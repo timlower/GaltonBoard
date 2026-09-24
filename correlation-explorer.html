@@ -1,0 +1,249 @@
+<div id="ce-root" style="max-width:760px;margin:0 auto;font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;color:#1f2933;">
+<style>
+#ce-root *{box-sizing:border-box}
+#ce-root .ce-card{background:#fff;border:1px solid #d5dbe1;border-radius:10px;padding:14px;margin-bottom:12px}
+#ce-root h2{font-size:1.25rem;margin:0 0 4px}
+#ce-root p{margin:4px 0}
+#ce-root .ce-row{display:flex;flex-wrap:wrap;gap:16px}
+#ce-root .ce-ctl{flex:1 1 220px}
+#ce-root label{display:block;font-weight:600;font-size:.9rem;margin-bottom:4px}
+#ce-root input[type=range]{width:100%}
+#ce-root button{font:inherit;font-size:.85rem;padding:6px 10px;margin:3px 4px 3px 0;border:1px solid #2b6cb0;background:#fff;color:#2b6cb0;border-radius:6px;cursor:pointer}
+#ce-root button:hover,#ce-root button:focus-visible{background:#2b6cb0;color:#fff}
+#ce-root canvas{width:100%;display:block;border:1px solid #d5dbe1;border-radius:8px;background:#fbfcfd;touch-action:none;cursor:crosshair}
+#ce-root .ce-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-top:10px}
+#ce-root .ce-stat{background:#f1f5f9;border-radius:8px;padding:8px;text-align:center}
+#ce-root .ce-stat b{display:block;font-size:1.25rem}
+#ce-root .ce-stat span{font-size:.75rem;color:#52606d}
+#ce-root .ce-note{font-size:.85rem;color:#52606d}
+#ce-root .ce-msg{background:#ebf4ff;border-left:4px solid #2b6cb0;padding:8px 10px;border-radius:4px;margin-top:10px;font-size:.92rem}
+</style>
+
+<div class="ce-card">
+  <h2>Correlation Explorer</h2>
+  <p class="ce-note">Set a target correlation, drag points, click empty space to add a point, double-click a point to remove it. Watch how r changes.</p>
+</div>
+
+<div class="ce-card">
+  <div class="ce-row">
+    <div class="ce-ctl">
+      <label for="ce-r">Target correlation: <span id="ce-rv">0.70</span></label>
+      <input type="range" id="ce-r" min="-100" max="100" value="70">
+    </div>
+    <div class="ce-ctl">
+      <label for="ce-n">Number of points: <span id="ce-nv">40</span></label>
+      <input type="range" id="ce-n" min="5" max="200" value="40">
+    </div>
+  </div>
+  <div style="margin-top:6px">
+    <button id="ce-new">New random sample</button>
+    <button id="ce-out">Add an outlier</button>
+    <button id="ce-line" aria-pressed="true">Regression line: on</button>
+    <button id="ce-res" aria-pressed="false">Residuals: off</button>
+    <button id="ce-clear">Clear all points</button>
+  </div>
+  <div>
+    <span class="ce-note">Anscombe's classic quartet (same r, very different pictures): </span>
+    <button data-pre="a1">Anscombe I</button>
+    <button data-pre="a2">II</button>
+    <button data-pre="a3">III</button>
+    <button data-pre="a4">IV</button>
+    <button data-pre="curve">Curved (r &asymp; 0)</button>
+  </div>
+</div>
+
+<div class="ce-card">
+  <canvas id="ce-cv" role="img" aria-label="Scatterplot of x and y with regression line. Points can be dragged."></canvas>
+  <div class="ce-stats" aria-live="polite">
+    <div class="ce-stat"><b id="ce-sr">-</b><span>Pearson r</span></div>
+    <div class="ce-stat"><b id="ce-sr2">-</b><span>r&sup2; (variance explained)</span></div>
+    <div class="ce-stat"><b id="ce-ssl">-</b><span>Slope</span></div>
+    <div class="ce-stat"><b id="ce-sic">-</b><span>Intercept</span></div>
+    <div class="ce-stat"><b id="ce-sn">-</b><span>n</span></div>
+  </div>
+  <div class="ce-msg" id="ce-msg"></div>
+  <p class="ce-note" style="margin-top:8px">Remember: correlation measures <i>linear</i> association only, and it does not show causation.</p>
+</div>
+
+<script>
+(function(){
+  var $=function(id){return document.getElementById(id)};
+  var cv=$('ce-cv'),ctx=cv.getContext('2d');
+  var pts=[],showLine=true,showRes=false,drag=-1,seed=7,W=700,H=480,PAD=42,label='';
+
+  function rng(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+  function gauss(r){var u=0,v;while(!u)u=r();v=r();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)}
+  function mean(a){var s=0;for(var i=0;i<a.length;i++)s+=a[i];return s/a.length}
+  function zs(a){var m=mean(a),s=0,i;for(i=0;i<a.length;i++)s+=(a[i]-m)*(a[i]-m);s=Math.sqrt(s/a.length)||1;return a.map(function(v){return(v-m)/s})}
+  function clamp(v){return Math.max(0,Math.min(100,v))}
+
+  function generate(){
+    var r=rng(seed),n=+$('ce-n').value,tr=+$('ce-r').value/100,x=[],e=[],i;
+    for(i=0;i<n;i++){x.push(gauss(r));e.push(gauss(r))}
+    x=zs(x);e=zs(e);
+    var d=0;for(i=0;i<n;i++)d+=x[i]*e[i];d/=n;
+    e=zs(e.map(function(v,k){return v-d*x[k]}));
+    pts=[];
+    for(i=0;i<n;i++){
+      var y=tr*x[i]+Math.sqrt(1-tr*tr)*e[i];
+      pts.push({x:clamp(50+15*x[i]),y:clamp(50+15*y)});
+    }
+    label='';
+  }
+
+  function stats(){
+    var n=pts.length;if(n<2)return null;
+    var mx=mean(pts.map(function(p){return p.x})),my=mean(pts.map(function(p){return p.y}));
+    var sxx=0,syy=0,sxy=0;
+    pts.forEach(function(p){sxx+=(p.x-mx)*(p.x-mx);syy+=(p.y-my)*(p.y-my);sxy+=(p.x-mx)*(p.y-my)});
+    if(sxx===0||syy===0)return{n:n,r:NaN,slope:NaN,ic:NaN};
+    var r=sxy/Math.sqrt(sxx*syy),sl=sxy/sxx;
+    return{n:n,r:r,slope:sl,ic:my-sl*mx};
+  }
+
+  function tx(v){return PAD+v/100*(W-PAD-14)}
+  function ty(v){return H-PAD-v/100*(H-PAD-14)}
+  function fx(px){return(px-PAD)/(W-PAD-14)*100}
+  function fy(py){return(H-PAD-py)/(H-PAD-14)*100}
+
+  function resize(){
+    var w=cv.parentNode.clientWidth||700,dpr=window.devicePixelRatio||1;
+    W=w;H=Math.round(Math.min(480,w*0.72));
+    cv.width=W*dpr;cv.height=H*dpr;cv.style.height=H+'px';
+    ctx.setTransform(dpr,0,0,dpr,0,0);draw();
+  }
+
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    ctx.font='11px system-ui,sans-serif';ctx.textAlign='center';ctx.textBaseline='top';
+    var t;
+    for(t=0;t<=100;t+=20){
+      ctx.strokeStyle='#e4e9ee';ctx.lineWidth=1;
+      ctx.beginPath();ctx.moveTo(tx(t),ty(0));ctx.lineTo(tx(t),ty(100));ctx.stroke();
+      ctx.beginPath();ctx.moveTo(tx(0),ty(t));ctx.lineTo(tx(100),ty(t));ctx.stroke();
+      ctx.fillStyle='#7b8794';ctx.fillText(t,tx(t),ty(0)+5);
+      ctx.textAlign='right';ctx.textBaseline='middle';ctx.fillText(t,tx(0)-6,ty(t));
+      ctx.textAlign='center';ctx.textBaseline='top';
+    }
+    ctx.strokeStyle='#9aa5b1';ctx.strokeRect(tx(0),ty(100),tx(100)-tx(0),ty(0)-ty(100));
+    ctx.fillStyle='#52606d';ctx.fillText('X',tx(50),H-16);
+    ctx.save();ctx.translate(12,ty(50));ctx.rotate(-Math.PI/2);ctx.fillText('Y',0,0);ctx.restore();
+
+    var s=stats();
+    if(s&&isFinite(s.r)){
+      if(showRes){
+        ctx.strokeStyle='rgba(197,48,48,.45)';ctx.lineWidth=1;
+        pts.forEach(function(p){
+          var yh=s.ic+s.slope*p.x;
+          ctx.beginPath();ctx.moveTo(tx(p.x),ty(p.y));ctx.lineTo(tx(p.x),ty(clamp(yh)));ctx.stroke();
+        });
+      }
+      if(showLine){
+        var x0=0,x1=100,y0=s.ic,y1=s.ic+s.slope*100;
+        ctx.save();ctx.beginPath();ctx.rect(tx(0),ty(100),tx(100)-tx(0),ty(0)-ty(100));ctx.clip();
+        ctx.strokeStyle='#c53030';ctx.lineWidth=2.5;
+        ctx.beginPath();ctx.moveTo(tx(x0),ty(y0));ctx.lineTo(tx(x1),ty(y1));ctx.stroke();ctx.restore();
+      }
+    }
+    pts.forEach(function(p,i){
+      ctx.beginPath();ctx.arc(tx(p.x),ty(p.y),i===drag?7:5,0,6.2832);
+      ctx.fillStyle=i===drag?'#dd6b20':'rgba(43,108,176,.8)';ctx.fill();
+      ctx.strokeStyle='#fff';ctx.lineWidth=1.2;ctx.stroke();
+    });
+    readout(s);
+  }
+
+  function strength(a){
+    return a<0.1?'negligible':a<0.3?'weak':a<0.5?'moderate':a<0.7?'fairly strong':a<0.9?'strong':'very strong';
+  }
+
+  function readout(s){
+    var ok=s&&isFinite(s.r);
+    $('ce-sr').textContent=ok?s.r.toFixed(3):'-';
+    $('ce-sr2').textContent=ok?(s.r*s.r*100).toFixed(1)+'%':'-';
+    $('ce-ssl').textContent=ok?s.slope.toFixed(3):'-';
+    $('ce-sic').textContent=ok?s.ic.toFixed(2):'-';
+    $('ce-sn').textContent=pts.length;
+    var m;
+    if(!ok){m='Add at least two points that vary in both X and Y.'}
+    else{
+      var a=Math.abs(s.r);
+      m='This is a <b>'+strength(a)+' '+(a<0.1?'':s.r>0?'positive ':'negative ')+'linear relationship</b>. '+
+        (a<0.1?'X tells you almost nothing about Y in a straight-line sense. ':
+        (s.r>0?'As X increases, Y tends to increase. ':'As X increases, Y tends to decrease. '))+
+        'About '+(s.r*s.r*100).toFixed(0)+'% of the variation in Y is linearly associated with X.';
+      if(pts.length<15)m+=' <i>With so few points, r can swing a lot from a single point, so try dragging one.</i>';
+    }
+    if(label)m='<b>'+label+'</b><br>'+m;
+    $('ce-msg').innerHTML=m;
+  }
+
+  function pos(e){var b=cv.getBoundingClientRect();return{x:e.clientX-b.left,y:e.clientY-b.top}}
+  function nearest(m){
+    var best=-1,bd=14*14;
+    pts.forEach(function(p,i){var dx=tx(p.x)-m.x,dy=ty(p.y)-m.y,d=dx*dx+dy*dy;if(d<bd){bd=d;best=i}});
+    return best;
+  }
+
+  cv.addEventListener('pointerdown',function(e){
+    var m=pos(e),i=nearest(m);
+    if(i>=0){drag=i;cv.setPointerCapture(e.pointerId)}
+    else{
+      var x=fx(m.x),y=fy(m.y);
+      if(x>=0&&x<=100&&y>=0&&y<=100){pts.push({x:x,y:y});label=''}
+    }
+    draw();
+  });
+  cv.addEventListener('pointermove',function(e){
+    if(drag<0)return;
+    var m=pos(e);pts[drag].x=clamp(fx(m.x));pts[drag].y=clamp(fy(m.y));label='';draw();
+  });
+  function up(){if(drag>=0){drag=-1;draw()}}
+  cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
+  cv.addEventListener('dblclick',function(e){
+    var i=nearest(pos(e));
+    if(i>=0){pts.splice(i,1);drag=-1;draw()}
+  });
+
+  $('ce-r').addEventListener('input',function(){$('ce-rv').textContent=(this.value/100).toFixed(2);generate();draw()});
+  $('ce-n').addEventListener('input',function(){$('ce-nv').textContent=this.value;generate();draw()});
+  $('ce-new').addEventListener('click',function(){seed=Math.floor(Math.random()*1e6);generate();draw()});
+  $('ce-out').addEventListener('click',function(){
+    var s=stats(),tr=s&&isFinite(s.r)?s.r:0;
+    pts.push(tr>=0?{x:92,y:6}:{x:92,y:94});
+    label='Outlier added: notice how much one point moves r.';draw();
+  });
+  $('ce-line').addEventListener('click',function(){
+    showLine=!showLine;this.textContent='Regression line: '+(showLine?'on':'off');this.setAttribute('aria-pressed',showLine);draw();
+  });
+  $('ce-res').addEventListener('click',function(){
+    showRes=!showRes;this.textContent='Residuals: '+(showRes?'on':'off');this.setAttribute('aria-pressed',showRes);draw();
+  });
+  $('ce-clear').addEventListener('click',function(){pts=[];label='';draw()});
+
+  var AX=[10,8,13,9,11,14,6,4,12,7,5];
+  var PRE={
+    a1:{x:AX,y:[8.04,6.95,7.58,8.81,8.33,9.96,7.24,4.26,10.84,4.82,5.68],t:'Anscombe I: a typical linear relationship.'},
+    a2:{x:AX,y:[9.14,8.14,8.74,8.77,9.26,8.10,6.13,3.10,9.13,7.26,4.74],t:'Anscombe II: a clear curve, yet r is about the same as in I.'},
+    a3:{x:AX,y:[7.46,6.77,12.74,7.11,7.81,8.84,6.08,5.39,8.15,6.42,5.73],t:'Anscombe III: a perfect line plus one outlier, which pulls r down.'},
+    a4:{x:[8,8,8,8,8,8,8,19,8,8,8],y:[6.58,5.76,7.71,8.84,8.47,7.04,5.25,12.5,5.56,7.91,6.89],t:'Anscombe IV: a single leverage point creates the entire correlation.'}
+  };
+  Array.prototype.forEach.call(document.querySelectorAll('#ce-root [data-pre]'),function(b){
+    b.addEventListener('click',function(){
+      var k=this.getAttribute('data-pre');
+      if(k==='curve'){
+        var r=rng(seed),i;pts=[];
+        for(i=0;i<40;i++){var x=5+r()*90,y=clamp(92-(x-50)*(x-50)/28+gauss(r)*4);pts.push({x:x,y:y})}
+        label='Curved: a strong relationship exists, but r is near zero because it is not linear.';
+      }else{
+        var p=PRE[k];pts=p.x.map(function(v,i){return{x:v*5,y:p.y[i]*7}});label=p.t;
+      }
+      draw();
+    });
+  });
+
+  window.addEventListener('resize',resize);
+  generate();resize();
+})();
+</script>
+</div>
