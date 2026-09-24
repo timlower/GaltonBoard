@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Galton Board</title>
+</head>
+<body>
+<div id="gb-app" style="max-width:740px;margin:0 auto;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#1f2937;">
+<style>
+  #gb-app * { box-sizing: border-box; }
+  #gb-app .gb-controls { display:flex; flex-wrap:wrap; gap:8px; margin:10px 0; }
+  #gb-app button { background:#2563eb; color:#fff; border:0; border-radius:6px; padding:8px 14px; font-size:14px; cursor:pointer; }
+  #gb-app button:hover { background:#1d4ed8; }
+  #gb-app button.gb-alt { background:#e5e7eb; color:#111827; }
+  #gb-app button.gb-alt:hover { background:#d1d5db; }
+  #gb-app button.gb-on { background:#059669; }
+  #gb-app .gb-sliders { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:10px 20px; margin:10px 0; }
+  #gb-app label { font-size:14px; display:block; }
+  #gb-app input[type=range] { width:100%; }
+  #gb-app .gb-stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:8px; margin:10px 0; }
+  #gb-app .gb-stat { background:#f3f4f6; border-radius:8px; padding:8px 10px; font-size:13px; }
+  #gb-app .gb-stat b { display:block; font-size:18px; color:#111827; }
+  #gb-app canvas { width:100%; height:auto; display:block; border:1px solid #e5e7eb; border-radius:8px; background:#fff; }
+  #gb-app .gb-note { font-size:14px; line-height:1.5; margin-top:12px; }
+</style>
+
+<h2 style="margin:0 0 4px;">Galton Board</h2>
+<div style="font-size:14px;color:#4b5563;">Each ball bounces left or right at every peg. Watch the histogram build up toward a bell curve.</div>
+
+<div class="gb-controls">
+  <button id="gb-d1">Drop 1</button>
+  <button id="gb-d10">Drop 10</button>
+  <button id="gb-d100">Drop 100</button>
+  <button id="gb-d1000" class="gb-alt">Instant &times;1000</button>
+  <button id="gb-auto" class="gb-alt">Auto-drop: Off</button>
+  <button id="gb-reset" class="gb-alt">Reset</button>
+</div>
+
+<div class="gb-sliders">
+  <label>Rows of pegs: <b id="gb-rows-v">10</b>
+    <input id="gb-rows" type="range" min="4" max="16" step="1" value="10"></label>
+  <label>Chance of bouncing right: <b id="gb-p-v">0.50</b>
+    <input id="gb-p" type="range" min="0.1" max="0.9" step="0.05" value="0.5"></label>
+  <label>Animation speed: <b id="gb-speed-v">5</b>
+    <input id="gb-speed" type="range" min="1" max="10" step="1" value="5"></label>
+  <label style="align-self:end;"><input id="gb-curve" type="checkbox" checked> Show theoretical binomial curve</label>
+</div>
+
+<canvas id="gb-canvas" aria-label="Galton board simulation"></canvas>
+
+<div class="gb-stats">
+  <div class="gb-stat">Balls landed<b id="gb-s-n">0</b></div>
+  <div class="gb-stat">Sample mean (bin)<b id="gb-s-mean">&ndash;</b><span id="gb-s-tmean"></span></div>
+  <div class="gb-stat">Sample std. dev.<b id="gb-s-sd">&ndash;</b><span id="gb-s-tsd"></span></div>
+</div>
+
+<div class="gb-note">
+  <b>What&rsquo;s happening?</b> A ball&rsquo;s final bin is the number of times it bounced right, so it follows a
+  binomial distribution with <i>n</i> = rows and <i>p</i> = chance of bouncing right. The red dots show the expected counts.
+  As <i>n</i> grows and more balls drop, the histogram approaches a normal (bell) curve &mdash; a picture of the Central Limit Theorem.
+  Changing the rows or the bounce probability resets the board.
+</div>
+
+<script>
+(function () {
+  var cv = document.getElementById('gb-canvas');
+  var ctx = cv.getContext('2d');
+  var W = 720, H = 600;
+  var dpr = Math.min(window.devicePixelRatio || 1, 2);
+  cv.width = W * dpr; cv.height = H * dpr;
+  ctx.scale(dpr, dpr);
+
+  function $(id) { return document.getElementById(id); }
+
+  var n = 10, p = 0.5, speed = 5, showCurve = true, auto = false;
+  var counts = [], total = 0, balls = [], queue = 0, spawnAcc = 0, G = {};
+
+  function layout() {
+    var cx = W / 2, topY = 70;
+    var dx = Math.min(46, (W - 40) / (n + 1));
+    var rowH = Math.min(dx * 0.9, 270 / n);
+    var pegR = Math.max(2.5, dx * 0.08);
+    var ballR = Math.max(3, dx * 0.19);
+    var firstY = topY + 30;
+    var lastY = firstY + (n - 1) * rowH;
+    var binTop = lastY + rowH * 0.8;
+    var yB = H - 36;
+    G = { cx: cx, topY: topY, dx: dx, rowH: rowH, pegR: pegR, ballR: ballR,
+          firstY: firstY, lastY: lastY, binTop: binTop, yB: yB, maxH: yB - binTop };
+  }
+
+  function reset() {
+    counts = []; for (var i = 0; i <= n; i++) counts.push(0);
+    total = 0; balls = []; queue = 0; spawnAcc = 0;
+    layout(); updateStats();
+  }
+
+  function pmf() {
+    var out = [], q = 1 - p;
+    out[0] = Math.pow(q, n);
+    for (var k = 0; k < n; k++) out[k + 1] = out[k] * (n - k) / (k + 1) * (p / q);
+    return out;
+  }
+
+  function getUnit() {
+    var maxVal = 1, i;
+    for (i = 0; i <= n; i++) if (counts[i] > maxVal) maxVal = counts[i];
+    if (showCurve && total > 0) {
+      var e = pmf();
+      for (i = 0; i <= n; i++) if (e[i] * total > maxVal) maxVal = e[i] * total;
+    }
+    return Math.min(G.ballR * 2, (G.maxH * 0.92) / maxVal);
+  }
+
+  function spawn() {
+    var off = G.pegR + G.ballR;
+    var pts = [{ x: G.cx, y: G.topY - 6 }];
+    var j = 0;
+    for (var r = 0; r < n; r++) {
+      pts.push({ x: G.cx + (j - r / 2) * G.dx, y: G.firstY + r * G.rowH - off });
+      if (Math.random() < p) j++;
+    }
+    pts.push({ x: G.cx + (j - n / 2) * G.dx, y: 0 });
+    balls.push({ pts: pts, seg: 0, t: 0, k: j });
+  }
+
+  function dropInstant(m) {
+    for (var i = 0; i < m; i++) {
+      var k = 0;
+      for (var r = 0; r < n; r++) if (Math.random() < p) k++;
+      counts[k]++; total++;
+    }
+    updateStats();
+  }
+
+  function update(dt) {
+    var mult = speed / 4;
+    var interval = 300 / speed;
+    if (auto && queue < 3) queue = 3;
+    if (queue > 0) {
+      spawnAcc += dt * 1000;
+      while (queue > 0 && spawnAcc >= interval) { spawn(); queue--; spawnAcc -= interval; }
+    } else { spawnAcc = 0; }
+
+    var landed = false;
+    for (var i = balls.length - 1; i >= 0; i--) {
+      var b = balls[i];
+      var dur = (b.seg === n) ? 0.28 : 0.15;
+      b.t += dt * mult / dur;
+      while (b.t >= 1) {
+        b.t -= 1; b.seg++;
+        if (b.seg > n) { break; }
+      }
+      if (b.seg > n) {
+        counts[b.k]++; total++; balls.splice(i, 1); landed = true;
+        continue;
+      }
+      if (b.seg === n) {
+        b.pts[n + 1].y = G.yB - counts[b.k] * getUnit() - G.ballR;
+      }
+    }
+    if (landed) updateStats();
+  }
+
+  function ballPos(b) {
+    var a = b.pts[b.seg], c = b.pts[b.seg + 1], t = b.t;
+    var x, y;
+    if (b.seg === n) {
+      x = a.x + (c.x - a.x) * t;
+      y = a.y + (c.y - a.y) * t * t;
+    } else {
+      x = a.x + (c.x - a.x) * t;
+      y = a.y + (c.y - a.y) * (0.3 * t + 0.7 * t * t);
+      if (b.seg > 0) y -= Math.sin(Math.PI * t) * G.rowH * 0.22;
+    }
+    return { x: x, y: y };
+  }
+
+  function draw() {
+    var i, k, r, j;
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, W, H);
+
+    // funnel
+    ctx.strokeStyle = '#9ca3af'; ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(G.cx - G.dx * 1.1, G.topY - 40); ctx.lineTo(G.cx - 8, G.topY - 8);
+    ctx.moveTo(G.cx + G.dx * 1.1, G.topY - 40); ctx.lineTo(G.cx + 8, G.topY - 8);
+    ctx.stroke();
+
+    // pegs
+    ctx.fillStyle = '#6b7280';
+    for (r = 0; r < n; r++) {
+      for (j = 0; j <= r; j++) {
+        ctx.beginPath();
+        ctx.arc(G.cx + (j - r / 2) * G.dx, G.firstY + r * G.rowH, G.pegR, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    // bin walls
+    ctx.strokeStyle = '#d1d5db'; ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (k = 0; k <= n + 1; k++) {
+      var wx = G.cx + (k - 0.5 - n / 2) * G.dx;
+      ctx.moveTo(wx, G.binTop); ctx.lineTo(wx, G.yB);
+    }
+    ctx.moveTo(G.cx - (n / 2 + 0.5) * G.dx, G.yB); ctx.lineTo(G.cx + (n / 2 + 0.5) * G.dx, G.yB);
+    ctx.stroke();
+
+    // bars
+    var unit = getUnit();
+    ctx.font = '11px sans-serif'; ctx.textAlign = 'center';
+    for (k = 0; k <= n; k++) {
+      var bx = G.cx + (k - n / 2) * G.dx;
+      var h = counts[k] * unit;
+      ctx.fillStyle = '#60a5fa';
+      ctx.fillRect(bx - G.dx / 2 + 2, G.yB - h, G.dx - 4, h);
+      if (counts[k] > 0 && G.dx >= 26) {
+        ctx.fillStyle = '#1f2937';
+        ctx.fillText(counts[k], bx, G.yB - h - 4);
+      }
+      ctx.fillStyle = '#6b7280';
+      ctx.fillText(k, bx, G.yB + 15);
+    }
+
+    // theoretical curve
+    if (showCurve && total > 0) {
+      var e = pmf();
+      ctx.strokeStyle = '#dc2626'; ctx.fillStyle = '#dc2626'; ctx.lineWidth = 2;
+      ctx.setLineDash([5, 4]);
+      ctx.beginPath();
+      for (k = 0; k <= n; k++) {
+        var px = G.cx + (k - n / 2) * G.dx, py = G.yB - e[k] * total * unit;
+        if (k === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+      }
+      ctx.stroke(); ctx.setLineDash([]);
+      for (k = 0; k <= n; k++) {
+        ctx.beginPath();
+        ctx.arc(G.cx + (k - n / 2) * G.dx, G.yB - e[k] * total * unit, 3, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    // balls
+    ctx.fillStyle = '#f59e0b'; ctx.strokeStyle = '#b45309'; ctx.lineWidth = 1;
+    for (i = 0; i < balls.length; i++) {
+      var pos = ballPos(balls[i]);
+      ctx.beginPath(); ctx.arc(pos.x, pos.y, G.ballR, 0, Math.PI * 2);
+      ctx.fill(); ctx.stroke();
+    }
+  }
+
+  function updateStats() {
+    $('gb-s-n').textContent = total;
+    var tm = n * p, tsd = Math.sqrt(n * p * (1 - p));
+    $('gb-s-tmean').textContent = 'Theory: ' + tm.toFixed(2);
+    $('gb-s-tsd').textContent = 'Theory: ' + tsd.toFixed(2);
+    if (total === 0) {
+      $('gb-s-mean').textContent = '\u2013'; $('gb-s-sd').textContent = '\u2013';
+      return;
+    }
+    var s = 0, k;
+    for (k = 0; k <= n; k++) s += k * counts[k];
+    var mean = s / total, v = 0;
+    for (k = 0; k <= n; k++) v += counts[k] * (k - mean) * (k - mean);
+    var sd = Math.sqrt(v / total);
+    $('gb-s-mean').textContent = mean.toFixed(2);
+    $('gb-s-sd').textContent = sd.toFixed(2);
+  }
+
+  // controls
+  $('gb-d1').onclick = function () { queue += 1; };
+  $('gb-d10').onclick = function () { queue += 10; };
+  $('gb-d100').onclick = function () { queue += 100; };
+  $('gb-d1000').onclick = function () { dropInstant(1000); };
+  $('gb-reset').onclick = reset;
+  $('gb-auto').onclick = function () {
+    auto = !auto;
+    this.textContent = 'Auto-drop: ' + (auto ? 'On' : 'Off');
+    this.className = auto ? 'gb-on' : 'gb-alt';
+  };
+  $('gb-rows').oninput = function () {
+    n = parseInt(this.value, 10); $('gb-rows-v').textContent = n; reset();
+  };
+  $('gb-p').oninput = function () {
+    p = parseFloat(this.value); $('gb-p-v').textContent = p.toFixed(2); reset();
+  };
+  $('gb-speed').oninput = function () {
+    speed = parseInt(this.value, 10); $('gb-speed-v').textContent = speed;
+  };
+  $('gb-curve').onchange = function () { showCurve = this.checked; };
+
+  reset();
+  var last = performance.now();
+  function frame(now) {
+    var dt = Math.min((now - last) / 1000, 0.05);
+    last = now;
+    update(dt); draw();
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+</script>
+</div>
+</body>
+</html>
