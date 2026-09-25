@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Log-Normal Distribution Explorer</title>
+<style>
+  :root {
+    --bg: #ffffff;
+    --panel: #f7f8fa;
+    --border: #dfe3e8;
+    --text: #1a1d23;
+    --muted: #5b6270;
+    --accent: #2f6fed;
+    --accent2: #d9820b;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    padding: 24px;
+  }
+  .wrap { max-width: 880px; margin: 0 auto; }
+  h1 { font-size: 20px; font-weight: 600; margin: 0 0 4px; }
+  p.sub { color: var(--muted); margin: 0 0 20px; font-size: 14px; }
+
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+
+  .controls {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  @media (max-width: 600px) {
+    .controls { grid-template-columns: 1fr; }
+  }
+
+  .control label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .control label span.val {
+    color: var(--text);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+  input[type="range"] {
+    width: 100%;
+    accent-color: var(--accent);
+  }
+
+  .toggles {
+    display: flex;
+    gap: 16px;
+    margin-top: 16px;
+    flex-wrap: wrap;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .toggles label { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+  .toggles button {
+    margin-left: auto;
+    background: transparent;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: 6px;
+    padding: 6px 14px;
+    font-size: 13px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .toggles button:hover { background: rgba(110,168,254,0.12); }
+
+  .mode-switch {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 18px;
+    font-size: 13px;
+  }
+  .mode-switch .side {
+    color: var(--muted);
+    transition: color 0.15s;
+  }
+  .mode-switch .side.active {
+    color: var(--text);
+    font-weight: 600;
+  }
+  .switch {
+    position: relative;
+    display: inline-block;
+    width: 46px;
+    height: 26px;
+    flex-shrink: 0;
+  }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .switch .slider {
+    position: absolute;
+    cursor: pointer;
+    inset: 0;
+    background: #c3c9d3;
+    border-radius: 999px;
+    transition: background 0.15s;
+  }
+  .switch .slider::before {
+    content: "";
+    position: absolute;
+    height: 20px;
+    width: 20px;
+    left: 3px;
+    top: 3px;
+    background: white;
+    border-radius: 50%;
+    transition: transform 0.15s;
+  }
+  .switch input:checked + .slider {
+    background: var(--accent2);
+  }
+  .switch input:checked + .slider::before {
+    transform: translateX(20px);
+  }
+
+  canvas { width: 100%; height: auto; display: block; }
+
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+    gap: 12px;
+    margin-top: 16px;
+  }
+  .stat {
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+  }
+  .stat .k { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+  .stat .v { font-size: 16px; font-weight: 600; margin-top: 2px; font-variant-numeric: tabular-nums; }
+
+  .legend { display: flex; gap: 18px; font-size: 12px; color: var(--muted); margin-top: 10px; flex-wrap: wrap; }
+  .legend .dot { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: middle; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Log-Normal Distribution Explorer</h1>
+  <p class="sub" id="subtext">Adjust μ and σ (the mean and standard deviation of the underlying normal, ln X) and watch the density reshape.</p>
+
+  <div class="card">
+    <div class="mode-switch">
+      <span class="side active" id="labelLognormal">Log-normal (X)</span>
+      <label class="switch">
+        <input type="checkbox" id="modeToggle">
+        <span class="slider"></span>
+      </label>
+      <span class="side" id="labelNormal">Normal (ln X)</span>
+    </div>
+
+    <div class="controls">
+      <div class="control">
+        <label>μ (mu, location) <span class="val" id="muVal">0.00</span></label>
+        <input type="range" id="mu" min="-2" max="2" step="0.01" value="0">
+      </div>
+      <div class="control">
+        <label>σ (sigma, shape) <span class="val" id="sigmaVal">0.50</span></label>
+        <input type="range" id="sigma" min="0.05" max="2" step="0.01" value="0.5">
+      </div>
+    </div>
+
+    <div class="toggles">
+      <label><input type="checkbox" id="showCdf"> Show Cumulative Distribution Function overlay</label>
+      <label id="showNormalWrap"><input type="checkbox" id="showNormal"> Compare to normal(mean, sd)</label>
+      <label id="showIncomeWrap"><input type="checkbox" id="showIncome"> Overlay: 2024 US household income shape</label>
+      <label><input type="checkbox" id="showMarkers" checked> Show mean / median / mode</label>
+      <button id="resetBtn" type="button">Reset</button>
+    </div>
+    <p class="sub" id="incomeNote" style="display:none; margin: 10px 0 0; font-size: 12px;">
+      Shown at your chosen median, using σ≈0.88 — the shape implied by the Census Bureau's 2024 household income Gini index (0.47). Actual 2024 median household income was $83,730.
+      <a href="https://www.census.gov/library/publications/2025/demo/p60-286.html" target="_blank" rel="noopener" style="color: var(--accent);">Source</a>.
+    </p>
+  </div>
+
+  <div class="card">
+    <canvas id="chart" width="1600" height="700"></canvas>
+    <div class="legend">
+      <span><i class="dot" id="legPdfDot" style="background:#173776"></i><span id="legPdf">PDF (log-normal)</span></span>
+      <span id="legCdf" style="display:none"><i class="dot" style="background:#044859"></i>Cumulative Distribution Function</span>
+      <span id="legNorm" style="display:none"><i class="dot" style="background:#0b5225"></i>Normal(mean, sd)</span>
+      <span id="legIncome" style="display:none"><i class="dot" style="background:#370a1e"></i>2024 US household income shape</span>
+      <span><i class="dot" style="background:#6e1313"></i>Mean</span>
+      <span><i class="dot" style="background:#3e1d76"></i>Median</span>
+      <span><i class="dot" style="background:#0b5225;"></i>Mode</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="stats">
+      <div class="stat"><div class="k">Mean</div><div class="v" id="statMean">-</div></div>
+      <div class="stat"><div class="k">Median</div><div class="v" id="statMedian">-</div></div>
+      <div class="stat"><div class="k">Mode</div><div class="v" id="statMode">-</div></div>
+      <div class="stat"><div class="k">Variance</div><div class="v" id="statVar">-</div></div>
+      <div class="stat"><div class="k">Std Dev</div><div class="v" id="statSd">-</div></div>
+      <div class="stat"><div class="k">Skewness</div><div class="v" id="statSkew">-</div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  const muSlider = document.getElementById('mu');
+  const sigmaSlider = document.getElementById('sigma');
+  const muVal = document.getElementById('muVal');
+  const sigmaVal = document.getElementById('sigmaVal');
+  const showCdf = document.getElementById('showCdf');
+  const showNormal = document.getElementById('showNormal');
+  const showMarkers = document.getElementById('showMarkers');
+  const legCdf = document.getElementById('legCdf');
+  const legNorm = document.getElementById('legNorm');
+  const legPdf = document.getElementById('legPdf');
+  const legPdfDot = document.getElementById('legPdfDot');
+  const resetBtn = document.getElementById('resetBtn');
+  const modeToggle = document.getElementById('modeToggle');
+  const labelLognormal = document.getElementById('labelLognormal');
+  const labelNormal = document.getElementById('labelNormal');
+  const showNormalWrap = document.getElementById('showNormalWrap');
+  const showIncome = document.getElementById('showIncome');
+  const showIncomeWrap = document.getElementById('showIncomeWrap');
+  const incomeNote = document.getElementById('incomeNote');
+  const legIncome = document.getElementById('legIncome');
+  const subtext = document.getElementById('subtext');
+  // Shape parameter for 2024 US household income, derived from the Census
+  // Bureau's reported Gini index (~0.47) via Gini = 2*Phi(sigma/sqrt2) - 1.
+  // Actual 2024 median household income: $83,730 (Census P60-286).
+  const INCOME_SIGMA = 0.88;
+  const canvas = document.getElementById('chart');
+  const ctx = canvas.getContext('2d');
+
+  const W = canvas.width, H = canvas.height;
+  const padL = 60, padR = 60, padT = 30, padB = 50;
+  const plotW = W - padL - padR;
+  const plotH = H - padT - padB;
+
+  function lnPdf(x, mu, sigma) {
+    if (x <= 0) return 0;
+    const z = (Math.log(x) - mu) / sigma;
+    return (1 / (x * sigma * Math.sqrt(2 * Math.PI))) * Math.exp(-0.5 * z * z);
+  }
+
+  function erf(x) {
+    // Abramowitz-Stegun approximation
+    const sign = x < 0 ? -1 : 1;
+    x = Math.abs(x);
+    const a1 = 0.254829592, a2 = -0.284496736, a3 = 1.421413741,
+          a4 = -1.453152027, a5 = 1.061405429, p = 0.3275911;
+    const t = 1 / (1 + p * x);
+    const y = 1 - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * Math.exp(-x * x);
+    return sign * y;
+  }
+
+  function lnCdf(x, mu, sigma) {
+    if (x <= 0) return 0;
+    const z = (Math.log(x) - mu) / (sigma * Math.sqrt(2));
+    return 0.5 * (1 + erf(z));
+  }
+
+  function normPdf(x, mean, sd) {
+    return (1 / (sd * Math.sqrt(2 * Math.PI))) * Math.exp(-0.5 * Math.pow((x - mean) / sd, 2));
+  }
+
+  function fmt(n) {
+    if (!isFinite(n)) return '∞';
+    if (Math.abs(n) >= 1000) return n.toFixed(0);
+    if (Math.abs(n) >= 10) return n.toFixed(2);
+    return n.toFixed(3);
+  }
+
+  function draw() {
+    const mu = parseFloat(muSlider.value);
+    const sigma = parseFloat(sigmaSlider.value);
+    const isNormalMode = modeToggle.checked;
+    muVal.textContent = mu.toFixed(2);
+    sigmaVal.textContent = sigma.toFixed(2);
+
+    labelLognormal.classList.toggle('active', !isNormalMode);
+    labelNormal.classList.toggle('active', isNormalMode);
+    showNormalWrap.style.display = isNormalMode ? 'none' : 'flex';
+    showIncomeWrap.style.display = isNormalMode ? 'none' : 'flex';
+    const incomeActive = !isNormalMode && showIncome.checked;
+    incomeNote.style.display = incomeActive ? 'block' : 'none';
+
+    const lnMean = Math.exp(mu + sigma * sigma / 2);
+    const lnMedian = Math.exp(mu);
+    const lnMode = Math.exp(mu - sigma * sigma);
+    const lnVariance = (Math.exp(sigma * sigma) - 1) * Math.exp(2 * mu + sigma * sigma);
+    const lnSd = Math.sqrt(lnVariance);
+    const lnSkew = (Math.exp(sigma * sigma) + 2) * Math.sqrt(Math.exp(sigma * sigma) - 1);
+
+    // In normal mode, the plotted variable is Y = ln(X) ~ Normal(mu, sigma)
+    const mean = isNormalMode ? mu : lnMean;
+    const median = isNormalMode ? mu : lnMedian;
+    const mode = isNormalMode ? mu : lnMode;
+    const variance = isNormalMode ? sigma * sigma : lnVariance;
+    const sd = isNormalMode ? sigma : lnSd;
+    const skew = isNormalMode ? 0 : lnSkew;
+
+    document.getElementById('statMean').textContent = fmt(mean);
+    document.getElementById('statMedian').textContent = fmt(median);
+    document.getElementById('statMode').textContent = fmt(mode);
+    document.getElementById('statVar').textContent = fmt(variance);
+    document.getElementById('statSd').textContent = fmt(sd);
+    document.getElementById('statSkew').textContent = fmt(skew);
+
+    subtext.textContent = isNormalMode
+      ? 'Y = ln(X) is normally distributed with mean μ and standard deviation σ — the transformation that turns the skewed log-normal back into a bell curve.'
+      : 'Adjust μ and σ (the mean and standard deviation of the underlying normal, ln X) and watch the density reshape.';
+    legPdf.textContent = isNormalMode ? 'PDF (normal, ln X)' : 'PDF (log-normal)';
+    legPdfDot.style.background = isNormalMode ? '#6c4105' : '#173776';
+
+    const N = 500;
+    let xMin, xMax;
+    if (isNormalMode) {
+      xMin = mu - 4 * sigma;
+      xMax = mu + 4 * sigma;
+    } else {
+      xMax = Math.max(lnMean + 4 * lnSd, lnMedian * 3, 3);
+      if (incomeActive) {
+        const incMean = Math.exp(mu + INCOME_SIGMA * INCOME_SIGMA / 2);
+        const incSd = Math.sqrt((Math.exp(INCOME_SIGMA * INCOME_SIGMA) - 1) * Math.exp(2 * mu + INCOME_SIGMA * INCOME_SIGMA));
+        xMax = Math.max(xMax, incMean + 4 * incSd);
+      }
+      xMin = 0.0001;
+    }
+
+    // find peak pdf for y-scaling
+    let peak = 0;
+    const xs = [], ys = [], cdfs = [];
+    for (let i = 0; i <= N; i++) {
+      const x = xMin + (xMax - xMin) * (i / N);
+      const y = isNormalMode ? normPdf(x, mu, sigma) : lnPdf(x, mu, sigma);
+      xs.push(x); ys.push(y);
+      cdfs.push(isNormalMode
+        ? 0.5 * (1 + erf((x - mu) / (sigma * Math.sqrt(2))))
+        : lnCdf(x, mu, sigma));
+      if (y > peak) peak = y;
+    }
+    const normPeak = (!isNormalMode && showNormal.checked) ? normPdf(lnMean, lnMean, lnSd) : 0;
+    let incomePeak = 0;
+    if (incomeActive) {
+      for (let i = 0; i <= N; i++) {
+        const y = lnPdf(xs[i], mu, INCOME_SIGMA);
+        if (y > incomePeak) incomePeak = y;
+      }
+    }
+    const yMax = Math.max(peak, normPeak, incomePeak) * 1.15;
+
+    function px(x) { return padL + ((x - xMin) / (xMax - xMin)) * plotW; }
+    function py(y) { return padT + plotH - (y / yMax) * plotH; }
+    function pyCdf(c) { return padT + plotH - c * plotH; }
+
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, W, H);
+
+    // grid + axes
+    ctx.strokeStyle = '#e3e6eb';
+    ctx.lineWidth = 1;
+    ctx.fillStyle = '#5b6270';
+    ctx.font = '20px -apple-system, sans-serif';
+    const xTicks = 8;
+    for (let i = 0; i <= xTicks; i++) {
+      const xv = xMin + (xMax - xMin) * (i / xTicks);
+      const xpix = px(xv);
+      ctx.beginPath();
+      ctx.moveTo(xpix, padT);
+      ctx.lineTo(xpix, padT + plotH);
+      ctx.stroke();
+      ctx.textAlign = 'center';
+      ctx.fillText(xv.toFixed(Math.abs(xMax - xMin) < 10 ? 2 : 1), xpix, padT + plotH + 28);
+    }
+    ctx.beginPath();
+    ctx.moveTo(padL, padT);
+    ctx.lineTo(padL, padT + plotH);
+    ctx.lineTo(padL + plotW, padT + plotH);
+    ctx.strokeStyle = '#8a919e';
+    ctx.stroke();
+
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#5b6270';
+    ctx.font = '22px -apple-system, sans-serif';
+    ctx.fillText(isNormalMode ? 'ln(x)' : 'x', padL + plotW / 2, H - 8);
+    ctx.save();
+    ctx.translate(18, padT + plotH / 2);
+    ctx.rotate(-Math.PI / 2);
+    ctx.fillText('density', 0, 0);
+    ctx.restore();
+
+    // optional comparison normal curve (log-normal mode only)
+    if (!isNormalMode && showNormal.checked) {
+      legNorm.style.display = 'inline';
+      ctx.beginPath();
+      ctx.strokeStyle = '#0b5225';
+      ctx.lineWidth = 5;
+      for (let i = 0; i <= N; i++) {
+        const x = xs[i];
+        const y = normPdf(x, lnMean, lnSd);
+        const xp = px(x), yp = py(y);
+        if (i === 0) ctx.moveTo(xp, yp); else ctx.lineTo(xp, yp);
+      }
+      ctx.stroke();
+    } else {
+      legNorm.style.display = 'none';
+    }
+
+    // overlay: 2024 US household income shape
+    if (incomeActive) {
+      legIncome.style.display = 'inline';
+      ctx.beginPath();
+      ctx.strokeStyle = '#370a1e';
+      ctx.lineWidth = 7;
+      ctx.setLineDash([2, 5]);
+      for (let i = 0; i <= N; i++) {
+        const x = xs[i];
+        const y = lnPdf(x, mu, INCOME_SIGMA);
+        const xp = px(x), yp = py(y);
+        if (i === 0) ctx.moveTo(xp, yp); else ctx.lineTo(xp, yp);
+      }
+      ctx.stroke();
+      ctx.setLineDash([]);
+    } else {
+      legIncome.style.display = 'none';
+    }
+
+    // PDF fill
+    ctx.beginPath();
+    ctx.moveTo(px(xs[0]), py(0));
+    for (let i = 0; i <= N; i++) ctx.lineTo(px(xs[i]), py(ys[i]));
+    ctx.lineTo(px(xs[N]), py(0));
+    ctx.closePath();
+    ctx.fillStyle = isNormalMode ? 'rgba(245,167,66,0.15)' : 'rgba(110,168,254,0.15)';
+    ctx.fill();
+
+    // PDF line
+    ctx.beginPath();
+    ctx.strokeStyle = isNormalMode ? '#6c4105' : '#173776';
+    ctx.lineWidth = 6;
+    for (let i = 0; i <= N; i++) {
+      const xp = px(xs[i]), yp = py(ys[i]);
+      if (i === 0) ctx.moveTo(xp, yp); else ctx.lineTo(xp, yp);
+    }
+    ctx.stroke();
+
+    // CDF overlay
+    if (showCdf.checked) {
+      legCdf.style.display = 'inline';
+      ctx.beginPath();
+      ctx.strokeStyle = '#044859';
+      ctx.lineWidth = 5;
+      ctx.setLineDash([8, 6]);
+      for (let i = 0; i <= N; i++) {
+        const xp = px(xs[i]), yp = pyCdf(cdfs[i]);
+        if (i === 0) ctx.moveTo(xp, yp); else ctx.lineTo(xp, yp);
+      }
+      ctx.stroke();
+      ctx.setLineDash([]);
+    } else {
+      legCdf.style.display = 'none';
+    }
+
+    // markers
+    if (showMarkers.checked) {
+      const markers = isNormalMode
+        ? [{ x: mean, color: '#6e1313', label: 'Mean = Median = Mode' }]
+        : [
+            { x: mean, color: '#6e1313', label: 'Mean' },
+            { x: median, color: '#3e1d76', label: 'Median' },
+            { x: mode, color: '#0b5225', label: 'Mode' }
+          ];
+      markers.forEach(m => {
+        if (m.x < xMin || m.x > xMax) return;
+        const xp = px(m.x);
+        ctx.beginPath();
+        ctx.strokeStyle = m.color;
+        ctx.lineWidth = 4;
+        ctx.setLineDash([5, 4]);
+        ctx.moveTo(xp, padT);
+        ctx.lineTo(xp, padT + plotH);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      });
+    }
+  }
+
+  [muSlider, sigmaSlider, showCdf, showNormal, showIncome, showMarkers, modeToggle].forEach(el =>
+    el.addEventListener('input', draw)
+  );
+
+  const DEFAULTS = { mu: 0, sigma: 0.5, showCdf: false, showNormal: false, showIncome: false, showMarkers: true, mode: false };
+
+  resetBtn.addEventListener('click', () => {
+    muSlider.value = DEFAULTS.mu;
+    sigmaSlider.value = DEFAULTS.sigma;
+    showCdf.checked = DEFAULTS.showCdf;
+    showNormal.checked = DEFAULTS.showNormal;
+    showIncome.checked = DEFAULTS.showIncome;
+    showMarkers.checked = DEFAULTS.showMarkers;
+    modeToggle.checked = DEFAULTS.mode;
+    draw();
+  });
+
+  draw();
+})();
+</script>
+</body>
+</html>
