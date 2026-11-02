@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Bivariate Normal Distribution Explorer</title>
+<style>
+  :root{
+    --bg:#ffffff;
+    --panel:#f6f8fc;
+    --panel2:#eaeef7;
+    --accent:#3b5bdb;
+    --accent2:#d9480f;
+    --text:#1a1d2e;
+    --muted:#5b6078;
+    --grid:#d5dae8;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:#ffffff;
+    color:var(--text);
+    min-height:100vh;
+    padding:24px;
+  }
+  h1{
+    font-size:1.4rem;
+    font-weight:600;
+    margin:0 0 4px 0;
+    letter-spacing:.2px;
+  }
+  .sub{
+    color:var(--muted);
+    font-size:.85rem;
+    margin-bottom:20px;
+  }
+  .layout{
+    display:grid;
+    grid-template-columns:minmax(320px,420px) 1fr;
+    gap:20px;
+    max-width:1200px;
+    margin:0 auto;
+  }
+  @media (max-width:820px){
+    .layout{grid-template-columns:1fr;}
+  }
+  .panel{
+    background:var(--panel);
+    border:1px solid var(--grid);
+    border-radius:14px;
+    padding:18px 20px;
+  }
+  .viz-panel{
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+  canvas{
+    display:block;
+    border-radius:10px;
+    background:#ffffff;
+    border:1px solid var(--grid);
+    width:100%;
+    height:auto;
+  }
+  .row{
+    margin-bottom:16px;
+  }
+  .row:last-child{margin-bottom:0;}
+  .label-line{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    margin-bottom:6px;
+    font-size:.82rem;
+  }
+  .label-line span.name{
+    color:var(--text);
+    font-weight:600;
+  }
+  .label-line span.val{
+    color:var(--accent);
+    font-variant-numeric:tabular-nums;
+    font-weight:600;
+  }
+  input[type=range]{
+    -webkit-appearance:none;
+    width:100%;
+    height:4px;
+    border-radius:2px;
+    background:var(--grid);
+    outline:none;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;
+    width:16px;height:16px;
+    border-radius:50%;
+    background:var(--accent);
+    cursor:pointer;
+    border:2px solid #ffffff;
+    box-shadow:0 0 0 2px var(--accent);
+  }
+  input[type=range]::-moz-range-thumb{
+    width:16px;height:16px;
+    border-radius:50%;
+    background:var(--accent);
+    cursor:pointer;
+    border:2px solid #ffffff;
+  }
+  .section-title{
+    font-size:.7rem;
+    text-transform:uppercase;
+    letter-spacing:1px;
+    color:var(--muted);
+    margin:18px 0 10px 0;
+    padding-top:14px;
+    border-top:1px solid var(--grid);
+  }
+  .section-title:first-child{
+    margin-top:0;
+    padding-top:0;
+    border-top:none;
+  }
+  .presets{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-bottom:4px;
+  }
+  button.preset{
+    background:var(--panel2);
+    border:1px solid var(--grid);
+    color:var(--text);
+    padding:6px 12px;
+    border-radius:20px;
+    font-size:.78rem;
+    cursor:pointer;
+    transition:.15s;
+  }
+  button.preset:hover{
+    border-color:var(--accent);
+    color:var(--accent);
+  }
+  .stats{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+    margin-top:4px;
+  }
+  .stat-box{
+    background:var(--panel2);
+    border-radius:8px;
+    padding:10px 12px;
+  }
+  .stat-box .k{
+    font-size:.68rem;
+    text-transform:uppercase;
+    letter-spacing:.6px;
+    color:var(--muted);
+  }
+  .stat-box .v{
+    font-size:.95rem;
+    font-weight:600;
+    color:var(--accent2);
+    font-variant-numeric:tabular-nums;
+  }
+  .mode-toggle{
+    display:flex;
+    gap:6px;
+    background:var(--panel2);
+    padding:4px;
+    border-radius:10px;
+  }
+  .mode-toggle button{
+    flex:1;
+    padding:7px 10px;
+    border:none;
+    border-radius:7px;
+    background:transparent;
+    color:var(--muted);
+    font-size:.8rem;
+    cursor:pointer;
+    font-weight:600;
+  }
+  .mode-toggle button.active{
+    background:var(--accent);
+    color:#ffffff;
+  }
+  .switch-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+  }
+  .switch-row .name{
+    font-size:.82rem;
+    font-weight:600;
+  }
+  .switch{
+    position:relative;
+    display:inline-block;
+    width:44px;
+    height:24px;
+  }
+  .switch input{
+    opacity:0;
+    width:0;
+    height:0;
+  }
+  .switch .track{
+    position:absolute;
+    inset:0;
+    background:var(--grid);
+    border-radius:24px;
+    cursor:pointer;
+    transition:background .2s;
+  }
+  .switch .track:before{
+    content:"";
+    position:absolute;
+    width:18px;
+    height:18px;
+    left:3px;
+    top:3px;
+    background:#ffffff;
+    border-radius:50%;
+    box-shadow:0 1px 3px rgba(0,0,0,.3);
+    transition:transform .2s;
+  }
+  .switch input:checked + .track{
+    background:var(--accent);
+  }
+  .switch input:checked + .track:before{
+    transform:translateX(20px);
+  }
+  .switch input:focus-visible + .track{
+    outline:2px solid var(--accent);
+    outline-offset:2px;
+  }
+  .hint{
+    font-size:.75rem;
+    color:var(--muted);
+    line-height:1.4;
+  }
+  .footer-note{
+    font-size:.72rem;
+    color:var(--muted);
+    text-align:center;
+    margin-top:6px;
+  }
+</style>
+</head>
+<body>
+
+<h1>Bivariate Normal Distribution</h1>
+<div class="sub">Drag the sliders — or click and drag directly on the plot to move the mean.</div>
+
+<div class="layout">
+
+  <div class="panel controls-panel">
+
+    <div class="section-title">Presets</div>
+    <div class="presets">
+      <button class="preset" data-p="0,0,1,1,0">Standard</button>
+      <button class="preset" data-p="0,0,1,1,0.8">Strong +corr</button>
+      <button class="preset" data-p="0,0,1,1,-0.8">Strong −corr</button>
+      <button class="preset" data-p="0,0,2,0.5,0">Elongated</button>
+      <button class="preset" data-p="0,0,1,1,0">Reset</button>
+    </div>
+
+    <div class="section-title">Mean</div>
+    <div class="row">
+      <div class="label-line"><span class="name">μₓ</span><span class="val" id="v-mux">0.00</span></div>
+      <input type="range" id="mux" min="-4" max="4" step="0.05" value="0">
+    </div>
+    <div class="row">
+      <div class="label-line"><span class="name">μᵧ</span><span class="val" id="v-muy">0.00</span></div>
+      <input type="range" id="muy" min="-4" max="4" step="0.05" value="0">
+    </div>
+
+    <div class="section-title">Spread</div>
+    <div class="row">
+      <div class="label-line"><span class="name">σₓ</span><span class="val" id="v-sx">1.00</span></div>
+      <input type="range" id="sx" min="0.2" max="3" step="0.05" value="1">
+    </div>
+    <div class="row">
+      <div class="label-line"><span class="name">σᵧ</span><span class="val" id="v-sy">1.00</span></div>
+      <input type="range" id="sy" min="0.2" max="3" step="0.05" value="1">
+    </div>
+
+    <div class="section-title">Correlation</div>
+    <div class="row">
+      <div class="label-line"><span class="name">ρ</span><span class="val" id="v-rho">0.00</span></div>
+      <input type="range" id="rho" min="-0.95" max="0.95" step="0.01" value="0">
+    </div>
+
+    <div class="section-title">Display</div>
+    <div class="row">
+      <div class="mode-toggle">
+        <button data-mode="heat" class="active">Heatmap</button>
+        <button data-mode="contour">Contours</button>
+        <button data-mode="surface">3D Surface</button>
+      </div>
+    </div>
+    <div class="row" id="invert-row" style="display:none;">
+      <div class="switch-row">
+        <span class="name">Invert surface</span>
+        <label class="switch" title="Flip the surface upside down">
+          <input type="checkbox" id="invert" aria-label="Invert surface">
+          <span class="track"></span>
+        </label>
+      </div>
+    </div>
+
+    <div class="stats" id="stats"></div>
+
+    <div class="hint" style="margin-top:14px;">
+      Covariance matrix Σ, determinant, and the correlation ellipse (1σ/2σ/3σ) update live as you move the sliders.
+    </div>
+  </div>
+
+  <div class="panel viz-panel">
+    <canvas id="plot" width="720" height="720"></canvas>
+    <div class="footer-note">Contours mark the 1σ, 2σ and 3σ Mahalanobis-distance ellipses. Surface mode: drag to orbit.</div>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  const canvas = document.getElementById('plot');
+  const ctx = canvas.getContext('2d');
+  const DPR = Math.min(window.devicePixelRatio || 1, 2);
+  const CSS_SIZE = 640;
+  canvas.style.width = CSS_SIZE + 'px';
+  canvas.style.height = CSS_SIZE + 'px';
+  canvas.width = CSS_SIZE * DPR;
+  canvas.height = CSS_SIZE * DPR;
+  ctx.scale(DPR, DPR);
+  const SIZE = CSS_SIZE;
+
+  const params = { mux:0, muy:0, sx:1, sy:1, rho:0 };
+  let mode = 'heat';
+
+  // world <-> screen mapping: world range [-6,6] both axes
+  const WMIN = -6, WMAX = 6;
+  function toScreen(x, y){
+    return [ (x - WMIN)/(WMAX-WMIN) * SIZE, SIZE - (y - WMIN)/(WMAX-WMIN) * SIZE ];
+  }
+  function toWorld(px, py){
+    return [ WMIN + (px/SIZE)*(WMAX-WMIN), WMIN + ((SIZE-py)/SIZE)*(WMAX-WMIN) ];
+  }
+
+  function density(x, y){
+    const {mux, muy, sx, sy, rho} = params;
+    const dx = x - mux, dy = y - muy;
+    const rho2 = 1 - rho*rho;
+    const z = (dx*dx)/(sx*sx) - (2*rho*dx*dy)/(sx*sy) + (dy*dy)/(sy*sy);
+    const norm = 1/(2*Math.PI*sx*sy*Math.sqrt(rho2));
+    return norm * Math.exp(-z/(2*rho2));
+  }
+
+  function mahalanobis2(x,y){
+    const {mux, muy, sx, sy, rho} = params;
+    const dx = x-mux, dy = y-muy;
+    const rho2 = 1-rho*rho;
+    return ((dx*dx)/(sx*sx) - (2*rho*dx*dy)/(sx*sy) + (dy*dy)/(sy*sy)) / rho2;
+  }
+
+  // color map: dark blue -> purple -> orange -> pale yellow
+  function heatColor(t){
+    // t in [0,1]
+    const stops = [
+      [255,255,255],
+      [219,228,255],
+      [150,170,240],
+      [112,72,196],
+      [204,56,112],
+      [245,120,40]
+    ];
+    const n = stops.length-1;
+    const seg = Math.min(n-1, Math.floor(t*n));
+    const localT = t*n - seg;
+    const c0 = stops[seg], c1 = stops[seg+1];
+    const r = c0[0]+(c1[0]-c0[0])*localT;
+    const g = c0[1]+(c1[1]-c0[1])*localT;
+    const b = c0[2]+(c1[2]-c0[2])*localT;
+    return [r,g,b];
+  }
+
+  let heatImageData = null;
+  function drawHeat(){
+    const res = 180; // grid resolution
+    if(!heatImageData || heatImageData._res !== res){
+      heatImageData = ctx.createImageData(res, res);
+      heatImageData._res = res;
+    }
+    const data = heatImageData.data;
+    let maxD = density(params.mux, params.muy);
+    let idx = 0;
+    const vals = new Float64Array(res*res);
+    for(let j=0;j<res;j++){
+      const py = j/(res-1)*SIZE;
+      for(let i=0;i<res;i++){
+        const px = i/(res-1)*SIZE;
+        const [x,y] = toWorld(px,py);
+        vals[j*res+i] = density(x,y);
+      }
+    }
+    for(let k=0;k<vals.length;k++){
+      const t = Math.pow(Math.min(1, vals[k]/maxD), 0.45);
+      const [r,g,b] = heatColor(t);
+      data[idx++] = r; data[idx++] = g; data[idx++] = b; data[idx++] = 255;
+    }
+    // draw scaled
+    const off = document.createElement('canvas');
+    off.width = res; off.height = res;
+    off.getContext('2d').putImageData(heatImageData, 0, 0);
+    ctx.imageSmoothingEnabled = true;
+    ctx.drawImage(off, 0, 0, res, res, 0, 0, SIZE, SIZE);
+  }
+
+  function drawEllipse(k, color, lw){
+    // Mahalanobis distance^2 = k^2  ellipse
+    const {mux,muy,sx,sy,rho} = params;
+    ctx.beginPath();
+    const N = 128;
+    for(let i=0;i<=N;i++){
+      const t = i/N*2*Math.PI;
+      // unit circle -> scale -> rotate via covariance sqrt
+      const ux = Math.cos(t), uy = Math.sin(t);
+      // Cholesky-ish transform for covariance [[sx^2, rho*sx*sy],[rho*sx*sy, sy^2]]
+      const a = sx;
+      const b = 0;
+      const c = rho*sy;
+      const d = sy*Math.sqrt(1-rho*rho);
+      const x = mux + k*(a*ux + b*uy);
+      const y = muy + k*(c*ux + d*uy);
+      const [px,py] = toScreen(x,y);
+      if(i===0) ctx.moveTo(px,py); else ctx.lineTo(px,py);
+    }
+    ctx.closePath();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = lw;
+    ctx.stroke();
+  }
+
+  function drawAxesAndGrid(){
+    ctx.save();
+    ctx.strokeStyle = 'rgba(20,24,50,0.07)';
+    ctx.lineWidth = 1;
+    for(let g=WMIN; g<=WMAX; g++){
+      const [px,] = toScreen(g,0);
+      const [,py] = toScreen(0,g);
+      ctx.beginPath(); ctx.moveTo(px,0); ctx.lineTo(px,SIZE); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(0,py); ctx.lineTo(SIZE,py); ctx.stroke();
+    }
+    // main axes
+    ctx.strokeStyle = 'rgba(20,24,50,0.28)';
+    const [ox,oy] = toScreen(0,0);
+    ctx.beginPath(); ctx.moveTo(ox,0); ctx.lineTo(ox,SIZE); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0,oy); ctx.lineTo(SIZE,oy); ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawMean(){
+    const [px,py] = toScreen(params.mux, params.muy);
+    ctx.save();
+    ctx.fillStyle = '#1a1d2e';
+    ctx.beginPath();
+    ctx.arc(px,py,4,0,2*Math.PI);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(20,24,50,0.8)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(px-9,py); ctx.lineTo(px+9,py); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(px,py-9); ctx.lineTo(px,py+9); ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawContours(){
+    // draw a subtle heat under contours too, faint
+    drawHeatFaint();
+    drawEllipse(3, 'rgba(59,91,219,0.35)', 1.5);
+    drawEllipse(2, 'rgba(59,91,219,0.65)', 1.8);
+    drawEllipse(1, 'rgba(59,91,219,1)', 2.2);
+  }
+
+  function drawHeatFaint(){
+    const res = 140;
+    const off = document.createElement('canvas');
+    off.width = res; off.height = res;
+    const octx = off.getContext('2d');
+    const imgData = octx.createImageData(res,res);
+    const data = imgData.data;
+    let maxD = density(params.mux, params.muy);
+    let idx=0;
+    for(let j=0;j<res;j++){
+      const py = j/(res-1)*SIZE;
+      for(let i=0;i<res;i++){
+        const px = i/(res-1)*SIZE;
+        const [x,y] = toWorld(px,py);
+        const t = Math.pow(Math.min(1, density(x,y)/maxD), 0.5);
+        const [r,g,b] = heatColor(t*0.7);
+        data[idx++]=r; data[idx++]=g; data[idx++]=b; data[idx++]=140*t+20;
+      }
+    }
+    octx.putImageData(imgData,0,0);
+    ctx.drawImage(off,0,0,res,res,0,0,SIZE,SIZE);
+  }
+
+  // -------- 3D surface mode --------
+  let orbit = { az: 0.9, el: 0.55 };
+  let invertSurface = false;
+  let dragging = false, lastX=0, lastY=0;
+
+  function project3D(x,y,z){
+    // scale z for visibility
+    const zScale = 2.6;
+    const zz = (invertSurface ? -1 : 1) * z * zScale;
+    const cosA = Math.cos(orbit.az), sinA = Math.sin(orbit.az);
+    const cosE = Math.cos(orbit.el), sinE = Math.sin(orbit.el);
+    // rotate around Y (az) then X (el)
+    let X = x*cosA - y*sinA;
+    let Y = x*sinA + y*cosA;
+    let Z = zz;
+    let Y2 = Y*sinE + Z*cosE;      // screen-up axis
+    let depth = Y*cosE - Z*sinE;   // larger = farther from the viewer
+    const scale = SIZE/17;
+    return [ SIZE/2 + X*scale, SIZE/2 - Y2*scale + 10, depth ];
+  }
+
+  function drawSurface(){
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0,0,SIZE,SIZE);
+    const res = 34;
+    const range = 5.5;
+    let maxD = density(params.mux, params.muy);
+    const pts = [];
+    for(let j=0;j<=res;j++){
+      const row = [];
+      const y = -range + (2*range)*(j/res);
+      for(let i=0;i<=res;i++){
+        const x = -range + (2*range)*(i/res);
+        const d = density(x,y)/maxD;
+        row.push({x,y,z:d});
+      }
+      pts.push(row);
+    }
+    // build quads, sort by depth (painter's algorithm)
+    const quads = [];
+    for(let j=0;j<res;j++){
+      for(let i=0;i<res;i++){
+        const p00=pts[j][i], p10=pts[j][i+1], p01=pts[j+1][i], p11=pts[j+1][i+1];
+        const avgZraw = (p00.z+p10.z+p01.z+p11.z)/4;
+        const c00=project3D(p00.x,p00.y,p00.z);
+        const c10=project3D(p10.x,p10.y,p10.z);
+        const c01=project3D(p01.x,p01.y,p01.z);
+        const c11=project3D(p11.x,p11.y,p11.z);
+        const depth = (c00[2]+c10[2]+c01[2]+c11[2])/4;
+        quads.push({pts:[c00,c10,c11,c01], depth, h:avgZraw});
+      }
+    }
+    quads.sort((a,b)=>b.depth-a.depth);
+    for(const q of quads){
+      const t = Math.pow(Math.max(0,Math.min(1,q.h)), 0.5);
+      const [r,g,b] = heatColor(t);
+      ctx.beginPath();
+      ctx.moveTo(q.pts[0][0], q.pts[0][1]);
+      for(let k=1;k<4;k++) ctx.lineTo(q.pts[k][0], q.pts[k][1]);
+      ctx.closePath();
+      ctx.fillStyle = `rgb(${r|0},${g|0},${b|0})`;
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(0,0,0,0.15)';
+      ctx.lineWidth = 0.5;
+      ctx.stroke();
+    }
+  }
+
+  canvas.addEventListener('mousedown', (e)=>{
+    dragging = true;
+    lastX = e.clientX; lastY = e.clientY;
+  });
+  window.addEventListener('mouseup', ()=> dragging=false);
+  window.addEventListener('mousemove', (e)=>{
+    if(!dragging) return;
+    const dx = e.clientX - lastX, dy = e.clientY - lastY;
+    lastX = e.clientX; lastY = e.clientY;
+    if(mode === 'surface'){
+      orbit.az += dx*0.01;
+      orbit.el = Math.max(0.1, Math.min(1.4, orbit.el - dy*0.01));
+      render();
+    } else {
+      const rect = canvas.getBoundingClientRect();
+      const scaleFactor = SIZE / rect.width;
+      const px = (e.clientX - rect.left) * scaleFactor;
+      const py = (e.clientY - rect.top) * scaleFactor;
+      const [wx, wy] = toWorld(px, py);
+      params.mux = Math.max(WMIN+0.5, Math.min(WMAX-0.5, wx));
+      params.muy = Math.max(WMIN+0.5, Math.min(WMAX-0.5, wy));
+      syncSliders();
+      render();
+    }
+  });
+
+  function syncSliders(){
+    document.getElementById('mux').value = params.mux;
+    document.getElementById('muy').value = params.muy;
+    document.getElementById('v-mux').textContent = params.mux.toFixed(2);
+    document.getElementById('v-muy').textContent = params.muy.toFixed(2);
+  }
+
+  function updateStats(){
+    const {sx,sy,rho} = params;
+    const covxy = rho*sx*sy;
+    const det = sx*sx*sy*sy*(1-rho*rho);
+    const statsEl = document.getElementById('stats');
+    statsEl.innerHTML = `
+      <div class="stat-box"><div class="k">Var(X), Var(Y)</div><div class="v">${(sx*sx).toFixed(2)}, ${(sy*sy).toFixed(2)}</div></div>
+      <div class="stat-box"><div class="k">Cov(X,Y)</div><div class="v">${covxy.toFixed(2)}</div></div>
+      <div class="stat-box"><div class="k">|Σ| (det)</div><div class="v">${det.toFixed(3)}</div></div>
+      <div class="stat-box"><div class="k">Peak density</div><div class="v">${density(params.mux,params.muy).toFixed(3)}</div></div>
+    `;
+  }
+
+  function render(){
+    ctx.clearRect(0,0,SIZE,SIZE);
+    if(mode === 'heat'){
+      drawHeat();
+      drawAxesAndGrid();
+      drawEllipse(1, 'rgba(20,24,50,0.75)', 1.3);
+      drawEllipse(2, 'rgba(20,24,50,0.5)', 1.1);
+      drawEllipse(3, 'rgba(20,24,50,0.3)', 1);
+      drawMean();
+    } else if(mode === 'contour'){
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0,0,SIZE,SIZE);
+      drawContours();
+      drawAxesAndGrid();
+      drawMean();
+    } else {
+      drawSurface();
+    }
+    updateStats();
+  }
+
+  // wire up controls
+  const ids = ['mux','muy','sx','sy','rho'];
+  ids.forEach(id=>{
+    const el = document.getElementById(id);
+    el.addEventListener('input', ()=>{
+      params[id] = parseFloat(el.value);
+      document.getElementById('v-'+id).textContent = params[id].toFixed(2);
+      render();
+    });
+  });
+
+  document.querySelectorAll('.preset').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const [mux,muy,sx,sy,rho] = btn.dataset.p.split(',').map(Number);
+      Object.assign(params, {mux,muy,sx,sy,rho});
+      ids.forEach(id=>{
+        document.getElementById(id).value = params[id];
+        document.getElementById('v-'+id).textContent = params[id].toFixed(2);
+      });
+      render();
+    });
+  });
+
+  document.querySelectorAll('.mode-toggle button').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      document.querySelectorAll('.mode-toggle button').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      mode = btn.dataset.mode;
+      document.getElementById('invert-row').style.display = (mode === 'surface') ? '' : 'none';
+      render();
+    });
+  });
+
+  document.getElementById('invert').addEventListener('change', (e)=>{
+    invertSurface = e.target.checked;
+    render();
+  });
+
+  render();
+})();
+</script>
+
+</body>
+</html>
