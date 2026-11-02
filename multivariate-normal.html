@@ -1,0 +1,1260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Multivariate Normal Distribution</title>
+<style>
+  :root{
+    --bg:#ffffff;
+    --panel:#f6f8fc;
+    --panel2:#eaeef7;
+    --accent:#3b5bdb;
+    --accent2:#d9480f;
+    --text:#1a1d2e;
+    --muted:#5b6078;
+    --grid:#d5dae8;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:#ffffff;
+    color:var(--text);
+    min-height:100vh;
+    padding:24px;
+  }
+  h1{
+    font-size:1.4rem;
+    font-weight:600;
+    margin:0 0 4px 0;
+    letter-spacing:.2px;
+  }
+  .sub{
+    color:var(--muted);
+    font-size:.85rem;
+  }
+  .top{
+    max-width:1240px;
+    margin:0 auto 18px;
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:space-between;
+    align-items:flex-end;
+    gap:14px;
+  }
+  .kbar{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    background:var(--panel);
+    border:1px solid var(--grid);
+    border-radius:12px;
+    padding:8px 12px;
+  }
+  .k-label{
+    font-size:.82rem;
+    font-weight:600;
+    white-space:nowrap;
+  }
+  .layout{
+    display:grid;
+    grid-template-columns:minmax(320px,430px) minmax(0,1fr);
+    gap:20px;
+    max-width:1240px;
+    margin:0 auto;
+    align-items:start;
+  }
+  @media (max-width:860px){
+    .layout{grid-template-columns:minmax(0,1fr);}
+    body{padding:14px;}
+  }
+  .right{
+    display:flex;
+    flex-direction:column;
+    gap:20px;
+    min-width:0;
+  }
+  .panel{
+    background:var(--panel);
+    border:1px solid var(--grid);
+    border-radius:14px;
+    padding:18px 20px;
+    min-width:0;
+  }
+  .viz-panel{
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+  canvas{
+    display:block;
+    margin:0 auto;
+    border-radius:10px;
+    background:#ffffff;
+    border:1px solid var(--grid);
+    max-width:100%;
+  }
+  .row{ margin-bottom:16px; }
+  .row:last-child{ margin-bottom:0; }
+  .label-line{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    margin-bottom:6px;
+    font-size:.82rem;
+  }
+  .label-line span.name{ color:var(--text); font-weight:600; }
+  .label-line span.val{
+    color:var(--accent);
+    font-variant-numeric:tabular-nums;
+    font-weight:600;
+  }
+  input[type=range]{
+    -webkit-appearance:none;
+    appearance:none;
+    width:100%;
+    height:4px;
+    border-radius:2px;
+    background:var(--grid);
+    outline:none;
+    margin:0;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;
+    width:16px;height:16px;
+    border-radius:50%;
+    background:var(--accent);
+    cursor:pointer;
+    border:2px solid #ffffff;
+    box-shadow:0 0 0 2px var(--accent);
+  }
+  input[type=range]::-moz-range-thumb{
+    width:16px;height:16px;
+    border-radius:50%;
+    background:var(--accent);
+    cursor:pointer;
+    border:2px solid #ffffff;
+  }
+  .section-title{
+    font-size:.7rem;
+    text-transform:uppercase;
+    letter-spacing:1px;
+    color:var(--muted);
+    margin:18px 0 10px 0;
+    padding-top:14px;
+    border-top:1px solid var(--grid);
+  }
+  .section-title:first-child{
+    margin-top:0;
+    padding-top:0;
+    border-top:none;
+  }
+  .presets{ display:flex; flex-wrap:wrap; gap:8px; }
+  button.preset{
+    background:var(--panel2);
+    border:1px solid var(--grid);
+    color:var(--text);
+    padding:6px 12px;
+    border-radius:20px;
+    font-size:.78rem;
+    cursor:pointer;
+    transition:.15s;
+  }
+  button.preset:hover{ border-color:var(--accent); color:var(--accent); }
+
+  /* segmented controls */
+  .seg{
+    display:flex;
+    gap:4px;
+    background:var(--panel2);
+    padding:4px;
+    border-radius:10px;
+  }
+  .seg button{
+    flex:1;
+    min-width:30px;
+    padding:6px 10px;
+    border:none;
+    border-radius:7px;
+    background:transparent;
+    color:var(--muted);
+    font-size:.8rem;
+    cursor:pointer;
+    font-weight:600;
+    white-space:nowrap;
+  }
+  .seg button.active{
+    background:var(--accent);
+    color:#ffffff;
+  }
+  .toolbar{
+    display:flex;
+    flex-wrap:wrap;
+    gap:12px;
+    align-items:center;
+  }
+  .toolbar > .seg{ flex:0 1 auto; }
+  .toolbar label{
+    font-size:.78rem;
+    color:var(--muted);
+    display:flex;
+    align-items:center;
+    gap:6px;
+    font-weight:600;
+  }
+  select{
+    padding:5px 8px;
+    border:1px solid var(--grid);
+    border-radius:8px;
+    background:#ffffff;
+    color:var(--text);
+    font-size:.82rem;
+  }
+  .view-title{
+    font-size:.95rem;
+    font-weight:600;
+    text-align:center;
+    color:var(--text);
+    font-variant-numeric:tabular-nums;
+  }
+
+  /* switch */
+  .switch-row{ display:flex; align-items:center; gap:10px; }
+  .switch-row .name{ font-size:.8rem; font-weight:600; color:var(--muted); }
+  .switch{ position:relative; display:inline-block; width:44px; height:24px; }
+  .switch input{ opacity:0; width:0; height:0; }
+  .switch .track{
+    position:absolute; inset:0;
+    background:var(--grid);
+    border-radius:24px;
+    cursor:pointer;
+    transition:background .2s;
+  }
+  .switch .track:before{
+    content:"";
+    position:absolute;
+    width:18px; height:18px;
+    left:3px; top:3px;
+    background:#ffffff;
+    border-radius:50%;
+    box-shadow:0 1px 3px rgba(0,0,0,.3);
+    transition:transform .2s;
+  }
+  .switch input:checked + .track{ background:var(--accent); }
+  .switch input:checked + .track:before{ transform:translateX(20px); }
+  .switch input:focus-visible + .track{ outline:2px solid var(--accent); outline-offset:2px; }
+
+  /* per-dimension parameter rows */
+  .prow{
+    display:grid;
+    grid-template-columns:30px minmax(0,1fr) 40px minmax(0,1fr) 40px;
+    gap:8px;
+    align-items:center;
+    margin-bottom:9px;
+  }
+  .prow.head{
+    font-size:.68rem;
+    letter-spacing:.4px;
+    color:var(--muted);
+    margin-bottom:6px;
+  }
+  .prow .dn{ font-size:.8rem; font-weight:700; }
+  .prow .pv{
+    font-size:.74rem;
+    color:var(--accent);
+    font-weight:600;
+    font-variant-numeric:tabular-nums;
+    text-align:right;
+  }
+
+  /* correlation matrix */
+  .cmat{ display:grid; gap:3px; }
+  .cmat .ch{
+    font-size:.7rem;
+    font-weight:700;
+    color:var(--muted);
+    text-align:center;
+    align-self:center;
+  }
+  .cmat button.cc{
+    border:1px solid var(--grid);
+    border-radius:6px;
+    padding:6px 0;
+    font-size:.7rem;
+    font-variant-numeric:tabular-nums;
+    cursor:pointer;
+    color:var(--text);
+    background:#ffffff;
+  }
+  .cmat button.cc:hover{ border-color:var(--accent); }
+  .cmat button.cc.diag{
+    background:var(--panel2);
+    color:var(--muted);
+    cursor:default;
+  }
+  .cmat button.cc.sel{ outline:2px solid var(--accent); outline-offset:0; }
+  .cmat button.cc.sel2{ outline:1.5px dashed var(--accent); outline-offset:0; }
+
+  .stats{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+  }
+  .stat-box{
+    background:var(--panel2);
+    border-radius:8px;
+    padding:10px 12px;
+  }
+  .stat-box .k{
+    font-size:.68rem;
+    letter-spacing:.3px;
+    color:var(--muted);
+  }
+  .stat-box .v{
+    font-size:.95rem;
+    font-weight:600;
+    color:var(--accent2);
+    font-variant-numeric:tabular-nums;
+  }
+  .cov-title{
+    font-size:.68rem;
+    text-transform:uppercase;
+    letter-spacing:.6px;
+    color:var(--muted);
+    margin:14px 0 6px;
+  }
+  table.cov{
+    width:100%;
+    border-collapse:collapse;
+    font-size:.7rem;
+    font-variant-numeric:tabular-nums;
+    table-layout:fixed;
+  }
+  table.cov th{ color:var(--muted); font-weight:700; padding:3px 2px; }
+  table.cov td{
+    padding:4px 3px;
+    text-align:right;
+    border:1px solid var(--grid);
+    background:#ffffff;
+  }
+  table.cov td.hl{ background:#dfe6ff; font-weight:700; }
+  .hint{ font-size:.75rem; color:var(--muted); line-height:1.4; }
+  .footer-note{
+    font-size:.72rem;
+    color:var(--muted);
+    text-align:center;
+    line-height:1.4;
+  }
+  .pair-title{
+    font-size:.95rem;
+    font-weight:600;
+    margin-bottom:10px;
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div>
+    <h1>Multivariate Normal Distribution</h1>
+    <div class="sub">Pick the number of dimensions k, then explore any pair of them. Drag on the plot to move the mean.</div>
+  </div>
+  <div class="kbar" role="group" aria-label="Number of dimensions">
+    <span class="k-label">Dimensions&nbsp;k</span>
+    <div class="seg" id="k-seg"></div>
+  </div>
+</header>
+
+<div class="layout">
+
+  <aside class="panel controls-panel">
+    <div class="section-title">Presets</div>
+    <div class="presets" id="presets"></div>
+
+    <div class="section-title">Mean &amp; spread per dimension</div>
+    <div id="params"></div>
+
+    <div class="section-title">Correlation matrix</div>
+    <div class="hint" style="margin-bottom:8px;">Click a cell to plot that pair. Σ is kept positive definite automatically.</div>
+    <div id="corr-matrix" class="cmat"></div>
+    <div class="row" style="margin-top:14px;">
+      <div class="label-line"><span class="name" id="rho-name">ρ</span><span class="val" id="rho-val">0.00</span></div>
+      <input type="range" id="rho-sel" min="-0.99" max="0.99" step="0.01" value="0" aria-label="Correlation of the plotted pair">
+      <div class="hint" id="rho-note" style="min-height:1.2em;margin-top:6px;"></div>
+    </div>
+
+    <div id="cond-box" style="display:none;">
+      <div class="section-title">Condition on</div>
+      <div id="cond-rows"></div>
+      <div class="hint">The plot shows the two chosen dimensions given that every other dimension is fixed at these values.</div>
+    </div>
+
+    <div class="section-title">Summary</div>
+    <div class="stats" id="stats"></div>
+    <div id="cov-wrap"></div>
+  </aside>
+
+  <main class="right">
+    <section class="panel viz-panel">
+      <div class="toolbar">
+        <div class="seg" id="disp-seg">
+          <button data-mode="heat" class="active">Heatmap</button>
+          <button data-mode="contour">Contours</button>
+          <button data-mode="surface">3D Surface</button>
+        </div>
+        <div class="switch-row" id="invert-wrap" style="display:none;">
+          <span class="name">Invert surface</span>
+          <label class="switch" title="Flip the surface upside down">
+            <input type="checkbox" id="invert" aria-label="Invert surface">
+            <span class="track"></span>
+          </label>
+        </div>
+      </div>
+      <div class="toolbar" id="xy-wrap" style="display:none;">
+        <label>Horizontal <select id="sel-x"></select></label>
+        <label>Vertical <select id="sel-y"></select></label>
+        <div class="seg" id="cond-seg">
+          <button data-cond="0" class="active">Marginal</button>
+          <button data-cond="1">Conditional</button>
+        </div>
+      </div>
+      <div class="view-title" id="view-title"></div>
+      <div id="plot-wrap"><canvas id="plot"></canvas></div>
+      <div class="footer-note" id="plot-note"></div>
+    </section>
+
+    <section class="panel" id="pair-panel" style="display:none;">
+      <div class="pair-title">Pairwise marginals</div>
+      <div id="pairs-wrap"><canvas id="pairs"></canvas></div>
+      <div class="footer-note" style="margin-top:8px;">
+        Diagonal: each dimension's own density. Below: bivariate marginal of each pair (1σ and 2σ contours). Above: correlation.
+        Any two-dimensional marginal of a multivariate normal is itself bivariate normal. Click a cell to plot that pair.
+      </div>
+    </section>
+  </main>
+
+</div>
+
+<script>
+(function(){
+  'use strict';
+
+  const MINK = 2, MAXK = 8;
+  const WMIN = -6, WMAX = 6, WR = WMAX - WMIN;
+  const SUB = '₀₁₂₃₄₅₆₇₈₉';
+  const sub = n => String(n).split('').map(d => SUB[+d]).join('');
+  const nm = i => 'X' + sub(i + 1);
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const $ = id => document.getElementById(id);
+
+  const canvas = $('plot'), ctx = canvas.getContext('2d');
+  const pcanvas = $('pairs'), pctx = pcanvas.getContext('2d');
+  const DPR = Math.min(window.devicePixelRatio || 1, 2);
+  let SIZE = 640;
+
+  // ---------------- model state ----------------
+  let k = 2;
+  let mu = [0, 0];
+  let sd = [1, 1];
+  let R = ident(2);
+  let cvals = [0, 0];       // conditioning values
+  let selX = 0, selY = 1;   // plotted dimensions
+  let dispMode = 'heat';    // heat | contour | surface
+  let condMode = false;
+  let invertSurface = false;
+  let orbit = { az: 0.9, el: 0.55 };
+  let view = { mux: 0, muy: 0, sx: 1, sy: 1, rho: 0 };
+
+  // ---------------- linear algebra ----------------
+  function ident(n){
+    return Array.from({length:n}, (_, i) => Array.from({length:n}, (_, j) => i === j ? 1 : 0));
+  }
+  function cholesky(A){
+    const n = A.length;
+    const L = Array.from({length:n}, () => new Array(n).fill(0));
+    for(let i = 0; i < n; i++){
+      for(let j = 0; j <= i; j++){
+        let sum = A[i][j];
+        for(let t = 0; t < j; t++) sum -= L[i][t] * L[j][t];
+        if(i === j){
+          if(sum <= 1e-7) return null;
+          L[i][i] = Math.sqrt(sum);
+        } else {
+          L[i][j] = sum / L[j][j];
+        }
+      }
+    }
+    return L;
+  }
+  function invert(A){
+    const n = A.length;
+    const M = A.map((r, i) => [...r, ...Array.from({length:n}, (_, j) => i === j ? 1 : 0)]);
+    for(let c = 0; c < n; c++){
+      let p = c;
+      for(let r = c + 1; r < n; r++) if(Math.abs(M[r][c]) > Math.abs(M[p][c])) p = r;
+      if(Math.abs(M[p][c]) < 1e-12) return null;
+      [M[c], M[p]] = [M[p], M[c]];
+      const d = M[c][c];
+      for(let j = 0; j < 2*n; j++) M[c][j] /= d;
+      for(let r = 0; r < n; r++){
+        if(r === c) continue;
+        const f = M[r][c];
+        if(f === 0) continue;
+        for(let j = 0; j < 2*n; j++) M[r][j] -= f * M[c][j];
+      }
+    }
+    return M.map(r => r.slice(n));
+  }
+  function matmul(A, B){
+    const n = A.length, m = B[0].length, p = B.length;
+    const C = Array.from({length:n}, () => new Array(m).fill(0));
+    for(let i = 0; i < n; i++)
+      for(let j = 0; j < m; j++){
+        let s = 0;
+        for(let t = 0; t < p; t++) s += A[i][t] * B[t][j];
+        C[i][j] = s;
+      }
+    return C;
+  }
+  const cov = () => R.map((row, i) => row.map((r, j) => r * sd[i] * sd[j]));
+  const isPD = A => cholesky(A) !== null;
+  function setSym(i, j, v){ R[i][j] = v; R[j][i] = v; }
+
+  // Set rho(i,j); if the result would not be positive definite, move as far
+  // toward the requested value as stays valid. Returns the value actually used.
+  function setRho(i, j, val){
+    const old = R[i][j];
+    setSym(i, j, val);
+    if(isPD(R)) return val;
+    let lo = old, hi = val;
+    for(let it = 0; it < 40; it++){
+      const mid = (lo + hi) / 2;
+      setSym(i, j, mid);
+      if(isPD(R)) lo = mid; else hi = mid;
+    }
+    setSym(i, j, lo);
+    return lo;
+  }
+
+  // ---------------- the plotted 2-D distribution ----------------
+  function computeView(){
+    const marg = { mux: mu[selX], muy: mu[selY], sx: sd[selX], sy: sd[selY], rho: R[selX][selY] };
+    view = marg;
+    if(!(condMode && k > 2)) return;
+    const B = [];
+    for(let i = 0; i < k; i++) if(i !== selX && i !== selY) B.push(i);
+    const S = cov();
+    const SBB = B.map(a => B.map(b => S[a][b]));
+    const inv = invert(SBB);
+    if(!inv) return;
+    const A = [selX, selY];
+    const SAB = A.map(a => B.map(b => S[a][b]));
+    const G = matmul(SAB, inv);               // 2 x m
+    const C = [[0,0],[0,0]];
+    for(let a = 0; a < 2; a++)
+      for(let b = 0; b < 2; b++){
+        let s = 0;
+        for(let t = 0; t < B.length; t++) s += G[a][t] * SAB[b][t];
+        C[a][b] = S[A[a]][A[b]] - s;
+      }
+    const d = B.map(b => cvals[b] - mu[b]);
+    const m0 = mu[selX] + G[0].reduce((s, g, t) => s + g * d[t], 0);
+    const m1 = mu[selY] + G[1].reduce((s, g, t) => s + g * d[t], 0);
+    const sx = Math.sqrt(Math.max(C[0][0], 1e-6));
+    const sy = Math.sqrt(Math.max(C[1][1], 1e-6));
+    view = { mux: m0, muy: m1, sx, sy, rho: clamp(C[0][1] / (sx * sy), -0.995, 0.995) };
+  }
+
+  function density(v, x, y){
+    const rho2 = 1 - v.rho * v.rho;
+    const ex = x - v.mux, ey = y - v.muy;
+    const z = (ex*ex)/(v.sx*v.sx) - (2*v.rho*ex*ey)/(v.sx*v.sy) + (ey*ey)/(v.sy*v.sy);
+    return Math.exp(-z / (2*rho2)) / (2*Math.PI*v.sx*v.sy*Math.sqrt(rho2));
+  }
+
+  // ---------------- drawing helpers ----------------
+  function heatColor(t){
+    const stops = [
+      [255,255,255],
+      [219,228,255],
+      [150,170,240],
+      [112,72,196],
+      [204,56,112],
+      [245,120,40]
+    ];
+    const n = stops.length - 1;
+    const seg = Math.min(n - 1, Math.floor(t * n));
+    const lt = t * n - seg;
+    const c0 = stops[seg], c1 = stops[seg + 1];
+    return [c0[0] + (c1[0]-c0[0])*lt, c0[1] + (c1[1]-c0[1])*lt, c0[2] + (c1[2]-c0[2])*lt];
+  }
+
+  function mapper(x0, y0, w, h){
+    return {
+      s: (x, y) => [x0 + (x - WMIN)/WR*w, y0 + h - (y - WMIN)/WR*h],
+      w: (px, py) => [WMIN + (px - x0)/w*WR, WMIN + (h - (py - y0))/h*WR]
+    };
+  }
+
+  function heatCanvas(v, res, faint){
+    const c = document.createElement('canvas');
+    c.width = c.height = res;
+    const g = c.getContext('2d');
+    const img = g.createImageData(res, res);
+    const d = img.data;
+    const peak = density(v, v.mux, v.muy);
+    let idx = 0;
+    for(let j = 0; j < res; j++){
+      const wy = WMIN + (1 - (j + 0.5)/res) * WR;
+      for(let i = 0; i < res; i++){
+        const wx = WMIN + (i + 0.5)/res * WR;
+        let t = Math.min(1, density(v, wx, wy) / peak);
+        if(faint){
+          t = Math.pow(t, 0.5);
+          const [r, gg, b] = heatColor(t * 0.7);
+          d[idx++] = r; d[idx++] = gg; d[idx++] = b; d[idx++] = 140*t + 20;
+        } else {
+          t = Math.pow(t, 0.45);
+          const [r, gg, b] = heatColor(t);
+          d[idx++] = r; d[idx++] = gg; d[idx++] = b; d[idx++] = 255;
+        }
+      }
+    }
+    g.putImageData(img, 0, 0);
+    return c;
+  }
+
+  function ellipsePath(g, M, v, kk){
+    g.beginPath();
+    const N = 96;
+    const a = v.sx, c = v.rho * v.sy, d = v.sy * Math.sqrt(1 - v.rho*v.rho);
+    for(let i = 0; i <= N; i++){
+      const t = i / N * 2 * Math.PI;
+      const ux = Math.cos(t), uy = Math.sin(t);
+      const x = v.mux + kk * (a * ux);
+      const y = v.muy + kk * (c * ux + d * uy);
+      const [px, py] = M.s(x, y);
+      if(i === 0) g.moveTo(px, py); else g.lineTo(px, py);
+    }
+    g.closePath();
+  }
+
+  function drawGrid(g, M, size){
+    g.save();
+    g.lineWidth = 1;
+    g.strokeStyle = 'rgba(20,24,50,0.07)';
+    for(let t = WMIN; t <= WMAX; t++){
+      const [px] = M.s(t, 0);
+      const [, py] = M.s(0, t);
+      g.beginPath(); g.moveTo(px, 0); g.lineTo(px, size); g.stroke();
+      g.beginPath(); g.moveTo(0, py); g.lineTo(size, py); g.stroke();
+    }
+    g.strokeStyle = 'rgba(20,24,50,0.28)';
+    const [ox, oy] = M.s(0, 0);
+    g.beginPath(); g.moveTo(ox, 0); g.lineTo(ox, size); g.stroke();
+    g.beginPath(); g.moveTo(0, oy); g.lineTo(size, oy); g.stroke();
+
+    g.fillStyle = 'rgba(20,24,50,0.55)';
+    g.font = '11px sans-serif';
+    g.textAlign = 'center'; g.textBaseline = 'bottom';
+    for(let t = -4; t <= 4; t += 2){
+      if(t === 0) continue;
+      const [px] = M.s(t, 0);
+      g.fillText(String(t), px, size - 4);
+    }
+    g.textAlign = 'left'; g.textBaseline = 'middle';
+    for(let t = -4; t <= 4; t += 2){
+      if(t === 0) continue;
+      const [, py] = M.s(0, t);
+      g.fillText(String(t), 5, py);
+    }
+    g.fillStyle = 'rgba(20,24,50,0.85)';
+    g.font = '600 13px sans-serif';
+    g.textAlign = 'right'; g.textBaseline = 'bottom';
+    g.fillText(nm(selX), size - 10, size - 20);
+    g.textAlign = 'left'; g.textBaseline = 'top';
+    g.fillText(nm(selY), 10, 10);
+    g.restore();
+  }
+
+  function drawMean(g, M){
+    const [px, py] = M.s(view.mux, view.muy);
+    g.save();
+    g.fillStyle = '#1a1d2e';
+    g.beginPath(); g.arc(px, py, 4, 0, 2*Math.PI); g.fill();
+    g.strokeStyle = 'rgba(20,24,50,0.8)';
+    g.lineWidth = 1.5;
+    g.beginPath(); g.moveTo(px - 9, py); g.lineTo(px + 9, py); g.stroke();
+    g.beginPath(); g.moveTo(px, py - 9); g.lineTo(px, py + 9); g.stroke();
+    g.restore();
+  }
+
+  // ---------------- 3D surface ----------------
+  function project3D(x, y, z){
+    const zz = (invertSurface ? -1 : 1) * z * 2.6;
+    const cosA = Math.cos(orbit.az), sinA = Math.sin(orbit.az);
+    const cosE = Math.cos(orbit.el), sinE = Math.sin(orbit.el);
+    const X = x*cosA - y*sinA;
+    const Y = x*sinA + y*cosA;
+    const Y2 = Y*sinE + zz*cosE;     // screen-up axis
+    const depth = Y*cosE - zz*sinE;  // larger = farther from the viewer
+    const scale = SIZE / 17;
+    return [SIZE/2 + X*scale, SIZE/2 - Y2*scale + 10, depth];
+  }
+
+  function drawSurface(){
+    const res = 34, range = 5.5;
+    const peak = density(view, view.mux, view.muy);
+    const pts = [];
+    for(let j = 0; j <= res; j++){
+      const row = [];
+      const y = -range + 2*range*(j/res);
+      for(let i = 0; i <= res; i++){
+        const x = -range + 2*range*(i/res);
+        row.push({x, y, z: density(view, x, y) / peak});
+      }
+      pts.push(row);
+    }
+    const quads = [];
+    for(let j = 0; j < res; j++){
+      for(let i = 0; i < res; i++){
+        const p00 = pts[j][i], p10 = pts[j][i+1], p01 = pts[j+1][i], p11 = pts[j+1][i+1];
+        const h = (p00.z + p10.z + p01.z + p11.z) / 4;
+        const c00 = project3D(p00.x, p00.y, p00.z);
+        const c10 = project3D(p10.x, p10.y, p10.z);
+        const c01 = project3D(p01.x, p01.y, p01.z);
+        const c11 = project3D(p11.x, p11.y, p11.z);
+        quads.push({pts: [c00, c10, c11, c01], depth: (c00[2]+c10[2]+c01[2]+c11[2])/4, h});
+      }
+    }
+    quads.sort((a, b) => b.depth - a.depth);
+    for(const q of quads){
+      const t = Math.pow(clamp(q.h, 0, 1), 0.5);
+      const [r, g, b] = heatColor(t);
+      ctx.beginPath();
+      ctx.moveTo(q.pts[0][0], q.pts[0][1]);
+      for(let i = 1; i < 4; i++) ctx.lineTo(q.pts[i][0], q.pts[i][1]);
+      ctx.closePath();
+      ctx.fillStyle = `rgb(${r|0},${g|0},${b|0})`;
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(0,0,0,0.15)';
+      ctx.lineWidth = 0.5;
+      ctx.stroke();
+    }
+  }
+
+  // ---------------- main plot ----------------
+  function renderMain(){
+    const M = mapper(0, 0, SIZE, SIZE);
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    ctx.clearRect(0, 0, SIZE, SIZE);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, SIZE, SIZE);
+    if(dispMode === 'heat'){
+      ctx.imageSmoothingEnabled = true;
+      ctx.drawImage(heatCanvas(view, 180, false), 0, 0, SIZE, SIZE);
+      drawGrid(ctx, M, SIZE);
+      [[1, 0.75, 1.3], [2, 0.5, 1.1], [3, 0.3, 1]].forEach(([kk, a, lw]) => {
+        ellipsePath(ctx, M, view, kk);
+        ctx.strokeStyle = `rgba(20,24,50,${a})`;
+        ctx.lineWidth = lw;
+        ctx.stroke();
+      });
+      drawMean(ctx, M);
+    } else if(dispMode === 'contour'){
+      ctx.imageSmoothingEnabled = true;
+      ctx.drawImage(heatCanvas(view, 140, true), 0, 0, SIZE, SIZE);
+      [[3, 0.35, 1.5], [2, 0.65, 1.8], [1, 1, 2.2]].forEach(([kk, a, lw]) => {
+        ellipsePath(ctx, M, view, kk);
+        ctx.strokeStyle = `rgba(59,91,219,${a})`;
+        ctx.lineWidth = lw;
+        ctx.stroke();
+      });
+      drawGrid(ctx, M, SIZE);
+      drawMean(ctx, M);
+    } else {
+      drawSurface();
+    }
+  }
+
+  // ---------------- pairwise matrix ----------------
+  function renderPairs(){
+    if(k < 3) return;
+    const PM = parseInt(pcanvas.style.width, 10) || SIZE;
+    const n = k, cs = PM / n;
+    pctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    pctx.clearRect(0, 0, PM, PM);
+    pctx.fillStyle = '#ffffff';
+    pctx.fillRect(0, 0, PM, PM);
+    const fontPx = Math.max(10, Math.min(15, cs * 0.17));
+
+    for(let r = 0; r < n; r++){
+      for(let c = 0; c < n; c++){
+        const x0 = c * cs, y0 = r * cs;
+        pctx.save();
+        pctx.beginPath(); pctx.rect(x0, y0, cs, cs); pctx.clip();
+
+        if(r === c){
+          const pad = cs * 0.1, w = cs - 2*pad, h = cs - 2*pad;
+          const ptsX = [], ptsY = [];
+          for(let s = 0; s <= 60; s++){
+            const x = WMIN + s/60*WR;
+            const y = Math.exp(-((x - mu[r])**2) / (2 * sd[r]**2));
+            ptsX.push(x0 + pad + s/60*w);
+            ptsY.push(y0 + cs - pad - y*h*0.8);
+          }
+          pctx.beginPath();
+          pctx.moveTo(ptsX[0], y0 + cs - pad);
+          for(let s = 0; s <= 60; s++) pctx.lineTo(ptsX[s], ptsY[s]);
+          pctx.lineTo(ptsX[60], y0 + cs - pad);
+          pctx.closePath();
+          pctx.fillStyle = 'rgba(59,91,219,0.18)';
+          pctx.fill();
+          pctx.beginPath();
+          for(let s = 0; s <= 60; s++) s ? pctx.lineTo(ptsX[s], ptsY[s]) : pctx.moveTo(ptsX[s], ptsY[s]);
+          pctx.strokeStyle = '#3b5bdb';
+          pctx.lineWidth = 1.6;
+          pctx.stroke();
+          pctx.fillStyle = '#1a1d2e';
+          pctx.font = `700 ${fontPx}px sans-serif`;
+          pctx.textAlign = 'left'; pctx.textBaseline = 'top';
+          pctx.fillText(nm(r), x0 + 6, y0 + 5);
+        } else if(r > c){
+          const v = { mux: mu[c], muy: mu[r], sx: sd[c], sy: sd[r], rho: R[c][r] };
+          pctx.imageSmoothingEnabled = true;
+          pctx.drawImage(heatCanvas(v, 36, false), x0, y0, cs, cs);
+          const M = mapper(x0, y0, cs, cs);
+          [[1, 'rgba(20,24,50,0.65)'], [2, 'rgba(20,24,50,0.35)']].forEach(([kk, col]) => {
+            ellipsePath(pctx, M, v, kk);
+            pctx.strokeStyle = col;
+            pctx.lineWidth = 1;
+            pctx.stroke();
+          });
+        } else {
+          const rho = R[c][r];
+          const a = Math.abs(rho) * 0.4;
+          pctx.fillStyle = rho >= 0 ? `rgba(59,91,219,${a})` : `rgba(217,72,15,${a})`;
+          pctx.fillRect(x0, y0, cs, cs);
+          pctx.fillStyle = '#1a1d2e';
+          pctx.font = `600 ${fontPx + 1}px sans-serif`;
+          pctx.textAlign = 'center'; pctx.textBaseline = 'middle';
+          pctx.fillText(rho.toFixed(2), x0 + cs/2, y0 + cs/2 - (cs >= 70 ? 6 : 0));
+          if(cs >= 70){
+            pctx.fillStyle = 'rgba(20,24,50,0.55)';
+            pctx.font = `${Math.max(9, fontPx - 3)}px sans-serif`;
+            pctx.fillText(`${nm(c)},${nm(r)}`, x0 + cs/2, y0 + cs/2 + 11);
+          }
+        }
+        pctx.restore();
+        pctx.strokeStyle = '#d5dae8';
+        pctx.lineWidth = 1;
+        pctx.strokeRect(x0 + 0.5, y0 + 0.5, cs - 1, cs - 1);
+      }
+    }
+    // highlight the plotted pair
+    pctx.strokeStyle = '#3b5bdb';
+    pctx.lineWidth = 2.5;
+    pctx.strokeRect(selX*cs + 1.5, selY*cs + 1.5, cs - 3, cs - 3);
+    pctx.lineWidth = 1.5;
+    pctx.setLineDash([4, 3]);
+    pctx.strokeRect(selY*cs + 1.5, selX*cs + 1.5, cs - 3, cs - 3);
+    pctx.setLineDash([]);
+  }
+
+  // ---------------- summary ----------------
+  function renderStats(){
+    const S = cov();
+    const L = cholesky(S);
+    let det = NaN;
+    if(L){ det = 1; for(let i = 0; i < k; i++) det *= L[i][i] * L[i][i]; }
+    const peak = 1 / (Math.pow(2*Math.PI, k/2) * Math.sqrt(det));
+    const cm = condMode && k > 2;
+    $('stats').innerHTML = `
+      <div class="stat-box"><div class="k">|Σ| (det)</div><div class="v">${det.toPrecision(3)}</div></div>
+      <div class="stat-box"><div class="k">Peak density, ${k}-D</div><div class="v">${peak.toPrecision(3)}</div></div>
+      <div class="stat-box"><div class="k">Plotted ρ${cm ? ' (conditional)' : ''}</div><div class="v">${view.rho.toFixed(2)}</div></div>
+      <div class="stat-box"><div class="k">Plotted σ (${nm(selX)}, ${nm(selY)})</div><div class="v">${view.sx.toFixed(2)}, ${view.sy.toFixed(2)}</div></div>`;
+
+    let h = `<div class="cov-title">Covariance matrix Σ</div><table class="cov"><tr><th></th>`;
+    for(let j = 0; j < k; j++) h += `<th>${nm(j)}</th>`;
+    h += '</tr>';
+    for(let i = 0; i < k; i++){
+      h += `<tr><th>${nm(i)}</th>`;
+      for(let j = 0; j < k; j++){
+        const hl = (i === selX && j === selY) || (i === selY && j === selX) || (i === j && (i === selX || i === selY));
+        h += `<td class="${hl ? 'hl' : ''}">${S[i][j].toFixed(2)}</td>`;
+      }
+      h += '</tr>';
+    }
+    h += '</table>';
+    $('cov-wrap').innerHTML = h;
+  }
+
+  // ---------------- UI construction ----------------
+  function buildKSeg(){
+    const seg = $('k-seg');
+    seg.innerHTML = '';
+    for(let n = MINK; n <= MAXK; n++){
+      const b = document.createElement('button');
+      b.textContent = n;
+      b.dataset.k = n;
+      b.setAttribute('aria-label', n + ' dimensions');
+      seg.appendChild(b);
+    }
+    seg.addEventListener('click', e => {
+      const b = e.target.closest('button');
+      if(b) setK(+b.dataset.k);
+    });
+  }
+  function syncKSeg(){
+    document.querySelectorAll('#k-seg button').forEach(b => b.classList.toggle('active', +b.dataset.k === k));
+  }
+
+  function buildParams(){
+    let h = `<div class="prow head"><span></span><span>Mean μ</span><span></span><span>Spread σ</span><span></span></div>`;
+    for(let i = 0; i < k; i++){
+      h += `<div class="prow">
+        <span class="dn">${nm(i)}</span>
+        <input type="range" data-kind="mu" data-i="${i}" min="-4" max="4" step="0.05" value="${mu[i]}" aria-label="Mean of ${nm(i)}">
+        <span class="pv" id="pv-mu-${i}">${mu[i].toFixed(2)}</span>
+        <input type="range" data-kind="sd" data-i="${i}" min="0.2" max="3" step="0.05" value="${sd[i]}" aria-label="Standard deviation of ${nm(i)}">
+        <span class="pv" id="pv-sd-${i}">${sd[i].toFixed(2)}</span>
+      </div>`;
+    }
+    $('params').innerHTML = h;
+  }
+  function syncParamUI(){
+    document.querySelectorAll('#params input[type=range]').forEach(inp => {
+      const i = +inp.dataset.i, kind = inp.dataset.kind;
+      const v = kind === 'mu' ? mu[i] : sd[i];
+      inp.value = v;
+      $(`pv-${kind}-${i}`).textContent = v.toFixed(2);
+    });
+  }
+
+  function tint(rho){
+    const a = Math.abs(rho) * 0.4;
+    return rho >= 0 ? `rgba(59,91,219,${a})` : `rgba(217,72,15,${a})`;
+  }
+  function buildCorr(){
+    const el = $('corr-matrix');
+    el.style.gridTemplateColumns = `26px repeat(${k}, minmax(0,1fr))`;
+    let h = '<span></span>';
+    for(let j = 0; j < k; j++) h += `<span class="ch">${nm(j)}</span>`;
+    for(let i = 0; i < k; i++){
+      h += `<span class="ch">${nm(i)}</span>`;
+      for(let j = 0; j < k; j++){
+        if(i === j){
+          h += `<button class="cc diag" disabled>1</button>`;
+        } else {
+          const cls = (i === selY && j === selX) ? ' sel' : ((i === selX && j === selY) ? ' sel2' : '');
+          h += `<button class="cc${cls}" data-i="${i}" data-j="${j}" style="background:${tint(R[i][j])}" aria-label="Correlation of ${nm(i)} and ${nm(j)}">${R[i][j].toFixed(2)}</button>`;
+        }
+      }
+    }
+    el.innerHTML = h;
+    syncRhoSlider();
+  }
+  function syncRhoSlider(){
+    const r = R[selX][selY];
+    $('rho-name').textContent = `ρ(${nm(selX)}, ${nm(selY)})`;
+    $('rho-val').textContent = r.toFixed(2);
+    $('rho-sel').value = r;
+  }
+
+  function buildSelects(){
+    const opts = Array.from({length:k}, (_, i) => `<option value="${i}">${nm(i)}</option>`).join('');
+    $('sel-x').innerHTML = opts;
+    $('sel-y').innerHTML = opts;
+    syncSelects();
+  }
+  function syncSelects(){
+    $('sel-x').value = selX;
+    $('sel-y').value = selY;
+  }
+
+  function buildCond(){
+    let h = '';
+    for(let m = 0; m < k; m++){
+      if(m === selX || m === selY) continue;
+      h += `<div class="prow" style="grid-template-columns:30px minmax(0,1fr) 44px;">
+        <span class="dn">${nm(m)}</span>
+        <input type="range" data-m="${m}" min="-6" max="6" step="0.05" value="${cvals[m]}" aria-label="Fixed value of ${nm(m)}">
+        <span class="pv" id="cv-${m}">${cvals[m].toFixed(2)}</span>
+      </div>`;
+    }
+    $('cond-rows').innerHTML = h;
+  }
+
+  function viewTitle(){
+    if(condMode && k > 2){
+      const others = [];
+      for(let m = 0; m < k; m++) if(m !== selX && m !== selY) others.push(m);
+      const parts = others.length <= 3
+        ? others.map(m => `${nm(m)}=${cvals[m].toFixed(2)}`).join(', ')
+        : `${others.length} other dims fixed`;
+      return `Conditional  f(${nm(selX)}, ${nm(selY)} | ${parts})`;
+    }
+    return k > 2 ? `Marginal  f(${nm(selX)}, ${nm(selY)})` : `f(${nm(selX)}, ${nm(selY)})`;
+  }
+
+  function updateVisibility(){
+    const multi = k > 2;
+    $('xy-wrap').style.display = multi ? '' : 'none';
+    $('pair-panel').style.display = multi ? '' : 'none';
+    $('cond-box').style.display = (condMode && multi) ? '' : 'none';
+    $('invert-wrap').style.display = dispMode === 'surface' ? '' : 'none';
+    document.querySelectorAll('#cond-seg button').forEach(b => b.classList.toggle('active', (b.dataset.cond === '1') === condMode));
+    document.querySelectorAll('#disp-seg button').forEach(b => b.classList.toggle('active', b.dataset.mode === dispMode));
+    $('view-title').textContent = viewTitle();
+
+    const canDrag = dispMode === 'surface' || !(condMode && multi);
+    canvas.style.touchAction = canDrag ? 'none' : 'auto';
+    canvas.style.cursor = canDrag ? (dispMode === 'surface' ? 'grab' : 'crosshair') : 'default';
+
+    let note;
+    if(dispMode === 'surface') note = 'Drag to orbit the surface.';
+    else if(condMode && multi) note = 'Conditional mean and covariance are computed from Σ. Change the fixed values in the left panel.';
+    else note = `Contours mark the 1σ, 2σ and 3σ ellipses. Drag on the plot to move the mean of ${nm(selX)} and ${nm(selY)}.`;
+    $('plot-note').textContent = note;
+  }
+
+  function render(){
+    computeView();
+    updateVisibility();
+    renderMain();
+    renderPairs();
+    renderStats();
+  }
+
+  function afterSelection(){
+    syncSelects();
+    buildCorr();
+    buildCond();
+    $('rho-note').textContent = '';
+    render();
+  }
+
+  // ---------------- dimension changes ----------------
+  function setK(n){
+    n = clamp(n, MINK, MAXK);
+    const old = k;
+    if(n === old) return;
+    mu = Array.from({length:n}, (_, i) => i < old ? mu[i] : 0);
+    sd = Array.from({length:n}, (_, i) => i < old ? sd[i] : 1);
+    cvals = Array.from({length:n}, (_, i) => i < old ? cvals[i] : 0);
+    R = Array.from({length:n}, (_, i) => Array.from({length:n}, (_, j) => (i < old && j < old) ? R[i][j] : (i === j ? 1 : 0)));
+    k = n;
+    if(selX >= k || selY >= k || selX === selY){ selX = 0; selY = 1; }
+    if(k === 2){ selX = 0; selY = 1; condMode = false; }
+    syncKSeg();
+    buildParams();
+    buildSelects();
+    buildCorr();
+    buildCond();
+    $('rho-note').textContent = '';
+    layout();
+    render();
+  }
+
+  // ---------------- presets ----------------
+  function randn(){
+    let u = 0, v = 0;
+    while(!u) u = Math.random();
+    while(!v) v = Math.random();
+    return Math.sqrt(-2*Math.log(u)) * Math.cos(2*Math.PI*v);
+  }
+  function resetBase(){
+    mu = new Array(k).fill(0);
+    sd = new Array(k).fill(1);
+    R = ident(k);
+    cvals = new Array(k).fill(0);
+  }
+  function equicorr(r){
+    R = Array.from({length:k}, (_, i) => Array.from({length:k}, (_, j) => i === j ? 1 : r));
+  }
+  const PRESETS = [
+    ['Standard',      () => { resetBase(); }],
+    ['Strong +corr',  () => { resetBase(); equicorr(0.8); }],
+    ['Strong −corr',  () => { resetBase(); equicorr(-Math.min(0.8, 0.9/(k - 1))); }],
+    ['Elongated',     () => { resetBase(); sd[0] = 2; sd[1] = 0.5; }],
+    ['Chain (AR-1)',  () => { resetBase(); R = Array.from({length:k}, (_, i) => Array.from({length:k}, (_, j) => Math.pow(0.8, Math.abs(i - j)))); }],
+    ['Random',        () => {
+      resetBase();
+      for(let attempt = 0; attempt < 30; attempt++){
+        const m = k + 2;
+        const A = Array.from({length:k}, () => Array.from({length:m}, randn));
+        const S = A.map(a => A.map(b => a.reduce((s, x, t) => s + x*b[t], 0)));
+        const Rn = S.map((row, i) => row.map((x, j) => i === j ? 1 : Math.round(100 * x / Math.sqrt(S[i][i]*S[j][j])) / 100));
+        if(cholesky(Rn)){ R = Rn; break; }
+      }
+      mu = mu.map(() => Math.round((Math.random()*4 - 2) * 20) / 20);
+      sd = sd.map(() => Math.round((0.6 + Math.random()*1.2) * 20) / 20);
+    }]
+  ];
+  function buildPresets(){
+    const box = $('presets');
+    PRESETS.forEach(([label, fn]) => {
+      const b = document.createElement('button');
+      b.className = 'preset';
+      b.textContent = label;
+      b.addEventListener('click', () => {
+        fn();
+        syncParamUI();
+        buildCorr();
+        buildCond();
+        $('rho-note').textContent = '';
+        render();
+      });
+      box.appendChild(b);
+    });
+  }
+
+  // ---------------- events ----------------
+  $('params').addEventListener('input', e => {
+    const t = e.target;
+    if(!t.dataset.kind) return;
+    const i = +t.dataset.i, v = parseFloat(t.value);
+    if(t.dataset.kind === 'mu') mu[i] = v; else sd[i] = v;
+    $(`pv-${t.dataset.kind}-${i}`).textContent = v.toFixed(2);
+    render();
+  });
+
+  $('corr-matrix').addEventListener('click', e => {
+    const b = e.target.closest('button.cc');
+    if(!b || b.classList.contains('diag')) return;
+    selY = +b.dataset.i;
+    selX = +b.dataset.j;
+    afterSelection();
+  });
+
+  $('rho-sel').addEventListener('input', e => {
+    const want = parseFloat(e.target.value);
+    const got = setRho(selX, selY, want);
+    $('rho-note').textContent = Math.abs(got - want) > 0.005
+      ? `Limited to ${got.toFixed(2)} to keep Σ positive definite.` : '';
+    buildCorr();
+    render();
+  });
+
+  $('cond-rows').addEventListener('input', e => {
+    const t = e.target;
+    if(!t.dataset.m) return;
+    const m = +t.dataset.m;
+    cvals[m] = parseFloat(t.value);
+    $(`cv-${m}`).textContent = cvals[m].toFixed(2);
+    render();
+  });
+
+  $('sel-x').addEventListener('change', e => {
+    const v = +e.target.value;
+    if(v === selY) selY = selX;
+    selX = v;
+    afterSelection();
+  });
+  $('sel-y').addEventListener('change', e => {
+    const v = +e.target.value;
+    if(v === selX) selX = selY;
+    selY = v;
+    afterSelection();
+  });
+
+  $('cond-seg').addEventListener('click', e => {
+    const b = e.target.closest('button');
+    if(!b) return;
+    condMode = b.dataset.cond === '1';
+    buildCond();
+    render();
+  });
+  $('disp-seg').addEventListener('click', e => {
+    const b = e.target.closest('button');
+    if(!b) return;
+    dispMode = b.dataset.mode;
+    render();
+  });
+  $('invert').addEventListener('change', e => {
+    invertSurface = e.target.checked;
+    render();
+  });
+
+  // dragging on the main plot
+  let dragging = false, lastX = 0, lastY = 0;
+  function dragMean(e){
+    const rect = canvas.getBoundingClientRect();
+    const f = SIZE / rect.width;
+    const [wx, wy] = mapper(0, 0, SIZE, SIZE).w((e.clientX - rect.left) * f, (e.clientY - rect.top) * f);
+    mu[selX] = clamp(Math.round(wx * 20) / 20, -4, 4);
+    mu[selY] = clamp(Math.round(wy * 20) / 20, -4, 4);
+    syncParamUI();
+    render();
+  }
+  canvas.addEventListener('pointerdown', e => {
+    if(dispMode !== 'surface' && condMode && k > 2) return;
+    dragging = true;
+    lastX = e.clientX; lastY = e.clientY;
+    canvas.setPointerCapture(e.pointerId);
+    if(dispMode !== 'surface') dragMean(e);
+  });
+  canvas.addEventListener('pointermove', e => {
+    if(!dragging) return;
+    if(dispMode === 'surface'){
+      orbit.az += (e.clientX - lastX) * 0.01;
+      orbit.el = clamp(orbit.el - (e.clientY - lastY) * 0.01, 0.1, 1.4);
+      lastX = e.clientX; lastY = e.clientY;
+      render();
+    } else {
+      dragMean(e);
+    }
+  });
+  const endDrag = () => { dragging = false; };
+  canvas.addEventListener('pointerup', endDrag);
+  canvas.addEventListener('pointercancel', endDrag);
+
+  // click a cell of the pairwise matrix
+  pcanvas.addEventListener('pointerdown', e => {
+    const rect = pcanvas.getBoundingClientRect();
+    const cs = rect.width / k;
+    const c = Math.floor((e.clientX - rect.left) / cs);
+    const r = Math.floor((e.clientY - rect.top) / cs);
+    if(r < 0 || c < 0 || r >= k || c >= k || r === c) return;
+    selX = c; selY = r;
+    afterSelection();
+  });
+  pcanvas.style.cursor = 'pointer';
+
+  // ---------------- layout ----------------
+  function sizeCanvas(cv, g, px){
+    cv.style.width = px + 'px';
+    cv.style.height = px + 'px';
+    cv.width = px * DPR;
+    cv.height = px * DPR;
+    g.setTransform(DPR, 0, 0, DPR, 0, 0);
+  }
+  function layout(){
+    const avail = $('plot-wrap').clientWidth || 640;
+    SIZE = Math.floor(clamp(avail, 260, 640));
+    sizeCanvas(canvas, ctx, SIZE);
+    sizeCanvas(pcanvas, pctx, SIZE);
+  }
+  let resizeTimer = null;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => { layout(); render(); }, 80);
+  });
+
+  // ---------------- init ----------------
+  buildKSeg();
+  syncKSeg();
+  buildPresets();
+  buildParams();
+  buildSelects();
+  buildCorr();
+  buildCond();
+  layout();
+  render();
+})();
+</script>
+
+</body>
+</html>
