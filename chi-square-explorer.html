@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Chi-Square Explorer</title>
+<style>body{margin:16px}</style>
+</head>
+<body>
+<div id="cx-root" style="max-width:760px;margin:0 auto;font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;color:#1f2933;">
+<style>
+#cx-root *{box-sizing:border-box}
+#cx-root .cx-card{background:#fff;border:1px solid #d5dbe1;border-radius:10px;padding:14px;margin-bottom:12px}
+#cx-root h2{font-size:1.25rem;margin:0 0 4px}
+#cx-root p{margin:4px 0}
+#cx-root .cx-row{display:flex;flex-wrap:wrap;gap:16px}
+#cx-root .cx-ctl{flex:1 1 220px}
+#cx-root label{display:block;font-weight:600;font-size:.9rem;margin-bottom:4px}
+#cx-root input[type=range]{width:100%}
+#cx-root button{font:inherit;font-size:.85rem;padding:6px 10px;margin:3px 4px 3px 0;border:1px solid #2b6cb0;background:#fff;color:#2b6cb0;border-radius:6px;cursor:pointer}
+#cx-root button:hover,#cx-root button:focus-visible,#cx-root button.cx-on{background:#2b6cb0;color:#fff}
+#cx-root canvas{width:100%;display:block;border:1px solid #d5dbe1;border-radius:8px;background:#fbfcfd;touch-action:none}
+#cx-root .cx-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-top:10px}
+#cx-root .cx-stat{background:#f1f5f9;border-radius:8px;padding:8px;text-align:center}
+#cx-root .cx-stat b{display:block;font-size:1.25rem}
+#cx-root .cx-stat span{font-size:.75rem;color:#52606d}
+#cx-root .cx-note{font-size:.85rem;color:#52606d}
+#cx-root .cx-msg{background:#ebf4ff;border-left:4px solid #2b6cb0;padding:8px 10px;border-radius:4px;margin-top:10px;font-size:.92rem}
+#cx-root .cx-warn{background:#fffaf0;border-left-color:#dd6b20}
+#cx-root .cx-tw{overflow-x:auto;margin-bottom:10px}
+#cx-root table{border-collapse:collapse;width:100%;font-size:.88rem}
+#cx-root th,#cx-root td{border:1px solid #d5dbe1;padding:4px 6px;text-align:center}
+#cx-root th{background:#f1f5f9;font-weight:600}
+#cx-root td.cx-lab,#cx-root th.cx-lab{text-align:left}
+#cx-root input[type=number]{width:72px;font:inherit;padding:3px 4px;border:1px solid #cbd2d9;border-radius:6px;text-align:center;background:#fff}
+#cx-root td small{display:block;font-size:.72rem;color:#52606d;margin-top:2px}
+#cx-root .cx-hide{display:none}
+#cx-root .cx-formula{font-family:Georgia,'Times New Roman',serif;font-size:1.05rem;margin:6px 0 2px}
+</style>
+
+<div class="cx-card">
+  <h2>Chi-Square Explorer</h2>
+  <p class="cx-note">Compare observed counts with the counts a hypothesis predicts. Edit counts, drag bars, or draw random samples, then watch &chi;&sup2; and its p-value respond.</p>
+  <p class="cx-formula">&chi;&sup2; = &Sigma; (O &minus; E)&sup2; / E</p>
+  <div>
+    <button id="cx-m-gof" class="cx-on" aria-pressed="true">Goodness of fit (one variable)</button>
+    <button id="cx-m-ind" aria-pressed="false">Test of independence (two variables)</button>
+  </div>
+  <p class="cx-note" id="cx-hyp"></p>
+</div>
+
+<div class="cx-card">
+  <div id="cx-pg">
+    <div class="cx-row">
+      <div class="cx-ctl">
+        <label for="cx-k">Number of categories: <span id="cx-kv">6</span></label>
+        <input type="range" id="cx-k" min="2" max="8" value="6">
+      </div>
+      <div class="cx-ctl">
+        <label for="cx-gn">Sample size: <span id="cx-gnv">120</span></label>
+        <input type="range" id="cx-gn" min="20" max="1000" step="10" value="120">
+      </div>
+      <div class="cx-ctl">
+        <label for="cx-gd">True departure from H<sub>0</sub>: <span id="cx-gdv">0.30</span></label>
+        <input type="range" id="cx-gd" min="0" max="80" value="30">
+      </div>
+    </div>
+    <div style="margin-top:6px">
+      <button id="cx-gnew">Draw a new sample</button>
+      <span class="cx-note">Examples: </span>
+      <button data-g="fair">Fair die</button>
+      <button data-g="loaded">Loaded die</button>
+      <button data-g="mendel">Mendel peas 9:3:3:1</button>
+    </div>
+  </div>
+  <div id="cx-pi" class="cx-hide">
+    <div class="cx-row">
+      <div class="cx-ctl">
+        <label for="cx-R">Rows: <span id="cx-Rv">2</span></label>
+        <input type="range" id="cx-R" min="2" max="4" value="2">
+      </div>
+      <div class="cx-ctl">
+        <label for="cx-C">Columns: <span id="cx-Cv">2</span></label>
+        <input type="range" id="cx-C" min="2" max="4" value="2">
+      </div>
+    </div>
+    <div class="cx-row" style="margin-top:6px">
+      <div class="cx-ctl">
+        <label for="cx-in">Sample size: <span id="cx-inv">100</span></label>
+        <input type="range" id="cx-in" min="20" max="1000" step="10" value="100">
+      </div>
+      <div class="cx-ctl">
+        <label for="cx-id">True association: <span id="cx-idv">0.30</span></label>
+        <input type="range" id="cx-id" min="0" max="80" value="30">
+      </div>
+    </div>
+    <div style="margin-top:6px">
+      <button id="cx-inew">Draw a new sample</button>
+      <button id="cx-yates" class="cx-hide" aria-pressed="false">Yates correction: off</button>
+      <span class="cx-note">Examples: </span>
+      <button data-i="indep">Independent 2&times;2</button>
+      <button data-i="assoc">Associated 2&times;2</button>
+      <button data-i="big">Study time &times; grade (3&times;3)</button>
+    </div>
+  </div>
+  <div class="cx-row" style="margin-top:8px">
+    <div class="cx-ctl">
+      <label for="cx-al">Significance level &alpha;: <span id="cx-alv">0.05</span></label>
+      <input type="range" id="cx-al" min="1" max="10" value="5">
+    </div>
+    <div class="cx-ctl" style="padding-top:18px">
+      <button id="cx-sim">Run 1,000 simulations under H<sub>0</sub></button>
+      <button id="cx-simc">Clear simulations</button>
+    </div>
+  </div>
+</div>
+
+<div class="cx-card">
+  <div class="cx-tw" id="cx-tw"></div>
+  <canvas id="cx-cv1" role="img" aria-label="Chart of observed and expected counts"></canvas>
+  <p class="cx-note" id="cx-c1note" style="margin-top:6px"></p>
+</div>
+
+<div class="cx-card">
+  <canvas id="cx-cv2" role="img" aria-label="Chi-square distribution with the observed statistic, the critical value and the p-value area"></canvas>
+  <div class="cx-stats" aria-live="polite">
+    <div class="cx-stat"><b id="cx-s1">-</b><span>&chi;&sup2; statistic</span></div>
+    <div class="cx-stat"><b id="cx-s2">-</b><span>Degrees of freedom</span></div>
+    <div class="cx-stat"><b id="cx-s3">-</b><span>p-value</span></div>
+    <div class="cx-stat"><b id="cx-s4">-</b><span>Critical value</span></div>
+    <div class="cx-stat"><b id="cx-s5">-</b><span id="cx-s5l">Effect size</span></div>
+    <div class="cx-stat"><b id="cx-s6">-</b><span>n</span></div>
+  </div>
+  <div class="cx-msg" id="cx-msg"></div>
+  <p class="cx-note" style="margin-top:8px">Remember: chi-square tests use counts (not percentages), need independent observations, and work best when every expected count is at least 5. A significant result shows a pattern, not its cause.</p>
+</div>
+
+<script>
+(function(){
+  var $=function(id){return document.getElementById(id)};
+  var cv1=$('cx-cv1'),c1=cv1.getContext('2d'),cv2=$('cx-cv2'),c2=cv2.getContext('2d');
+  var W1=700,H1=300,W2=700,H2=260;
+  var COLS=['#2b6cb0','#dd6b20','#2f855a','#805ad5'];
+  var S={mode:'gof',alpha:.05,yates:false,seed:7,sim:null,drag:-1,ylock:0,ycur:10,c:null,
+    k:6,obs:[],w:[],gl:[],R:2,C:2,t:[],rl:[],cl:[]};
+
+  /* ---------- math ---------- */
+  function rng(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+  function lgamma(x){
+    var c=[76.18009172947146,-86.50532032941677,24.01409824083091,-1.231739572450155,0.1208650973866179e-2,-0.5395239384953e-5];
+    var y=x,tmp=x+5.5,ser=1.000000000190015,j;
+    tmp-=(x+0.5)*Math.log(tmp);
+    for(j=0;j<6;j++)ser+=c[j]/++y;
+    return -tmp+Math.log(2.5066282746310005*ser/x);
+  }
+  function gammaQ(a,x){
+    if(x<=0)return 1;
+    var i,gln=lgamma(a);
+    if(x<a+1){
+      var ap=a,sum=1/a,del=sum;
+      for(i=0;i<500;i++){ap++;del*=x/ap;sum+=del;if(Math.abs(del)<Math.abs(sum)*1e-14)break}
+      return Math.max(0,1-sum*Math.exp(-x+a*Math.log(x)-gln));
+    }
+    var b=x+1-a,cc=1/1e-300,d=1/b,h=d,an;
+    for(i=1;i<500;i++){
+      an=-i*(i-a);b+=2;d=an*d+b;if(Math.abs(d)<1e-300)d=1e-300;
+      cc=b+an/cc;if(Math.abs(cc)<1e-300)cc=1e-300;d=1/d;
+      var del2=d*cc;h*=del2;if(Math.abs(del2-1)<1e-14)break;
+    }
+    return Math.exp(-x+a*Math.log(x)-gln)*h;
+  }
+  function pval(x,df){return gammaQ(df/2,x/2)}
+  function crit(df,al){
+    var lo=0,hi=10,i;
+    while(pval(hi,df)>al)hi*=2;
+    for(i=0;i<80;i++){var m=(lo+hi)/2;if(pval(m,df)>al)lo=m;else hi=m}
+    return(lo+hi)/2;
+  }
+  function pdf(x,df){return x<=0?0:Math.exp((df/2-1)*Math.log(x)-x/2-(df/2)*Math.LN2-lgamma(df/2))}
+  function gauss(r){var u=0,v;while(!u)u=r();v=r();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)}
+  function multinom(n,probs,r){
+    var cum=[],s=0,i,out=[];
+    for(i=0;i<probs.length;i++){s+=probs[i];cum.push(s);out.push(0)}
+    for(var t=0;t<n;t++){
+      var u=r()*s,lo=0,hi=cum.length-1;
+      while(lo<hi){var m=(lo+hi)>>1;if(cum[m]<u)lo=m+1;else hi=m}
+      out[lo]++;
+    }
+    return out;
+  }
+  function fmtP(p){return p<0.0001?'<0.0001':p.toFixed(4)}
+  function sum(a){var s=0;for(var i=0;i<a.length;i++)s+=a[i];return s}
+
+  /* ---------- statistic ---------- */
+  function yatesOn(){return S.mode==='ind'&&S.R===2&&S.C===2&&S.yates}
+  function term(o,e){
+    var d=Math.abs(o-e);if(yatesOn())d=Math.max(0,d-0.5);
+    return d*d/e;
+  }
+  function compute(){
+    var i,j,c={};
+    if(S.mode==='gof'){
+      var n=sum(S.obs);
+      if(n<=0)return{err:'Enter at least one observation to compute &chi;&sup2;.'};
+      var ws=S.w.map(function(v){return v>0?v:0.01}),wt=sum(ws);
+      c.obs=S.obs.slice();c.n=n;c.df=S.k-1;
+      c.exp=ws.map(function(v){return n*v/wt});
+      c.con=c.obs.map(function(o,k){return term(o,c.exp[k])});
+      c.res=c.obs.map(function(o,k){return(o-c.exp[k])/Math.sqrt(c.exp[k])});
+      c.eff=null;
+    }else{
+      var R=S.R,C=S.C,rt=[],ct=[];
+      for(i=0;i<R;i++){rt.push(0)}for(j=0;j<C;j++)ct.push(0);
+      for(i=0;i<R;i++)for(j=0;j<C;j++){rt[i]+=S.t[i*C+j];ct[j]+=S.t[i*C+j]}
+      var N=sum(rt);
+      if(N<=0||rt.some(function(v){return v===0})||ct.some(function(v){return v===0}))
+        return{err:'Every row and every column needs at least one observation.'};
+      c.n=N;c.rt=rt;c.ct=ct;c.df=(R-1)*(C-1);c.obs=S.t.slice();c.exp=[];c.con=[];c.res=[];
+      for(i=0;i<R;i++)for(j=0;j<C;j++){
+        var e=rt[i]*ct[j]/N,o=S.t[i*C+j];
+        c.exp.push(e);c.con.push(term(o,e));c.res.push((o-e)/Math.sqrt(e));
+      }
+    }
+    c.chi=sum(c.con);
+    c.p=pval(c.chi,c.df);
+    c.crit=crit(c.df,S.alpha);
+    c.minE=Math.min.apply(null,c.exp);
+    c.low=c.exp.filter(function(e){return e<5}).length;
+    if(S.mode==='gof')c.eff=Math.sqrt(c.chi/c.n);
+    else c.eff=Math.sqrt(c.chi/(c.n*Math.min(S.R-1,S.C-1)));
+    return c;
+  }
+  function effLabel(v){
+    var s=S.mode==='gof'?1:Math.sqrt(Math.min(S.R-1,S.C-1));
+    return v<.1/s?'negligible':v<.3/s?'small':v<.5/s?'medium':'large';
+  }
+
+  /* ---------- data generation ---------- */
+  function drawGof(){
+    var r=rng(S.seed),d=+$('cx-gd').value/100,n=+$('cx-gn').value,k=S.k,p=[],i;
+    for(i=0;i<k;i++){var tilt=k>1?1-2*i/(k-1):0;p.push((S.w[i]>0?S.w[i]:0.01)*(1+d*tilt))}
+    S.obs=multinom(n,p,r);
+  }
+  function drawInd(){
+    var r=rng(S.seed),a=+$('cx-id').value/100,n=+$('cx-in').value,R=S.R,C=S.C,p=[],i,j;
+    for(i=0;i<R;i++)for(j=0;j<C;j++){
+      var s=1-2*i/(R-1),t=1-2*j/(C-1);p.push(1+a*s*t);
+    }
+    S.t=multinom(n,p,r);
+  }
+  function letters(k){var a=[];for(var i=0;i<k;i++)a.push(String.fromCharCode(65+i));return a}
+  function defaultsInd(){
+    S.rl=[];S.cl=[];
+    for(var i=0;i<S.R;i++)S.rl.push('Row '+(i+1));
+    for(var j=0;j<S.C;j++)S.cl.push('Col '+String.fromCharCode(65+j));
+  }
+
+  /* ---------- tables ---------- */
+  function mk(tag,txt,cls){var e=document.createElement(tag);if(txt!=null)e.innerHTML=txt;if(cls)e.className=cls;return e}
+  function buildTable(){
+    var tw=$('cx-tw'),i,j;tw.innerHTML='';
+    var tb=mk('table'),thd=mk('thead'),tr=mk('tr');
+    if(S.mode==='gof'){
+      ['Category','Observed (O)','H<sub>0</sub> weight','Expected (E)','(O&minus;E)&sup2;/E'].forEach(function(h,k){tr.appendChild(mk('th',h,k===0?'cx-lab':''))});
+      thd.appendChild(tr);tb.appendChild(thd);
+      var body=mk('tbody');
+      for(i=0;i<S.k;i++){
+        var r=mk('tr');
+        r.appendChild(mk('td',S.gl[i],'cx-lab'));
+        var td=mk('td'),inp=mk('input');inp.type='number';inp.min=0;inp.step=1;inp.value=S.obs[i];inp.setAttribute('data-o',i);inp.setAttribute('aria-label','Observed count for '+S.gl[i]);td.appendChild(inp);r.appendChild(td);
+        td=mk('td');inp=mk('input');inp.type='number';inp.min=0;inp.step='any';inp.value=S.w[i];inp.setAttribute('data-w',i);inp.setAttribute('aria-label','Hypothesized weight for '+S.gl[i]);td.appendChild(inp);r.appendChild(td);
+        td=mk('td','-');td.id='cx-e'+i;r.appendChild(td);
+        td=mk('td','-');td.id='cx-q'+i;r.appendChild(td);
+        body.appendChild(r);
+      }
+      var f=mk('tr');f.appendChild(mk('th','Total','cx-lab'));
+      var t1=mk('th','-');t1.id='cx-tO';var t2=mk('th','-');t2.id='cx-tW';var t3=mk('th','-');t3.id='cx-tE';var t4=mk('th','-');t4.id='cx-tQ';
+      [t1,t2,t3,t4].forEach(function(x){f.appendChild(x)});body.appendChild(f);tb.appendChild(body);
+    }else{
+      tr.appendChild(mk('th','','cx-lab'));
+      for(j=0;j<S.C;j++)tr.appendChild(mk('th',S.cl[j]));
+      tr.appendChild(mk('th','Total'));thd.appendChild(tr);tb.appendChild(thd);
+      var bd=mk('tbody');
+      for(i=0;i<S.R;i++){
+        var rr=mk('tr');rr.appendChild(mk('th',S.rl[i],'cx-lab'));
+        for(j=0;j<S.C;j++){
+          var c=mk('td'),inp2=mk('input');inp2.type='number';inp2.min=0;inp2.step=1;inp2.value=S.t[i*S.C+j];inp2.setAttribute('data-c',i*S.C+j);
+          inp2.setAttribute('aria-label','Count for '+S.rl[i]+', '+S.cl[j]);
+          c.appendChild(inp2);var sm=mk('small','');sm.id='cx-x'+(i*S.C+j);c.appendChild(sm);rr.appendChild(c);
+        }
+        var tt=mk('th','-');tt.id='cx-rt'+i;rr.appendChild(tt);bd.appendChild(rr);
+      }
+      var fr=mk('tr');fr.appendChild(mk('th','Total','cx-lab'));
+      for(j=0;j<S.C;j++){var ft=mk('th','-');ft.id='cx-ct'+j;fr.appendChild(ft)}
+      var gt=mk('th','-');gt.id='cx-gt';fr.appendChild(gt);bd.appendChild(fr);tb.appendChild(bd);
+    }
+    tw.appendChild(tb);
+  }
+  function refreshTable(c){
+    var i,j;
+    if(S.mode==='gof'){
+      for(i=0;i<S.k;i++){
+        $('cx-e'+i).textContent=c.err?'-':c.exp[i].toFixed(2);
+        var q=$('cx-q'+i);q.textContent=c.err?'-':c.con[i].toFixed(3);
+        q.style.background=c.err?'':shade(c.res[i]);
+      }
+      $('cx-tO').textContent=sum(S.obs);
+      $('cx-tW').textContent='-';
+      $('cx-tE').textContent=c.err?'-':sum(c.exp).toFixed(2);
+      $('cx-tQ').textContent=c.err?'-':c.chi.toFixed(3);
+    }else{
+      var rt=[],ct=[];for(i=0;i<S.R;i++)rt.push(0);for(j=0;j<S.C;j++)ct.push(0);
+      for(i=0;i<S.R;i++)for(j=0;j<S.C;j++){rt[i]+=S.t[i*S.C+j];ct[j]+=S.t[i*S.C+j]}
+      for(i=0;i<S.R;i++){
+        $('cx-rt'+i).textContent=rt[i];
+        for(j=0;j<S.C;j++){
+          var k=i*S.C+j,sm=$('cx-x'+k),td=sm.parentNode;
+          if(c.err){sm.textContent='';td.style.background=''}
+          else{sm.textContent='E = '+c.exp[k].toFixed(1)+' · res '+(c.res[k]>=0?'+':'')+c.res[k].toFixed(2);td.style.background=shade(c.res[k])}
+        }
+      }
+      for(j=0;j<S.C;j++)$('cx-ct'+j).textContent=ct[j];
+      $('cx-gt').textContent=sum(rt);
+    }
+  }
+  function shade(z){
+    var a=Math.min(.55,Math.abs(z)/4);
+    return z>=0?'rgba(221,107,32,'+a.toFixed(2)+')':'rgba(43,108,176,'+a.toFixed(2)+')';
+  }
+  $('cx-tw').addEventListener('input',function(e){
+    var t=e.target,v;
+    if(t.hasAttribute('data-o')){v=Math.max(0,Math.round(+t.value)||0);S.obs[+t.getAttribute('data-o')]=v}
+    else if(t.hasAttribute('data-w')){v=+t.value;S.w[+t.getAttribute('data-w')]=v>0?v:0}
+    else if(t.hasAttribute('data-c')){v=Math.max(0,Math.round(+t.value)||0);S.t[+t.getAttribute('data-c')]=v}
+    else return;
+    changed();
+  });
+
+  /* ---------- drawing: chart 1 ---------- */
+  function niceMax(v){
+    if(v<=0)return{max:5,step:1};
+    var raw=v/5,p=Math.pow(10,Math.floor(Math.log10(raw))),f=raw/p;
+    var st=(f<=1?1:f<=2?2:f<=5?5:10)*p;
+    return{max:Math.ceil(v/st)*st,step:st};
+  }
+  function geom1(){return{x0:46,x1:W1-14,y0:34,y1:H1-34}}
+  function drawChart1(c){
+    c1.clearRect(0,0,W1,H1);
+    c1.font='11px system-ui,sans-serif';
+    if(S.mode==='gof')drawBars(c);else drawMosaic(c);
+  }
+  function drawBars(c){
+    var g=geom1(),k=S.k,i,mx=1;
+    var exp=c.err?S.obs.map(function(){return 0}):c.exp;
+    for(i=0;i<k;i++)mx=Math.max(mx,S.obs[i],exp[i]);
+    var nm=niceMax(mx*1.15),ym=S.ylock||nm.max,step=S.ylock?S.ylock/5:nm.step;
+    S.ycur=ym;
+    var Y=function(v){return g.y1-v/ym*(g.y1-g.y0)};
+    c1.textAlign='right';c1.textBaseline='middle';
+    for(var t=0;t<=ym+1e-9;t+=step){
+      c1.strokeStyle='#e4e9ee';c1.lineWidth=1;c1.beginPath();c1.moveTo(g.x0,Y(t));c1.lineTo(g.x1,Y(t));c1.stroke();
+      c1.fillStyle='#7b8794';c1.fillText(+t.toFixed(2),g.x0-6,Y(t));
+    }
+    c1.strokeStyle='#9aa5b1';c1.strokeRect(g.x0,g.y0,g.x1-g.x0,g.y1-g.y0);
+    var bw=(g.x1-g.x0)/k,w=Math.min(70,bw*.55);
+    c1.textAlign='center';
+    for(i=0;i<k;i++){
+      var cx=g.x0+bw*(i+.5),top=Y(Math.min(S.obs[i],ym));
+      c1.fillStyle=i===S.drag?'#dd6b20':'rgba(43,108,176,.8)';
+      c1.fillRect(cx-w/2,top,w,g.y1-top);
+      c1.strokeStyle='#fff';c1.lineWidth=1.2;c1.strokeRect(cx-w/2,top,w,g.y1-top);
+      c1.fillStyle='#1f2933';c1.textBaseline='bottom';c1.fillText(S.obs[i],cx,top-3);
+      c1.fillStyle='#52606d';c1.textBaseline='top';c1.fillText(S.gl[i],cx,g.y1+6);
+      if(!c.err){
+        var ey=Y(Math.min(exp[i],ym));
+        c1.strokeStyle='#c53030';c1.lineWidth=2.5;c1.setLineDash([5,3]);
+        c1.beginPath();c1.moveTo(cx-w/2-6,ey);c1.lineTo(cx+w/2+6,ey);c1.stroke();c1.setLineDash([]);
+      }
+    }
+    c1.textAlign='left';c1.textBaseline='middle';
+    c1.fillStyle='rgba(43,108,176,.8)';c1.fillRect(g.x0,10,12,12);
+    c1.fillStyle='#52606d';c1.fillText('Observed (drag a bar top)',g.x0+17,16);
+    c1.strokeStyle='#c53030';c1.lineWidth=2.5;c1.setLineDash([5,3]);c1.beginPath();c1.moveTo(g.x0+190,16);c1.lineTo(g.x0+212,16);c1.stroke();c1.setLineDash([]);
+    c1.fillStyle='#52606d';c1.fillText('Expected under H₀',g.x0+218,16);
+  }
+  function drawMosaic(c){
+    var g=geom1(),R=S.R,C=S.C,i,j,gap=6;
+    var rt=[],ct=[];for(i=0;i<R;i++)rt.push(0);for(j=0;j<C;j++)ct.push(0);
+    for(i=0;i<R;i++)for(j=0;j<C;j++){rt[i]+=S.t[i*C+j];ct[j]+=S.t[i*C+j]}
+    var N=sum(rt);
+    c1.textAlign='right';c1.textBaseline='middle';
+    for(var t=0;t<=100;t+=25){
+      var yy=g.y0+t/100*(g.y1-g.y0);c1.fillStyle='#7b8794';c1.fillText(t+'%',g.x0-6,yy);
+    }
+    if(N<=0||rt.some(function(v){return v===0})){
+      c1.textAlign='center';c1.fillStyle='#7b8794';c1.fillText('Each row needs at least one observation',(g.x0+g.x1)/2,(g.y0+g.y1)/2);return;
+    }
+    var avail=g.x1-g.x0-gap*(R-1),x=g.x0;
+    for(i=0;i<R;i++){
+      var w=avail*rt[i]/N,y=g.y0;
+      for(j=0;j<C;j++){
+        var h=(g.y1-g.y0)*S.t[i*C+j]/rt[i];
+        c1.fillStyle=COLS[j];c1.globalAlpha=.8;c1.fillRect(x,y,w,h);c1.globalAlpha=1;
+        c1.strokeStyle='#fff';c1.lineWidth=1.2;c1.strokeRect(x,y,w,h);
+        if(h>16&&w>34){c1.fillStyle='#fff';c1.textAlign='center';c1.textBaseline='middle';c1.fillText(Math.round(100*S.t[i*C+j]/rt[i])+'%',x+w/2,y+h/2)}
+        y+=h;
+      }
+      c1.fillStyle='#52606d';c1.textAlign='center';c1.textBaseline='top';
+      c1.fillText(S.rl[i]+' (n='+rt[i]+')',x+w/2,g.y1+6);
+      x+=w+gap;
+    }
+    var cum=0;
+    c1.strokeStyle='#1f2933';c1.lineWidth=1.5;c1.setLineDash([5,3]);
+    for(j=0;j<C-1;j++){
+      cum+=ct[j]/N;var ly=g.y0+cum*(g.y1-g.y0);
+      c1.beginPath();c1.moveTo(g.x0,ly);c1.lineTo(g.x1,ly);c1.stroke();
+    }
+    c1.setLineDash([]);
+    c1.textAlign='left';c1.textBaseline='middle';var lx=g.x0;
+    for(j=0;j<C;j++){
+      c1.fillStyle=COLS[j];c1.globalAlpha=.8;c1.fillRect(lx,10,12,12);c1.globalAlpha=1;
+      c1.fillStyle='#52606d';c1.fillText(S.cl[j],lx+17,16);lx+=22+c1.measureText(S.cl[j]).width+12;
+    }
+    c1.strokeStyle='#1f2933';c1.setLineDash([5,3]);c1.beginPath();c1.moveTo(lx,16);c1.lineTo(lx+22,16);c1.stroke();c1.setLineDash([]);
+    c1.fillStyle='#52606d';c1.fillText('Overall split (what independence predicts)',lx+28,16);
+  }
+
+  /* ---------- drawing: chart 2 ---------- */
+  function drawDist(c){
+    c2.clearRect(0,0,W2,H2);
+    c2.font='11px system-ui,sans-serif';
+    var df=c.err?(S.mode==='gof'?S.k-1:(S.R-1)*(S.C-1)):c.df;
+    var cr=c.err?crit(df,S.alpha):c.crit;
+    var xmax=Math.max(cr*1.7,df+5*Math.sqrt(2*df)+2);
+    var P={l:46,r:14,t:30,b:34},pw=W2-P.l-P.r,ph=H2-P.t-P.b,i;
+    var X=function(v){return P.l+Math.min(v,xmax)/xmax*pw};
+    var ymax=0;
+    for(i=1;i<=240;i++){ymax=Math.max(ymax,pdf(xmax*i/240,df))}
+    if(df<=2)ymax=Math.max(ymax,pdf(df===1?0.15:0.02,df)*(df===1?1:1));
+    if(df===1)ymax=pdf(0.2,1);
+    ymax*=1.12;
+    var Y=function(v){return P.t+ph-Math.min(v,ymax)/ymax*ph};
+    /* grid + x ticks */
+    var nm=niceMax(xmax),tick=nm.step;
+    c2.textAlign='center';c2.textBaseline='top';
+    for(var t=0;t<=xmax+1e-9;t+=tick){
+      c2.strokeStyle='#e4e9ee';c2.lineWidth=1;c2.beginPath();c2.moveTo(X(t),P.t);c2.lineTo(X(t),P.t+ph);c2.stroke();
+      c2.fillStyle='#7b8794';c2.fillText(+t.toFixed(2),X(t),P.t+ph+5);
+    }
+    c2.strokeStyle='#9aa5b1';c2.strokeRect(P.l,P.t,pw,ph);
+    c2.fillStyle='#52606d';c2.fillText('χ² value',P.l+pw/2,H2-16);
+    c2.save();c2.translate(12,P.t+ph/2);c2.rotate(-Math.PI/2);c2.textBaseline='middle';c2.fillText('Density',0,0);c2.restore();
+    /* simulation histogram */
+    if(S.sim){
+      var nb=32,bwid=xmax/nb,cnt=[];for(i=0;i<nb;i++)cnt.push(0);
+      S.sim.forEach(function(v){var b=Math.floor(v/bwid);if(b>=0&&b<nb)cnt[b]++});
+      c2.fillStyle='rgba(82,96,109,.28)';
+      for(i=0;i<nb;i++){
+        var d=cnt[i]/(S.sim.length*bwid),x0=X(i*bwid),x1=X((i+1)*bwid);
+        c2.fillRect(x0,Y(d),x1-x0-1,P.t+ph-Y(d));
+      }
+    }
+    /* area fills */
+    function area(from,fill){
+      c2.beginPath();c2.moveTo(X(from),Y(0));
+      var steps=160;
+      for(var s=0;s<=steps;s++){var xv=from+(xmax-from)*s/steps;c2.lineTo(X(xv),Y(pdf(Math.max(xv,1e-6),df)))}
+      c2.lineTo(X(xmax),Y(0));c2.closePath();c2.fillStyle=fill;c2.fill();
+    }
+    if(cr<xmax)area(cr,'rgba(197,48,48,.16)');
+    if(!c.err&&c.chi<xmax)area(c.chi,'rgba(43,108,176,.38)');
+    /* curve */
+    c2.beginPath();c2.strokeStyle='#2b6cb0';c2.lineWidth=2.5;
+    var st=true;
+    for(i=0;i<=300;i++){
+      var xv=Math.max(xmax*i/300,df===1?0.004:1e-6);
+      var yv=pdf(xv,df);
+      if(st){c2.moveTo(X(xv),Y(yv));st=false}else c2.lineTo(X(xv),Y(yv));
+    }
+    c2.stroke();
+    /* critical line */
+    c2.save();c2.beginPath();c2.rect(P.l,P.t,pw,ph);c2.clip();
+    c2.strokeStyle='#c53030';c2.lineWidth=2;c2.setLineDash([6,4]);
+    c2.beginPath();c2.moveTo(X(cr),P.t);c2.lineTo(X(cr),P.t+ph);c2.stroke();c2.setLineDash([]);
+    if(!c.err){
+      c2.strokeStyle='#dd6b20';c2.lineWidth=3;
+      c2.beginPath();c2.moveTo(X(c.chi),P.t);c2.lineTo(X(c.chi),P.t+ph);c2.stroke();
+    }
+    c2.restore();
+    c2.textBaseline='bottom';
+    var chiRight=!c.err&&c.chi>=cr;
+    if(!c.err){
+      var over=c.chi>xmax;
+      c2.fillStyle='#dd6b20';
+      if(over){c2.textAlign='right';c2.fillText('\u03c7\u00b2 = '+c.chi.toFixed(2)+' \u2192',P.l+pw-4,P.t-2)}
+      else{c2.textAlign=chiRight?'left':'right';c2.fillText('\u03c7\u00b2 = '+c.chi.toFixed(2),X(c.chi)+(chiRight?5:-5),P.t-2)}
+    }
+    c2.fillStyle='#c53030';
+    var critLeft=chiRight&&c.chi<=xmax;
+    c2.textAlign=critLeft?'right':'left';
+    c2.fillText('critical = '+cr.toFixed(2),X(cr)+(critLeft?-5:5),P.t-2);
+    /* legend */
+    var items=[['rgba(197,48,48,.25)','Rejection region (\u03b1 = '+S.alpha.toFixed(2)+')']];
+    if(!c.err)items.push(['rgba(43,108,176,.45)','p-value: area beyond your \u03c7\u00b2']);
+    if(S.sim)items.push(['rgba(82,96,109,.35)','1,000 simulated samples under H\u2080']);
+    c2.textAlign='left';c2.textBaseline='middle';
+    var lx=P.l+pw-250;if(lx<P.l+4)lx=P.l+4;
+    items.forEach(function(it,k){
+      var ly=P.t+14+k*16;
+      c2.fillStyle=it[0];c2.fillRect(lx,ly-6,12,12);c2.fillStyle='#52606d';c2.fillText(it[1],lx+17,ly);
+    });
+  }
+  /* ---------- readouts ---------- */
+  function hypText(){
+    return S.mode==='gof'
+      ?'<b>H<sub>0</sub>:</b> the population proportions match the hypothesized weights. <b>H<sub>1</sub>:</b> at least one proportion differs. Expected counts = n &times; weight share.'
+      :'<b>H<sub>0</sub>:</b> the row and column variables are independent. <b>H<sub>1</sub>:</b> they are associated. Expected count = (row total &times; column total) / n.';
+  }
+  function readout(c){
+    var ok=!c.err;
+    $('cx-s1').textContent=ok?c.chi.toFixed(2):'-';
+    $('cx-s2').textContent=ok?c.df:(S.mode==='gof'?S.k-1:(S.R-1)*(S.C-1));
+    $('cx-s3').textContent=ok?fmtP(c.p):'-';
+    $('cx-s4').textContent=ok?c.crit.toFixed(2):crit(S.mode==='gof'?S.k-1:(S.R-1)*(S.C-1),S.alpha).toFixed(2);
+    $('cx-s5l').innerHTML=S.mode==='gof'?'Effect size w':'Cram&eacute;r\'s V';
+    $('cx-s5').textContent=ok?c.eff.toFixed(3):'-';
+    $('cx-s6').textContent=ok?c.n:'-';
+    var m,warn=false;
+    if(!ok){m=c.err;warn=true}
+    else{
+      var rej=c.p<S.alpha,mi=0,i;
+      m='<b>'+(rej?'Reject H<sub>0</sub>':'Fail to reject H<sub>0</sub>')+'</b> at &alpha; = '+S.alpha.toFixed(2)+' (p = '+fmtP(c.p)+'). ';
+      if(S.mode==='gof')m+=rej?'The counts sit further from the hypothesized proportions than chance alone would usually allow.':'The counts are consistent with the hypothesized proportions; the gaps are within normal sampling noise.';
+      else m+=rej?'The pattern across rows differs more than independence would predict, so the variables look associated.':'There is no convincing evidence of association; the data are consistent with independence.';
+      m+=' The effect is <b>'+effLabel(c.eff)+'</b> ('+(S.mode==='gof'?'w':'V')+' = '+c.eff.toFixed(2)+').';
+      for(i=1;i<c.con.length;i++)if(c.con[i]>c.con[mi])mi=i;
+      if(c.chi>0){
+        var nm=S.mode==='gof'?'category <b>'+S.gl[mi]+'</b>':'the cell <b>'+S.rl[Math.floor(mi/S.C)]+' &times; '+S.cl[mi%S.C]+'</b>';
+        m+='<br>Largest contributor: '+nm+' (O = '+c.obs[mi]+', E = '+c.exp[mi].toFixed(1)+'), '+Math.round(100*c.con[mi]/c.chi)+'% of &chi;&sup2;.';
+      }
+      if(c.low>0){m+='<br><i>Caution: '+c.low+' expected count'+(c.low>1?'s are':' is')+' below 5, so the chi-square approximation may be unreliable.</i>';warn=true}
+      if(!rej&&c.n<60)m+='<br><i>With a small sample, a real effect can easily go undetected. Try a larger n.</i>';
+      if(yatesOn())m+='<br><i>Yates continuity correction is applied.</i>';
+      if(S.sim){
+        var hit=0;S.sim.forEach(function(v){if(v>=c.chi-1e-9)hit++});
+        m+='<br><b>Simulation:</b> '+hit+' of '+S.sim.length+' samples drawn under H<sub>0</sub> gave &chi;&sup2; &ge; '+c.chi.toFixed(2)+' (simulated p &asymp; '+(hit/S.sim.length).toFixed(3)+', theory '+fmtP(c.p)+').';
+      }
+    }
+    var el=$('cx-msg');el.innerHTML=m;el.className='cx-msg'+(warn?' cx-warn':'');
+  }
+  function note1(){
+    $('cx-c1note').innerHTML=S.mode==='gof'
+      ?'Click or drag a bar to change its observed count. Cell shading in the last table column shows the direction of each gap: orange = more than expected, blue = fewer.'
+      :'Each bar shows how that row splits across the columns. If the variables were independent, every bar would line up with the dashed overall split. Cell shading in the table: orange = more than expected, blue = fewer.';
+  }
+
+  /* ---------- update cycle ---------- */
+  function refresh(){
+    var c=compute();S.c=c;
+    refreshTable(c);drawChart1(c);drawDist(c);readout(c);
+  }
+  function changed(){S.sim=null;refresh()}
+  function rebuild(){buildTable();note1();$('cx-hyp').innerHTML=hypText();changed()}
+
+  /* ---------- simulation ---------- */
+  function runSim(){
+    var c=S.c;if(!c||c.err)return;
+    var r=rng(Math.floor(Math.random()*1e9)),N=1000,out=[],i,j,p=c.exp.map(function(e){return e/c.n});
+    for(var s=0;s<N;s++){
+      var cnt=multinom(c.n,p,r),chi=0,e;
+      if(S.mode==='gof'){
+        for(i=0;i<cnt.length;i++)chi+=term(cnt[i],c.exp[i]);
+      }else{
+        var R=S.R,C=S.C,rt=[],ct=[];
+        for(i=0;i<R;i++)rt.push(0);for(j=0;j<C;j++)ct.push(0);
+        for(i=0;i<R;i++)for(j=0;j<C;j++){rt[i]+=cnt[i*C+j];ct[j]+=cnt[i*C+j]}
+        for(i=0;i<R;i++)for(j=0;j<C;j++){
+          if(rt[i]===0||ct[j]===0)continue;
+          e=rt[i]*ct[j]/c.n;chi+=term(cnt[i*C+j],e);
+        }
+      }
+      out.push(chi);
+    }
+    S.sim=out;refresh();
+  }
+
+  /* ---------- events ---------- */
+  function setMode(m){
+    S.mode=m;
+    $('cx-m-gof').className=m==='gof'?'cx-on':'';$('cx-m-gof').setAttribute('aria-pressed',m==='gof');
+    $('cx-m-ind').className=m==='ind'?'cx-on':'';$('cx-m-ind').setAttribute('aria-pressed',m==='ind');
+    $('cx-pg').className=m==='gof'?'':'cx-hide';$('cx-pi').className=m==='ind'?'':'cx-hide';
+    cv1.style.cursor=m==='gof'?'ns-resize':'default';
+    cv1.setAttribute('aria-label',m==='gof'?'Bar chart of observed counts with expected counts marked. Bars can be dragged.':'Stacked bars showing how each row splits across columns, with the overall split dashed.');
+    rebuild();
+  }
+  $('cx-m-gof').addEventListener('click',function(){setMode('gof')});
+  $('cx-m-ind').addEventListener('click',function(){setMode('ind')});
+
+  function newGof(){S.k=+$('cx-k').value;drawGof();rebuild()}
+  $('cx-k').addEventListener('input',function(){
+    $('cx-kv').textContent=this.value;S.k=+this.value;S.gl=letters(S.k);S.w=[];
+    for(var i=0;i<S.k;i++)S.w.push(1);
+    drawGof();rebuild();
+  });
+  $('cx-gn').addEventListener('input',function(){$('cx-gnv').textContent=this.value;drawGof();rebuild()});
+  $('cx-gd').addEventListener('input',function(){$('cx-gdv').textContent=(this.value/100).toFixed(2);drawGof();rebuild()});
+  $('cx-gnew').addEventListener('click',function(){S.seed=Math.floor(Math.random()*1e6);drawGof();rebuild()});
+
+  function setSlider(id,labId,v,fmt){$(id).value=v;$(labId).textContent=fmt?fmt(v):v}
+  var GP={
+    fair:{k:6,gl:['1','2','3','4','5','6'],w:[1,1,1,1,1,1],o:[18,22,19,21,20,20]},
+    loaded:{k:6,gl:['1','2','3','4','5','6'],w:[1,1,1,1,1,1],o:[12,15,16,20,24,33]},
+    mendel:{k:4,gl:['Round yellow','Round green','Wrinkled yellow','Wrinkled green'],w:[9,3,3,1],o:[315,101,108,32]}
+  };
+  Array.prototype.forEach.call(document.querySelectorAll('#cx-root [data-g]'),function(b){
+    b.addEventListener('click',function(){
+      var p=GP[this.getAttribute('data-g')];
+      S.k=p.k;S.gl=p.gl.slice();S.w=p.w.slice();S.obs=p.o.slice();
+      setSlider('cx-k','cx-kv',p.k);setSlider('cx-gn','cx-gnv',Math.min(1000,Math.max(20,sum(p.o))));
+      rebuild();
+    });
+  });
+
+  function resizeInd(){
+    S.R=+$('cx-R').value;S.C=+$('cx-C').value;
+    $('cx-Rv').textContent=S.R;$('cx-Cv').textContent=S.C;
+    var y=$('cx-yates');
+    if(S.R===2&&S.C===2)y.className='';else{y.className='cx-hide';S.yates=false;y.textContent='Yates correction: off';y.setAttribute('aria-pressed','false')}
+    defaultsInd();drawInd();rebuild();
+  }
+  $('cx-R').addEventListener('input',resizeInd);
+  $('cx-C').addEventListener('input',resizeInd);
+  $('cx-in').addEventListener('input',function(){$('cx-inv').textContent=this.value;drawInd();rebuild()});
+  $('cx-id').addEventListener('input',function(){$('cx-idv').textContent=(this.value/100).toFixed(2);drawInd();rebuild()});
+  $('cx-inew').addEventListener('click',function(){S.seed=Math.floor(Math.random()*1e6);drawInd();rebuild()});
+  $('cx-yates').addEventListener('click',function(){
+    S.yates=!S.yates;this.textContent='Yates correction: '+(S.yates?'on':'off');this.setAttribute('aria-pressed',S.yates);changed();
+  });
+  var IP={
+    indep:{R:2,C:2,rl:['Treatment','Placebo'],cl:['Improved','No change'],t:[26,24,22,28]},
+    assoc:{R:2,C:2,rl:['Treatment','Placebo'],cl:['Improved','No change'],t:[30,20,18,32]},
+    big:{R:3,C:3,rl:['Low study','Medium study','High study'],cl:['C or below','B','A'],t:[30,15,10,20,25,15,10,20,35]}
+  };
+  Array.prototype.forEach.call(document.querySelectorAll('#cx-root [data-i]'),function(b){
+    b.addEventListener('click',function(){
+      var p=IP[this.getAttribute('data-i')];
+      S.R=p.R;S.C=p.C;S.rl=p.rl.slice();S.cl=p.cl.slice();S.t=p.t.slice();
+      setSlider('cx-R','cx-Rv',p.R);setSlider('cx-C','cx-Cv',p.C);setSlider('cx-in','cx-inv',Math.min(1000,Math.max(20,sum(p.t))));
+      var y=$('cx-yates');
+      if(p.R===2&&p.C===2)y.className='';else{y.className='cx-hide';S.yates=false;y.textContent='Yates correction: off';y.setAttribute('aria-pressed','false')}
+      rebuild();
+    });
+  });
+
+  $('cx-al').addEventListener('input',function(){S.alpha=this.value/100;$('cx-alv').textContent=S.alpha.toFixed(2);refresh()});
+  $('cx-sim').addEventListener('click',runSim);
+  $('cx-simc').addEventListener('click',function(){S.sim=null;refresh()});
+
+  /* drag bars (goodness of fit) */
+  function pos(e){var b=cv1.getBoundingClientRect();return{x:e.clientX-b.left,y:e.clientY-b.top}}
+  function bandAt(m){
+    var g=geom1(),bw=(g.x1-g.x0)/S.k,i=Math.floor((m.x-g.x0)/bw);
+    return(i>=0&&i<S.k&&m.y>=g.y0-12&&m.y<=g.y1+4)?i:-1;
+  }
+  function setFromY(i,m){
+    var g=geom1(),v=Math.round((g.y1-m.y)/(g.y1-g.y0)*S.ycur);
+    v=Math.max(0,Math.min(S.ycur,v));S.obs[i]=v;
+    var inp=$('cx-tw').querySelector('[data-o="'+i+'"]');if(inp)inp.value=v;
+    changed();
+  }
+  cv1.addEventListener('pointerdown',function(e){
+    if(S.mode!=='gof')return;
+    var m=pos(e),i=bandAt(m);
+    if(i>=0){S.drag=i;S.ylock=S.ycur;cv1.setPointerCapture(e.pointerId);setFromY(i,m)}
+  });
+  cv1.addEventListener('pointermove',function(e){
+    if(S.drag<0)return;setFromY(S.drag,pos(e));
+  });
+  function up(){if(S.drag>=0){S.drag=-1;S.ylock=0;refresh()}}
+  cv1.addEventListener('pointerup',up);cv1.addEventListener('pointercancel',up);
+
+  function resize(){
+    var w=cv1.parentNode.clientWidth||700,dpr=window.devicePixelRatio||1;
+    W1=w;H1=Math.round(Math.max(240,Math.min(340,w*.5)));
+    cv1.width=W1*dpr;cv1.height=H1*dpr;cv1.style.height=H1+'px';c1.setTransform(dpr,0,0,dpr,0,0);
+    W2=cv2.parentNode.clientWidth||700;H2=Math.round(Math.max(220,Math.min(280,W2*.4)));
+    cv2.width=W2*dpr;cv2.height=H2*dpr;cv2.style.height=H2+'px';c2.setTransform(dpr,0,0,dpr,0,0);
+    if(S.c)refresh();
+  }
+  window.addEventListener('resize',resize);
+
+  /* init */
+  S.k=6;S.gl=letters(6);S.w=[1,1,1,1,1,1];
+  S.R=2;S.C=2;defaultsInd();S.rl=['Treatment','Placebo'];S.cl=['Improved','No change'];
+  drawGof();drawInd();
+  setMode('gof');resize();
+})();
+</script>
+</div>
+</body>
+</html>
