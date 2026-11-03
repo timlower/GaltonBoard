@@ -1,0 +1,783 @@
+<div id="re-root" style="max-width:760px;margin:0 auto;font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;color:#1f2933;">
+<style>
+#re-root *{box-sizing:border-box}
+#re-root .re-card{background:#fff;border:1px solid #d5dbe1;border-radius:10px;padding:14px;margin-bottom:12px}
+#re-root h2{font-size:1.25rem;margin:0 0 4px}
+#re-root h3{font-size:1rem;margin:0 0 4px}
+#re-root p{margin:4px 0}
+#re-root .re-row{display:flex;flex-wrap:wrap;gap:16px}
+#re-root .re-ctl{flex:1 1 220px}
+#re-root label{display:block;font-weight:600;font-size:.9rem;margin-bottom:4px}
+#re-root label.re-inline{display:inline-flex;align-items:center;gap:6px;margin:0 16px 0 0}
+#re-root input[type=range]{width:100%}
+#re-root button{font:inherit;font-size:.85rem;padding:6px 10px;margin:3px 4px 3px 0;border:1px solid #2b6cb0;background:#fff;color:#2b6cb0;border-radius:6px;cursor:pointer}
+#re-root button:hover,#re-root button:focus-visible{background:#2b6cb0;color:#fff}
+#re-root button.re-on{background:#2b6cb0;color:#fff}
+#re-root .re-tabs button{font-size:.95rem;font-weight:600;padding:8px 14px}
+#re-root canvas{width:100%;display:block;border:1px solid #d5dbe1;border-radius:8px;background:#fbfcfd;touch-action:none;cursor:crosshair}
+#re-root .re-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-top:10px}
+#re-root .re-stat{background:#f1f5f9;border-radius:8px;padding:8px;text-align:center}
+#re-root .re-stat b{display:block;font-size:1.25rem}
+#re-root .re-stat span{font-size:.75rem;color:#52606d}
+#re-root .re-note{font-size:.85rem;color:#52606d}
+#re-root .re-msg{background:#ebf4ff;border-left:4px solid #2b6cb0;padding:8px 10px;border-radius:4px;margin-top:10px;font-size:.92rem}
+#re-root .re-bar{display:flex;height:18px;border-radius:6px;overflow:hidden;background:#e4e9ee;margin-top:12px}
+#re-root .re-bar div{height:100%;transition:flex-basis .15s}
+#re-root .re-scroll{overflow-x:auto;margin-top:10px}
+#re-root table{border-collapse:collapse;width:100%;font-size:.85rem}
+#re-root th,#re-root td{padding:5px 8px;text-align:right;border-bottom:1px solid #e4e9ee;white-space:nowrap}
+#re-root th:first-child,#re-root td:first-child{text-align:left}
+#re-root th{font-size:.75rem;color:#52606d;font-weight:600}
+#re-root .re-hide{display:none!important}
+</style>
+
+<div class="re-card">
+  <h2>Regression Explorer</h2>
+  <p class="re-note">Fit a line (one predictor) or a plane (two predictors) to data. Drag points, double-click to remove them, and watch the coefficients, R&sup2;, p-values and residuals respond.</p>
+  <div class="re-tabs" style="margin-top:6px">
+    <button id="re-tab-s" class="re-on" aria-pressed="true">Simple regression</button>
+    <button id="re-tab-m" aria-pressed="false">Multiple regression</button>
+  </div>
+</div>
+
+<div class="re-card">
+  <div id="re-sctl">
+    <div class="re-row">
+      <div class="re-ctl">
+        <label for="re-sl">True slope: <span id="re-slv">0.80</span></label>
+        <input type="range" id="re-sl" min="-150" max="150" value="80">
+      </div>
+      <div class="re-ctl">
+        <label for="re-sg">Noise around the line: <span id="re-sgv">10</span></label>
+        <input type="range" id="re-sg" min="0" max="30" value="10">
+      </div>
+      <div class="re-ctl">
+        <label for="re-n">Number of points: <span id="re-nv">40</span></label>
+        <input type="range" id="re-n" min="5" max="200" value="40">
+      </div>
+      <div class="re-ctl">
+        <label for="re-px">Predict Y at X = <span id="re-pxv">70</span></label>
+        <input type="range" id="re-px" min="0" max="100" value="70">
+      </div>
+    </div>
+    <div style="margin-top:6px">
+      <button id="re-new">New random sample</button>
+      <button id="re-out">Add an outlier</button>
+      <button id="re-line" aria-pressed="true">Regression line: on</button>
+      <button id="re-res" aria-pressed="false">Residuals: off</button>
+      <button id="re-ival" aria-pressed="false">Interval: off</button>
+      <button id="re-mean" aria-pressed="false">Mean of Y: off</button>
+      <button id="re-tru" aria-pressed="false">True line: off</button>
+      <button id="re-clear">Clear all points</button>
+    </div>
+    <div>
+      <span class="re-note">Tricky datasets: </span>
+      <button data-pre="a1">Anscombe I</button>
+      <button data-pre="a2">II</button>
+      <button data-pre="a3">III</button>
+      <button data-pre="a4">IV</button>
+      <button data-pre="curve">Curved</button>
+      <button data-pre="fan">Fan-shaped</button>
+    </div>
+  </div>
+
+  <div id="re-mctl" class="re-hide">
+    <div class="re-row">
+      <div class="re-ctl">
+        <label for="re-rho">Correlation between X1 and X2: <span id="re-rhov">0.50</span></label>
+        <input type="range" id="re-rho" min="-95" max="95" value="50">
+      </div>
+      <div class="re-ctl">
+        <label for="re-ms">Noise in Y: <span id="re-msv">0.70</span></label>
+        <input type="range" id="re-ms" min="0" max="200" value="70">
+      </div>
+      <div class="re-ctl">
+        <label for="re-b1">True effect of X1 on Y: <span id="re-b1v">0.60</span></label>
+        <input type="range" id="re-b1" min="-100" max="100" value="60">
+      </div>
+      <div class="re-ctl">
+        <label for="re-b2">True effect of X2 on Y: <span id="re-b2v">0.40</span></label>
+        <input type="range" id="re-b2" min="-100" max="100" value="40">
+      </div>
+      <div class="re-ctl">
+        <label for="re-mn">Number of points: <span id="re-mnv">60</span></label>
+        <input type="range" id="re-mn" min="10" max="300" value="60">
+      </div>
+    </div>
+    <div style="margin-top:8px">
+      <span class="re-note">Predictors in the model: </span>
+      <label class="re-inline"><input type="checkbox" id="re-i1" checked> X1</label>
+      <label class="re-inline"><input type="checkbox" id="re-i2" checked> X2</label>
+    </div>
+    <div style="margin-top:4px">
+      <button id="re-mnew">New random sample</button>
+      <button id="re-mout">Add an outlier</button>
+      <button id="re-mres" aria-pressed="false">Residuals: off</button>
+    </div>
+    <div>
+      <span class="re-note">Scenarios: </span>
+      <button data-sc="indep">Independent predictors</button>
+      <button data-sc="conf">Confounder</button>
+      <button data-sc="flip">Sign flip</button>
+      <button data-sc="supp">Suppression</button>
+      <button data-sc="coll">Multicollinearity</button>
+      <button data-sc="def">Reset</button>
+    </div>
+  </div>
+</div>
+
+<div class="re-card">
+  <div id="re-views" class="re-hide" style="margin-bottom:6px">
+    <button data-view="x1" class="re-on">Y vs X1</button>
+    <button data-view="x2">Y vs X2</button>
+    <button data-view="av1">Partial: X1</button>
+    <button data-view="av2">Partial: X2</button>
+    <button data-view="fit">Actual vs fitted</button>
+    <button data-view="3d">3D plane</button>
+    <p class="re-note" id="re-vdesc"></p>
+  </div>
+  <canvas id="re-cv" role="img" aria-label="Interactive regression plot. In 2D views points can be dragged."></canvas>
+  <div class="re-bar" id="re-bar" aria-hidden="true"><div id="re-bar1" style="background:#2b6cb0;flex:0 0 0%"></div><div id="re-bar2" style="background:#fc8181;flex:1 1 0%"></div></div>
+  <p class="re-note" id="re-barlbl" style="margin-top:4px"></p>
+  <div class="re-stats" id="re-stats" aria-live="polite"></div>
+  <div class="re-scroll re-hide" id="re-tblwrap"></div>
+  <div class="re-msg" id="re-msg"></div>
+  <p class="re-note" style="margin-top:8px">Remember: regression describes association, not causation, and its p-values assume a roughly linear relationship with evenly scattered errors.</p>
+</div>
+
+<div class="re-card">
+  <h3 id="re-dh">Residual plot</h3>
+  <canvas id="re-cv2" role="img" aria-label="Residual plot" style="cursor:default"></canvas>
+  <p class="re-note" style="margin-top:6px">A healthy model leaves residuals as a shapeless band around zero. A curve means the relationship is not linear; a fan means the noise is not constant; isolated points far from zero are outliers.</p>
+</div>
+
+<script>
+(function(){
+  var $=function(id){return document.getElementById(id)};
+  var cv=$('re-cv'),ctx=cv.getContext('2d'),cv2=$('re-cv2'),c2=cv2.getContext('2d');
+  var mode='simple',view='x1',seed=7,label='';
+  var sp=[],mp=[],trueS=true,trueM=null,trueOK=true,inc=[true,true];
+  var M={w:700,h:480},D={w:700,h:200};
+  var opt={line:true,res:0,ival:0,mean:false,tru:false,mres:false};
+  var drag=-1,lastF=null,yaw=-0.75,pitch=0.5,rot=null,tcache={};
+  var RES=['off','lines','squares'],IV=['off','95% confidence','95% prediction'];
+
+  /* ---------- helpers ---------- */
+  function rng(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+  function gauss(r){var u=0,v;while(!u)u=r();v=r();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)}
+  function mean(a){var s=0;for(var i=0;i<a.length;i++)s+=a[i];return s/a.length}
+  function sdev(a){var m=mean(a),s=0,i;for(i=0;i<a.length;i++)s+=(a[i]-m)*(a[i]-m);return Math.sqrt(s/a.length)}
+  function zs(a){var m=mean(a),s=sdev(a)||1;return a.map(function(v){return(v-m)/s})}
+  function clamp(v){return Math.max(0,Math.min(100,v))}
+  function corr(a,b){var ma=mean(a),mb=mean(b),sab=0,saa=0,sbb=0,i;for(i=0;i<a.length;i++){sab+=(a[i]-ma)*(b[i]-mb);saa+=(a[i]-ma)*(a[i]-ma);sbb+=(b[i]-mb)*(b[i]-mb)}return sab/Math.sqrt(saa*sbb)}
+  function fm(v,d){return(typeof v==='number'&&isFinite(v))?v.toFixed(d):'-'}
+  function fpv(p){return(typeof p==='number'&&isFinite(p))?(p<0.001?'&lt; 0.001':p.toFixed(3)):'-'}
+  function sgn(v,d){return(v<0?'&minus;':'+')+' '+Math.abs(v).toFixed(d)}
+
+  /* ---------- t and F distributions ---------- */
+  function lgam(x){var c=[76.18009172947146,-86.50532032941677,24.01409824083091,-1.231739572450155,0.1208650973866179e-2,-0.5395239384953e-5],y=x,t=x+5.5,s=1.000000000190015,j;t-=(x+0.5)*Math.log(t);for(j=0;j<6;j++)s+=c[j]/++y;return -t+Math.log(2.5066282746310005*s/x)}
+  function betacf(a,b,x){
+    var m,m2,aa,c=1,d=1-(a+b)*x/(a+1),h,del;
+    if(Math.abs(d)<1e-30)d=1e-30;d=1/d;h=d;
+    for(m=1;m<=300;m++){
+      m2=2*m;aa=m*(b-m)*x/((a+m2-1)*(a+m2));
+      d=1+aa*d;if(Math.abs(d)<1e-30)d=1e-30;c=1+aa/c;if(Math.abs(c)<1e-30)c=1e-30;d=1/d;h*=d*c;
+      aa=-(a+m)*(a+b+m)*x/((a+m2)*(a+m2+1));
+      d=1+aa*d;if(Math.abs(d)<1e-30)d=1e-30;c=1+aa/c;if(Math.abs(c)<1e-30)c=1e-30;d=1/d;del=d*c;h*=del;
+      if(Math.abs(del-1)<3e-12)break;
+    }
+    return h;
+  }
+  function ibeta(x,a,b){
+    if(x<=0)return 0;if(x>=1)return 1;
+    var bt=Math.exp(lgam(a+b)-lgam(a)-lgam(b)+a*Math.log(x)+b*Math.log(1-x));
+    return x<(a+1)/(a+b+2)?bt*betacf(a,b,x)/a:1-bt*betacf(b,a,1-x)/b;
+  }
+  function pT(t,df){if(!(df>=1)||isNaN(t))return NaN;return ibeta(df/(df+t*t),df/2,0.5)}
+  function pFd(F,d1,d2){if(!(d2>=1)||isNaN(F))return NaN;return ibeta(d2/(d2+d1*F),d2/2,d1/2)}
+  function tcrit(df){
+    if(!(df>=1))return NaN;
+    if(tcache[df])return tcache[df];
+    var lo=0,hi=1000,m,i;
+    for(i=0;i<70;i++){m=(lo+hi)/2;if(pT(m,df)>0.05)lo=m;else hi=m}
+    return tcache[df]=(lo+hi)/2;
+  }
+
+  /* ---------- least squares ---------- */
+  function invert(A){
+    var n=A.length,W=[],i,j,k,mx=0;
+    for(i=0;i<n;i++){W.push([]);for(j=0;j<n;j++)W[i].push(A[i][j]);for(j=0;j<n;j++)W[i].push(i===j?1:0);mx=Math.max(mx,Math.abs(A[i][i]))}
+    for(i=0;i<n;i++){
+      var p=i;for(k=i+1;k<n;k++)if(Math.abs(W[k][i])>Math.abs(W[p][i]))p=k;
+      if(Math.abs(W[p][i])<=1e-10*mx)return null;
+      var t=W[i];W[i]=W[p];W[p]=t;
+      var d=W[i][i];for(j=0;j<2*n;j++)W[i][j]/=d;
+      for(k=0;k<n;k++)if(k!==i){var q=W[k][i];if(q!==0)for(j=0;j<2*n;j++)W[k][j]-=q*W[i][j]}
+    }
+    return W.map(function(r){return r.slice(n)});
+  }
+
+  /* cols: array of predictor arrays; y: response. Centered internally for stability. */
+  function fit(cols,y){
+    var n=y.length,k=cols.length,my=mean(y),mx=cols.map(mean),i,j,l,s;
+    if(n<=k)return null;
+    var S=[],Sy=[],syy=0;
+    for(i=0;i<k;i++){
+      S.push([]);
+      for(j=0;j<k;j++){s=0;for(l=0;l<n;l++)s+=(cols[i][l]-mx[i])*(cols[j][l]-mx[j]);S[i].push(s)}
+      s=0;for(l=0;l<n;l++)s+=(cols[i][l]-mx[i])*(y[l]-my);Sy.push(s);
+    }
+    for(l=0;l<n;l++)syy+=(y[l]-my)*(y[l]-my);
+    var Si=invert(S);if(!Si||syy===0)return null;
+    var b=[],ic=my;
+    for(i=0;i<k;i++){s=0;for(j=0;j<k;j++)s+=Si[i][j]*Sy[j];b.push(s)}
+    for(i=0;i<k;i++)ic-=b[i]*mx[i];
+    var res=[],fitted=[],sse=0,e,fv;
+    for(l=0;l<n;l++){fv=ic;for(i=0;i<k;i++)fv+=b[i]*cols[i][l];fitted.push(fv);e=y[l]-fv;res.push(e);sse+=e*e}
+    var df=n-k-1,s2=df>0?sse/df:NaN,r2=1-sse/syy;
+    var se=[],t=[],p=[],q=0;
+    for(i=0;i<k;i++){se.push(Math.sqrt(s2*Si[i][i]));t.push(b[i]/se[i]);p.push(pT(Math.abs(t[i]),df))}
+    for(i=0;i<k;i++)for(j=0;j<k;j++)q+=mx[i]*Si[i][j]*mx[j];
+    var seic=Math.sqrt(s2*(1/n+q)),F=df>0?((syy-sse)/k)/(sse/df):NaN;
+    return{n:n,k:k,b:b,ic:ic,se:se,t:t,p:p,seic:seic,ticp:pT(Math.abs(ic/seic),df),res:res,fitted:fitted,
+      sse:sse,sst:syy,r2:r2,adj:df>0?1-(1-r2)*(n-1)/df:NaN,s:Math.sqrt(s2),df:df,F:F,pF:pFd(F,k,df),Si:Si,mx:mx,my:my};
+  }
+
+  /* ---------- data generation ---------- */
+  function genS(){
+    var r=rng(seed),n=+$('re-n').value,sl=+$('re-sl').value/100,sg=+$('re-sg').value,i,x;
+    sp=[];
+    for(i=0;i<n;i++){x=clamp(50+18*gauss(r));sp.push({x:x,y:clamp(50+sl*(x-50)+sg*gauss(r))})}
+    trueS=true;label='';
+  }
+  function genM(){
+    var r=rng(seed+101),n=+$('re-mn').value,rho=+$('re-rho').value/100,b1=+$('re-b1').value/100,b2=+$('re-b2').value/100,sg=+$('re-ms').value/100;
+    var z1=[],u=[],e=[],i,d=0;
+    for(i=0;i<n;i++){z1.push(gauss(r));u.push(gauss(r));e.push(gauss(r))}
+    z1=zs(z1);u=zs(u);
+    for(i=0;i<n;i++)d+=z1[i]*u[i];d/=n;
+    u=zs(u.map(function(v,k){return v-d*z1[k]}));
+    var z2=[],yz=[];
+    for(i=0;i<n;i++){z2.push(rho*z1[i]+Math.sqrt(1-rho*rho)*u[i]);yz.push(b1*z1[i]+b2*z2[i]+sg*e[i])}
+    var my=mean(yz),s=sdev(yz)||1;
+    mp=[];
+    for(i=0;i<n;i++)mp.push({a:clamp(50+15*z1[i]),b:clamp(50+15*z2[i]),y:clamp(50+15*(yz[i]-my)/s)});
+    trueM={t1:b1/s,t2:b2/s,ic:50-50*(b1/s+b2/s)};trueOK=true;label='';
+  }
+
+  /* ---------- plotting frame ---------- */
+  function ticks(a,b,c){
+    var span=b-a;if(!(span>0))return[a];
+    var st=Math.pow(10,Math.floor(Math.log(span/c)/Math.LN10)),m=span/c/st;
+    st*=m<1.5?1:m<3?2:m<7?5:10;
+    var t=[],v=Math.ceil(a/st-1e-9)*st;
+    for(;v<=b+1e-9;v+=st)t.push(Math.abs(v)<1e-9?0:v);
+    return t;
+  }
+  function tl(v){return String(+v.toFixed(4))}
+  function frame(c,w,h,x0,x1,y0,y1,xl,yl){
+    var L=52,R=w-14,T=12,B=h-40,i,v,tk;
+    var o={L:L,R:R,T:T,B:B,
+      tx:function(v){return L+(v-x0)/(x1-x0)*(R-L)},
+      ty:function(v){return B-(v-y0)/(y1-y0)*(B-T)},
+      fx:function(p){return x0+(p-L)/(R-L)*(x1-x0)},
+      fy:function(p){return y0+(B-p)/(B-T)*(y1-y0)}};
+    c.clearRect(0,0,w,h);c.font='11px system-ui,sans-serif';c.lineWidth=1;c.setLineDash([]);
+    tk=ticks(x0,x1,6);
+    for(i=0;i<tk.length;i++){v=tk[i];c.strokeStyle='#e4e9ee';c.beginPath();c.moveTo(o.tx(v),T);c.lineTo(o.tx(v),B);c.stroke();
+      c.fillStyle='#7b8794';c.textAlign='center';c.textBaseline='top';c.fillText(tl(v),o.tx(v),B+5)}
+    tk=ticks(y0,y1,5);
+    for(i=0;i<tk.length;i++){v=tk[i];c.strokeStyle='#e4e9ee';c.beginPath();c.moveTo(L,o.ty(v));c.lineTo(R,o.ty(v));c.stroke();
+      c.fillStyle='#7b8794';c.textAlign='right';c.textBaseline='middle';c.fillText(tl(v),L-6,o.ty(v))}
+    c.strokeStyle='#9aa5b1';c.strokeRect(L,T,R-L,B-T);
+    c.fillStyle='#52606d';c.textAlign='center';c.textBaseline='top';c.fillText(xl,(L+R)/2,h-18);
+    c.save();c.translate(8,(T+B)/2);c.rotate(-Math.PI/2);c.textBaseline='top';c.fillText(yl,0,0);c.restore();
+    return o;
+  }
+  function clipTo(c,f){c.save();c.beginPath();c.rect(f.L,f.T,f.R-f.L,f.B-f.T);c.clip()}
+  function line(c,f,x0,y0,x1,y1,col,w,dash){
+    c.strokeStyle=col;c.lineWidth=w;c.setLineDash(dash||[]);
+    c.beginPath();c.moveTo(f.tx(x0),f.ty(y0));c.lineTo(f.tx(x1),f.ty(y1));c.stroke();c.setLineDash([]);
+  }
+  function dot(c,x,y,r,fill){c.beginPath();c.arc(x,y,r,0,6.2832);c.fillStyle=fill;c.fill();c.strokeStyle='#fff';c.lineWidth=1.2;c.stroke()}
+  function legend(f,items,right){
+    if(!items.length)return;
+    ctx.save();ctx.font='11px system-ui,sans-serif';ctx.textAlign='left';ctx.textBaseline='middle';
+    var w=0,i;for(i=0;i<items.length;i++)w=Math.max(w,ctx.measureText(items[i].t).width);
+    var bw=w+44,bh=items.length*17+8,x=right?f.R-bw-8:f.L+8,y=f.T+8;
+    ctx.fillStyle='rgba(255,255,255,.9)';ctx.fillRect(x,y,bw,bh);ctx.strokeStyle='#d5dbe1';ctx.lineWidth=1;ctx.strokeRect(x+.5,y+.5,bw,bh);
+    items.forEach(function(it,k){
+      var yy=y+12.5+k*17;
+      ctx.strokeStyle=it.c;ctx.lineWidth=2.5;ctx.setLineDash(it.d?[5,3]:[]);
+      ctx.beginPath();ctx.moveTo(x+6,yy);ctx.lineTo(x+30,yy);ctx.stroke();ctx.setLineDash([]);
+      ctx.fillStyle='#3e4c59';ctx.fillText(it.t,x+36,yy);
+    });
+    ctx.restore();
+  }
+  function ramp(t,a){
+    t=Math.max(0,Math.min(1,t));
+    var c0=[221,107,32],c1=[138,148,163],c2=[43,108,176],u,s,v=[],i;
+    if(t<.5){u=t*2;s=[c0,c1]}else{u=(t-.5)*2;s=[c1,c2]}
+    for(i=0;i<3;i++)v.push(Math.round(s[0][i]+(s[1][i]-s[0][i])*u));
+    return'rgba('+v.join(',')+','+a+')';
+  }
+
+  /* ---------- simple regression ---------- */
+  function fitS(){
+    if(sp.length<2)return null;
+    return fit([sp.map(function(p){return p.x})],sp.map(function(p){return p.y}));
+  }
+
+  function drawSimple(){
+    var f=lastF=frame(ctx,M.w,M.h,0,100,0,100,'X','Y'),m=fitS(),ok=m&&isFinite(m.b[0]),i,p,x,h,items=[];
+    if(ok){
+      clipTo(ctx,f);
+      if(opt.mean)line(ctx,f,0,m.my,100,m.my,'#718096',1.5,[6,4]);
+      if(opt.ival&&isFinite(m.s)){
+        var tcv=tcrit(m.df),extra=opt.ival===2?1:0;
+        ctx.beginPath();
+        for(i=0;i<=50;i++){x=i*2;h=tcv*m.s*Math.sqrt(extra+1/m.n+(x-m.mx[0])*(x-m.mx[0])*m.Si[0][0]);ctx.lineTo(f.tx(x),f.ty(m.ic+m.b[0]*x+h))}
+        for(i=50;i>=0;i--){x=i*2;h=tcv*m.s*Math.sqrt(extra+1/m.n+(x-m.mx[0])*(x-m.mx[0])*m.Si[0][0]);ctx.lineTo(f.tx(x),f.ty(m.ic+m.b[0]*x-h))}
+        ctx.closePath();ctx.fillStyle='rgba(197,48,48,.11)';ctx.fill();ctx.strokeStyle='rgba(197,48,48,.35)';ctx.lineWidth=1;ctx.stroke();
+      }
+      if(opt.res===1){
+        ctx.strokeStyle='rgba(197,48,48,.5)';ctx.lineWidth=1;
+        sp.forEach(function(q,k){ctx.beginPath();ctx.moveTo(f.tx(q.x),f.ty(q.y));ctx.lineTo(f.tx(q.x),f.ty(m.fitted[k]));ctx.stroke()});
+      }else if(opt.res===2){
+        ctx.fillStyle='rgba(197,48,48,.14)';ctx.strokeStyle='rgba(197,48,48,.55)';ctx.lineWidth=1;
+        sp.forEach(function(q,k){
+          var sd=Math.abs(f.ty(q.y)-f.ty(m.fitted[k])),x0=f.tx(q.x),tp=Math.min(f.ty(q.y),f.ty(m.fitted[k]));
+          if(q.x>50)x0-=sd;
+          ctx.fillRect(x0,tp,sd,sd);ctx.strokeRect(x0,tp,sd,sd);
+        });
+      }
+      if(opt.tru&&trueS){var sl=+$('re-sl').value/100;line(ctx,f,0,50-50*sl,100,50+50*sl,'#2f855a',2,[7,4])}
+      if(opt.line)line(ctx,f,0,m.ic,100,m.ic+m.b[0]*100,'#c53030',2.5);
+      var qx=+$('re-px').value,qy=m.ic+m.b[0]*qx;
+      line(ctx,f,qx,0,qx,qy,'#dd6b20',1.5,[3,3]);line(ctx,f,0,qy,qx,qy,'#dd6b20',1.5,[3,3]);
+      ctx.beginPath();ctx.arc(f.tx(qx),f.ty(qy),7,0,6.2832);ctx.fillStyle='#fff';ctx.fill();ctx.strokeStyle='#dd6b20';ctx.lineWidth=2.5;ctx.stroke();
+      ctx.restore();
+      if(opt.line)items.push({c:'#c53030',t:'Fitted line'});
+      if(opt.mean)items.push({c:'#718096',t:'Mean of Y',d:1});
+      if(opt.tru&&trueS)items.push({c:'#2f855a',t:'True line (as generated)',d:1});
+      if(opt.ival)items.push({c:'rgba(197,48,48,.6)',t:IV[opt.ival]+' band'});
+      items.push({c:'#dd6b20',t:'Prediction at X = '+qx,d:1});
+      legend(f,items,m.b[0]<0);
+    }
+    sp.forEach(function(q,k){dot(ctx,f.tx(q.x),f.ty(q.y),k===drag?7:5,k===drag?'#dd6b20':'rgba(43,108,176,.8)')});
+    readoutS(m);
+  }
+
+  function readoutS(m){
+    var ok=m&&isFinite(m.b[0]),inf=ok&&m.df>=1;
+    tiles(ok?[
+      [fm(m.b[0],3),'Slope (b&#8321;)'],[fm(m.ic,2),'Intercept (b&#8320;)'],[inf?fm(m.r2*100,1)+'%':'-','R&sup2;'],
+      [fm(Math.sign(m.b[0])*Math.sqrt(Math.max(0,m.r2)),3),'Pearson r'],[fm(m.s,2),'Residual std. error (s)'],
+      [fm(m.se[0],3),'Std. error of slope'],[fm(m.t[0],2),'t statistic'],[inf?fpv(m.p[0]).replace('&lt;','<'):'-','p-value (slope)'],[m.n,'n']
+    ]:[[sp.length,'n']]);
+    bar(ok?m.r2:NaN);
+    var out;
+    if(!ok)out='Add at least two points that vary in X to fit a line.';
+    else{
+      var q=+$('re-px').value,yq=m.ic+m.b[0]*q;
+      out='The fitted line is <b>&#374; = '+fm(m.ic,2)+' '+sgn(m.b[0],3)+'&middot;X</b>. Each 1-unit increase in X goes with a <b>'+fm(m.b[0],3)+'</b> change in predicted Y. ';
+      if(inf){
+        var tc=tcrit(m.df);
+        out+='X accounts for <b>'+fm(m.r2*100,0)+'%</b> of the variation in Y, and predictions are typically off by about <b>'+fm(m.s,1)+'</b> units. ';
+        out+='The slope\'s 95% confidence interval is ['+fm(m.b[0]-tc*m.se[0],2)+', '+fm(m.b[0]+tc*m.se[0],2)+'], '+
+          (m.p[0]<0.05?'which excludes zero (p '+(m.p[0]<0.001?'&lt; 0.001':'= '+m.p[0].toFixed(3))+'): a real slope is plausible.':'which includes zero (p = '+m.p[0].toFixed(3)+'): this sample does not show a reliable slope.');
+        var pw=tc*m.s*Math.sqrt(1+1/m.n+(q-m.mx[0])*(q-m.mx[0])*m.Si[0][0]);
+        out+='<br>At X = '+q+', predicted Y = <b>'+fm(yq,1)+'</b> (95% prediction interval '+fm(yq-pw,1)+' to '+fm(yq+pw,1)+').';
+        if(m.n<15)out+=' <i>With so few points the estimates swing wildly, so try dragging one.</i>';
+      }else out+='<i>Two points always fit perfectly, so there is nothing left to estimate uncertainty with. Add more points.</i>';
+    }
+    if(label)out='<b>'+label+'</b><br>'+out;
+    $('re-msg').innerHTML=out;
+  }
+
+  /* ---------- multiple regression ---------- */
+  function fitM(){
+    var n=mp.length;if(n<4)return null;
+    var A=mp.map(function(p){return p.a}),B=mp.map(function(p){return p.b}),Y=mp.map(function(p){return p.y});
+    var cols=[],ix=[-1,-1];
+    if(inc[0]){ix[0]=cols.length;cols.push(A)}
+    if(inc[1]){ix[1]=cols.length;cols.push(B)}
+    var full=fit(cols,Y);if(!full)return null;
+    return{n:n,A:A,B:B,Y:Y,full:full,both:fit([A,B],Y),alone:[fit([A],Y),fit([B],Y)],ix:ix,r12:corr(A,B)};
+  }
+  function predM(m,a,b){
+    var v=m.full.ic;
+    if(m.ix[0]>=0)v+=m.full.b[m.ix[0]]*a;
+    if(m.ix[1]>=0)v+=m.full.b[m.ix[1]]*b;
+    return v;
+  }
+  function pxyM(i){
+    if(!lastF)return null;
+    if(view==='x1')return{x:lastF.tx(mp[i].a),y:lastF.ty(mp[i].y)};
+    if(view==='x2')return{x:lastF.tx(mp[i].b),y:lastF.ty(mp[i].y)};
+    return null;
+  }
+
+  function drawMulti(){
+    var m=fitM();lastF=null;
+    if(view==='3d')draw3d(m);
+    else if(view==='x1'||view==='x2')drawY(m,view==='x1'?0:1);
+    else if(view==='av1'||view==='av2')drawAV(m,view==='av1'?0:1);
+    else drawFit(m);
+    readoutM(m);
+  }
+
+  function noModel(f,msg){
+    ctx.save();ctx.font='13px system-ui,sans-serif';ctx.fillStyle='#7b8794';ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(msg,(f.L+f.R)/2,(f.T+f.B)/2);ctx.restore();
+  }
+
+  function drawY(m,w){
+    var nm=['X1','X2'],f=lastF=frame(ctx,M.w,M.h,0,100,0,100,nm[w],'Y');
+    if(!m){noModel(f,'Need at least 4 points that are not perfectly collinear.');return}
+    var xs=w?m.B:m.A,os=w?m.A:m.B,o=1-w,i,items=[];
+    var omin=Math.min.apply(null,os),omax=Math.max.apply(null,os),om=mean(os),osd=sdev(os);
+    function nrm(v){return omax>omin?(v-omin)/(omax-omin):.5}
+    var inM=inc[w],inO=inc[o],al=m.alone[w];
+    if(opt.mres&&inM){
+      clipTo(ctx,f);ctx.strokeStyle='rgba(197,48,48,.45)';ctx.lineWidth=1;
+      for(i=0;i<m.n;i++){ctx.beginPath();ctx.moveTo(f.tx(xs[i]),f.ty(m.Y[i]));ctx.lineTo(f.tx(xs[i]),f.ty(m.full.fitted[i]));ctx.stroke()}
+      ctx.restore();
+    }
+    clipTo(ctx,f);
+    if(inM&&inO){
+      if(al)line(ctx,f,0,al.ic,100,al.ic+al.b[0]*100,'#4a5568',2,[6,4]);
+      var lv=[om-osd,om,om+osd],cl=[ramp(nrm(om-osd),1),'#2d3748',ramp(nrm(om+osd),1)];
+      for(i=0;i<3;i++){
+        var yy=function(x){return predM(m,w?lv[i]:x,w?x:lv[i])};
+        line(ctx,f,0,yy(0),100,yy(100),cl[i],2.5);
+      }
+      items=[{c:cl[2],t:'Model, '+nm[o]+' high (+1 SD)'},{c:cl[1],t:'Model, '+nm[o]+' average'},{c:cl[0],t:'Model, '+nm[o]+' low (-1 SD)'},{c:'#4a5568',t:nm[w]+' alone (ignores '+nm[o]+')',d:1}];
+    }else if(inM){
+      line(ctx,f,0,predM(m,0,0),100,predM(m,100,100),'#c53030',2.5);
+      items=[{c:'#c53030',t:'Model ('+nm[o]+' not included)'}];
+    }
+    ctx.restore();
+    if(!inM)noModel(f,nm[w]+' is not in the model');
+    for(i=0;i<m.n;i++)dot(ctx,f.tx(xs[i]),f.ty(m.Y[i]),i===drag?7:4.8,i===drag?'#dd6b20':ramp(nrm(os[i]),.85));
+    var sl=al?al.b[0]:1;
+    if(inM)legend(f,items,sl<0);
+    ctx.save();ctx.font='11px system-ui,sans-serif';ctx.fillStyle='#52606d';ctx.textAlign='right';ctx.textBaseline='bottom';
+    ctx.fillText('dot color = '+nm[o]+' (orange low, blue high)',f.R-8,f.B-6);ctx.restore();
+  }
+
+  function drawAV(m,w){
+    var nm=['X1','X2'],o=1-w;
+    if(!m||!m.both){lastF=frame(ctx,M.w,M.h,0,1,0,1,nm[w],'Y');noModel(lastF,'Needs at least 4 points with both predictors varying independently.');return}
+    var x=w?m.B:m.A,z=w?m.A:m.B,fy=fit([z],m.Y),fx=fit([z],x);
+    if(!fy||!fx){lastF=frame(ctx,M.w,M.h,0,1,0,1,nm[w],'Y');noModel(lastF,'Not enough variation.');return}
+    var ry=fy.res,rx=fx.res,i,xm=0,ym=0;
+    for(i=0;i<m.n;i++){xm=Math.max(xm,Math.abs(rx[i]));ym=Math.max(ym,Math.abs(ry[i]))}
+    xm*=1.12;ym*=1.12;
+    var f=frame(ctx,M.w,M.h,-xm,xm,-ym,ym,nm[w]+' | '+nm[o]+'  (part of '+nm[w]+' not explained by '+nm[o]+')','Y | '+nm[o]),b=m.both.b[w];
+    clipTo(ctx,f);
+    line(ctx,f,-xm,0,xm,0,'#9aa5b1',1,[3,3]);line(ctx,f,0,-ym,0,ym,'#9aa5b1',1,[3,3]);
+    if(opt.mres){ctx.strokeStyle='rgba(197,48,48,.45)';ctx.lineWidth=1;for(i=0;i<m.n;i++){ctx.beginPath();ctx.moveTo(f.tx(rx[i]),f.ty(ry[i]));ctx.lineTo(f.tx(rx[i]),f.ty(b*rx[i]));ctx.stroke()}}
+    line(ctx,f,-xm,-b*xm,xm,b*xm,'#c53030',2.5);
+    ctx.restore();
+    for(i=0;i<m.n;i++)dot(ctx,f.tx(rx[i]),f.ty(ry[i]),4.8,'rgba(43,108,176,.8)');
+    legend(f,[{c:'#c53030',t:'Slope = coefficient of '+nm[w]+' = '+fm(b,3)}],b<0);
+  }
+
+  function drawFit(m){
+    var f=lastF=frame(ctx,M.w,M.h,0,100,0,100,'Fitted Y (model prediction)','Actual Y');
+    if(!m){noModel(f,'Need at least 4 points that are not perfectly collinear.');return}
+    var i;
+    clipTo(ctx,f);line(ctx,f,0,0,100,100,'#9aa5b1',1.5,[6,4]);
+    if(opt.mres){ctx.strokeStyle='rgba(197,48,48,.45)';ctx.lineWidth=1;for(i=0;i<m.n;i++){ctx.beginPath();ctx.moveTo(f.tx(m.full.fitted[i]),f.ty(m.Y[i]));ctx.lineTo(f.tx(m.full.fitted[i]),f.ty(m.full.fitted[i]));ctx.stroke()}}
+    ctx.restore();
+    for(i=0;i<m.n;i++)dot(ctx,f.tx(m.full.fitted[i]),f.ty(m.Y[i]),4.8,'rgba(43,108,176,.8)');
+    legend(f,[{c:'#9aa5b1',t:'Perfect prediction (y = x)',d:1}],false);
+  }
+
+  function draw3d(m){
+    var w=M.w,h=M.h,sc=Math.min(w,h)*0.27,cx=w/2,cy=h/2+h*0.02;
+    ctx.clearRect(0,0,w,h);
+    var cy1=Math.cos(yaw),sy=Math.sin(yaw),cp=Math.cos(pitch),sp2=Math.sin(pitch);
+    function P(a,b,y){
+      var x=(a-50)/50,z=(b-50)/50,v=(y-50)/50;
+      var x1=x*cy1-z*sy,z1=x*sy+z*cy1;
+      return{x:cx+x1*sc,y:cy-(v*cp+z1*sp2)*sc,d:-v*sp2+z1*cp};
+    }
+    function seg(p,q,col,wd){ctx.strokeStyle=col;ctx.lineWidth=wd;ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(q.x,q.y);ctx.stroke()}
+    var t,k;
+    for(t=0;t<=100;t+=20){seg(P(t,0,0),P(t,100,0),'#e4e9ee',1);seg(P(0,t,0),P(100,t,0),'#e4e9ee',1)}
+    seg(P(0,0,0),P(100,0,0),'#7b8794',1.5);seg(P(0,0,0),P(0,100,0),'#7b8794',1.5);seg(P(0,0,0),P(0,0,100),'#7b8794',1.5);
+    ctx.font='bold 12px system-ui,sans-serif';ctx.fillStyle='#52606d';ctx.textAlign='center';ctx.textBaseline='middle';
+    var e1=P(108,0,0),e2=P(0,108,0),e3=P(0,0,108);
+    ctx.fillText('X1',e1.x,e1.y);ctx.fillText('X2',e2.x,e2.y);ctx.fillText('Y',e3.x,e3.y);
+    ctx.font='11px system-ui,sans-serif';ctx.textAlign='left';ctx.textBaseline='bottom';ctx.fillStyle='#7b8794';ctx.fillText('Drag to rotate',10,h-8);
+    if(!m){ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('Need at least 4 points that are not perfectly collinear.',w/2,h/2);return}
+    function g(a,b){return Math.max(-15,Math.min(115,predM(m,a,b)))}
+    var items=[],N=10,i,j;
+    for(i=0;i<N;i++)for(j=0;j<N;j++){
+      var a0=i*10,b0=j*10,c=[P(a0,b0,g(a0,b0)),P(a0+10,b0,g(a0+10,b0)),P(a0+10,b0+10,g(a0+10,b0+10)),P(a0,b0+10,g(a0,b0+10))];
+      items.push({d:(c[0].d+c[1].d+c[2].d+c[3].d)/4,t:0,c:c});
+    }
+    for(k=0;k<m.n;k++)items.push({d:P(m.A[k],m.B[k],m.Y[k]).d,t:1,k:k});
+    items.sort(function(a,b){return b.d-a.d});
+    items.forEach(function(it){
+      if(it.t===0){
+        ctx.beginPath();ctx.moveTo(it.c[0].x,it.c[0].y);for(var q=1;q<4;q++)ctx.lineTo(it.c[q].x,it.c[q].y);ctx.closePath();
+        ctx.fillStyle='rgba(197,48,48,.15)';ctx.fill();ctx.strokeStyle='rgba(197,48,48,.35)';ctx.lineWidth=1;ctx.stroke();
+      }else{
+        var q1=P(m.A[it.k],m.B[it.k],m.Y[it.k]);
+        if(opt.mres)seg(q1,P(m.A[it.k],m.B[it.k],g(m.A[it.k],m.B[it.k])),'rgba(197,48,48,.7)',1.2);
+        dot(ctx,q1.x,q1.y,4.6,'rgba(43,108,176,.9)');
+      }
+    });
+  }
+
+  function readoutM(m){
+    var wrap=$('re-tblwrap');
+    if(!m){tiles([[mp.length,'n']]);bar(NaN);wrap.innerHTML='';
+      $('re-msg').innerHTML='Need at least 4 points, and the predictors in the model must not be perfectly collinear.';return}
+    var F=m.full,k=F.k,both=inc[0]&&inc[1];
+    tiles([[fm(F.r2*100,1)+'%','R&sup2;'],[fm(F.adj*100,1)+'%','Adjusted R&sup2;'],[fm(F.s,2),'Residual std. error (s)'],
+      [fm(F.F,2),'F statistic'],[fpv(F.pF).replace('&lt;','<'),'p-value (F test)'],[m.n,'n'],[F.df,'Residual df']]);
+    bar(F.r2);
+    var vif=both?1/(1-m.r12*m.r12):NaN,nm=['X1','X2'],tv=[trueM&&trueOK?trueM.t1:NaN,trueM&&trueOK?trueM.t2:NaN];
+    function cell(v,bold){return'<td'+(bold?' style="font-weight:700;color:#2b6cb0"':'')+'>'+v+'</td>'}
+    var rows='<tr><td>Intercept</td>'+cell(fm(F.ic,2))+cell(fm(F.seic,2))+cell(fm(F.ic/F.seic,2))+cell(fpv(F.ticp),F.ticp<0.05)+cell('-')+cell('-')+
+      cell(trueM&&trueOK&&both?fm(trueM.ic,2):'-')+'</tr>';
+    [0,1].forEach(function(j){
+      var al=m.alone[j];
+      if(m.ix[j]>=0){
+        var q=m.ix[j];
+        rows+='<tr><td>'+nm[j]+'</td>'+cell(fm(F.b[q],3))+cell(fm(F.se[q],3))+cell(fm(F.t[q],2))+cell(fpv(F.p[q]),F.p[q]<0.05)+
+          '<td'+(vif>5?' style="color:#c53030;font-weight:700"':'')+'>'+fm(vif,1)+'</td>'+cell(al?fm(al.b[0],3):'-')+cell(fm(tv[j],3))+'</tr>';
+      }else rows+='<tr><td>'+nm[j]+'</td><td colspan="5" style="text-align:center;color:#7b8794;font-style:italic">not in model</td>'+cell(al?fm(al.b[0],3):'-')+cell(fm(tv[j],3))+'</tr>';
+    });
+    wrap.innerHTML='<table><thead><tr><th>Term</th><th>Estimate</th><th>Std. error</th><th>t</th><th>p</th><th>VIF</th><th>Alone</th><th>True value</th></tr></thead><tbody>'+rows+'</tbody></table>'+
+      '<p class="re-note" style="margin-top:6px"><b>Alone</b> is the slope you would get regressing Y on that predictor by itself. <b>True value</b> is the effect used to generate the data (shown until you edit points).</p>';
+    var out='Together the predictors in the model explain <b>'+fm(F.r2*100,0)+'%</b> of the variation in Y (adjusted R&sup2; '+fm(F.adj*100,0)+'%).';
+    if(both){
+      [0,1].forEach(function(j){
+        var q=m.ix[j],al=m.alone[j],o=nm[1-j];
+        out+='<br><b>'+nm[j]+'</b>: holding '+o+' constant, +1 in '+nm[j]+' goes with a <b>'+fm(F.b[q],3)+'</b> change in Y ('+(F.p[q]<0.05?'significant, p '+(F.p[q]<0.001?'&lt; 0.001':'= '+F.p[q].toFixed(3)):'not significant, p = '+fm(F.p[q],3))+')';
+        if(al){
+          out+='; on its own the slope is '+fm(al.b[0],3)+'.';
+          if(al.b[0]*F.b[q]<0&&Math.abs(al.b[0])>0.03&&Math.abs(F.b[q])>0.03)out+=' <b>Sign flip:</b> adjusting for '+o+' reverses the direction of the relationship.';
+          else if(al.p[0]<0.05&&F.p[q]>=0.05&&F.p[m.ix[1-j]]<0.05)out+=' '+nm[j]+' looks related to Y by itself, but the link disappears once '+o+' is controlled for, so '+nm[j]+' was mostly standing in for '+o+'.';
+          else if(al.p[0]>=0.05&&F.p[q]<0.05)out+=' <b>Suppression:</b> '+nm[j]+' only reveals its effect once '+o+' is controlled for.';
+        }else out+='.';
+      });
+      if(vif>5)out+='<br><b>Multicollinearity:</b> X1 and X2 overlap heavily (r = '+fm(m.r12,2)+'), inflating each standard error by about '+fm(Math.sqrt(vif),1)+'&times;'+'. The model as a whole can fit well while individual coefficients are unstable.';
+    }else{
+      var j=inc[0]?0:1,al=m.alone[j];
+      out+='<br>Only <b>'+nm[j]+'</b> is in the model, so its slope ('+fm(F.b[0],3)+') also soaks up any effect of the omitted '+nm[1-j]+' that travels through their correlation (r = '+fm(m.r12,2)+'). Turn '+nm[1-j]+' back on to see the adjusted slope.';
+    }
+    if(label)out='<b>'+label+'</b><br>'+out;
+    $('re-msg').innerHTML=out;
+  }
+
+  /* ---------- shared readout pieces ---------- */
+  function tiles(a){$('re-stats').innerHTML=a.map(function(t){return'<div class="re-stat"><b>'+t[0]+'</b><span>'+t[1]+'</span></div>'}).join('')}
+  function bar(r2){
+    var ok=isFinite(r2),e=ok?Math.max(0,Math.min(1,r2))*100:0;
+    $('re-bar1').style.flexBasis=e+'%';
+    $('re-barlbl').innerHTML=ok?'Total variation in Y: <b>'+e.toFixed(0)+'%</b> explained by the model (blue), <b>'+(100-e).toFixed(0)+'%</b> left in the residuals (red).':'';
+  }
+
+  /* ---------- residual diagnostics ---------- */
+  function drawDiag(){
+    var xs=null,ys=null,x0=0,x1=100,xl='X',m;
+    if(mode==='simple'){
+      $('re-dh').textContent='Residuals vs X';
+      m=fitS();if(m){xs=sp.map(function(p){return p.x});ys=m.res}
+    }else{
+      $('re-dh').textContent='Residuals vs fitted values';xl='Fitted Y';
+      m=fitM();
+      if(m){
+        xs=m.full.fitted;ys=m.full.res;
+        x0=Math.min.apply(null,xs);x1=Math.max.apply(null,xs);
+        var pd=(x1-x0)*.06||1;x0-=pd;x1+=pd;
+      }
+    }
+    if(!xs){frame(c2,D.w,D.h,0,1,-1,1,xl,'Residual');return}
+    var mr=1e-6,i;for(i=0;i<ys.length;i++)mr=Math.max(mr,Math.abs(ys[i]));mr*=1.15;
+    var f=frame(c2,D.w,D.h,x0,x1,-mr,mr,xl,'Residual');
+    clipTo(c2,f);c2.strokeStyle='#4a5568';c2.lineWidth=1.5;c2.setLineDash([5,3]);
+    c2.beginPath();c2.moveTo(f.L,f.ty(0));c2.lineTo(f.R,f.ty(0));c2.stroke();c2.setLineDash([]);c2.restore();
+    for(i=0;i<xs.length;i++){
+      c2.beginPath();c2.arc(f.tx(xs[i]),f.ty(ys[i]),3.6,0,6.2832);c2.fillStyle=(mode==='simple'&&i===drag)?'#dd6b20':'rgba(43,108,176,.75)';c2.fill();
+    }
+  }
+
+  function draw(){
+    if(mode==='simple')drawSimple();else drawMulti();
+    drawDiag();
+  }
+
+  /* ---------- sizing ---------- */
+  function setup(c,x,d){var dpr=window.devicePixelRatio||1;c.width=Math.round(d.w*dpr);c.height=Math.round(d.h*dpr);c.style.height=d.h+'px';x.setTransform(dpr,0,0,dpr,0,0)}
+  function resize(){
+    M.w=cv.clientWidth||700;M.h=Math.round(Math.min(480,M.w*0.72));setup(cv,ctx,M);
+    D.w=cv2.clientWidth||700;D.h=Math.round(Math.min(230,Math.max(160,D.w*0.32)));setup(cv2,c2,D);
+    draw();
+  }
+
+  /* ---------- mode and view ---------- */
+  var VD={
+    x1:'Dots are colored by X2. The three colored lines are the model\'s predictions at low, average and high X2: parallel lines are what "holding X2 constant" looks like. The dashed line is the slope you get by ignoring X2. Drag dots to see the fit respond.',
+    x2:'The mirror image: dots colored by X1, with model lines at low, average and high X1, and a dashed line that ignores X1.',
+    av1:'Partial (added-variable) plot. X2\'s influence has been removed from both X1 and Y. The slope of what remains is exactly the X1 coefficient in the full model.',
+    av2:'Partial (added-variable) plot with X1\'s influence removed from both X2 and Y. Its slope is exactly the X2 coefficient in the full model.',
+    fit:'Each dot is a point\'s model prediction against its actual value. Tight hugging of the diagonal means good prediction; R&sup2; is the squared correlation between the two.',
+    '3d':'The fitted model is a flat plane through the cloud of points. Drag to rotate. Turn residuals on to see the vertical errors the plane is minimizing.'
+  };
+  function cursor(){cv.style.cursor=mode==='multi'&&view==='3d'?'grab':(mode==='multi'&&view!=='x1'&&view!=='x2')?'default':'crosshair'}
+  function setMode(m){
+    mode=m;drag=-1;label='';
+    $('re-tab-s').className=m==='simple'?'re-on':'';$('re-tab-m').className=m==='multi'?'re-on':'';
+    $('re-tab-s').setAttribute('aria-pressed',m==='simple');$('re-tab-m').setAttribute('aria-pressed',m==='multi');
+    $('re-sctl').className=m==='simple'?'':'re-hide';$('re-mctl').className=m==='multi'?'':'re-hide';
+    $('re-views').className=m==='multi'?'':'re-hide';$('re-tblwrap').className='re-scroll'+(m==='multi'?'':' re-hide');
+    cursor();setView(view);
+  }
+  function setView(v){
+    view=v;drag=-1;
+    Array.prototype.forEach.call(document.querySelectorAll('#re-root [data-view]'),function(b){b.className=b.getAttribute('data-view')===v?'re-on':''});
+    $('re-vdesc').innerHTML=VD[v];cursor();resize();
+  }
+  $('re-tab-s').addEventListener('click',function(){setMode('simple')});
+  $('re-tab-m').addEventListener('click',function(){setMode('multi')});
+  Array.prototype.forEach.call(document.querySelectorAll('#re-root [data-view]'),function(b){
+    b.addEventListener('click',function(){setView(this.getAttribute('data-view'))});
+  });
+
+  /* ---------- pointer interaction ---------- */
+  function pos(e){var b=cv.getBoundingClientRect();return{x:e.clientX-b.left,y:e.clientY-b.top}}
+  function npts(){return mode==='simple'?sp.length:mp.length}
+  function pxy(i){
+    if(!lastF)return null;
+    return mode==='simple'?{x:lastF.tx(sp[i].x),y:lastF.ty(sp[i].y)}:pxyM(i);
+  }
+  function nearest(m){
+    var best=-1,bd=196,i,q,dx,dy,d;
+    for(i=0;i<npts();i++){q=pxy(i);if(!q)return-1;dx=q.x-m.x;dy=q.y-m.y;d=dx*dx+dy*dy;if(d<bd){bd=d;best=i}}
+    return best;
+  }
+  cv.addEventListener('pointerdown',function(e){
+    var m=pos(e);
+    if(mode==='multi'&&view==='3d'){rot={x:e.clientX,y:e.clientY};cv.setPointerCapture(e.pointerId);cv.style.cursor='grabbing';return}
+    var i=nearest(m);
+    if(i>=0){drag=i;cv.setPointerCapture(e.pointerId)}
+    else if(mode==='simple'&&lastF){
+      var x=lastF.fx(m.x),y=lastF.fy(m.y);
+      if(x>=0&&x<=100&&y>=0&&y<=100){sp.push({x:x,y:y});label='';trueS=false}
+    }
+    draw();
+  });
+  cv.addEventListener('pointermove',function(e){
+    if(rot){
+      yaw+=(e.clientX-rot.x)*0.01;pitch=Math.max(0.05,Math.min(1.45,pitch+(e.clientY-rot.y)*0.01));
+      rot={x:e.clientX,y:e.clientY};draw();return;
+    }
+    if(drag<0||!lastF)return;
+    var m=pos(e),x=clamp(lastF.fx(m.x)),y=clamp(lastF.fy(m.y));
+    if(mode==='simple'){sp[drag].x=x;sp[drag].y=y;trueS=false}
+    else{if(view==='x1')mp[drag].a=x;else mp[drag].b=x;mp[drag].y=y;trueOK=false}
+    label='';draw();
+  });
+  function up(){if(rot){rot=null;cursor();return}if(drag>=0){drag=-1;draw()}}
+  cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
+  cv.addEventListener('dblclick',function(e){
+    var i=nearest(pos(e));
+    if(i>=0){(mode==='simple'?sp:mp).splice(i,1);if(mode==='simple')trueS=false;else trueOK=false;drag=-1;draw()}
+  });
+
+  /* ---------- simple controls ---------- */
+  function bind(id,out,fmtf,h){$(id).addEventListener('input',function(){$(out).textContent=fmtf(this.value);h()})}
+  bind('re-sl','re-slv',function(v){return(v/100).toFixed(2)},function(){genS();draw()});
+  bind('re-sg','re-sgv',function(v){return v},function(){genS();draw()});
+  bind('re-n','re-nv',function(v){return v},function(){genS();draw()});
+  bind('re-px','re-pxv',function(v){return v},function(){draw()});
+  $('re-new').addEventListener('click',function(){seed=Math.floor(Math.random()*1e6);genS();draw()});
+  $('re-out').addEventListener('click',function(){
+    var m=fitS(),sl=m&&isFinite(m.b[0])?m.b[0]:0;
+    sp.push(sl>=0?{x:92,y:6}:{x:92,y:94});trueS=false;
+    label='Outlier added: notice how far one point drags the line, and how R\u00b2 drops.';draw();
+  });
+  function toggle(id,key,name){
+    $(id).addEventListener('click',function(){
+      opt[key]=!opt[key];this.textContent=name+': '+(opt[key]?'on':'off');this.setAttribute('aria-pressed',opt[key]);draw();
+    });
+  }
+  toggle('re-line','line','Regression line');toggle('re-mean','mean','Mean of Y');toggle('re-tru','tru','True line');toggle('re-mres','mres','Residuals');
+  $('re-res').addEventListener('click',function(){opt.res=(opt.res+1)%3;this.textContent='Residuals: '+RES[opt.res];this.setAttribute('aria-pressed',opt.res>0);draw()});
+  $('re-ival').addEventListener('click',function(){opt.ival=(opt.ival+1)%3;this.textContent='Interval: '+IV[opt.ival];this.setAttribute('aria-pressed',opt.ival>0);draw()});
+  $('re-clear').addEventListener('click',function(){sp=[];label='';trueS=false;draw()});
+
+  var AX=[10,8,13,9,11,14,6,4,12,7,5];
+  var PRE={
+    a1:{x:AX,y:[8.04,6.95,7.58,8.81,8.33,9.96,7.24,4.26,10.84,4.82,5.68],t:'Anscombe I: a typical linear relationship.'},
+    a2:{x:AX,y:[9.14,8.14,8.74,8.77,9.26,8.10,6.13,3.10,9.13,7.26,4.74],t:'Anscombe II: a clear curve, yet the fitted line and R\u00b2 match set I. The residual plot gives it away.'},
+    a3:{x:AX,y:[7.46,6.77,12.74,7.11,7.81,8.84,6.08,5.39,8.15,6.42,5.73],t:'Anscombe III: a perfect line plus one outlier that tilts the fitted line.'},
+    a4:{x:[8,8,8,8,8,8,8,19,8,8,8],y:[6.58,5.76,7.71,8.84,8.47,7.04,5.25,12.5,5.56,7.91,6.89],t:'Anscombe IV: one leverage point alone determines the slope.'}
+  };
+  Array.prototype.forEach.call(document.querySelectorAll('#re-root [data-pre]'),function(b){
+    b.addEventListener('click',function(){
+      var k=this.getAttribute('data-pre'),r=rng(seed),i,x,y;
+      if(k==='curve'){
+        sp=[];for(i=0;i<40;i++){x=5+r()*90;y=clamp(92-(x-50)*(x-50)/28+gauss(r)*4);sp.push({x:x,y:y})}
+        label='Curved: the straight line misses the pattern, and the residuals form a U shape.';
+      }else if(k==='fan'){
+        sp=[];for(i=0;i<60;i++){x=5+r()*90;y=clamp(50+0.6*(x-50)+gauss(r)*(3+x*0.28));sp.push({x:x,y:y})}
+        label='Fan-shaped: the line is fine on average, but the spread grows with X, so the usual standard errors and intervals are unreliable.';
+      }else{
+        var p=PRE[k];sp=p.x.map(function(v,j){return{x:v*5,y:p.y[j]*7}});label=p.t;
+      }
+      trueS=false;draw();
+    });
+  });
+
+  /* ---------- multiple controls ---------- */
+  function mchange(){genM();draw()}
+  bind('re-rho','re-rhov',function(v){return(v/100).toFixed(2)},mchange);
+  bind('re-ms','re-msv',function(v){return(v/100).toFixed(2)},mchange);
+  bind('re-b1','re-b1v',function(v){return(v/100).toFixed(2)},mchange);
+  bind('re-b2','re-b2v',function(v){return(v/100).toFixed(2)},mchange);
+  bind('re-mn','re-mnv',function(v){return v},mchange);
+  $('re-mnew').addEventListener('click',function(){seed=Math.floor(Math.random()*1e6);mchange()});
+  $('re-mout').addEventListener('click',function(){
+    var m=fitM(),y=m&&predM(m,92,92)>50?4:96;
+    mp.push({a:92,b:92,y:y});trueOK=false;
+    label='Outlier added at high X1 and high X2: watch the coefficients and R\u00b2 shift.';draw();
+  });
+  [0,1].forEach(function(j){
+    $('re-i'+(j+1)).addEventListener('change',function(){
+      inc[j]=this.checked;
+      if(!inc[0]&&!inc[1]){inc[j]=true;this.checked=true}
+      label='';draw();
+    });
+  });
+  var SC={
+    def:{rho:50,b1:60,b2:40,ms:70,t:''},
+    indep:{rho:0,b1:60,b2:50,ms:70,t:'Independent predictors: with X1 and X2 uncorrelated, each coefficient matches its "Alone" slope, so adding the other predictor changes nothing but the noise.'},
+    conf:{rho:80,b1:0,b2:80,ms:60,t:'Confounder: X2 drives Y and X1 has no true effect, but X1 is correlated with X2. Alone, X1 looks important. Include X2 and its coefficient collapses toward zero (or untick X2 to watch the false effect appear).'},
+    flip:{rho:80,b1:-30,b2:80,ms:60,t:'Sign flip (Simpson\'s paradox style): X1 truly lowers Y, but because it travels with the strongly positive X2, its simple slope is positive.'},
+    supp:{rho:60,b1:100,b2:-60,ms:60,t:'Suppression: X2 has almost no simple relationship with Y (see its "Alone" slope), yet it matters once X1 is in the model because it cancels noise shared with X1.'},
+    coll:{rho:95,b1:50,b2:50,ms:60,t:'Multicollinearity: X1 and X2 are nearly the same variable, so the model cannot tell their effects apart. R\u00b2 stays high but standard errors balloon. Click New random sample and watch the coefficients jump around.'}
+  };
+  Array.prototype.forEach.call(document.querySelectorAll('#re-root [data-sc]'),function(b){
+    b.addEventListener('click',function(){
+      var s=SC[this.getAttribute('data-sc')];
+      $('re-rho').value=s.rho;$('re-b1').value=s.b1;$('re-b2').value=s.b2;$('re-ms').value=s.ms;
+      $('re-rhov').textContent=(s.rho/100).toFixed(2);$('re-b1v').textContent=(s.b1/100).toFixed(2);
+      $('re-b2v').textContent=(s.b2/100).toFixed(2);$('re-msv').textContent=(s.ms/100).toFixed(2);
+      inc=[true,true];$('re-i1').checked=true;$('re-i2').checked=true;
+      genM();label=s.t;draw();
+    });
+  });
+
+  window.addEventListener('resize',resize);
+  genS();genM();setMode('simple');
+})();
+</script>
+</div>
