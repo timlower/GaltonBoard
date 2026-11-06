@@ -29,6 +29,19 @@
 #re-root th:first-child,#re-root td:first-child{text-align:left}
 #re-root th{font-size:.75rem;color:#52606d;font-weight:600}
 #re-root .re-hide{display:none!important}
+#re-root .re-swrap{display:flex;align-items:center;gap:10px}
+#re-root button.re-switch{position:relative;width:44px;height:24px;padding:0;margin:0;border:1px solid #9aa5b1;border-radius:12px;background:#cbd2d9;color:inherit;transition:background .15s,border-color .15s}
+#re-root button.re-switch::after{content:"";position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.3);transition:transform .15s}
+#re-root button.re-switch[aria-checked=true]{background:#2b6cb0;border-color:#2b6cb0}
+#re-root button.re-switch[aria-checked=true]::after{transform:translateX(20px)}
+#re-root button.re-switch:hover{background:#b8c1cb}
+#re-root button.re-switch[aria-checked=true]:hover{background:#2c5f9a}
+#re-root button.re-switch:focus-visible{outline:2px solid #2b6cb0;outline-offset:2px}
+#re-root .re-swlbl{font-weight:600;font-size:.9rem;cursor:pointer;margin:0}
+#re-root dl.re-key{margin:8px 0 0;display:grid;grid-template-columns:max-content 1fr;gap:4px 14px;font-size:.88rem}
+#re-root dl.re-key dt{font-weight:700;white-space:nowrap}
+#re-root dl.re-key dd{margin:0;color:#3e4c59}
+#re-root .re-keyh{font-size:.75rem;font-weight:700;color:#52606d;text-transform:uppercase;letter-spacing:.04em;margin:12px 0 0}
 </style>
 
 <div class="re-card">
@@ -149,6 +162,53 @@
   <h3 id="re-dh">Residual plot</h3>
   <canvas id="re-cv2" role="img" aria-label="Residual plot" style="cursor:default"></canvas>
   <p class="re-note" style="margin-top:6px">A healthy model leaves residuals as a shapeless band around zero. A curve means the relationship is not linear; a fan means the noise is not constant; isolated points far from zero are outliers.</p>
+</div>
+
+<div class="re-card">
+  <div class="re-swrap">
+    <button id="re-keybtn" class="re-switch" role="switch" aria-checked="false" aria-labelledby="re-keylbl" aria-controls="re-key"></button>
+    <label id="re-keylbl" class="re-swlbl" for="re-keybtn">Symbol key</label>
+  </div>
+  <div id="re-key" class="re-hide">
+    <div id="re-key-s">
+      <p class="re-keyh">Simple regression</p>
+      <dl class="re-key">
+        <dt>X, Y</dt><dd>The predictor and the outcome being predicted.</dd>
+        <dt>&#374; (Y-hat)</dt><dd>The value of Y predicted by the fitted line.</dd>
+        <dt>b&#8320;, b&#8321;</dt><dd>Intercept (predicted Y when X = 0) and slope (change in predicted Y per 1-unit increase in X).</dd>
+        <dt>Pearson r</dt><dd>Strength and direction of the linear association, from &minus;1 to +1.</dd>
+        <dt>R&sup2;</dt><dd>Share of the variation in Y accounted for by the model.</dd>
+        <dt>s</dt><dd>Residual standard error: the typical size of a prediction miss, in Y units.</dd>
+        <dt>Std. error of slope</dt><dd>How much the slope would vary from sample to sample.</dd>
+        <dt>t, p</dt><dd>t = slope / its standard error; p is the chance of a slope this far from 0 if the true slope were 0.</dd>
+        <dt>Confidence band</dt><dd>Plausible range for the average Y at each X.</dd>
+        <dt>Prediction band</dt><dd>Plausible range for a single new Y at each X (wider).</dd>
+      </dl>
+    </div>
+    <div id="re-key-m" class="re-hide">
+      <p class="re-keyh">Multiple regression</p>
+      <dl class="re-key">
+        <dt>X1, X2</dt><dd>The two predictors; Y is the outcome.</dd>
+        <dt>Estimate</dt><dd>Coefficient: change in Y per 1-unit increase in that predictor, holding the other constant.</dd>
+        <dt>Std. error, t, p</dt><dd>Uncertainty of each coefficient, its t statistic, and its p-value.</dd>
+        <dt>Adjusted R&sup2;</dt><dd>R&sup2; penalized for the number of predictors, so extra predictors must earn their place.</dd>
+        <dt>F, p (F test)</dt><dd>Tests whether the predictors together explain more than chance.</dd>
+        <dt>Residual df</dt><dd>n minus the number of estimated coefficients (including the intercept).</dd>
+        <dt>VIF</dt><dd>Variance inflation factor: how much the other predictor inflates this coefficient's variance. Above about 5 signals multicollinearity.</dd>
+        <dt>Alone</dt><dd>The slope from regressing Y on that predictor by itself, ignoring the other.</dd>
+        <dt>True value</dt><dd>The effect used to generate the data, rescaled to the plot's units.</dd>
+        <dt>Partial plot</dt><dd>Y and one predictor after removing the other's influence; its slope equals that coefficient.</dd>
+      </dl>
+    </div>
+    <div>
+      <p class="re-keyh">Both modes</p>
+      <dl class="re-key">
+        <dt>Residual</dt><dd>Actual Y minus fitted Y; the part the model misses.</dd>
+        <dt>n</dt><dd>Number of points.</dd>
+        <dt>Variance bar</dt><dd>Blue = explained (R&sup2;); red = left in the residuals.</dd>
+      </dl>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -638,6 +698,7 @@
     $('re-tab-s').setAttribute('aria-pressed',m==='simple');$('re-tab-m').setAttribute('aria-pressed',m==='multi');
     $('re-sctl').className=m==='simple'?'':'re-hide';$('re-mctl').className=m==='multi'?'':'re-hide';
     $('re-views').className=m==='multi'?'':'re-hide';$('re-tblwrap').className='re-scroll'+(m==='multi'?'':' re-hide');
+    $('re-key-s').className=m==='simple'?'':'re-hide';$('re-key-m').className=m==='multi'?'':'re-hide';
     cursor();setView(view);
   }
   function setView(v){
@@ -776,6 +837,11 @@
     });
   });
 
+  $('re-keybtn').addEventListener('click',function(){
+    var on=this.getAttribute('aria-checked')!=='true';
+    this.setAttribute('aria-checked',on);
+    $('re-key').className=on?'':'re-hide';
+  });
   window.addEventListener('resize',resize);
   genS();genM();setMode('simple');
 })();
