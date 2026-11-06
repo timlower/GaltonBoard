@@ -346,6 +346,43 @@
     text-align:center;
     line-height:1.4;
   }
+  .key{
+    max-width:1240px;
+    margin:20px auto 0;
+  }
+  .key-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:12px;
+  }
+  .key h2{
+    font-size:.95rem;
+    font-weight:600;
+    margin:0;
+  }
+  .key dl[hidden]{ display:none; }
+  .key dl{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(250px,1fr));
+    gap:14px 28px;
+    margin:16px 0 0 0;
+  }
+  .key dl > div{
+    min-width:0;
+  }
+  .key dt{
+    font-weight:700;
+    font-size:.82rem;
+    color:var(--accent);
+    margin-bottom:2px;
+  }
+  .key dd{
+    margin:0;
+    font-size:.78rem;
+    line-height:1.45;
+    color:var(--muted);
+  }
   .pair-title{
     font-size:.95rem;
     font-weight:600;
@@ -358,7 +395,7 @@
 <header class="top">
   <div>
     <h1>Multivariate Normal Distribution</h1>
-    <div class="sub">Pick the number of dimensions k, then explore any pair of them. Drag on the plot to move the mean.</div>
+    <div class="sub">Pick the number of dimensions k. For bivariate normal distributions (k = 2) a 3-D surface can be depicted. For trivariate normal distributions (k = 3), a 3-D coordinate ellipsoid can be depicted.</div>
   </div>
   <div class="kbar" role="group" aria-label="Number of dimensions">
     <span class="k-label">Dimensions&nbsp;k</span>
@@ -376,7 +413,7 @@
     <div id="params"></div>
 
     <div class="section-title">Correlation matrix</div>
-    <div class="hint" style="margin-bottom:8px;">Click a cell to plot that pair. Σ is kept positive definite automatically.</div>
+    <div class="hint" style="margin-bottom:8px;"><span id="corr-hint">Click a cell to plot that pair.</span> Σ is kept positive definite automatically.</div>
     <div id="corr-matrix" class="cmat"></div>
     <div class="row" style="margin-top:14px;">
       <div class="label-line"><span class="name" id="rho-name">ρ</span><span class="val" id="rho-val">0.00</span></div>
@@ -397,7 +434,7 @@
 
   <main class="right">
     <section class="panel viz-panel">
-      <div class="toolbar">
+      <div class="toolbar" id="disp-bar">
         <div class="seg" id="disp-seg">
           <button data-mode="heat" class="active">Heatmap</button>
           <button data-mode="contour">Contours</button>
@@ -407,6 +444,20 @@
           <span class="name">Invert surface</span>
           <label class="switch" title="Flip the surface upside down">
             <input type="checkbox" id="invert" aria-label="Invert surface">
+            <span class="track"></span>
+          </label>
+        </div>
+      </div>
+      <div class="toolbar" id="cube-bar" style="display:none;">
+        <div class="seg" id="shell-seg" role="group" aria-label="Ellipsoid shells to show">
+          <button data-shell="1" class="active" title="Surface where the Mahalanobis distance is 1">1σ</button>
+          <button data-shell="2" class="active" title="Surface where the Mahalanobis distance is 2">2σ</button>
+          <button data-shell="3" class="active" title="Surface where the Mahalanobis distance is 3">3σ</button>
+        </div>
+        <div class="switch-row">
+          <span class="name">Wall projections</span>
+          <label class="switch" title="Show each pairwise marginal on the cube walls">
+            <input type="checkbox" id="proj" checked aria-label="Show wall projections">
             <span class="track"></span>
           </label>
         </div>
@@ -429,12 +480,43 @@
       <div id="pairs-wrap"><canvas id="pairs"></canvas></div>
       <div class="footer-note" style="margin-top:8px;">
         Diagonal: each dimension's own density. Below: bivariate marginal of each pair (1σ and 2σ contours). Above: correlation.
-        Any two-dimensional marginal of a multivariate normal is itself bivariate normal. Click a cell to plot that pair.
+        Any two-dimensional marginal of a multivariate normal is itself bivariate normal. <span id="pair-hint">Click a cell to plot that pair.</span>
       </div>
     </section>
   </main>
 
 </div>
+
+<section class="panel key" aria-labelledby="key-title">
+  <div class="key-head">
+    <h2 id="key-title">Key to symbols and expressions</h2>
+    <div class="switch-row">
+      <span class="name">Show key</span>
+      <label class="switch" title="Show or hide the key">
+        <input type="checkbox" id="key-toggle" aria-controls="key-body" aria-expanded="false" aria-label="Show key">
+        <span class="track"></span>
+      </label>
+    </div>
+  </div>
+  <dl id="key-body" hidden>
+    <div><dt>k</dt><dd>Number of dimensions (variables) in the distribution.</dd></div>
+    <div><dt>X₁ … X<sub>k</sub></dt><dd>The k random variables. Each is normally distributed on its own.</dd></div>
+    <div><dt>f(x)</dt><dd>Probability density: how concentrated the probability is near the point x. Higher means more likely nearby.</dd></div>
+    <div><dt>μ (mean)</dt><dd>The center of the distribution, one value per dimension. Shown as a dot or cross on the plots.</dd></div>
+    <div><dt>σ (spread)</dt><dd>Standard deviation of a single variable: its typical distance from its mean.</dd></div>
+    <div><dt>ρ (correlation)</dt><dd>How strongly two variables move together, from −1 to 1. Positive tilts the shape up and to the right, negative tilts it down; 0 means uncorrelated.</dd></div>
+    <div><dt>Σ (covariance matrix)</dt><dd>Table of all variances (diagonal, σ²) and covariances (off-diagonal, ρσσ) that together set the shape and tilt.</dd></div>
+    <div><dt>Cov(X,Y)</dt><dd>Covariance of two variables: ρ × σₓ × σᵧ.</dd></div>
+    <div><dt>|Σ| (det)</dt><dd>Determinant of Σ. A larger value means the distribution occupies more volume and is more spread out.</dd></div>
+    <div><dt>Peak density</dt><dd>Height of f at the mean, the highest point of the distribution: 1 / ((2π)<sup>k/2</sup>√|Σ|).</dd></div>
+    <div><dt>1σ, 2σ, 3σ</dt><dd>Ellipses (2-D) or ellipsoid shells (3-D) of constant density at 1, 2 and 3 standard deviations from the mean (Mahalanobis distance). In one dimension these hold about 68%, 95% and 99.7% of the probability.</dd></div>
+    <div><dt>Marginal</dt><dd>The distribution of a chosen subset of variables with all the others ignored. Any pair's marginal is itself a bivariate normal.</dd></div>
+    <div><dt>Conditional</dt><dd>The distribution of two chosen variables given that every other variable is held at a fixed value.</dd></div>
+    <div><dt>Pairwise grid</dt><dd>Matrix of plots: each variable's own curve on the diagonal, each pair's marginal below it, and correlations above it.</dd></div>
+    <div><dt>Wall projections</dt><dd>In the 3-D cube, the flat outlines on the back walls show each pair's marginal, as if the ellipsoid cast a shadow onto the wall.</dd></div>
+    <div><dt>Positive definite</dt><dd>The condition that Σ describes a valid distribution. The page limits correlations so that this always holds.</dd></div>
+  </dl>
+</section>
 
 <script>
 (function(){
@@ -464,6 +546,8 @@
   let condMode = false;
   let invertSurface = false;
   let orbit = { az: 0.9, el: 0.55 };
+  let shellOn = { 1: true, 2: true, 3: true };   // k = 3: which ellipsoid shells are drawn
+  let showProj = true;                           // k = 3: pairwise marginals on the cube walls
   let view = { mux: 0, muy: 0, sx: 1, sy: 1, rho: 0 };
 
   // ---------------- linear algebra ----------------
@@ -744,6 +828,223 @@
     }
   }
 
+  // ---------------- 3D ellipsoid in a cube (k = 3) ----------------
+  const CUBE = 6;   // the field is [-6, 6]^3, matching the 2-D views
+  const SHELLS = [
+    { c: 1, rgb: heatColor(0.9),  alpha: 0.55 },
+    { c: 2, rgb: heatColor(0.6),  alpha: 0.30 },
+    { c: 3, rgb: heatColor(0.35), alpha: 0.17 }
+  ];
+  const NLAT = 22, NLON = 36;
+  const UNIT = [];
+  for(let i = 0; i <= NLAT; i++){
+    const th = Math.PI * i / NLAT, row = [];
+    for(let j = 0; j <= NLON; j++){
+      const ph = 2 * Math.PI * j / NLON;
+      row.push([Math.sin(th)*Math.cos(ph), Math.sin(th)*Math.sin(ph), Math.cos(th)]);
+    }
+    UNIT.push(row);
+  }
+  const LIGHT = (() => { const l = [-0.35, 0.6, -0.72], n = Math.hypot(...l); return l.map(v => v / n); })();
+
+  function camera(){
+    const cA = Math.cos(orbit.az), sA = Math.sin(orbit.az);
+    const cE = Math.cos(orbit.el), sE = Math.sin(orbit.el);
+    const sc = SIZE / 23;
+    // returns [right, up, depth]; larger depth = farther from the viewer; X3 is vertical
+    const rot = (x, y, z) => {
+      const Y = x*sA + y*cA;
+      return [x*cA - y*sA, Y*sE + z*cE, Y*cE - z*sE];
+    };
+    const proj = (x, y, z) => {
+      const r = rot(x, y, z);
+      return [SIZE/2 + r[0]*sc, SIZE/2 - r[1]*sc, r[2]];
+    };
+    return { rot, proj };
+  }
+
+  function drawCube(){
+    const g = ctx, C = CUBE;
+    const { rot, proj } = camera();
+    const L = cholesky(cov());
+    const Linv = L && invert(L);
+    if(!L || !Linv) return;
+
+    // cube corners; the farthest corner decides which walls and edges are "behind"
+    const V = [];
+    for(let i = 0; i < 8; i++) V.push([(i & 4 ? 1 : -1)*C, (i & 2 ? 1 : -1)*C, (i & 1 ? 1 : -1)*C]);
+    const VP = V.map(v => proj(v[0], v[1], v[2]));
+    let far = 0;
+    for(let i = 1; i < 8; i++) if(VP[i][2] > VP[far][2]) far = i;
+    const sv = V[far];
+    const cs = proj(0, 0, 0);
+    const others = ax => [0, 1, 2].filter(i => i !== ax);
+    const wallPt = (ax, u, v) => {
+      const p = [0, 0, 0], o = others(ax);
+      p[ax] = sv[ax]; p[o[0]] = u; p[o[1]] = v;
+      return p;
+    };
+    const line = (p, q) => {
+      const a = proj(p[0], p[1], p[2]), b = proj(q[0], q[1], q[2]);
+      g.beginPath(); g.moveTo(a[0], a[1]); g.lineTo(b[0], b[1]); g.stroke();
+    };
+    const edges = [];
+    for(let i = 0; i < 8; i++) for(let j = i + 1; j < 8; j++){
+      const d = i ^ j;
+      if(d === 1 || d === 2 || d === 4) edges.push([i, j]);
+    }
+
+    g.save();
+    g.lineJoin = 'round';
+
+    // 1. back walls with grid lines
+    for(let ax = 0; ax < 3; ax++){
+      const q = [wallPt(ax,-C,-C), wallPt(ax,C,-C), wallPt(ax,C,C), wallPt(ax,-C,C)].map(p => proj(p[0], p[1], p[2]));
+      g.beginPath();
+      g.moveTo(q[0][0], q[0][1]);
+      for(let i = 1; i < 4; i++) g.lineTo(q[i][0], q[i][1]);
+      g.closePath();
+      g.fillStyle = 'rgba(59,91,219,0.035)';
+      g.fill();
+      g.strokeStyle = 'rgba(20,24,50,0.09)';
+      g.lineWidth = 1;
+      for(let t = -C + 2; t < C; t += 2){
+        line(wallPt(ax, t, -C), wallPt(ax, t, C));
+        line(wallPt(ax, -C, t), wallPt(ax, C, t));
+      }
+    }
+
+    // 2. pairwise marginals projected onto the back walls
+    if(showProj){
+      for(let ax = 0; ax < 3; ax++){
+        const [a, b] = others(ax);
+        const sa = sd[a], sb = sd[b], rho = R[a][b];
+        const sel = (a === selX && b === selY) || (a === selY && b === selX);
+        for(const kk of [2, 1]){
+          g.beginPath();
+          for(let i = 0; i <= 72; i++){
+            const t = i / 72 * 2 * Math.PI;
+            const p = [0, 0, 0];
+            p[ax] = sv[ax];
+            p[a] = clamp(mu[a] + kk*sa*Math.cos(t), -C, C);
+            p[b] = clamp(mu[b] + kk*sb*(rho*Math.cos(t) + Math.sqrt(1 - rho*rho)*Math.sin(t)), -C, C);
+            const q = proj(p[0], p[1], p[2]);
+            if(i) g.lineTo(q[0], q[1]); else g.moveTo(q[0], q[1]);
+          }
+          g.closePath();
+          if(kk === 2){
+            g.fillStyle = sel ? 'rgba(59,91,219,0.12)' : 'rgba(20,24,50,0.05)';
+            g.fill();
+          }
+          g.strokeStyle = sel ? `rgba(59,91,219,${kk === 1 ? 0.95 : 0.6})` : `rgba(20,24,50,${kk === 1 ? 0.55 : 0.3})`;
+          g.lineWidth = sel ? 2 : 1.2;
+          g.stroke();
+        }
+      }
+    }
+
+    // 3. coordinate axes through the origin and the hidden cube edges
+    g.strokeStyle = 'rgba(20,24,50,0.22)';
+    g.lineWidth = 1;
+    for(let i = 0; i < 3; i++){
+      const p = [0, 0, 0], q = [0, 0, 0];
+      p[i] = -C; q[i] = C;
+      line(p, q);
+    }
+    g.setLineDash([4, 4]);
+    g.strokeStyle = 'rgba(20,24,50,0.28)';
+    for(const [i, j] of edges) if(i === far || j === far) line(V[i], V[j]);
+    g.setLineDash([]);
+
+    // 4. the ellipsoid: shells of constant density, x = mu + c * L * u for unit vectors u
+    const LU = UNIT.map(row => row.map(u => [
+      L[0][0]*u[0],
+      L[1][0]*u[0] + L[1][1]*u[1],
+      L[2][0]*u[0] + L[2][1]*u[1] + L[2][2]*u[2]
+    ]));
+    // surface normal of the ellipsoid is proportional to inv(L)^T u
+    const NRM = UNIT.map(row => row.map(u => [0, 1, 2].map(m => Linv[0][m]*u[0] + Linv[1][m]*u[1] + Linv[2][m]*u[2])));
+    const faces = [];
+    for(const sh of SHELLS){
+      if(!shellOn[sh.c]) continue;
+      const PP = LU.map(row => row.map(l => proj(
+        clamp(mu[0] + sh.c*l[0], -C, C),
+        clamp(mu[1] + sh.c*l[1], -C, C),
+        clamp(mu[2] + sh.c*l[2], -C, C))));
+      for(let i = 0; i < NLAT; i++){
+        for(let j = 0; j < NLON; j++){
+          const q = [PP[i][j], PP[i][j+1], PP[i+1][j+1], PP[i+1][j]];
+          const n0 = NRM[i][j], n1 = NRM[i][j+1], n2 = NRM[i+1][j+1], n3 = NRM[i+1][j];
+          const nr = rot(n0[0]+n1[0]+n2[0]+n3[0], n0[1]+n1[1]+n2[1]+n3[1], n0[2]+n1[2]+n2[2]+n3[2]);
+          const len = Math.hypot(nr[0], nr[1], nr[2]) || 1;
+          const front = nr[2] < 0;                         // normal points toward the viewer
+          let d = (nr[0]*LIGHT[0] + nr[1]*LIGHT[1] + nr[2]*LIGHT[2]) / len;
+          if(!front) d = -d;                               // we see the inside of back faces
+          d = clamp(d, 0, 1);
+          const shade = front ? 0.58 + 0.42*d : 0.5 + 0.2*d;
+          faces.push({
+            q,
+            depth: (q[0][2] + q[1][2] + q[2][2] + q[3][2]) / 4,
+            col: `${(sh.rgb[0]*shade)|0},${(sh.rgb[1]*shade)|0},${(sh.rgb[2]*shade)|0}`,
+            a: front ? sh.alpha : sh.alpha * 0.75
+          });
+        }
+      }
+    }
+    faces.sort((p, q) => q.depth - p.depth);     // far to near
+    g.lineWidth = 0.6;
+    for(const f of faces){
+      g.beginPath();
+      g.moveTo(f.q[0][0], f.q[0][1]);
+      for(let i = 1; i < 4; i++) g.lineTo(f.q[i][0], f.q[i][1]);
+      g.closePath();
+      g.fillStyle = `rgba(${f.col},${f.a})`;
+      g.fill();
+      g.strokeStyle = `rgba(${f.col},${Math.min(1, f.a * 0.9)})`;
+      g.stroke();
+    }
+
+    // 5. front cube edges and the mean
+    g.strokeStyle = 'rgba(20,24,50,0.55)';
+    g.lineWidth = 1.3;
+    for(const [i, j] of edges) if(i !== far && j !== far) line(V[i], V[j]);
+
+    const m = proj(clamp(mu[0], -C, C), clamp(mu[1], -C, C), clamp(mu[2], -C, C));
+    g.fillStyle = '#1a1d2e';
+    g.strokeStyle = '#ffffff';
+    g.lineWidth = 1.5;
+    g.beginPath(); g.arc(m[0], m[1], 4, 0, 2*Math.PI); g.fill(); g.stroke();
+
+    // 6. tick labels and axis names along the three back edges, placed outside the cube
+    const edgeLabel = (p0, p1, pt, text, off, font, color) => {
+      const a = proj(p0[0], p0[1], p0[2]), b = proj(p1[0], p1[1], p1[2]), q = proj(pt[0], pt[1], pt[2]);
+      const ox = q[0] - cs[0], oy = q[1] - cs[1];
+      let dx = b[0] - a[0], dy = b[1] - a[1];
+      const len = Math.hypot(dx, dy);
+      let nx, ny;
+      if(len < 2){                                    // edge seen end-on: push straight away from the centre
+        const ol = Math.hypot(ox, oy) || 1;
+        nx = ox / ol; ny = oy / ol;
+      } else {
+        nx = -dy / len; ny = dx / len;
+        if(nx*ox + ny*oy < 0){ nx = -nx; ny = -ny; }
+      }
+      g.font = font;
+      g.fillStyle = color;
+      g.textAlign = 'center';
+      g.textBaseline = 'middle';
+      g.fillText(text, q[0] + nx*off, q[1] + ny*off);
+    };
+    for(let ax = 0; ax < 3; ax++){
+      const at = t => { const p = [sv[0], sv[1], sv[2]]; p[ax] = t; return p; };
+      for(let t = -4; t <= 4; t += 2){
+        edgeLabel(at(-C), at(C), at(t), String(t), 11, '11px sans-serif', 'rgba(20,24,50,0.6)');
+      }
+      edgeLabel(at(-C), at(C), at(0), nm(ax), 30, '700 14px sans-serif', '#1a1d2e');
+    }
+    g.restore();
+  }
+
   // ---------------- main plot ----------------
   function renderMain(){
     const M = mapper(0, 0, SIZE, SIZE);
@@ -751,6 +1052,7 @@
     ctx.clearRect(0, 0, SIZE, SIZE);
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, SIZE, SIZE);
+    if(k === 3){ drawCube(); return; }
     if(dispMode === 'heat'){
       ctx.imageSmoothingEnabled = true;
       ctx.drawImage(heatCanvas(view, 180, false), 0, 0, SIZE, SIZE);
@@ -873,8 +1175,8 @@
     $('stats').innerHTML = `
       <div class="stat-box"><div class="k">|Σ| (det)</div><div class="v">${det.toPrecision(3)}</div></div>
       <div class="stat-box"><div class="k">Peak density, ${k}-D</div><div class="v">${peak.toPrecision(3)}</div></div>
-      <div class="stat-box"><div class="k">Plotted ρ${cm ? ' (conditional)' : ''}</div><div class="v">${view.rho.toFixed(2)}</div></div>
-      <div class="stat-box"><div class="k">Plotted σ (${nm(selX)}, ${nm(selY)})</div><div class="v">${view.sx.toFixed(2)}, ${view.sy.toFixed(2)}</div></div>`;
+      <div class="stat-box"><div class="k">${k === 3 ? 'Selected' : 'Plotted'} ρ${cm ? ' (conditional)' : ''}</div><div class="v">${view.rho.toFixed(2)}</div></div>
+      <div class="stat-box"><div class="k">${k === 3 ? 'Selected' : 'Plotted'} σ (${nm(selX)}, ${nm(selY)})</div><div class="v">${view.sx.toFixed(2)}, ${view.sy.toFixed(2)}</div></div>`;
 
     let h = `<div class="cov-title">Covariance matrix Σ</div><table class="cov"><tr><th></th>`;
     for(let j = 0; j < k; j++) h += `<th>${nm(j)}</th>`;
@@ -988,6 +1290,7 @@
   }
 
   function viewTitle(){
+    if(k === 3) return `Density f(${nm(0)}, ${nm(1)}, ${nm(2)}) as nested ellipsoids`;
     if(condMode && k > 2){
       const others = [];
       for(let m = 0; m < k; m++) if(m !== selX && m !== selY) others.push(m);
@@ -1001,7 +1304,13 @@
 
   function updateVisibility(){
     const multi = k > 2;
-    $('xy-wrap').style.display = multi ? '' : 'none';
+    const cube = k === 3;
+    $('xy-wrap').style.display = (multi && !cube) ? '' : 'none';
+    $('disp-bar').style.display = cube ? 'none' : '';
+    $('cube-bar').style.display = cube ? '' : 'none';
+    document.querySelectorAll('#shell-seg button').forEach(b => b.classList.toggle('active', !!shellOn[+b.dataset.shell]));
+    $('corr-hint').textContent = cube ? 'Click a cell to select that pair for the ρ slider.' : 'Click a cell to plot that pair.';
+    $('pair-hint').textContent = cube ? 'Click a cell to select that pair; its projection is highlighted on the cube wall.' : 'Click a cell to plot that pair.';
     $('pair-panel').style.display = multi ? '' : 'none';
     $('cond-box').style.display = (condMode && multi) ? '' : 'none';
     $('invert-wrap').style.display = dispMode === 'surface' ? '' : 'none';
@@ -1009,12 +1318,13 @@
     document.querySelectorAll('#disp-seg button').forEach(b => b.classList.toggle('active', b.dataset.mode === dispMode));
     $('view-title').textContent = viewTitle();
 
-    const canDrag = dispMode === 'surface' || !(condMode && multi);
+    const canDrag = orbitMode() || !(condMode && multi);
     canvas.style.touchAction = canDrag ? 'none' : 'auto';
-    canvas.style.cursor = canDrag ? (dispMode === 'surface' ? 'grab' : 'crosshair') : 'default';
+    canvas.style.cursor = canDrag ? (orbitMode() ? 'grab' : 'crosshair') : 'default';
 
     let note;
-    if(dispMode === 'surface') note = 'Drag to orbit the surface.';
+    if(cube) note = 'Drag to rotate the cube. Shells are surfaces of constant density (1σ, 2σ, 3σ); the dot is the mean. Change the mean and spread with the sliders.';
+    else if(dispMode === 'surface') note = 'Drag to orbit the surface.';
     else if(condMode && multi) note = 'Conditional mean and covariance are computed from Σ. Change the fixed values in the left panel.';
     else note = `Contours mark the 1σ, 2σ and 3σ ellipses. Drag on the plot to move the mean of ${nm(selX)} and ${nm(selY)}.`;
     $('plot-note').textContent = note;
@@ -1027,6 +1337,8 @@
     renderPairs();
     renderStats();
   }
+
+  function orbitMode(){ return k === 3 || dispMode === 'surface'; }
 
   function afterSelection(){
     syncSelects();
@@ -1047,7 +1359,8 @@
     R = Array.from({length:n}, (_, i) => Array.from({length:n}, (_, j) => (i < old && j < old) ? R[i][j] : (i === j ? 1 : 0)));
     k = n;
     if(selX >= k || selY >= k || selX === selY){ selX = 0; selY = 1; }
-    if(k === 2){ selX = 0; selY = 1; condMode = false; }
+    if(k === 2){ selX = 0; selY = 1; }
+    if(k <= 3) condMode = false;
     syncKSeg();
     buildParams();
     buildSelects();
@@ -1173,6 +1486,21 @@
     dispMode = b.dataset.mode;
     render();
   });
+  $('shell-seg').addEventListener('click', e => {
+    const b = e.target.closest('button');
+    if(!b) return;
+    const c = +b.dataset.shell;
+    shellOn[c] = !shellOn[c];
+    render();
+  });
+  $('key-toggle').addEventListener('change', e => {
+    $('key-body').hidden = !e.target.checked;
+    e.target.setAttribute('aria-expanded', String(e.target.checked));
+  });
+  $('proj').addEventListener('change', e => {
+    showProj = e.target.checked;
+    render();
+  });
   $('invert').addEventListener('change', e => {
     invertSurface = e.target.checked;
     render();
@@ -1190,17 +1518,17 @@
     render();
   }
   canvas.addEventListener('pointerdown', e => {
-    if(dispMode !== 'surface' && condMode && k > 2) return;
+    if(!orbitMode() && condMode && k > 2) return;
     dragging = true;
     lastX = e.clientX; lastY = e.clientY;
-    canvas.setPointerCapture(e.pointerId);
-    if(dispMode !== 'surface') dragMean(e);
+    try { canvas.setPointerCapture(e.pointerId); } catch(_) {}
+    if(!orbitMode()) dragMean(e);
   });
   canvas.addEventListener('pointermove', e => {
     if(!dragging) return;
-    if(dispMode === 'surface'){
+    if(orbitMode()){
       orbit.az += (e.clientX - lastX) * 0.01;
-      orbit.el = clamp(orbit.el - (e.clientY - lastY) * 0.01, 0.1, 1.4);
+      orbit.el = clamp(orbit.el - (e.clientY - lastY) * 0.01, k === 3 ? -1.45 : 0.1, k === 3 ? 1.45 : 1.4);
       lastX = e.clientX; lastY = e.clientY;
       render();
     } else {
