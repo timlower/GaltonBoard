@@ -35,6 +35,18 @@
 #cx-root input[type=number]{width:72px;font:inherit;padding:3px 4px;border:1px solid #cbd2d9;border-radius:6px;text-align:center;background:#fff}
 #cx-root td small{display:block;font-size:.72rem;color:#52606d;margin-top:2px}
 #cx-root .cx-hide{display:none}
+#cx-root label.cx-sw{display:inline-flex;align-items:center;gap:10px;margin:0;cursor:pointer;font-weight:600;font-size:.9rem}
+#cx-root .cx-sw input{position:absolute;opacity:0;width:1px;height:1px}
+#cx-root .cx-track{position:relative;flex:none;width:40px;height:22px;border-radius:11px;background:#9aa5b1;transition:background .15s}
+#cx-root .cx-track::after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.3);transition:transform .15s}
+#cx-root .cx-sw input:checked+.cx-track{background:#2b6cb0}
+#cx-root .cx-sw input:checked+.cx-track::after{transform:translateX(18px)}
+#cx-root .cx-sw input:focus-visible+.cx-track{outline:2px solid #2b6cb0;outline-offset:2px}
+#cx-root .cx-key{display:grid;grid-template-columns:minmax(120px,max-content) 1fr;gap:6px 14px;margin:10px 0 0;font-size:.88rem}
+#cx-root .cx-key.cx-hide{display:none}
+#cx-root .cx-key dt{font-weight:600;font-family:Georgia,'Times New Roman',serif;white-space:nowrap}
+#cx-root .cx-key dd{margin:0;color:#52606d}
+#cx-root .cx-key h3{grid-column:1/-1;font-size:.8rem;text-transform:uppercase;letter-spacing:.04em;color:#7b8794;margin:8px 0 0;border-bottom:1px solid #e4e9ee;padding-bottom:2px}
 #cx-root .cx-formula{font-family:Georgia,'Times New Roman',serif;font-size:1.05rem;margin:6px 0 2px}
 </style>
 
@@ -133,6 +145,47 @@
   </div>
   <div class="cx-msg" id="cx-msg"></div>
   <p class="cx-note" style="margin-top:8px">Remember: chi-square tests use counts (not percentages), need independent observations, and work best when every expected count is at least 5. A significant result shows a pattern, not its cause.</p>
+</div>
+
+<div class="cx-card">
+  <label class="cx-sw" for="cx-keybtn">
+    <input type="checkbox" role="switch" id="cx-keybtn" aria-controls="cx-key">
+    <span class="cx-track" aria-hidden="true"></span>
+    <span>Show key: symbols &amp; terms</span>
+  </label>
+  <dl class="cx-key cx-hide" id="cx-key">
+    <h3>Test statistic</h3>
+    <dt>&chi;&sup2;</dt><dd>Chi-square statistic: the total gap between observed and expected counts. Bigger means a worse fit to H<sub>0</sub>.</dd>
+    <dt>&Sigma;</dt><dd>Sum over every category (or table cell).</dd>
+    <dt>O</dt><dd>Observed count: what the data actually show.</dd>
+    <dt>E</dt><dd>Expected count: what H<sub>0</sub> predicts.</dd>
+    <dt>(O &minus; E)&sup2; / E</dt><dd>One category's contribution to &chi;&sup2;. Squaring removes the sign; dividing by E scales the gap to the size of the count.</dd>
+    <dt>n</dt><dd>Total number of observations.</dd>
+    <dt>Residual</dt><dd>(O &minus; E) / &radic;E, the signed, standardized gap. Beyond about &plusmn;2 is notable. Orange = more than expected, blue = fewer.</dd>
+
+    <h3>Decision</h3>
+    <dt>H<sub>0</sub> / H<sub>1</sub></dt><dd>Null hypothesis (nothing going on) and the alternative.</dd>
+    <dt>df</dt><dd>Degrees of freedom: sets the shape of the &chi;&sup2; curve.</dd>
+    <dt>p-value</dt><dd>Chance of a &chi;&sup2; at least this large if H<sub>0</sub> were true. It is the blue area beyond your statistic.</dd>
+    <dt>&alpha;</dt><dd>Significance level: the cutoff for p, and the size of the red rejection region.</dd>
+    <dt>Critical value</dt><dd>The &chi;&sup2; value where the rejection region begins. Reject H<sub>0</sub> when your &chi;&sup2; is beyond it (equivalently, p &lt; &alpha;).</dd>
+
+    <h3 class="cx-kg">Goodness of fit</h3>
+    <dt class="cx-kg">H<sub>0</sub> weight</dt><dd class="cx-kg">Relative size of each category under H<sub>0</sub>. E = n &times; weight / total of weights.</dd>
+    <dt class="cx-kg">df = k &minus; 1</dt><dd class="cx-kg">k is the number of categories.</dd>
+    <dt class="cx-kg">w</dt><dd class="cx-kg">Effect size, &radic;(&chi;&sup2; / n). Rough guide: .1 small, .3 medium, .5 large.</dd>
+    <dt class="cx-kg">True departure</dt><dd class="cx-kg">How far the sampled population is tilted away from H<sub>0</sub> (0 = H<sub>0</sub> is exactly true).</dd>
+
+    <h3 class="cx-ki">Test of independence</h3>
+    <dt class="cx-ki">E = R&times;C / n</dt><dd class="cx-ki">Row total times column total, divided by n: the count expected if the variables were unrelated.</dd>
+    <dt class="cx-ki">df = (r&minus;1)(c&minus;1)</dt><dd class="cx-ki">r rows and c columns.</dd>
+    <dt class="cx-ki">Cram&eacute;r's V</dt><dd class="cx-ki">Effect size from 0 (none) to 1 (perfect association), &radic;(&chi;&sup2; / (n &middot; min(r&minus;1, c&minus;1))).</dd>
+    <dt class="cx-ki">Yates correction</dt><dd class="cx-ki">2&times;2 only: subtracts 0.5 from each |O &minus; E| to offset the approximation's tendency to overstate significance.</dd>
+    <dt class="cx-ki">True association</dt><dd class="cx-ki">How strongly the sampled population departs from independence (0 = independent).</dd>
+
+    <h3>Simulation</h3>
+    <dt>Simulations</dt><dd>1,000 random samples drawn assuming H<sub>0</sub> is true. Their &chi;&sup2; histogram should hug the curve; the share beyond your &chi;&sup2; approximates p.</dd>
+  </dl>
 </div>
 
 <script>
@@ -592,7 +645,7 @@
     $('cx-pg').className=m==='gof'?'':'cx-hide';$('cx-pi').className=m==='ind'?'':'cx-hide';
     cv1.style.cursor=m==='gof'?'ns-resize':'default';
     cv1.setAttribute('aria-label',m==='gof'?'Bar chart of observed counts with expected counts marked. Bars can be dragged.':'Stacked bars showing how each row splits across columns, with the overall split dashed.');
-    rebuild();
+    keyMode();rebuild();
   }
   $('cx-m-gof').addEventListener('click',function(){setMode('gof')});
   $('cx-m-ind').addEventListener('click',function(){setMode('ind')});
@@ -689,6 +742,15 @@
     if(S.c)refresh();
   }
   window.addEventListener('resize',resize);
+
+  $('cx-keybtn').addEventListener('change',function(){
+    $('cx-key').className='cx-key'+(this.checked?'':' cx-hide');
+  });
+  function keyMode(){
+    var g=S.mode==='gof';
+    Array.prototype.forEach.call(document.querySelectorAll('#cx-key .cx-kg'),function(e){e.style.display=g?'':'none'});
+    Array.prototype.forEach.call(document.querySelectorAll('#cx-key .cx-ki'),function(e){e.style.display=g?'none':''});
+  }
 
   /* init */
   S.k=6;S.gl=letters(6);S.w=[1,1,1,1,1,1];
