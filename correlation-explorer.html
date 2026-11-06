@@ -16,6 +16,19 @@
 #ce-root .ce-stat b{display:block;font-size:1.25rem}
 #ce-root .ce-stat span{font-size:.75rem;color:#52606d}
 #ce-root .ce-note{font-size:.85rem;color:#52606d}
+#ce-root button.ce-sw{display:inline-flex;align-items:center;gap:10px;border:none;background:none;color:#1f2933;padding:4px 0;margin:6px 0 0;font-weight:600}
+#ce-root button.ce-sw:hover,#ce-root button.ce-sw:focus-visible{background:none;color:#1f2933}
+#ce-root button.ce-sw:focus-visible .ce-track{outline:2px solid #2b6cb0;outline-offset:2px}
+#ce-root .ce-track{position:relative;flex:none;width:42px;height:24px;border-radius:12px;background:#9aa5b1;transition:background .2s}
+#ce-root .ce-track::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:transform .2s}
+#ce-root button.ce-sw[aria-checked="true"] .ce-track{background:#2b6cb0}
+#ce-root button.ce-sw[aria-checked="true"] .ce-track::after{transform:translateX(18px)}
+#ce-root [hidden]{display:none !important}
+#ce-root .ce-key{margin-top:10px;background:#f8fafc;border:1px solid #d5dbe1;border-radius:8px;padding:10px 12px;font-size:.88rem}
+#ce-root .ce-key dl{margin:0}
+#ce-root .ce-key dt{font-weight:700;margin-top:8px}
+#ce-root .ce-key dt:first-child{margin-top:0}
+#ce-root .ce-key dd{margin:2px 0 0 0;color:#3e4c59}
 #ce-root .ce-msg{background:#ebf4ff;border-left:4px solid #2b6cb0;padding:8px 10px;border-radius:4px;margin-top:10px;font-size:.92rem}
 </style>
 
@@ -63,6 +76,33 @@
   </div>
   <div class="ce-msg" id="ce-msg"></div>
   <p class="ce-note" style="margin-top:8px">Remember: correlation measures <i>linear</i> association only, and it does not show causation.</p>
+  <button id="ce-keybtn" class="ce-sw" role="switch" aria-checked="false" aria-controls="ce-key"><span class="ce-track" aria-hidden="true"></span><span>Show key</span></button>
+  <div class="ce-key" id="ce-key" hidden>
+    <dl>
+      <dt>r (Pearson correlation)</dt>
+      <dd>Strength and direction of the straight-line relationship, from &minus;1 (perfect negative) through 0 (none) to +1 (perfect positive).</dd>
+      <dt>r&sup2;</dt>
+      <dd>The share of variation in Y that is linearly associated with X (r multiplied by itself).</dd>
+      <dt>Slope</dt>
+      <dd>How much Y is predicted to change for each 1-unit increase in X.</dd>
+      <dt>Intercept</dt>
+      <dd>The predicted value of Y when X equals 0.</dd>
+      <dt>n</dt>
+      <dd>The number of points (observations) in the plot.</dd>
+      <dt>Target correlation</dt>
+      <dd>The r the random sample is generated to match. Dragging or adding points changes the actual r.</dd>
+      <dt>Regression line (red)</dt>
+      <dd>The best-fit straight line, which minimizes the squared vertical distances to the points.</dd>
+      <dt>Residual</dt>
+      <dd>The vertical gap between a point and the regression line, shown as thin red segments.</dd>
+      <dt>Outlier</dt>
+      <dd>A point far from the overall pattern. One can shift r substantially, especially in small samples.</dd>
+      <dt>Leverage point</dt>
+      <dd>A point with an extreme X value that can pull the line toward itself (see Anscombe IV).</dd>
+      <dt>Linear association</dt>
+      <dd>A relationship that follows a straight line. Curved patterns can be strong yet still produce r near 0.</dd>
+    </dl>
+  </div>
 </div>
 
 <script>
@@ -218,6 +258,11 @@
   });
   $('ce-res').addEventListener('click',function(){
     showRes=!showRes;this.textContent='Residuals: '+(showRes?'on':'off');this.setAttribute('aria-pressed',showRes);draw();
+  });
+  $('ce-keybtn').addEventListener('click',function(){
+    var k=$('ce-key'),open=k.hasAttribute('hidden');
+    if(open){k.removeAttribute('hidden')}else{k.setAttribute('hidden','')}
+    this.setAttribute('aria-checked',open);
   });
   $('ce-clear').addEventListener('click',function(){pts=[];label='';draw()});
 
