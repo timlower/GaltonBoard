@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Latin Square Explorer – counterbalancing designs</title>
+<meta name="description" content="Interactive Latin square explorer for counterbalancing experimental conditions: balanced (Williams) designs, carryover matrices and participant schedules.">
+<style>
+:root{
+  --bg:#f6f5f1; --surface:#ffffff; --text:#1f2328; --muted:#5d656e; --border:#d6d9dd;
+  --accent:#2f5fd0; --accent-contrast:#ffffff; --good:#17663a; --good-bg:#e1f3e8;
+  --warn:#8a4b00; --warn-bg:#fdebd0; --radius:10px;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#14161a; --surface:#1d2025; --text:#e8eaed; --muted:#9aa3ad; --border:#363b43;
+    --accent:#7aa2ff; --accent-contrast:#0b1220; --good:#7fd9a3; --good-bg:#16301f;
+    --warn:#f2b86b; --warn-bg:#3a2a12;
+  }
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header,main{max-width:1100px;margin:0 auto;padding:0 16px}
+header{padding-top:28px;padding-bottom:8px}
+h1{font-size:1.7rem;margin:0 0 4px;letter-spacing:-.01em}
+h2{font-size:1.1rem;margin:0 0 4px}
+.sub{color:var(--muted);margin:0}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin:16px 0}
+.hint{color:var(--muted);font-size:.9rem;margin:2px 0 12px}
+.controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(210px,100%),1fr));gap:14px 18px;align-items:start}
+.controls>*{min-width:0}
+.wide{grid-column:1/-1}
+@media (min-width:700px){.wide{grid-column:span 2}}
+label,.lbl{display:block;font-weight:600;font-size:.88rem;margin-bottom:4px}
+input[type=text],input[type=number],select{
+  width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:7px;background:var(--bg);color:var(--text);font:inherit}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.row{display:flex;gap:8px;align-items:center}
+.check{display:flex;gap:8px;align-items:flex-start;font-weight:400;font-size:.9rem;margin:0 0 6px}
+.check input{margin-top:4px;accent-color:var(--accent)}
+button{font:inherit;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--text);border-radius:7px;padding:7px 12px}
+button:hover{border-color:var(--accent)}
+button.primary{background:var(--accent);color:var(--accent-contrast);border-color:var(--accent);font-weight:600}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.note{background:var(--bg);border-left:3px solid var(--accent);padding:10px 12px;border-radius:0 7px 7px 0;margin:14px 0 0;font-size:.92rem}
+.checks{list-style:none;padding:0;margin:8px 0 12px;display:grid;gap:6px}
+.checks li{display:flex;gap:8px;align-items:flex-start;padding:7px 10px;border-radius:7px;font-size:.92rem}
+.checks li.ok{background:var(--good-bg);color:var(--good)}
+.checks li.bad{background:var(--warn-bg);color:var(--warn)}
+.checks b{flex:none;width:1.2em;text-align:center}
+.legend{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 12px}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border:1px solid var(--border);border-radius:999px;font-size:.85rem}
+.chip i{width:12px;height:12px;border-radius:3px;display:inline-block;border:1px solid rgba(0,0,0,.25)}
+.chip[aria-pressed=true]{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent) inset}
+.scroll{overflow:auto;max-height:520px;border:1px solid var(--border);border-radius:7px}
+table{border-collapse:separate;border-spacing:0;width:100%;font-variant-numeric:tabular-nums}
+th,td{padding:6px 8px;text-align:center;border-bottom:1px solid var(--border);border-right:1px solid var(--border);white-space:nowrap}
+th:last-child,td:last-child{border-right:0}
+thead th{position:sticky;top:0;background:var(--surface);z-index:2;font-size:.8rem;color:var(--muted);font-weight:600}
+tbody th{position:sticky;left:0;background:var(--surface);z-index:1;font-size:.8rem;color:var(--muted);font-weight:600}
+thead th:first-child{left:0;z-index:3}
+td.cell{color:#1a1d21;font-weight:600;min-width:58px;max-width:140px;overflow:hidden;text-overflow:ellipsis;cursor:pointer;transition:opacity .08s}
+td.cell.dim,.chip.dim{opacity:.22}
+td.cell.hit{outline:2px solid #000;outline-offset:-2px}
+td.m{min-width:46px}
+td.m[tabindex]{cursor:default}
+td.diag{background:repeating-linear-gradient(45deg,transparent 0 5px,var(--border) 5px 6px);color:var(--muted)}
+.two{display:grid;gap:12px;grid-template-columns:1fr auto;align-items:end}
+.seq{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:8px}
+.seq .step{padding:5px 12px;border-radius:7px;color:#1a1d21;font-weight:600;border:1px solid rgba(0,0,0,.2)}
+.seq small{color:var(--muted)}
+.btns{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+.stat{color:var(--muted);font-size:.88rem}
+details summary{cursor:pointer;font-weight:600}
+details p,details li{font-size:.92rem}
+main{padding-bottom:30px}
+@media (max-width:560px){h1{font-size:1.4rem}.card{padding:14px}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Latin Square Explorer</h1>
+  <p class="sub">Generate and inspect counterbalanced condition orders for within-subject experiments.</p>
+</header>
+
+<main>
+  <section class="card" aria-labelledby="h-setup">
+    <h2 id="h-setup">1 · Set up your design</h2>
+    <div class="controls">
+      <div>
+        <label for="n">Number of conditions</label>
+        <div class="row">
+          <input type="number" id="n" min="2" max="12" value="4" style="width:80px">
+          <input type="range" id="nRange" min="2" max="12" value="4" aria-label="Number of conditions slider">
+        </div>
+      </div>
+      <div>
+        <label for="type">Design type</label>
+        <select id="type">
+          <option value="balanced">Balanced Latin square (Williams)</option>
+          <option value="cyclic">Simple cyclic Latin square</option>
+          <option value="random">Random Latin square</option>
+          <option value="complete" id="optComplete">All orders (complete counterbalancing)</option>
+        </select>
+      </div>
+      <div class="wide">
+        <label for="names">Condition names <span style="font-weight:400;color:var(--muted)">(optional, comma-separated)</span></label>
+        <input type="text" id="names" placeholder="e.g. Control, Low, Medium, High" autocomplete="off">
+      </div>
+      <div>
+        <label for="seed">Seed</label>
+        <div class="row">
+          <input type="text" id="seed" value="latin" autocomplete="off">
+          <button type="button" id="newSeed" title="Pick a new random seed">New</button>
+        </div>
+      </div>
+      <div>
+        <span class="lbl">Randomisation (seeded)</span>
+        <label class="check"><input type="checkbox" id="shuffleLabels"> Randomly assign conditions to the square's labels</label>
+        <label class="check"><input type="checkbox" id="shuffleRows"> Shuffle row order</label>
+      </div>
+    </div>
+    <p class="note" id="designNote"></p>
+  </section>
+
+  <section class="card" aria-labelledby="h-square">
+    <h2 id="h-square">2 · The square</h2>
+    <p class="hint">Each row is one counterbalanced order (given to one participant); each column is the order position. Hover a cell, or click a condition below to pin it.</p>
+    <ul class="checks" id="checks"></ul>
+    <div class="legend" id="legend" role="group" aria-label="Conditions"></div>
+    <div class="scroll" id="gridWrap"></div>
+  </section>
+
+  <section class="card" aria-labelledby="h-carry">
+    <h2 id="h-carry">3 · Carryover (what follows what)</h2>
+    <p class="hint">Each cell counts how often the row condition is <em>immediately followed by</em> the column condition. In a carryover-balanced design every off-diagonal cell is equal. Hover a cell to see where that transition occurs in the square.</p>
+    <div class="scroll" id="matrixWrap"></div>
+    <p class="stat" id="matrixStat"></p>
+  </section>
+
+  <section class="card" aria-labelledby="h-sched">
+    <h2 id="h-sched">4 · Participant schedule</h2>
+    <div class="controls">
+      <div>
+        <label for="pCount">Number of participants</label>
+        <input type="number" id="pCount" min="1" max="500" value="12">
+      </div>
+      <div>
+        <label for="lookup">Look up participant #</label>
+        <input type="number" id="lookup" min="1" value="1">
+      </div>
+    </div>
+    <div class="seq" id="lookupOut" aria-live="polite"></div>
+    <p class="note" id="pNote" style="display:none"></p>
+    <div class="btns">
+      <button type="button" class="primary" id="dlSchedule">Download schedule (CSV)</button>
+      <button type="button" id="dlDesign">Download square (CSV)</button>
+      <button type="button" id="copySchedule">Copy schedule</button>
+    </div>
+    <div class="scroll" id="schedWrap"></div>
+    <p class="hint" style="margin-top:8px">Participants are assigned to rows in order (participant 1 → row 1, …), cycling back to row 1 after the last row.</p>
+  </section>
+
+  <section class="card">
+    <details>
+      <summary>How to choose a design</summary>
+      <ul>
+        <li><b>Order (position) effects</b> – practice, fatigue, boredom. Any Latin square controls these: each condition appears in every position equally often.</li>
+        <li><b>Carryover (sequence) effects</b> – one condition influencing the next. Only a <i>balanced</i> square controls first-order carryover: every condition immediately follows every other condition equally often.</li>
+        <li><b>Even number of conditions</b> – a Williams design needs just <i>n</i> rows.</li>
+        <li><b>Odd number of conditions</b> – a single square can’t be balanced, so the design uses <i>2n</i> rows (the square plus its mirror image).</li>
+        <li><b>Number of participants</b> – use a multiple of the number of rows so the design stays balanced. Extra participants beyond a full cycle break the balance.</li>
+        <li><b>Many conditions</b> – complete counterbalancing needs <i>n!</i> rows (720 for six conditions), so it is limited to six conditions here.</li>
+        <li><b>Reproducibility</b> – the same settings and seed always give the same design, and the page address updates so you can share or bookmark a setup.</li>
+      </ul>
+    </details>
+  </section>
+</main>
+
+
+<script>
+(function(){
+'use strict';
+
+// ==== CORE START ====
+var MAX_N = 12, MAX_COMPLETE_N = 6;
+
+function hashSeed(str){
+  var h = 1779033703 ^ str.length;
+  for (var i = 0; i < str.length; i++){
+    h = Math.imul(h ^ str.charCodeAt(i), 3432918353);
+    h = (h << 13) | (h >>> 19);
+  }
+  h = Math.imul(h ^ (h >>> 16), 2246822507);
+  h = Math.imul(h ^ (h >>> 13), 3266489909);
+  return (h ^ (h >>> 16)) >>> 0;
+}
+function mulberry32(a){
+  return function(){
+    a |= 0; a = (a + 0x6D2B79F5) | 0;
+    var t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+function range(n){ var a = []; for (var i = 0; i < n; i++) a.push(i); return a; }
+function shuffle(arr, rng){
+  var a = arr.slice();
+  for (var i = a.length - 1; i > 0; i--){
+    var j = Math.floor(rng() * (i + 1));
+    var t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+function cyclicSquare(n){
+  return range(n).map(function(r){ return range(n).map(function(c){ return (r + c) % n; }); });
+}
+// Williams design: first row 0,1,n-1,2,n-2,...; each later row adds 1 (mod n).
+// Even n -> n rows. Odd n -> add the reversed rows (2n rows).
+function williamsDesign(n){
+  var first = [0], lo = 1, hi = n - 1;
+  for (var k = 1; k < n; k++) first.push(k % 2 === 1 ? lo++ : hi--);
+  var rows = range(n).map(function(r){ return first.map(function(x){ return (x + r) % n; }); });
+  if (n % 2 === 1){
+    rows = rows.concat(rows.map(function(r){ return r.slice().reverse(); }));
+  }
+  return rows;
+}
+function permutations(n){
+  var a = range(n), res = [a.slice()];
+  while (true){
+    var i = n - 2;
+    while (i >= 0 && a[i] >= a[i + 1]) i--;
+    if (i < 0) break;
+    var j = n - 1;
+    while (a[j] <= a[i]) j--;
+    var t = a[i]; a[i] = a[j]; a[j] = t;
+    for (var l = i + 1, r = n - 1; l < r; l++, r--){ t = a[l]; a[l] = a[r]; a[r] = t; }
+    res.push(a.slice());
+  }
+  return res;
+}
+function buildDesign(o){
+  var n = o.n, rng = mulberry32(hashSeed(o.seed + '|' + n + '|' + o.type)), rows;
+  if (o.type === 'cyclic') rows = cyclicSquare(n);
+  else if (o.type === 'complete') rows = permutations(n);
+  else if (o.type === 'random'){
+    rows = shuffle(cyclicSquare(n), rng);
+    var colPerm = shuffle(range(n), rng), symPerm = shuffle(range(n), rng);
+    rows = rows.map(function(r){ return colPerm.map(function(c){ return symPerm[r[c]]; }); });
+  } else rows = williamsDesign(n);
+  if (o.shuffleLabels && o.type !== 'random'){
+    var p = shuffle(range(n), rng);
+    rows = rows.map(function(r){ return r.map(function(x){ return p[x]; }); });
+  }
+  if (o.shuffleRows) rows = shuffle(rows, rng);
+  return rows;
+}
+function analyze(rows, n){
+  var R = rows.length, i, j;
+  var rowsOk = rows.every(function(r){ return r.length === n && new Set(r).size === n; });
+  var pos = range(n).map(function(){ return range(n).map(function(){ return 0; }); });
+  rows.forEach(function(r){ r.forEach(function(s, c){ pos[c][s]++; }); });
+  var each = R / n;
+  var posOk = pos.every(function(col){ return col.every(function(v){ return v === each; }); });
+  var co = range(n).map(function(){ return range(n).map(function(){ return 0; }); });
+  rows.forEach(function(r){ for (var k = 0; k < n - 1; k++) co[r[k]][r[k + 1]]++; });
+  var min = Infinity, max = -Infinity;
+  for (i = 0; i < n; i++) for (j = 0; j < n; j++) if (i !== j){
+    if (co[i][j] < min) min = co[i][j];
+    if (co[i][j] > max) max = co[i][j];
+  }
+  return { R: R, rowsOk: rowsOk, posOk: posOk, perPos: each, co: co, coMin: min, coMax: max, coBalanced: min === max };
+}
+function parseNames(text, n){
+  var raw = text.split(/[,\n]/).map(function(s){ return s.trim(); }).filter(Boolean);
+  var out = [], seen = {};
+  for (var i = 0; i < n; i++){
+    var nm = raw[i] || String.fromCharCode(65 + i), k = nm.toLowerCase();
+    if (seen[k]){ seen[k]++; nm = nm + ' (' + seen[k] + ')'; } else seen[k] = 1;
+    out.push(nm);
+  }
+  return out;
+}
+function csvCell(v){
+  var s = String(v);
+  return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+}
+// ==== CORE END ====
+
+if (typeof document === 'undefined'){ // allow loading the core in Node for tests
+  module.exports = { hashSeed: hashSeed, mulberry32: mulberry32, buildDesign: buildDesign, analyze: analyze, parseNames: parseNames, csvCell: csvCell, permutations: permutations };
+  return;
+}
+
+var $ = function(id){ return document.getElementById(id); };
+var ui = {
+  n: $('n'), nRange: $('nRange'), type: $('type'), names: $('names'), seed: $('seed'),
+  shuffleLabels: $('shuffleLabels'), shuffleRows: $('shuffleRows'), pCount: $('pCount'), lookup: $('lookup')
+};
+var cur = null, gridCells = [], legendEls = [], pinned = null, hover = null;
+
+function el(tag, props, kids){
+  var e = document.createElement(tag);
+  Object.keys(props || {}).forEach(function(k){
+    var v = props[k];
+    if (k === 'text') e.textContent = v;
+    else if (k === 'class') e.className = v;
+    else e.setAttribute(k, v);
+  });
+  (kids || []).forEach(function(c){ e.append(c); });
+  return e;
+}
+function color(i){ return 'hsl(' + ((210 + i * 137.508) % 360).toFixed(1) + ',62%,79%)'; }
+function clamp(v, lo, hi, dflt){ v = parseInt(v, 10); return isFinite(v) ? Math.min(hi, Math.max(lo, v)) : dflt; }
+
+function readState(){
+  var n = clamp(ui.n.value, 2, MAX_N, cur ? cur.n : 4);
+  var type = ui.type.value;
+  if (type === 'complete' && n > MAX_COMPLETE_N){ type = 'balanced'; ui.type.value = 'balanced'; }
+  return {
+    n: n, type: type, namesText: ui.names.value, seed: ui.seed.value || 'latin',
+    shuffleLabels: ui.shuffleLabels.checked, shuffleRows: ui.shuffleRows.checked,
+    P: clamp(ui.pCount.value, 1, 500, 12)
+  };
+}
+
+function designNote(s, a){
+  var n = s.n;
+  if (s.type === 'balanced'){
+    return n % 2 === 0
+      ? 'Williams balanced Latin square: ' + n + ' rows. Every condition appears in every position once, and every condition immediately precedes every other condition exactly once, so both order and first-order carryover effects are balanced.'
+      : 'With an odd number of conditions a single square cannot balance carryover, so this Williams design uses ' + a.R + ' rows (a square plus its mirror image). Every condition immediately precedes every other condition exactly twice.';
+  }
+  if (s.type === 'cyclic') return 'Simple cyclic square: ' + n + ' rows. Balances position, but each condition is always preceded by the same condition, so carryover is completely confounded with condition. Best avoided unless carryover is negligible.';
+  if (s.type === 'random') return 'Random Latin square: ' + n + ' rows built by randomly permuting the rows, columns and labels of a cyclic square. Balances position; carryover is not controlled.';
+  return 'Complete counterbalancing: all ' + a.R + ' possible orders. Controls position and all carryover, but you need a multiple of ' + a.R + ' participants.';
+}
+
+function render(){
+  var s = readState();
+  ui.n.value = s.n; ui.nRange.value = s.n;
+  ui.pCount.value = s.P;
+  $('optComplete').disabled = s.n > MAX_COMPLETE_N;
+  var rows = buildDesign(s), a = analyze(rows, s.n), names = parseNames(s.namesText, s.n);
+  cur = { n: s.n, rows: rows, a: a, names: names, s: s };
+  pinned = null; hover = null;
+  $('designNote').textContent = designNote(s, a);
+  renderChecks(); renderLegend(); renderGrid(); renderMatrix(); renderSchedule();
+  syncHash();
+}
+
+function renderChecks(){
+  var a = cur.a, n = cur.n, ul = $('checks');
+  ul.textContent = '';
+  function add(ok, text){ ul.append(el('li', { class: ok ? 'ok' : 'bad' }, [el('b', { text: ok ? '✓' : '!' }), el('span', { text: text })])); }
+  add(a.rowsOk, a.rowsOk ? 'Every row contains each condition exactly once (' + a.R + ' rows × ' + n + ' positions).' : 'Some rows do not contain every condition once.');
+  add(a.posOk, a.posOk
+    ? 'Order balanced: each condition appears in each position ' + a.perPos + (a.perPos === 1 ? ' time.' : ' times.')
+    : 'Order not balanced across positions.');
+  add(a.coBalanced, a.coBalanced
+    ? 'Carryover balanced: every condition immediately follows every other condition exactly ' + a.coMin + (a.coMin === 1 ? ' time.' : ' times.')
+    : 'Carryover not balanced: a given condition follows another between ' + a.coMin + ' and ' + a.coMax + ' times.');
+}
+
+function renderLegend(){
+  var box = $('legend'); box.textContent = ''; legendEls = [];
+  cur.names.forEach(function(nm, i){
+    var b = el('button', { type: 'button', class: 'chip', 'aria-pressed': 'false', title: 'Click to pin / unpin this condition' }, [
+      el('i'), document.createTextNode(nm)]);
+    b.firstChild.style.background = color(i);
+    b.addEventListener('mouseenter', function(){ hover = { type: 'cond', c: i }; applyHighlight(); });
+    b.addEventListener('mouseleave', function(){ hover = null; applyHighlight(); });
+    b.addEventListener('focus', function(){ hover = { type: 'cond', c: i }; applyHighlight(); });
+    b.addEventListener('blur', function(){ hover = null; applyHighlight(); });
+    b.addEventListener('click', function(){ togglePin(i); });
+    legendEls.push(b); box.append(b);
+  });
+}
+function togglePin(i){
+  pinned = (pinned && pinned.c === i) ? null : { type: 'cond', c: i };
+  legendEls.forEach(function(b, k){ b.setAttribute('aria-pressed', pinned && pinned.c === k ? 'true' : 'false'); });
+  applyHighlight();
+}
+
+function renderGrid(){
+  var wrap = $('gridWrap'), n = cur.n; wrap.textContent = ''; gridCells = [];
+  var thead = el('thead'), hr = el('tr', {}, [el('th', { scope: 'col', text: 'Row' })]);
+  for (var p = 0; p < n; p++) hr.append(el('th', { scope: 'col', text: 'Pos ' + (p + 1) }));
+  thead.append(hr);
+  var tbody = el('tbody');
+  cur.rows.forEach(function(r, ri){
+    var tr = el('tr', {}, [el('th', { scope: 'row', text: String(ri + 1) })]), arr = [];
+    r.forEach(function(sym){
+      var td = el('td', { class: 'cell', text: cur.names[sym], title: cur.names[sym] });
+      td.style.background = color(sym);
+      td.dataset.c = sym;
+      arr.push(td); tr.append(td);
+    });
+    gridCells.push(arr); tbody.append(tr);
+  });
+  wrap.append(el('table', { 'aria-label': 'Latin square' }, [thead, tbody]));
+  wrap.onmouseover = function(e){
+    var td = e.target.closest && e.target.closest('td.cell');
+    if (td){ hover = { type: 'cond', c: +td.dataset.c }; applyHighlight(); }
+  };
+  wrap.onmouseleave = function(){ hover = null; applyHighlight(); };
+  wrap.onclick = function(e){
+    var td = e.target.closest && e.target.closest('td.cell');
+    if (td) togglePin(+td.dataset.c);
+  };
+}
+
+function applyHighlight(){
+  var h = hover || pinned, rows = cur.rows, n = cur.n, hits = null;
+  legendEls.forEach(function(b, i){ b.classList.toggle('dim', !!(h && h.type === 'cond' && h.c !== i)); });
+  if (h && h.type === 'pair'){
+    hits = {};
+    rows.forEach(function(r, ri){
+      for (var i = 0; i < n - 1; i++) if (r[i] === h.a && r[i + 1] === h.b){ hits[ri + ':' + i] = 1; hits[ri + ':' + (i + 1)] = 1; }
+    });
+  }
+  gridCells.forEach(function(arr, ri){
+    arr.forEach(function(td, p){
+      var dim = false, hit = false;
+      if (h){
+        if (h.type === 'cond') dim = rows[ri][p] !== h.c;
+        else { hit = !!hits[ri + ':' + p]; dim = !hit; }
+      }
+      td.classList.toggle('dim', dim);
+      td.classList.toggle('hit', hit);
+    });
+  });
+}
+
+function renderMatrix(){
+  var wrap = $('matrixWrap'), n = cur.n, co = cur.a.co; wrap.textContent = '';
+  var max = Math.max.apply(null, co.map(function(r){ return Math.max.apply(null, r); })) || 1;
+  var thead = el('thead'), hr = el('tr', {}, [el('th', { scope: 'col', text: 'Preceding ↓ / Following →' })]);
+  cur.names.forEach(function(nm){ hr.append(el('th', { scope: 'col', text: nm })); });
+  thead.append(hr);
+  var tbody = el('tbody');
+  for (var i = 0; i < n; i++){
+    var tr = el('tr', {}, [el('th', { scope: 'row', text: cur.names[i] })]);
+    for (var j = 0; j < n; j++){
+      (function(i, j){
+        if (i === j){ tr.append(el('td', { class: 'm diag', text: '–' })); return; }
+        var v = co[i][j];
+        var td = el('td', { class: 'm', tabindex: '0', text: String(v),
+          'aria-label': cur.names[i] + ' immediately followed by ' + cur.names[j] + ': ' + v + ' times' });
+        td.style.background = 'color-mix(in srgb, var(--accent) ' + Math.round(v / max * 45) + '%, var(--surface))';
+        var on = function(){ hover = { type: 'pair', a: i, b: j }; applyHighlight(); };
+        var off = function(){ hover = null; applyHighlight(); };
+        td.addEventListener('mouseenter', on); td.addEventListener('focus', on);
+        td.addEventListener('mouseleave', off); td.addEventListener('blur', off);
+        tr.append(td);
+      })(i, j);
+    }
+    tbody.append(tr);
+  }
+  wrap.append(el('table', { 'aria-label': 'Carryover matrix' }, [thead, tbody]));
+  $('matrixStat').textContent = cur.a.coBalanced
+    ? 'All off-diagonal cells equal ' + cur.a.coMin + ' → carryover balanced.'
+    : 'Off-diagonal counts range from ' + cur.a.coMin + ' to ' + cur.a.coMax + ' → carryover not balanced.';
+}
+
+function rowFor(pIdx){ return pIdx % cur.rows.length; }
+
+function renderSchedule(){
+  var wrap = $('schedWrap'), n = cur.n, P = cur.s.P, R = cur.rows.length; wrap.textContent = '';
+  var thead = el('thead'), hr = el('tr', {}, [el('th', { scope: 'col', text: 'Participant' }), el('th', { scope: 'col', text: 'Row' })]);
+  for (var p = 0; p < n; p++) hr.append(el('th', { scope: 'col', text: 'Pos ' + (p + 1) }));
+  thead.append(hr);
+  var tbody = el('tbody');
+  for (var k = 0; k < P; k++){
+    var ri = rowFor(k);
+    var tr = el('tr', {}, [el('th', { scope: 'row', text: String(k + 1) }), el('td', { text: String(ri + 1) })]);
+    cur.rows[ri].forEach(function(sym){
+      var td = el('td', { class: 'cell', text: cur.names[sym], title: cur.names[sym] });
+      td.style.background = color(sym); td.style.cursor = 'default';
+      tr.append(td);
+    });
+    tbody.append(tr);
+  }
+  wrap.append(el('table', { 'aria-label': 'Participant schedule' }, [thead, tbody]));
+  var note = $('pNote');
+  if (P % R !== 0){
+    var need = Math.ceil(P / R) * R - P;
+    note.style.display = '';
+    note.textContent = P + ' participants is not a multiple of ' + R + ' rows, so the final cycle is incomplete and the design is slightly unbalanced. ' +
+      'Add ' + need + ' more participant' + (need === 1 ? '' : 's') + ' (' + (P + need) + ' total) to complete it.';
+  } else if (P >= R){
+    note.style.display = '';
+    note.textContent = P + ' participants = ' + (P / R) + ' complete cycle' + (P / R === 1 ? '' : 's') + ' of the ' + R + ' rows, so the design stays fully balanced.';
+  } else note.style.display = 'none';
+  ui.lookup.max = P;
+  renderLookup();
+}
+
+function renderLookup(){
+  var P = cur.s.P, out = $('lookupOut'); out.textContent = '';
+  var k = clamp(ui.lookup.value, 1, P, 1);
+  var ri = rowFor(k - 1);
+  out.append(el('small', { text: 'Participant ' + k + ' → row ' + (ri + 1) + ':' }));
+  cur.rows[ri].forEach(function(sym, i){
+    if (i) out.append(el('small', { text: '→' }));
+    var st = el('span', { class: 'step', text: cur.names[sym] });
+    st.style.background = color(sym);
+    out.append(st);
+  });
+}
+
+function download(name, text){
+  var blob = new Blob([text], { type: 'text/csv;charset=utf-8' });
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.append(a); a.click(); a.remove();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); }, 1000);
+}
+function scheduleRows(){
+  var hdr = ['participant', 'row'].concat(range(cur.n).map(function(i){ return 'position_' + (i + 1); }));
+  var out = [hdr];
+  for (var k = 0; k < cur.s.P; k++){
+    var ri = rowFor(k);
+    out.push([k + 1, ri + 1].concat(cur.rows[ri].map(function(s){ return cur.names[s]; })));
+  }
+  return out;
+}
+function designRows(){
+  var hdr = ['row'].concat(range(cur.n).map(function(i){ return 'position_' + (i + 1); }));
+  return [hdr].concat(cur.rows.map(function(r, i){ return [i + 1].concat(r.map(function(s){ return cur.names[s]; })); }));
+}
+function toCSV(rows){ return rows.map(function(r){ return r.map(csvCell).join(','); }).join('\r\n') + '\r\n'; }
+function fname(prefix){ return prefix + '-' + cur.s.type + '-n' + cur.n + '.csv'; }
+
+$('dlSchedule').addEventListener('click', function(){ download(fname('schedule'), toCSV(scheduleRows())); });
+$('dlDesign').addEventListener('click', function(){ download(fname('latin-square'), toCSV(designRows())); });
+$('copySchedule').addEventListener('click', function(){
+  var btn = this, text = scheduleRows().map(function(r){ return r.join('\t'); }).join('\n');
+  function done(ok){ var t = btn.textContent; btn.textContent = ok ? 'Copied ✓' : 'Copy failed'; setTimeout(function(){ btn.textContent = t; }, 1500); }
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(function(){ done(true); }, function(){ done(false); });
+  else {
+    var ta = el('textarea'); ta.value = text; document.body.append(ta); ta.select();
+    var ok = false; try { ok = document.execCommand('copy'); } catch (e) {}
+    ta.remove(); done(ok);
+  }
+});
+
+// ----- shareable URL state -----
+function syncHash(){
+  var s = cur.s, p = new URLSearchParams();
+  p.set('n', s.n); p.set('type', s.type); p.set('seed', s.seed); p.set('p', s.P);
+  if (s.namesText.trim()) p.set('names', s.namesText);
+  if (s.shuffleLabels) p.set('sl', '1');
+  if (s.shuffleRows) p.set('sr', '1');
+  try { history.replaceState(null, '', '#' + p.toString()); } catch (e) {}
+}
+function loadHash(){
+  if (!location.hash || location.hash.length < 2) return;
+  var p = new URLSearchParams(location.hash.slice(1));
+  if (p.has('n')) ui.n.value = p.get('n');
+  if (p.has('type') && ['balanced', 'cyclic', 'random', 'complete'].indexOf(p.get('type')) >= 0) ui.type.value = p.get('type');
+  if (p.has('seed')) ui.seed.value = p.get('seed');
+  if (p.has('p')) ui.pCount.value = p.get('p');
+  if (p.has('names')) ui.names.value = p.get('names');
+  ui.shuffleLabels.checked = p.get('sl') === '1';
+  ui.shuffleRows.checked = p.get('sr') === '1';
+}
+
+// Number boxes: re-render live only while the typed value is valid; clamp on blur/Enter.
+function liveNumber(input, lo, hi){
+  input.addEventListener('input', function(){
+    var v = parseInt(input.value, 10);
+    if (isFinite(v) && v >= lo && v <= hi) render();
+  });
+  input.addEventListener('change', render);
+}
+liveNumber(ui.n, 2, MAX_N);
+liveNumber(ui.pCount, 1, 500);
+ui.nRange.addEventListener('input', function(){ ui.n.value = ui.nRange.value; render(); });
+['type', 'names', 'seed', 'shuffleLabels', 'shuffleRows'].forEach(function(k){
+  ui[k].addEventListener(ui[k].type === 'checkbox' || k === 'type' ? 'change' : 'input', render);
+});
+ui.lookup.addEventListener('input', renderLookup);
+$('newSeed').addEventListener('click', function(){
+  ui.seed.value = Math.random().toString(36).slice(2, 8);
+  render();
+});
+
+loadHash();
+render();
+})();
+</script>
+</body>
+</html>
