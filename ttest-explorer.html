@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>t-Test Explorer: Independent &amp; Repeated Measures</title>
+<meta name="description" content="Interactive explorer for the independent-samples and repeated-measures (paired) t-test. Adjust means, SDs, sample sizes and correlation and watch the test statistic, p-value, confidence interval, effect size and power respond.">
+<style>
+:root{
+  --bg:#f5f4ef;--panel:#ffffff;--ink:#1b1e25;--muted:#5b6370;--line:#dedbd1;--soft:#efede6;
+  --a:#2468d6;--b:#d9730d;--rej:#c8372d;--ok:#1b8a5a;--accent:#2468d6;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#13151a;--panel:#1c1f26;--ink:#e8e9ed;--muted:#9aa1ae;--line:#323744;--soft:#252932;
+    --a:#6ba4ff;--b:#ffa24f;--rej:#ff7064;--ok:#4cc58c;--accent:#6ba4ff;}
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{padding:26px 22px 8px;max-width:1280px;margin:0 auto}
+h1{margin:0 0 4px;font-size:1.65rem;letter-spacing:-.01em}
+header p{margin:0;color:var(--muted);max-width:760px}
+.tabs{display:flex;gap:6px;margin-top:16px;flex-wrap:wrap}
+.tab{border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:9px 16px;border-radius:999px;font:inherit;font-weight:600;cursor:pointer}
+.tab[aria-selected="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.tab:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,summary:focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 55%,transparent);outline-offset:2px}
+main{max-width:1280px;margin:0 auto;padding:14px 22px 30px;display:grid;grid-template-columns:330px minmax(0,1fr);gap:18px;align-items:start}
+@media(max-width:940px){main{grid-template-columns:1fr}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 18px}
+.controls{position:sticky;top:10px}
+@media(max-width:940px){.controls{position:static}}
+.stack{display:flex;flex-direction:column;gap:18px;min-width:0}
+h2{margin:0 0 10px;font-size:1.02rem}
+h2 .n{display:inline-block;background:var(--soft);border-radius:6px;padding:0 7px;margin-right:6px;color:var(--muted);font-variant-numeric:tabular-nums}
+h3{margin:14px 0 6px;font-size:.78rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+button.pill{border:1px solid var(--line);background:var(--soft);color:var(--ink);padding:5px 11px;border-radius:8px;font:inherit;font-size:.85rem;cursor:pointer}
+button.pill:hover{border-color:var(--accent)}
+.sl{margin:9px 0}
+.sl label{display:flex;justify-content:space-between;font-size:.88rem}
+.sl output{font-family:var(--mono);font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--accent)}
+fieldset{border:0;padding:0;margin:0}
+select,textarea{font:inherit;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:6px 8px;width:100%}
+textarea{font-family:var(--mono);font-size:.85rem;min-height:84px;resize:vertical}
+.opt{margin:8px 0}.opt>label{display:block;font-size:.85rem;color:var(--muted);margin-bottom:3px}
+.seg{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg label{flex:1;text-align:center;padding:6px 4px;font-size:.85rem;cursor:pointer;color:var(--ink);margin:0}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg input:checked+span{background:var(--accent);color:#fff}
+.seg span{display:block;padding:6px 4px;margin:-6px -4px}
+.seg input:focus-visible+span{outline:3px solid color-mix(in srgb,var(--accent) 55%,transparent);outline-offset:-3px}
+.truth{font-size:.85rem;background:var(--soft);border-radius:8px;padding:7px 10px;margin-top:10px;color:var(--muted)}
+.truth b{color:var(--ink);font-family:var(--mono)}
+.charts{display:grid;grid-template-columns:minmax(0,2.1fr) minmax(0,1fr);gap:14px}
+@media(max-width:700px){.charts{grid-template-columns:1fr}}
+svg{width:100%;height:auto;display:block;overflow:visible}
+svg text{fill:var(--muted);font:11px system-ui,sans-serif}
+svg .ax{stroke:var(--line)}
+svg .strong{fill:var(--ink)}
+.cap{font-size:.82rem;color:var(--muted);margin:6px 0 0}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:.82rem;color:var(--muted);margin-top:6px}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.stat{background:var(--soft);border-radius:10px;padding:9px 12px}
+.stat small{display:block;color:var(--muted);font-size:.75rem}
+.stat b{font:600 1.15rem var(--mono);font-variant-numeric:tabular-nums}
+.badge{display:inline-block;padding:3px 10px;border-radius:999px;font-weight:700;font-size:.82rem;color:#fff}
+.badge.sig{background:var(--ok)}.badge.ns{background:#7b8392}
+.interp{margin:12px 0 0}
+.apa{font-family:var(--mono);font-size:.88rem;background:var(--soft);padding:8px 10px;border-radius:8px;display:flex;justify-content:space-between;gap:10px;align-items:center;margin-top:10px}
+table{border-collapse:collapse;width:100%;font-size:.88rem}
+th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line)}
+th{font-weight:600;color:var(--muted);font-size:.78rem}
+td.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+tr.sel td{background:color-mix(in srgb,var(--accent) 10%,transparent)}
+.bar{height:14px;border-radius:4px;background:var(--a)}
+.err{color:var(--rej);font-weight:600}
+details{max-width:1280px;margin:0 auto 10px;padding:0 22px}
+details .panel{margin-top:8px}
+details summary{cursor:pointer;font-weight:600}
+code,.f{font-family:var(--mono);font-size:.88rem}
+footer{max-width:1280px;margin:0 auto;padding:6px 22px 30px;color:var(--muted);font-size:.82rem}
+dl.key{display:grid;grid-template-columns:max-content 1fr;gap:6px 16px;margin:0}dl.key dt{font-family:var(--mono);font-size:.88rem;font-weight:600}dl.key dd{margin:0;color:var(--muted)}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<header>
+  <h1>t-Test Explorer</h1>
+  <p>Compare two <b>independent</b> groups or two <b>repeated measures</b> on the same people. Drag the sliders, switch tests, or paste your own data and see how the t statistic, p-value, confidence interval, effect size and power respond.</p>
+  <div class="tabs" role="tablist" aria-label="Test type">
+    <button class="tab" role="tab" id="tab-ind" aria-selected="true">Independent samples</button>
+    <button class="tab" role="tab" id="tab-paired" aria-selected="false">Repeated measures (paired)</button>
+  </div>
+</header>
+
+<main>
+  <aside class="panel controls" aria-label="Controls">
+    <h2>Setup</h2>
+    <div class="row" id="presets"></div>
+
+    <h3>Data source</h3>
+    <div class="seg" role="radiogroup" aria-label="Data source">
+      <label><input type="radio" name="src" value="sim" checked><span>Simulated</span></label>
+      <label><input type="radio" name="src" value="own"><span>My own data</span></label>
+    </div>
+
+    <div id="simBox">
+      <fieldset id="params"></fieldset>
+      <div class="opt"><label><input type="checkbox" id="exact"> Make the sample match the settings exactly</label></div>
+      <div class="row">
+        <button class="pill" id="resample">New random sample</button>
+        <span class="cap" id="seedTxt" style="align-self:center;margin:0"></span>
+      </div>
+      <div class="truth" id="truth"></div>
+    </div>
+
+    <div id="ownBox" hidden>
+      <div class="opt"><label id="lblOwnA" for="ownA">Group A</label><textarea id="ownA" placeholder="e.g. 12.1, 14.3, 9.8 …"></textarea></div>
+      <div class="opt"><label id="lblOwnB" for="ownB">Group B</label><textarea id="ownB"></textarea></div>
+      <button class="pill" id="loadSim">Load current simulated data into boxes</button>
+      <p class="cap">Separate values with spaces, commas or new lines. Paired data needs the same number of values in the same order.</p>
+    </div>
+
+    <h3>Test options</h3>
+    <div class="opt"><label for="tails">Alternative hypothesis</label>
+      <select id="tails"></select></div>
+    <div class="opt"><label for="alpha">Significance level α</label>
+      <select id="alpha"><option value="0.10">.10</option><option value="0.05" selected>.05</option><option value="0.01">.01</option><option value="0.001">.001</option></select></div>
+    <div class="opt" id="welchOpt"><label for="variant">Variance assumption</label>
+      <select id="variant"><option value="welch" selected>Welch (unequal variances)</option><option value="student">Student (pooled variance)</option></select></div>
+  </aside>
+
+  <section class="stack">
+    <div class="panel" id="pData">
+      <h2><span class="n">1</span>The data</h2>
+      <div id="msg" class="err" hidden></div>
+      <div class="charts"><div id="chartMain"></div><div id="chartDiff"></div></div>
+      <p class="cap" id="dataCap"></p>
+    </div>
+
+    <div class="panel" id="pDist">
+      <h2><span class="n">2</span>Where does the observed t fall if H₀ were true?</h2>
+      <div id="chartT"></div>
+      <div class="legend">
+        <span><i style="background:var(--rej);opacity:.35"></i>Rejection region (area = α)</span>
+        <span><i style="background:repeating-linear-gradient(45deg,var(--accent) 0 2px,transparent 2px 5px)"></i>p-value (area beyond observed t)</span>
+        <span><i style="background:var(--ink);height:3px;vertical-align:3px"></i>Observed t</span>
+        <span><i style="border:1px dashed var(--muted);background:none"></i>Normal curve (for comparison)</span>
+      </div>
+    </div>
+
+    <div class="panel" id="pRes" aria-live="polite">
+      <h2><span class="n">3</span>Result <span id="badge"></span></h2>
+      <div class="stats" id="stats"></div>
+      <p class="interp" id="interp"></p>
+      <div class="apa"><span id="apa"></span><button class="pill" id="copy">Copy</button></div>
+      <h3 id="cmpTitle">Comparison</h3>
+      <table id="cmp"></table>
+    </div>
+
+    <div class="panel" id="pWhy" hidden>
+      <h2><span class="n">★</span>Why pairing helps</h2>
+      <p style="margin:0 0 8px">The paired test works on the <i>difference scores</i>, whose variance shrinks as the correlation between conditions grows:</p>
+      <p class="f" id="whyFormula" style="margin:0 0 10px"></p>
+      <div id="whyBars"></div>
+      <p class="cap">Raise the correlation <b>r</b> and the paired standard error falls while the independent one stays put. Set r near 0 and the two tests converge. Treating paired data as independent throws away power.</p>
+    </div>
+
+    <div class="panel" id="pSim">
+      <h2><span class="n">4</span>Repeat the experiment many times</h2>
+      <div class="row" style="align-items:center;margin-bottom:8px">
+        <label for="simN" class="cap" style="margin:0">Experiments:</label>
+        <select id="simN" style="width:auto"><option>500</option><option selected>2000</option><option>5000</option></select>
+        <button class="pill" id="simAgain">Draw new experiments</button>
+      </div>
+      <div id="chartSim"></div>
+      <p id="simTxt" style="margin:8px 0 0"></p>
+      <p class="cap">Uses the population settings in the sliders (not your own data). If the true difference is 0, p-values are uniform and about α of experiments come out “significant” (false positives). If it isn't, the significant share estimates the test's <b>power</b>.</p>
+    </div>
+  </section>
+</main>
+
+<details>
+  <summary>Formulas used</summary>
+  <div class="panel">
+    <p><b>Independent samples.</b> <span class="f">t = (M₁ − M₂) / SE</span></p>
+    <ul>
+      <li>Student: <span class="f">SE = s<sub>p</sub>·√(1/n₁ + 1/n₂)</span>, <span class="f">s<sub>p</sub>² = [(n₁−1)s₁² + (n₂−1)s₂²]/(n₁+n₂−2)</span>, <span class="f">df = n₁ + n₂ − 2</span></li>
+      <li>Welch: <span class="f">SE = √(s₁²/n₁ + s₂²/n₂)</span>, df by Welch–Satterthwaite</li>
+      <li>Effect size: Cohen's <span class="f">d = (M₁ − M₂)/s<sub>p</sub></span>; Hedges' <span class="f">g = d·(1 − 3/(4·df − 1))</span> (with df = n₁ + n₂ − 2)</li>
+    </ul>
+    <p><b>Repeated measures.</b> Let <span class="f">D<sub>i</sub> = X<sub>1i</sub> − X<sub>2i</sub></span>. Then <span class="f">t = M<sub>D</sub> / (s<sub>D</sub>/√n)</span>, <span class="f">df = n − 1</span>, and <span class="f">s<sub>D</sub>² = s₁² + s₂² − 2·r·s₁·s₂</span>.</p>
+    <ul><li>Effect sizes: <span class="f">d<sub>z</sub> = M<sub>D</sub>/s<sub>D</sub></span> (difference-score SD) and <span class="f">d<sub>av</sub> = M<sub>D</sub>/((s₁+s₂)/2)</span> (comparable to an independent-groups d).</li></ul>
+    <p>Confidence intervals are two-sided at level 1 − α: <span class="f">estimate ± t<sub>crit</sub>·SE</span>. p-values come from the exact t distribution (regularised incomplete beta function). Everything runs in your browser; nothing is uploaded.</p>
+  </div>
+</details>
+<details id="keyBox">
+  <summary>Key: symbols and terms</summary>
+  <div class="panel">
+    <dl class="key">
+      <dt>H₀</dt><dd>Null hypothesis: the population means do not differ (the true difference is 0).</dd>
+      <dt>Alternative</dt><dd>What you test against H₀. Two-sided: the means differ in either direction. One-sided: the difference goes in one stated direction only.</dd>
+      <dt>μ</dt><dd>A population (true) mean. The sliders set the μ values the simulated data are drawn from.</dd>
+      <dt>M</dt><dd>A sample mean.</dd>
+      <dt>s, s²</dt><dd>Sample standard deviation and variance.</dd>
+      <dt>s<sub>p</sub></dt><dd>Pooled standard deviation: the two groups' variances combined, weighted by their degrees of freedom.</dd>
+      <dt>n</dt><dd>Number of observations (per group, or the number of participants in a paired design).</dd>
+      <dt>D, M<sub>D</sub>, s<sub>D</sub></dt><dd>Each participant's difference score (condition 1 − condition 2), its mean, and its standard deviation.</dd>
+      <dt>r</dt><dd>Pearson correlation between the two conditions across participants. The slider sets the population value; the results show the sample value.</dd>
+      <dt>SE</dt><dd>Standard error: the typical size of sampling error in the estimated difference. Smaller SE gives a larger |t|.</dd>
+      <dt>t</dt><dd>Test statistic: the estimated difference divided by its SE, i.e. how many standard errors from 0 it lies.</dd>
+      <dt>df</dt><dd>Degrees of freedom: sets the exact shape of the t distribution (heavier tails when df is small). Welch's df is usually not a whole number.</dd>
+      <dt>t*</dt><dd>Critical value: the |t| beyond which the result is significant at your α.</dd>
+      <dt>p</dt><dd>p-value: the probability of a |t| (or t, if one-sided) at least as extreme as observed if H₀ were true. It is not the probability that H₀ is true.</dd>
+      <dt>α</dt><dd>Significance level: the false-positive rate you accept. The result is significant when p &lt; α.</dd>
+      <dt>CI</dt><dd>Confidence interval for the true mean difference. At level 1 − α, intervals built this way from repeated samples contain the true value in that proportion of cases.</dd>
+      <dt>d, g, d<sub>z</sub>, d<sub>av</sub></dt><dd>Standardised effect sizes: the mean difference in standard-deviation units. g is d with a small-sample bias correction; d<sub>z</sub> uses the SD of difference scores; d<sub>av</sub> uses the average of the two conditions' SDs.</dd>
+      <dt>Welch</dt><dd>The independent-samples test that does not assume equal variances; df comes from the Welch–Satterthwaite approximation.</dd>
+      <dt>Type I error</dt><dd>Rejecting H₀ when it is true (a false positive). Its long-run rate equals α when the assumptions hold.</dd>
+      <dt>Power</dt><dd>The probability of a significant result when the true difference is not 0. It rises with larger effects, larger n and, for paired data, higher r.</dd>
+      <dt>Seed</dt><dd>The number that fixes the random generator, so the same seed reproduces the same simulated sample.</dd>
+    </dl>
+  </div>
+</details>
+<footer>Single-file, dependency-free demo. Simulated data are drawn from normal distributions with a seeded random generator, so a given seed is reproducible.</footer>
+
+<script>
+"use strict";
+/* ============ Statistics core ============ */
+function lgamma(x){
+  const c=[76.18009172947146,-86.50532032941677,24.01409824083091,-1.231739572450155,0.1208650973866179e-2,-0.5395239384953e-5];
+  let y=x,t=x+5.5; t-=(x+0.5)*Math.log(t); let s=1.000000000190015;
+  for(let j=0;j<6;j++){y+=1;s+=c[j]/y;}
+  return -t+Math.log(2.5066282746310005*s/x);
+}
+function betacf(a,b,x){
+  const FP=1e-300,EPS=3e-14,qab=a+b,qap=a+1,qam=a-1;
+  let c=1,d=1-qab*x/qap; if(Math.abs(d)<FP)d=FP; d=1/d; let h=d;
+  for(let m=1;m<=300;m++){
+    const m2=2*m; let aa=m*(b-m)*x/((qam+m2)*(a+m2));
+    d=1+aa*d; if(Math.abs(d)<FP)d=FP; c=1+aa/c; if(Math.abs(c)<FP)c=FP; d=1/d; h*=d*c;
+    aa=-(a+m)*(qab+m)*x/((a+m2)*(qap+m2));
+    d=1+aa*d; if(Math.abs(d)<FP)d=FP; c=1+aa/c; if(Math.abs(c)<FP)c=FP; d=1/d;
+    const del=d*c; h*=del; if(Math.abs(del-1)<EPS)break;
+  }
+  return h;
+}
+function ibeta(x,a,b){
+  if(x<=0)return 0; if(x>=1)return 1;
+  const bt=Math.exp(lgamma(a+b)-lgamma(a)-lgamma(b)+a*Math.log(x)+b*Math.log(1-x));
+  return x<(a+1)/(a+b+2)?bt*betacf(a,b,x)/a:1-bt*betacf(b,a,1-x)/b;
+}
+function pTwo(t,df){ return isFinite(t)?ibeta(df/(df+t*t),df/2,0.5):0; }
+/* tails: 'two' | 'greater' (mean1 > mean2) | 'less' */
+function pValue(t,df,tails){
+  const p2=pTwo(t,df); if(tails==='two')return p2;
+  const upper=t>=0?p2/2:1-p2/2;
+  return tails==='greater'?upper:1-upper;
+}
+function tCrit(tailProb,df){ // t>0 with P(T>t)=tailProb
+  let lo=0,hi=1e5; for(let i=0;i<90;i++){const mid=(lo+hi)/2; if(pTwo(mid,df)>2*tailProb)lo=mid;else hi=mid;} return (lo+hi)/2;
+}
+function tpdf(x,df){ return Math.exp(lgamma((df+1)/2)-lgamma(df/2)-0.5*Math.log(df*Math.PI)-((df+1)/2)*Math.log(1+x*x/df)); }
+function npdf(x){ return Math.exp(-x*x/2)/Math.sqrt(2*Math.PI); }
+const mean=a=>a.reduce((s,v)=>s+v,0)/a.length;
+function vari(a){const m=mean(a);return a.reduce((s,v)=>s+(v-m)*(v-m),0)/(a.length-1);}
+function corr(a,b){const ma=mean(a),mb=mean(b);let sab=0,sa=0,sb=0;for(let i=0;i<a.length;i++){sab+=(a[i]-ma)*(b[i]-mb);sa+=(a[i]-ma)**2;sb+=(b[i]-mb)**2;}return sab/Math.sqrt(sa*sb);}
+
+function decide(res,tails,alpha,lite){
+  res.tails=tails;res.alpha=alpha;
+  res.p=pValue(res.t,res.df,tails);
+  if(lite){res.sig=res.p<alpha;return res;}
+  const tc=tCrit(tails==='two'?alpha/2:alpha,res.df);
+  const tcCI=tCrit(alpha/2,res.df);
+  res.tcrit=tc; res.ci=[res.diff-tcCI*res.se,res.diff+tcCI*res.se];
+  res.sig=res.p<alpha; return res;
+}
+function indTest(A,B,variant,tails,alpha,lite){
+  const nA=A.length,nB=B.length;
+  if(nA<2||nB<2)return{invalid:true,msg:'Each group needs at least 2 values.'};
+  const mA=mean(A),mB=mean(B),vA=vari(A),vB=vari(B),diff=mA-mB;
+  const sp2=((nA-1)*vA+(nB-1)*vB)/(nA+nB-2);
+  let se,df;
+  if(variant==='welch'){const a=vA/nA,b=vB/nB;se=Math.sqrt(a+b);df=(a+b)**2/(a*a/(nA-1)+b*b/(nB-1));}
+  else{se=Math.sqrt(sp2*(1/nA+1/nB));df=nA+nB-2;}
+  if(!(se>0)||!isFinite(df))return{invalid:true,msg:'Both groups have zero variance, so t is undefined.'};
+  const d=diff/Math.sqrt(sp2),g=d*(1-3/(4*(nA+nB-2)-1));
+  return decide({kind:'ind',variant,nA,nB,mA,mB,vA,vB,diff,se,df,t:diff/se,d,g,sp:Math.sqrt(sp2)},tails,alpha,lite);
+}
+function pairedTest(A,B,tails,alpha,lite){
+  const n=A.length;
+  if(n<2||B.length!==n)return{invalid:true,msg:'Paired data needs the same number of values (at least 2) in both conditions.'};
+  const D=A.map((a,i)=>a-B[i]),md=mean(D),vD=vari(D),sdD=Math.sqrt(vD);
+  if(!(sdD>0))return{invalid:true,msg:'All difference scores are identical (SD = 0), so t is undefined.'};
+  const se=sdD/Math.sqrt(n),df=n-1,vA=vari(A),vB=vari(B);
+  const dz=md/sdD,gz=dz*(1-3/(4*df-1)),dav=md/((Math.sqrt(vA)+Math.sqrt(vB))/2);
+  return decide({kind:'paired',n,D,mA:mean(A),mB:mean(B),vA,vB,diff:md,sdD,se,df,t:md/se,dz,gz,dav,r:corr(A,B)},tails,alpha,lite);
+}
+
+/* ============ Random numbers ============ */
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function normalGen(rng){let spare=null;return function(){if(spare!==null){const s=spare;spare=null;return s;}let u=0,v=0;while(u===0)u=rng();v=rng();const m=Math.sqrt(-2*Math.log(u));spare=m*Math.sin(2*Math.PI*v);return m*Math.cos(2*Math.PI*v);};}
+
+/* ============ State ============ */
+const S={mode:'ind',source:'sim',muA:107.5,muB:100,sdA:15,sdB:15,nA:30,nB:30,r:0.6,alpha:0.05,tails:'two',variant:'welch',exact:false,seed:7,simSeed:1};
+const MAXN=100;
+let Z1,Z2,JIT;
+function genBase(){
+  const rng=mulberry32(S.seed*7919+13),g=normalGen(rng);
+  Z1=[];Z2=[];JIT=[];
+  for(let i=0;i<MAXN;i++){Z1.push(g());Z2.push(g());JIT.push(rng()*2-1);}
+}
+function stdz(z){const m=mean(z),s=Math.sqrt(vari(z));return z.map(v=>(v-m)/s);}
+function orth(z2,z1){const m2=mean(z2);let num=0,den=0;for(let i=0;i<z1.length;i++){num+=z1[i]*(z2[i]-m2);den+=z1[i]*z1[i];}const b=num/den;return z2.map((v,i)=>v-m2-b*z1[i]);}
+function simData(){
+  const paired=S.mode==='paired',nA=S.nA,nB=paired?S.nA:S.nB;
+  let z1=Z1.slice(0,nA),z2=Z2.slice(0,nB);
+  if(S.exact){z1=stdz(z1);if(paired)z2=orth(z2,z1);z2=stdz(z2);}
+  if(paired){const r=S.r,k=Math.sqrt(1-r*r);
+    return{A:z1.map(z=>S.muA+S.sdA*z),B:z1.map((z,i)=>S.muB+S.sdB*(r*z+k*z2[i]))};}
+  return{A:z1.map(z=>S.muA+S.sdA*z),B:z2.map(z=>S.muB+S.sdB*z)};
+}
+function parseList(s){return s.split(/[\s,;]+/).filter(x=>x!=='').map(Number);}
+function ownData(){
+  const A=parseList($('ownA').value),B=parseList($('ownB').value);
+  if(A.some(v=>!isFinite(v))||B.some(v=>!isFinite(v)))return{err:'Some entries are not numbers.'};
+  return{A,B};
+}
+function runSim(N){
+  const rng=mulberry32(S.simSeed*104729+S.nA*31+S.nB),g=normalGen(rng),paired=S.mode==='paired';
+  const bins=new Array(20).fill(0);let sig=0,sigWrong=0,valid=0;
+  const nA=S.nA,nB=paired?S.nA:S.nB,r=S.r,k=Math.sqrt(1-r*r);
+  for(let it=0;it<N;it++){
+    const A=new Array(nA),B=new Array(nB);
+    if(paired){for(let i=0;i<nA;i++){const z1=g(),z2=g();A[i]=S.muA+S.sdA*z1;B[i]=S.muB+S.sdB*(r*z1+k*z2);}}
+    else{for(let i=0;i<nA;i++)A[i]=S.muA+S.sdA*g();for(let i=0;i<nB;i++)B[i]=S.muB+S.sdB*g();}
+    const res=paired?pairedTest(A,B,S.tails,S.alpha,true):indTest(A,B,S.variant,S.tails,S.alpha,true);
+    if(res.invalid)continue; valid++;
+    bins[Math.min(19,Math.floor(res.p*20))]++; if(res.sig)sig++;
+    if(paired){const w=indTest(A,B,S.variant,S.tails,S.alpha,true);if(!w.invalid&&w.sig)sigWrong++;}
+  }
+  return{bins,sig,sigWrong,N:valid,paired};
+}
+
+/* ============ Formatting ============ */
+const $=id=>document.getElementById(id);
+const f=(x,d=2)=>isFinite(x)?x.toFixed(d).replace('-','−'):(x>0?'∞':x<0?'−∞':'–');
+const fp=p=>p<0.001?'< .001':p.toFixed(3).replace(/^0/,'');
+const fdf=df=>Number.isInteger(df)?String(df):df.toFixed(2);
+const tk=v=>(+v.toFixed(6)).toString().replace('-','−');
+const lvl=()=>(+((1-S.alpha)*100).toFixed(1))+'%';
+const L=()=>S.mode==='ind'?{A:'Group A',B:'Group B',d:'A − B',s1:'A',s2:'B'}:{A:'Condition 1',B:'Condition 2',d:'1 − 2',s1:'1',s2:'2'};
+
+/* ============ Controls ============ */
+const PARAMS=[
+  {k:'muA',min:50,max:150,step:0.5,dec:1,lab:m=>m==='ind'?'Mean of group A':'Mean of condition 1'},
+  {k:'muB',min:50,max:150,step:0.5,dec:1,lab:m=>m==='ind'?'Mean of group B':'Mean of condition 2'},
+  {k:'sdA',min:1,max:40,step:0.5,dec:1,lab:m=>m==='ind'?'SD of group A':'SD of condition 1'},
+  {k:'sdB',min:1,max:40,step:0.5,dec:1,lab:m=>m==='ind'?'SD of group B':'SD of condition 2'},
+  {k:'nA',min:3,max:100,step:1,dec:0,lab:m=>m==='ind'?'n in group A':'n (participants)'},
+  {k:'nB',min:3,max:100,step:1,dec:0,only:'ind',lab:()=>'n in group B'},
+  {k:'r',min:-0.5,max:0.95,step:0.05,dec:2,only:'paired',lab:()=>'Correlation r between conditions'}
+];
+const PRESETS=[
+  {name:'No true effect',mode:'ind',v:{muA:100,muB:100,sdA:15,sdB:15,nA:30,nB:30}},
+  {name:'Medium effect (d = .5)',mode:'ind',v:{muA:107.5,muB:100,sdA:15,sdB:15,nA:30,nB:30}},
+  {name:'Unequal variances & n',mode:'ind',v:{muA:100,muB:108,sdA:10,sdB:25,nA:15,nB:45}},
+  {name:'Tiny samples',mode:'ind',v:{muA:110,muB:100,sdA:15,sdB:15,nA:6,nB:6}},
+  {name:'Paired, r = .8',mode:'paired',v:{muA:105,muB:100,sdA:15,sdB:15,nA:20,r:0.8}},
+  {name:'Paired, r = 0',mode:'paired',v:{muA:105,muB:100,sdA:15,sdB:15,nA:20,r:0}}
+];
+function buildControls(){
+  $('params').innerHTML=PARAMS.map(p=>`<div class="sl" id="w_${p.k}"><label for="p_${p.k}"><span id="l_${p.k}"></span><output id="o_${p.k}"></output></label><input type="range" id="p_${p.k}" min="${p.min}" max="${p.max}" step="${p.step}"></div>`).join('');
+  PARAMS.forEach(p=>$('p_'+p.k).addEventListener('input',e=>{S[p.k]=+e.target.value;update();}));
+  $('presets').innerHTML=PRESETS.map((p,i)=>`<button class="pill" data-i="${i}">${p.name}</button>`).join('');
+  $('presets').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const p=PRESETS[+b.dataset.i];Object.assign(S,p.v);S.mode=p.mode;S.source='sim';document.querySelector('input[name=src][value=sim]').checked=true;update();});
+}
+function syncUI(){
+  const ind=S.mode==='ind',lab=L();
+  $('tab-ind').setAttribute('aria-selected',ind);$('tab-paired').setAttribute('aria-selected',!ind);
+  PARAMS.forEach(p=>{
+    $('w_'+p.k).hidden=!!p.only&&p.only!==S.mode;
+    $('l_'+p.k).textContent=p.lab(S.mode);$('p_'+p.k).value=S[p.k];$('o_'+p.k).textContent=(+S[p.k]).toFixed(p.dec);
+  });
+  $('params').disabled=S.source==='own';$('params').style.opacity=S.source==='own'?.45:1;
+  $('simBox').hidden=S.source==='own';$('ownBox').hidden=S.source!=='own';
+  $('exact').checked=S.exact;$('alpha').value=String(S.alpha);$('variant').value=S.variant;
+  $('welchOpt').hidden=!ind;
+  $('tails').innerHTML=`<option value="two">Two-sided (${lab.s1} ≠ ${lab.s2})</option><option value="greater">One-sided: ${lab.s1} &gt; ${lab.s2}</option><option value="less">One-sided: ${lab.s1} &lt; ${lab.s2}</option>`;
+  $('tails').value=S.tails;
+  $('seedTxt').textContent='seed '+S.seed;
+  $('lblOwnA').textContent=lab.A+(ind?'':' (one value per participant)');$('lblOwnB').textContent=lab.B+(ind?'':' (same participant order)');
+  if(ind){const sp=Math.sqrt(((S.nA-1)*S.sdA**2+(S.nB-1)*S.sdB**2)/(S.nA+S.nB-2));
+    $('truth').innerHTML=`True mean difference <b>${f(S.muA-S.muB,1)}</b> · population d ≈ <b>${f((S.muA-S.muB)/sp,2)}</b>`;}
+  else{const sdD=Math.sqrt(Math.max(1e-9,S.sdA**2+S.sdB**2-2*S.r*S.sdA*S.sdB));
+    $('truth').innerHTML=`True mean difference <b>${f(S.muA-S.muB,1)}</b> · SD of differences <b>${f(sdD,1)}</b> · d<sub>z</sub> ≈ <b>${f((S.muA-S.muB)/sdD,2)}</b>`;}
+  $('dataCap').textContent=ind
+    ?'Dots are individual scores; the black marks are each group mean with its CI. The right panel shows the estimated difference with its CI: when a two-sided test is significant, that interval excludes 0.'
+    :'Each grey line is one participant. The right panel shows each participant’s difference score. The paired test uses these differences, so judge the effect there rather than from the two separate group CIs.';
+}
+
+/* ============ SVG helpers ============ */
+function ticks(lo,hi,n=6){const raw=(hi-lo)/n,mag=Math.pow(10,Math.floor(Math.log10(raw))),nm=raw/mag,step=(nm<1.5?1:nm<3?2:nm<7?5:10)*mag,out=[];for(let v=Math.ceil(lo/step-1e-9)*step;v<=hi+1e-9;v+=step)out.push(+v.toPrecision(12));return out;}
+function yAxis(m,W,y,lo,hi){let s='';for(const v of ticks(lo,hi,6))s+=`<line class="ax" x1="${m.l}" x2="${W-m.r}" y1="${y(v)}" y2="${y(v)}"/><text x="${m.l-6}" y="${y(v)+4}" text-anchor="end">${tk(v)}</text>`;return s;}
+const halfCI=a=>tCrit(S.alpha/2,a.length-1)*Math.sqrt(vari(a)/a.length);
+const px=v=>(+v.toFixed(2));
+
+function chartGroups(A,B,res){
+  const paired=res.kind==='paired',lab=L();
+  const W=560,H=340,m={l:50,r:12,t:14,b:50},pw=W-m.l-m.r,ph=H-m.t-m.b;
+  const hA=halfCI(A),hB=halfCI(B),mA=mean(A),mB=mean(B);
+  let lo=Math.min(...A,...B,mA-hA,mB-hB),hi=Math.max(...A,...B,mA+hA,mB+hB);
+  const pad=(hi-lo)*0.06||1;lo-=pad;hi+=pad;
+  const y=v=>px(m.t+ph*(1-(v-lo)/(hi-lo))),x1=px(m.l+pw*0.27),x2=px(m.l+pw*0.73),jw=36;
+  let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Scores for ${lab.A} and ${lab.B}">`+yAxis(m,W,y,lo,hi);
+  s+=`<text transform="rotate(-90)" x="${-(m.t+ph/2)}" y="12" text-anchor="middle">Score</text>`;
+  if(paired)for(let i=0;i<A.length;i++)s+=`<line x1="${x1}" x2="${x2}" y1="${y(A[i])}" y2="${y(B[i])}" style="stroke:var(--muted)" stroke-opacity=".4"/>`;
+  A.forEach((v,i)=>{const dx=paired?0:JIT[i%MAXN]*jw;s+=`<circle cx="${px(x1+dx)}" cy="${y(v)}" r="4" style="fill:var(--a)" fill-opacity=".72"/>`;});
+  B.forEach((v,i)=>{const dx=paired?0:JIT[(i+37)%MAXN]*jw;s+=`<circle cx="${px(x2+dx)}" cy="${y(v)}" r="4" style="fill:var(--b)" fill-opacity=".72"/>`;});
+  if(paired)s+=`<line x1="${x1}" x2="${x2}" y1="${y(mA)}" y2="${y(mB)}" style="stroke:var(--ink)" stroke-width="2.5"/>`;
+  [[x1,mA,hA],[x2,mB,hB]].forEach(([x,mu,h])=>{
+    s+=`<line x1="${x}" x2="${x}" y1="${y(mu-h)}" y2="${y(mu+h)}" style="stroke:var(--ink)" stroke-width="2.5"/>`;
+    s+=`<line x1="${x-8}" x2="${x+8}" y1="${y(mu-h)}" y2="${y(mu-h)}" style="stroke:var(--ink)" stroke-width="2.5"/><line x1="${x-8}" x2="${x+8}" y1="${y(mu+h)}" y2="${y(mu+h)}" style="stroke:var(--ink)" stroke-width="2.5"/>`;
+    s+=`<line x1="${x-30}" x2="${x+30}" y1="${y(mu)}" y2="${y(mu)}" style="stroke:var(--ink)" stroke-width="3.5"/>`;});
+  s+=`<text class="strong" style="fill:var(--ink);font-weight:600" x="${x1}" y="${H-m.b+20}" text-anchor="middle">${lab.A}</text><text x="${x1}" y="${H-m.b+35}" text-anchor="middle">n = ${A.length} · M = ${f(mA)}</text>`;
+  s+=`<text style="fill:var(--ink);font-weight:600" x="${x2}" y="${H-m.b+20}" text-anchor="middle">${lab.B}</text><text x="${x2}" y="${H-m.b+35}" text-anchor="middle">n = ${B.length} · M = ${f(mB)}</text>`;
+  return s+'</svg>';
+}
+function chartDiff(res){
+  const paired=res.kind==='paired',W=250,H=340,m={l:48,r:10,t:14,b:50},pw=W-m.l-m.r,ph=H-m.t-m.b;
+  const vals=paired?res.D:[];
+  let lo=Math.min(0,res.ci[0],...vals),hi=Math.max(0,res.ci[1],...vals);
+  const pad=(hi-lo)*0.08||1;lo-=pad;hi+=pad;
+  const y=v=>px(m.t+ph*(1-(v-lo)/(hi-lo))),cx=px(m.l+pw/2);
+  let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Estimated difference with confidence interval">`+yAxis(m,W,y,lo,hi);
+  s+=`<line x1="${m.l}" x2="${W-m.r}" y1="${y(0)}" y2="${y(0)}" style="stroke:var(--rej)" stroke-dasharray="5 4" stroke-width="1.5"/><text x="${W-m.r}" y="${y(0)-5}" text-anchor="end" style="fill:var(--rej)">0 = no difference</text>`;
+  if(paired)res.D.forEach((v,i)=>{s+=`<circle cx="${px(cx+JIT[i%MAXN]*30)}" cy="${y(v)}" r="3.6" style="fill:var(--muted)" fill-opacity=".55"/>`;});
+  const col=res.sig?'var(--ok)':'var(--ink)';
+  s+=`<line x1="${cx}" x2="${cx}" y1="${y(res.ci[0])}" y2="${y(res.ci[1])}" style="stroke:${col}" stroke-width="3"/>`;
+  s+=`<line x1="${cx-9}" x2="${cx+9}" y1="${y(res.ci[0])}" y2="${y(res.ci[0])}" style="stroke:${col}" stroke-width="3"/><line x1="${cx-9}" x2="${cx+9}" y1="${y(res.ci[1])}" y2="${y(res.ci[1])}" style="stroke:${col}" stroke-width="3"/>`;
+  s+=`<circle cx="${cx}" cy="${y(res.diff)}" r="6.5" style="fill:${col}"/>`;
+  s+=`<text x="${cx}" y="${H-m.b+20}" text-anchor="middle" style="fill:var(--ink);font-weight:600">${paired?'Differences (1 − 2)':'Mean difference (A − B)'}</text><text x="${cx}" y="${H-m.b+35}" text-anchor="middle">${f(res.diff)} · ${lvl()} CI</text>`;
+  return s+'</svg>';
+}
+function chartT(res){
+  const W=900,H=270,m={l:14,r:14,t:26,b:34},df=res.df,t=res.t,tc=res.tcrit,tails=res.tails;
+  const xm=Math.max(4.5,Math.min(14,Math.max(Math.abs(t)*1.12,tc*1.35)));
+  const X=v=>px(m.l+(W-m.l-m.r)*(v+xm)/(2*xm));
+  const ymax=Math.max(tpdf(0,df),npdf(0))*1.1,Y=v=>px(H-m.b-(H-m.t-m.b)*v/ymax);
+  const curve=g=>{let d='';for(let i=0;i<=400;i++){const v=-xm+2*xm*i/400;d+=(i?'L':'M')+X(v)+' '+Y(g(v,df));}return d;};
+  const area=(a,b)=>{a=Math.max(a,-xm);b=Math.min(b,xm);if(!(a<b))return'';let d=`M${X(a)} ${Y(0)}`;for(let i=0;i<=120;i++){const v=a+(b-a)*i/120;d+=`L${X(v)} ${Y(tpdf(v,df))}`;}return d+`L${X(b)} ${Y(0)}Z`;};
+  const rej=[],pr=[];
+  if(tails==='two'){rej.push([-Infinity,-tc],[tc,Infinity]);pr.push([-Infinity,-Math.abs(t)],[Math.abs(t),Infinity]);}
+  else if(tails==='greater'){rej.push([tc,Infinity]);pr.push([t,Infinity]);}
+  else{rej.push([-Infinity,-tc]);pr.push([-Infinity,t]);}
+  let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="t distribution with df ${fdf(df)} showing the observed t and rejection region"><defs><pattern id="hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="6" style="stroke:var(--accent)" stroke-width="2"/></pattern></defs>`;
+  rej.forEach(([a,b])=>{s+=`<path d="${area(a,b)}" style="fill:var(--rej)" fill-opacity=".3"/>`;});
+  pr.forEach(([a,b])=>{s+=`<path d="${area(a,b)}" fill="url(#hatch)"/>`;});
+  s+=`<path d="${curve((v)=>npdf(v))}" fill="none" style="stroke:var(--muted)" stroke-dasharray="4 4" stroke-width="1.3"/>`;
+  s+=`<path d="${curve(tpdf)}" fill="none" style="stroke:var(--ink)" stroke-width="2.2"/>`;
+  s+=`<line class="ax" x1="${m.l}" x2="${W-m.r}" y1="${Y(0)}" y2="${Y(0)}" style="stroke:var(--muted)"/>`;
+  const step=xm<=6?1:xm<=10?2:4;
+  for(let v=-Math.floor(xm/step)*step;v<=xm;v+=step)s+=`<text x="${X(v)}" y="${H-m.b+16}" text-anchor="middle">${tk(v)}</text>`;
+  s+=`<text x="${W/2}" y="${H-6}" text-anchor="middle">t (df = ${fdf(df)})</text>`;
+  const crit=tails==='two'?[-tc,tc]:tails==='greater'?[tc]:[-tc];
+  crit.forEach(c=>{
+    if(Math.abs(c)>xm){const left=c<0;s+=`<text x="${left?m.l+4:W-m.r-4}" y="${m.t+44}" text-anchor="${left?'start':'end'}" style="fill:var(--rej)">${left?'◀ ':''}t* = ${left?'−':''}${f(Math.abs(c))} (off scale)${left?'':' ▶'}</text>`;return;}
+    s+=`<line x1="${X(c)}" x2="${X(c)}" y1="${Y(0)}" y2="${m.t+6}" style="stroke:var(--rej)" stroke-dasharray="4 3" stroke-width="1.5"/><text x="${X(c)+(c<0?-6:6)}" y="${m.t+44}" text-anchor="${c<0?'end':'start'}" style="fill:var(--rej)">t* = ${c<0?'−':''}${f(Math.abs(c))}</text>`;});
+  const off=Math.abs(t)>xm,tt=Math.max(-xm,Math.min(xm,t)),tx=X(tt);
+  s+=`<line x1="${tx}" x2="${tx}" y1="${Y(0)}" y2="${m.t+14}" style="stroke:var(--ink)" stroke-width="3"/>`;
+  const anchor=tx>W*0.72?'end':tx<W*0.28?'start':'middle';
+  s+=`<text x="${tx}" y="${m.t+8}" text-anchor="${anchor}" style="fill:var(--ink);font-weight:700;font-size:12px" dy="-14">observed t = ${f(t)}${off?' (off scale)':''}</text>`;
+  return s+'</svg>';
+}
+function chartSim(sim){
+  const W=700,H=210,m={l:46,r:10,t:12,b:34},pw=W-m.l-m.r,ph=H-m.t-m.b,bw=pw/20;
+  const props=sim.bins.map(c=>c/sim.N),ymax=Math.max(...props,0.08)*1.12,Y=v=>px(m.t+ph*(1-v/ymax));
+  let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Histogram of p-values from repeated experiments">`;
+  for(const v of ticks(0,ymax,4))s+=`<line class="ax" x1="${m.l}" x2="${W-m.r}" y1="${Y(v)}" y2="${Y(v)}"/><text x="${m.l-6}" y="${Y(v)+4}" text-anchor="end">${Math.round(v*100)}%</text>`;
+  props.forEach((p,i)=>{const red=i*0.05<S.alpha-1e-9;s+=`<rect x="${px(m.l+i*bw+1)}" y="${Y(p)}" width="${px(bw-2)}" height="${px(Y(0)-Y(p))}" style="fill:${red?'var(--rej)':'var(--a)'}" fill-opacity="${red?.8:.45}"/>`;});
+  s+=`<line x1="${m.l}" x2="${W-m.r}" y1="${Y(0.05)}" y2="${Y(0.05)}" style="stroke:var(--ink)" stroke-dasharray="4 4"/><text x="${W-m.r}" y="${Y(0.05)-4}" text-anchor="end">flat at 5% per bin if H₀ is true</text>`;
+  for(const v of [0,.25,.5,.75,1])s+=`<text x="${px(m.l+pw*v)}" y="${H-m.b+16}" text-anchor="middle">${v}</text>`;
+  s+=`<text x="${m.l+pw/2}" y="${H-4}" text-anchor="middle">p-value</text>`;
+  return s+'</svg>';
+}
+
+/* ============ Rendering ============ */
+function effLabel(d){d=Math.abs(d);return d<0.2?'negligible':d<0.5?'small':d<0.8?'medium':'large';}
+function renderResult(res,lab){
+  $('badge').innerHTML=`<span class="badge ${res.sig?'sig':'ns'}">${res.sig?'Significant':'Not significant'} at α = ${fp(res.alpha)}</span>`;
+  const ci=`[${f(res.ci[0])}, ${f(res.ci[1])}]`,ind=res.kind==='ind';
+  const cards=ind
+    ?[['t',f(res.t,3)],['df',fdf(res.df)],['p',fp(res.p)],['Mean difference',f(res.diff)],[lvl()+' CI',ci],['Std. error',f(res.se,3)],["Cohen's d",f(res.d)],["Hedges' g",f(res.g)]]
+    :[['t',f(res.t,3)],['df',fdf(res.df)],['p',fp(res.p)],['Mean difference',f(res.diff)],[lvl()+' CI',ci],['Std. error',f(res.se,3)],['d_z (diff SD)',f(res.dz)],['d_av',f(res.dav)],['Sample r',f(res.r)]];
+  $('stats').innerHTML=cards.map(([a,b])=>`<div class="stat"><small>${a}</small><b>${b}</b></div>`).join('');
+  const dir=res.diff>=0?'higher':'lower',es=ind?res.d:res.dz;
+  const alt=res.tails==='two'?'two-sided':'one-sided ('+(res.tails==='greater'?lab.s1+' > '+lab.s2:lab.s1+' < '+lab.s2)+')';
+  let txt=ind
+    ?`${lab.A} (M = ${f(res.mA)}) was ${dir} than ${lab.B} (M = ${f(res.mB)}) by ${f(Math.abs(res.diff))} points.`
+    :`On average ${lab.A} (M = ${f(res.mA)}) was ${dir} than ${lab.B} (M = ${f(res.mB)}), a mean difference of ${f(res.diff)} across ${res.n} participants.`;
+  txt+=` With a ${alt} test at α = ${fp(res.alpha)}, p ${res.p<0.001?'< .001':'= '+fp(res.p)}, so H₀ (no difference in population means) is ${res.sig?'<b>rejected</b>':'<b>not rejected</b>'}.`;
+  txt+=` The effect is ${effLabel(es)} by Cohen’s rough benchmarks (${ind?'d':'d<sub>z</sub>'} = ${f(es)}). “Not rejected” does not mean “no effect”; look at how wide the CI is.`;
+  if(res.tails!=='two'&&((res.tails==='greater'&&res.diff<0)||(res.tails==='less'&&res.diff>0)))txt+=' <b>Note:</b> the observed difference is in the opposite direction to the one-sided hypothesis.';
+  $('interp').innerHTML=txt;
+  $('apa').textContent=`t(${fdf(res.df)}) = ${f(res.t)}, p ${res.p<0.001?'< .001':'= '+fp(res.p)}, ${ind?'d':'d_z'} = ${f(es)}, ${lvl()} CI [${f(res.ci[0])}, ${f(res.ci[1])}]`;
+}
+function renderCompare(A,B,res){
+  let rows;
+  if(res.kind==='ind'){
+    $('cmpTitle').textContent='Student vs Welch on the same data';
+    rows=['student','welch'].map(v=>({name:v==='student'?'Student (pooled variance)':'Welch (unequal variances)',r:indTest(A,B,v,S.tails,S.alpha),sel:v===S.variant}));
+  }else{
+    $('cmpTitle').textContent='Right test vs wrong test on the same data';
+    rows=[{name:'Paired t-test (correct)',r:res,sel:true},{name:'Independent t-test, ignoring the pairing',r:indTest(A,B,S.variant,S.tails,S.alpha),sel:false}];
+  }
+  $('cmp').innerHTML='<tr><th>Test</th><th>t</th><th>df</th><th>SE</th><th>p</th></tr>'+rows.map(o=>o.r.invalid?`<tr><td>${o.name}</td><td colspan="4">n/a</td></tr>`
+    :`<tr class="${o.sel?'sel':''}"><td>${o.name}</td><td class="num">${f(o.r.t,3)}</td><td class="num">${fdf(o.r.df)}</td><td class="num">${f(o.r.se,3)}</td><td class="num">${fp(o.r.p)}</td></tr>`).join('');
+}
+function renderWhy(res){
+  const s1=Math.sqrt(res.vA),s2=Math.sqrt(res.vB),n=res.n,r=res.r;
+  const seInd=Math.sqrt((res.vA+res.vB)/n),sePair=res.se,mx=Math.max(seInd,sePair);
+  $('whyFormula').innerHTML=`s<sub>D</sub>² = s₁² + s₂² − 2·r·s₁·s₂ = ${f(res.vA,1)} + ${f(res.vB,1)} − 2(${f(r)})(${f(s1,1)})(${f(s2,1)}) = <b>${f(res.sdD**2,1)}</b>`;
+  const bar=(lab,v,c)=>`<div style="display:grid;grid-template-columns:190px 1fr 60px;gap:8px;align-items:center;margin:4px 0"><span class="cap" style="margin:0">${lab}</span><div class="bar" style="width:${Math.max(2,100*v/mx)}%;background:${c}"></div><span class="f">${f(v,3)}</span></div>`;
+  $('whyBars').innerHTML=bar('SE if treated as independent',seInd,'var(--muted)')+bar('SE of paired differences',sePair,'var(--accent)');
+}
+function renderSim(){
+  const N=+$('simN').value,sim=runSim(N);
+  if(!sim.N){$('chartSim').innerHTML='';$('simTxt').textContent='';return;}
+  $('chartSim').innerHTML=chartSim(sim);
+  const pct=100*sim.sig/sim.N,trueD=S.muA-S.muB,what=trueD===0?'false-positive rate (Type I error)':'power';
+  let t=`<b>${sim.sig.toLocaleString()}</b> of ${sim.N.toLocaleString()} experiments (<b>${pct.toFixed(1)}%</b>) were significant at α = ${fp(S.alpha)}: an estimate of the ${what}.`;
+  if(sim.paired)t+=` Analysing the same data with an independent-groups test would have found only <b>${(100*sim.sigWrong/sim.N).toFixed(1)}%</b>.`;
+  $('simTxt').innerHTML=t;
+}
+let simTimer=null;
+function scheduleSim(){clearTimeout(simTimer);simTimer=setTimeout(renderSim,40);}
+
+function update(){
+  syncUI();
+  let A,B;
+  if(S.source==='sim'){const d=simData();A=d.A;B=d.B;}
+  else{const d=ownData();if(d.err){return showErr(d.err);}A=d.A;B=d.B;}
+  const res=S.mode==='paired'?pairedTest(A,B,S.tails,S.alpha):indTest(A,B,S.variant,S.tails,S.alpha);
+  if(res.invalid)return showErr(res.msg);
+  $('msg').hidden=true;
+  ['pDist','pRes'].forEach(id=>$(id).hidden=false);
+  $('chartMain').innerHTML=chartGroups(A,B,res);$('chartDiff').innerHTML=chartDiff(res);
+  $('chartT').innerHTML=chartT(res);
+  renderResult(res,L());renderCompare(A,B,res);
+  $('pWhy').hidden=res.kind!=='paired';if(res.kind==='paired')renderWhy(res);
+  scheduleSim();
+}
+function showErr(msg){
+  $('msg').hidden=false;$('msg').textContent=msg;
+  $('chartMain').innerHTML='';$('chartDiff').innerHTML='';
+  $('pDist').hidden=true;$('pRes').hidden=true;$('pWhy').hidden=true;
+  scheduleSim();
+}
+
+/* ============ Wiring ============ */
+function init(){
+  buildControls();genBase();
+  $('tab-ind').onclick=()=>{S.mode='ind';update();};
+  $('tab-paired').onclick=()=>{S.mode='paired';update();};
+  document.querySelectorAll('input[name=src]').forEach(el=>el.addEventListener('change',e=>{
+    S.source=e.target.value;
+    if(S.source==='own'&&!$('ownA').value&&!$('ownB').value)loadSim();
+    update();}));
+  $('tails').onchange=e=>{S.tails=e.target.value;update();};
+  $('alpha').onchange=e=>{S.alpha=+e.target.value;update();};
+  $('variant').onchange=e=>{S.variant=e.target.value;update();};
+  $('exact').onchange=e=>{S.exact=e.target.checked;update();};
+  $('resample').onclick=()=>{S.seed=Math.floor(Math.random()*1e6);genBase();update();};
+  $('ownA').oninput=update;$('ownB').oninput=update;
+  $('loadSim').onclick=()=>{loadSim();update();};
+  $('simN').onchange=renderSim;
+  $('simAgain').onclick=()=>{S.simSeed=Math.floor(Math.random()*1e6);renderSim();};
+  $('copy').onclick=()=>{
+    const txt=$('apa').textContent,done=()=>{$('copy').textContent='Copied';setTimeout(()=>$('copy').textContent='Copy',1200);};
+    if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(txt).then(done,done);
+    else{const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');}catch(e){}ta.remove();done();}
+  };
+  update();
+}
+function loadSim(){
+  const d=simData(),fmt=a=>a.map(v=>v.toFixed(2)).join(', ');
+  $('ownA').value=fmt(d.A);$('ownB').value=fmt(d.B);
+}
+init();
+</script>
+</body>
+</html>
