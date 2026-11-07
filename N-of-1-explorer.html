@@ -1,0 +1,1189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>N-of-1 Design Explorer: ABAB &amp; Multiple Baseline</title>
+<meta name="description" content="Interactive N-of-1 design explorer for ABAB reversal and multiple-baseline single-case experimental designs with up to five conditions (baseline A plus treatments B, C, D, E): simulate data, analyze your own, and practice visual analysis.">
+<style>
+:root{
+  --bg:#f5f6f4; --card:#ffffff; --fg:#1c1f24; --muted:#5b6572; --line:#d9dde3; --grid:#eceff2;
+  --plot:#ffffff; --axis:#8b94a1; --colA:#34588a; --colB:#c0531a; --tintB:rgba(192,83,26,.07); --colC:#14806f; --colD:#7c3fb0; --colE:#8a6d00;
+  --accent:#2b62c4; --accentFg:#ffffff; --good:#1f7a43; --warn:#9a6700; --bad:#b3261e;
+  --goodBg:#e5f4ea; --warnBg:#fbf0d4; --badBg:#fbe4e2;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme=light]){
+    --bg:#13161b; --card:#1b1f26; --fg:#e8eaed; --muted:#9aa3af; --line:#2d333c; --grid:#262b33;
+    --plot:#1b1f26; --axis:#6f7886; --colA:#8fb4e8; --colB:#f59a5f; --tintB:rgba(245,154,95,.10); --colC:#4fcfb8; --colD:#c39bea; --colE:#e3c64f;
+    --accent:#7aa7ff; --accentFg:#0d1117; --good:#6fd596; --warn:#e8c05a; --bad:#ff8c84;
+    --goodBg:#16301f; --warnBg:#3a3016; --badBg:#3d1d1b;
+  }
+}
+:root[data-theme=dark]{
+  --bg:#13161b; --card:#1b1f26; --fg:#e8eaed; --muted:#9aa3af; --line:#2d333c; --grid:#262b33;
+  --plot:#1b1f26; --axis:#6f7886; --colA:#8fb4e8; --colB:#f59a5f; --tintB:rgba(245,154,95,.10); --colC:#4fcfb8; --colD:#c39bea; --colE:#e3c64f;
+  --accent:#7aa7ff; --accentFg:#0d1117; --good:#6fd596; --warn:#e8c05a; --bad:#ff8c84;
+  --goodBg:#16301f; --warnBg:#3a3016; --badBg:#3d1d1b;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+header.top{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:14px 20px 6px;max-width:1360px;margin:0 auto}
+header.top h1{font-size:1.25rem;margin:0;letter-spacing:-.01em}
+header.top p{margin:2px 0 0;color:var(--muted);font-size:.9rem;max-width:62ch}
+.hbtns{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+button,.btn{font:inherit;font-size:.85rem;border:1px solid var(--line);background:var(--card);color:var(--fg);padding:6px 11px;border-radius:7px;cursor:pointer}
+button:hover{border-color:var(--accent)}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button.primary{background:var(--accent);color:var(--accentFg);border-color:var(--accent);font-weight:600}
+button.small{padding:3px 8px;font-size:.78rem}
+nav.tabs{display:flex;gap:2px;max-width:1360px;margin:6px auto 0;padding:0 20px;border-bottom:1px solid var(--line);overflow-x:auto}
+nav.tabs button{border:none;border-bottom:3px solid transparent;border-radius:0;background:none;padding:9px 14px;font-size:.92rem;color:var(--muted);white-space:nowrap}
+nav.tabs button[aria-selected=true]{color:var(--fg);border-bottom-color:var(--colB);font-weight:600}
+main{max-width:1360px;margin:0 auto;padding:16px 20px 40px}
+.tabpanel[hidden]{display:none}
+.layout{display:grid;grid-template-columns:330px minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:980px){.layout{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:14px}
+.card h2{font-size:1rem;margin:0 0 8px}
+.card h3{font-size:.92rem;margin:14px 0 6px}
+.card p{margin:6px 0}
+.muted{color:var(--muted)}
+.small{font-size:.82rem}
+aside.controls{position:sticky;top:8px;max-height:calc(100vh - 16px);overflow:auto;padding:12px 14px}
+@media (max-width:980px){aside.controls{position:static;max-height:none}}
+details.grp{border-top:1px solid var(--line);padding:6px 0}
+details.grp:first-of-type{border-top:none}
+details.grp>summary{cursor:pointer;font-weight:600;font-size:.88rem;padding:4px 0;list-style:none}
+details.grp>summary::before{content:"▸ ";color:var(--muted)}
+details.grp[open]>summary::before{content:"▾ "}
+.ctl{margin:6px 0 10px}
+.ctl label{display:flex;justify-content:space-between;gap:8px;font-size:.82rem;color:var(--muted);margin-bottom:2px}
+.ctl output{color:var(--fg);font-variant-numeric:tabular-nums;font-weight:600}
+.ctl input[type=range]{width:100%;accent-color:var(--accent)}
+.ctl input[type=text],.ctl input[type=number],.ctl select,textarea{width:100%;font:inherit;font-size:.85rem;padding:5px 7px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--fg)}
+.ctl.check label{display:flex;justify-content:flex-start;gap:8px;align-items:center;color:var(--fg)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.toolbar{display:flex;gap:6px 14px;flex-wrap:wrap;align-items:center;margin-bottom:8px;font-size:.82rem}
+.toolbar label{display:inline-flex;gap:5px;align-items:center;cursor:pointer}
+.toolbar .sp{flex:1}
+.chart svg{width:100%;height:auto;display:block}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted);margin-top:6px}
+.legend i{display:inline-block;vertical-align:middle;margin-right:4px}
+.dotA{width:10px;height:10px;border-radius:50%;background:var(--colA)}
+.dotB{width:10px;height:10px;background:var(--colB)}
+.tbl-wrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.84rem;font-variant-numeric:tabular-nums}
+th,td{padding:5px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{font-weight:600;color:var(--muted);font-size:.78rem}
+th[title]{cursor:help;text-decoration:underline dotted;text-underline-offset:3px}
+td.l,th.l{text-align:left;white-space:normal}
+.pill{display:inline-block;padding:1px 8px;border-radius:99px;font-size:.76rem;font-weight:600}
+.pill.good{background:var(--goodBg);color:var(--good)}
+.pill.warn{background:var(--warnBg);color:var(--warn)}
+.pill.bad{background:var(--badBg);color:var(--bad)}
+.callout{border-left:4px solid var(--colA);background:var(--grid);padding:8px 12px;border-radius:0 8px 8px 0;font-size:.88rem;margin:8px 0}
+.callout.warn{border-left-color:var(--warn)}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+.stat{display:flex;gap:18px;flex-wrap:wrap;margin:6px 0 8px}
+.stat div{min-width:110px}
+.stat b{display:block;font-size:1.3rem;font-variant-numeric:tabular-nums}
+.stat span{font-size:.76rem;color:var(--muted)}
+ul.clean{padding-left:18px;margin:6px 0}
+ul.clean li{margin:3px 0}
+.q{margin:12px 0}
+.q legend{font-weight:600;font-size:.92rem;padding:0}
+.q fieldset{border:none;margin:0;padding:0}
+.q label{display:block;margin:3px 0;font-size:.9rem;cursor:pointer}
+.fit{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-top:1px solid var(--line)}
+.fit:first-child{border-top:none}
+.fit .nm{font-weight:600}
+footer{max-width:1360px;margin:0 auto;padding:0 20px 30px;color:var(--muted);font-size:.8rem}
+.sr{position:absolute;left:-9999px}
+dl.gl dt{font-weight:600;margin-top:8px}
+dl.gl dd{margin:2px 0 0 0;color:var(--muted)}
+ol.refs li{margin:5px 0;font-size:.85rem}
+#toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:8px 14px;border-radius:8px;font-size:.85rem;opacity:0;pointer-events:none;transition:opacity .2s}
+#toast.show{opacity:.95}
+</style>
+</head>
+<body>
+<header class="top">
+  <div>
+    <h1>N-of-1 Design Explorer</h1>
+    <p>ABAB reversal and multiple-baseline designs for single-case (N-of-1) research, with up to five conditions: baseline A plus treatments B, C, D and E. Simulate, break and analyze data; load your own; practice visual analysis.</p>
+  </div>
+  <div class="hbtns">
+    <button id="btn-link" title="Put the current settings in the page URL so you can share or bookmark them">Copy share link</button>
+    <button id="btn-theme" title="Toggle light / dark">Theme</button>
+  </div>
+</header>
+
+<nav class="tabs" role="tablist" aria-label="Sections">
+  <button role="tab" id="t-abab" aria-controls="p-abab" aria-selected="true">ABAB reversal</button>
+  <button role="tab" id="t-mbd" aria-controls="p-mbd" aria-selected="false">Multiple baseline</button>
+  <button role="tab" id="t-prac" aria-controls="p-prac" aria-selected="false">Practice</button>
+  <button role="tab" id="t-sel" aria-controls="p-sel" aria-selected="false">Design selector</button>
+  <button role="tab" id="t-ref" aria-controls="p-ref" aria-selected="false">Reference</button>
+</nav>
+
+<main>
+<noscript><div class="card">This explorer needs JavaScript enabled.</div></noscript>
+
+<!-- ================= ABAB ================= -->
+<section class="tabpanel" id="p-abab" role="tabpanel" aria-labelledby="t-abab">
+  <div class="layout">
+    <aside class="card controls" id="ab-controls" aria-label="ABAB controls"></aside>
+    <div>
+      <div class="card">
+        <div class="row" style="justify-content:space-between">
+          <h2 id="ab-title" style="margin:0">ABAB reversal design</h2>
+          <div class="row">
+            <button class="small" data-act="ab-csv">CSV</button>
+            <button class="small" data-act="ab-svg">SVG</button>
+            <button class="small" data-act="ab-png">PNG</button>
+          </div>
+        </div>
+        <div class="toolbar" id="ab-ov"></div>
+        <div class="chart" id="ab-chart"></div>
+        <div class="legend" id="ab-legend"></div>
+      </div>
+      <div class="card" id="ab-custom-card">
+        <details>
+          <summary><b>Use your own data</b> <span class="muted small">(paste, analyze, export)</span></summary>
+          <p class="small muted">One observation per line as <code>phase,value</code> (e.g. <code>A,4</code>), or one phase per line as <code>A: 4 5 3 6</code>. Any label starting with A is a baseline/withdrawal phase; anything else is an intervention phase, and the labels B, C, D and E get their own colors and marker shapes. Consecutive runs of the same label form a phase, so A, B, A, B (or A, B, A, C, A, D) is detected automatically.</p>
+          <textarea id="ab-paste" rows="7" spellcheck="false" placeholder="A: 4 6 5 5 4 6 5&#10;B: 12 14 15 13 16 15 14 15&#10;A: 9 7 6 5 5 6 4&#10;B: 13 15 16 16 15 17 16 15"></textarea>
+          <div class="row" style="margin-top:6px">
+            <button class="primary small" data-act="ab-use">Analyze my data</button>
+            <button class="small" data-act="ab-fill">Copy simulated data into box</button>
+            <button class="small" data-act="ab-sim">Back to simulation</button>
+          </div>
+          <div id="ab-paste-msg" class="small" role="status" style="margin-top:6px"></div>
+        </details>
+      </div>
+      <div class="card"><h2>Phase summary</h2><div class="tbl-wrap" id="ab-phases"></div></div>
+      <div class="card"><h2>Visual analysis features and effect contrasts</h2><div id="ab-contrasts"></div></div>
+      <div class="card" id="ab-cond-card" hidden><h2>Comparing treatment conditions</h2><div id="ab-cond"></div></div>
+      <div class="card"><h2>Randomization test (Onghena, 1992)</h2><div id="ab-rand"></div></div>
+      <div class="card"><h2>Design-standards check</h2><div id="ab-std"></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= MBD ================= -->
+<section class="tabpanel" id="p-mbd" role="tabpanel" aria-labelledby="t-mbd" hidden>
+  <div class="layout">
+    <aside class="card controls" id="mb-controls" aria-label="Multiple baseline controls"></aside>
+    <div>
+      <div class="card">
+        <div class="row" style="justify-content:space-between">
+          <h2 style="margin:0">Multiple-baseline design</h2>
+          <div class="row">
+            <button class="small" data-act="mb-csv">CSV</button>
+            <button class="small" data-act="mb-svg">SVG</button>
+            <button class="small" data-act="mb-png">PNG</button>
+          </div>
+        </div>
+        <div class="toolbar" id="mb-ov"></div>
+        <div class="chart" id="mb-chart"></div>
+        <div class="legend" id="mb-legend"></div>
+      </div>
+      <div class="card" id="mb-custom-card">
+        <details>
+          <summary><b>Use your own data</b> <span class="muted small">(paste, analyze, export)</span></summary>
+          <p class="small muted">One tier per line: <code>Name; baseline values; B values</code>, optionally followed by <code>; C values; D values; E values</code>. Example: <code>Ana; 3 4 3 5 4; 9 10 12 11 12 13</code>. Values may be separated by spaces or commas. Tiers can have different lengths; sessions are aligned by position.</p>
+          <textarea id="mb-paste" rows="6" spellcheck="false" placeholder="Ana; 3 4 3 5 4; 9 10 12 11 12 13 12 14 13&#10;Ben; 5 4 5 6 4 5 5 4; 11 12 13 12 14 13 13&#10;Cy; 4 5 4 4 5 6 5 5 4 5; 10 12 11 13 12"></textarea>
+          <div class="row" style="margin-top:6px">
+            <button class="primary small" data-act="mb-use">Analyze my data</button>
+            <button class="small" data-act="mb-fill">Copy simulated data into box</button>
+            <button class="small" data-act="mb-sim">Back to simulation</button>
+          </div>
+          <div id="mb-paste-msg" class="small" role="status" style="margin-top:6px"></div>
+        </details>
+      </div>
+      <div class="card"><h2>Tier-by-tier effects</h2><div id="mb-tiers"></div></div>
+      <div class="card" id="mb-cond-card" hidden><h2>Conditions within tiers</h2><div id="mb-cond"></div></div>
+      <div class="card"><h2>Vertical analysis: do untreated tiers change when another tier starts?</h2><div id="mb-vert"></div></div>
+      <div class="card"><h2>Randomization test (Koehler &amp; Levin, 1998)</h2><div id="mb-rand"></div></div>
+      <div class="card"><h2>Design-standards check</h2><div id="mb-std"></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= PRACTICE ================= -->
+<section class="tabpanel" id="p-prac" role="tabpanel" aria-labelledby="t-prac" hidden>
+  <div class="card">
+    <h2>Visual-analysis practice</h2>
+    <p class="muted">A hidden scenario is generated at random: sometimes a real intervention effect, sometimes noise, drift, an outside event, or a change that never reverses. Judge it by looking at level, trend, variability, immediacy, overlap and consistency. Decide whether the data demonstrate a functional relation, then reveal the truth.</p>
+    <div class="row">
+      <button class="primary" data-act="pr-new">New scenario</button>
+      <span id="pr-score" class="muted small"></span>
+    </div>
+  </div>
+  <div class="card" id="pr-card" hidden>
+    <div class="toolbar" id="pr-ov"></div>
+    <div class="chart" id="pr-chart"></div>
+    <div class="row" id="pr-answer" style="margin-top:10px">
+      <b>Is a functional relation demonstrated?</b>
+      <button data-act="pr-yes">Yes: effect shown</button>
+      <button data-act="pr-no">No: not demonstrated</button>
+    </div>
+    <div id="pr-feedback" role="status"></div>
+  </div>
+</section>
+
+<!-- ================= SELECTOR ================= -->
+<section class="tabpanel" id="p-sel" role="tabpanel" aria-labelledby="t-sel" hidden>
+  <div class="grid2">
+    <div class="card">
+      <h2>Answer a few questions about your study</h2>
+      <div class="q"><fieldset><legend>1. Is the target behavior likely to return toward baseline when the intervention is withdrawn?</legend>
+        <label><input type="radio" name="q-rev" value="yes"> Yes, it depends on the intervention being in place</label>
+        <label><input type="radio" name="q-rev" value="unsure" checked> Not sure</label>
+        <label><input type="radio" name="q-rev" value="no"> No: skills, learning or knowledge will be retained</label></fieldset></div>
+      <div class="q"><fieldset><legend>2. Is it safe and ethical to withdraw an effective intervention?</legend>
+        <label><input type="radio" name="q-eth" value="ok"> Yes, withdrawal is acceptable</label>
+        <label><input type="radio" name="q-eth" value="unsure" checked> Not sure</label>
+        <label><input type="radio" name="q-eth" value="no"> No: harm risk (e.g. self-injury) or withdrawal is unacceptable</label></fieldset></div>
+      <div class="q"><fieldset><legend>3. Do you have 3 or more comparable baselines (participants, behaviors, or settings) that can be staggered?</legend>
+        <label><input type="radio" name="q-units" value="yes"> Yes</label>
+        <label><input type="radio" name="q-units" value="no" checked> No: one participant, one behavior, one setting</label></fieldset></div>
+      <div class="q"><fieldset><legend>4. Are you comparing two or more interventions against each other?</legend>
+        <label><input type="radio" name="q-cmp" value="one" checked> No: one intervention vs. baseline</label>
+        <label><input type="radio" name="q-cmp" value="two"> Yes: 2 or more interventions</label></fieldset></div>
+      <div class="q"><fieldset><legend>5. Will the behavior be shaped in steps toward a criterion (e.g. gradually raise a performance level)?</legend>
+        <label><input type="radio" name="q-grad" value="no" checked> No</label>
+        <label><input type="radio" name="q-grad" value="yes"> Yes</label></fieldset></div>
+    </div>
+    <div class="card">
+      <h2>Fit of each design</h2>
+      <div id="sel-out"></div>
+      <p class="small muted">A heuristic aid, not a substitute for design judgment, ethics review, or your field's standards. Designs can be combined (for instance, ABAB replicated within a multiple baseline) to strengthen internal validity.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= REFERENCE ================= -->
+<section class="tabpanel" id="p-ref" role="tabpanel" aria-labelledby="t-ref" hidden>
+  <div class="grid2">
+    <div class="card">
+      <h2>ABAB reversal (withdrawal) design</h2>
+      <p>Repeated measurement in a baseline phase (A1), an intervention phase (B1), a return to baseline (A2), and a second intervention phase (B2). Experimental control is shown when behavior changes with each introduction of the intervention and reverses when it is withdrawn. That gives three chances to show the effect: A1→B1, B1→A2, A2→B2.</p>
+      <h3>Strengths</h3>
+      <ul class="clean"><li>Strong internal validity within one participant</li><li>Each phase change is a replication; the effect is shown 3 times</li><li>Simple to run and to explain</li></ul>
+      <h3>Limits</h3>
+      <ul class="clean"><li>Needs a behavior that reverses; learned skills usually do not</li><li>Withdrawing an effective intervention may be unethical or unsafe</li><li>Carryover and slow reversal make interpretation ambiguous</li><li>Ends on B, but the study spends time without treatment</li></ul>
+    </div>
+    <div class="card">
+      <h2>Multiple-baseline design</h2>
+      <p>The intervention is introduced to different tiers (participants, behaviors, or settings) at staggered times. Each tier serves as a control for the others while it waits in baseline. Experimental control is shown when each tier changes only after, and soon after, its own intervention starts.</p>
+      <h3>Strengths</h3>
+      <ul class="clean"><li>No withdrawal needed, so it suits non-reversible behavior</li><li>Replication across tiers and across time</li><li>Ethical when withdrawal is not acceptable</li></ul>
+      <h3>Limits</h3>
+      <ul class="clean"><li>Needs 3+ comparable, ideally independent, tiers (WWC: at least 6 phases)</li><li>Spillover (generalization) between tiers blurs the logic</li><li>Long baselines for late tiers can be hard to justify</li><li>History events hitting all tiers at once are a threat</li></ul>
+    </div>
+    <div class="card">
+      <h2>Visual analysis: six features</h2>
+      <dl class="gl">
+        <dt>Level</dt><dd>The mean (or median) within a phase. Compare adjacent phases.</dd>
+        <dt>Trend</dt><dd>The slope of the data within a phase. A baseline already improving weakens any claim.</dd>
+        <dt>Variability</dt><dd>Spread around level or trend. High variability makes change harder to see.</dd>
+        <dt>Immediacy</dt><dd>How fast the change shows after a phase change (this tool compares the last 3 and first 3 points).</dd>
+        <dt>Overlap</dt><dd>How much data in adjacent phases fall in the same range. Less overlap means a clearer effect.</dd>
+        <dt>Consistency</dt><dd>Whether similar phases (A1 and A2, B1 and B2) look alike, and each change goes the expected way.</dd>
+      </dl>
+    </div>
+    <div class="card">
+      <h2>Metrics used here</h2>
+      <dl class="gl">
+        <dt>PND</dt><dd>Percent of intervention points beyond the most extreme baseline point in the therapeutic direction. Easy, but depends on one data point.</dd>
+        <dt>PEM</dt><dd>Percent of intervention points beyond the baseline median.</dd>
+        <dt>NAP</dt><dd>Nonoverlap of All Pairs: the share of (baseline, intervention) pairs where the intervention point is better, ties counting 0.5. 0.5 = chance, 1.0 = no overlap. Tau shown here is 2·NAP−1; it is <i>not</i> baseline-trend-corrected Tau-U.</dd>
+        <dt>d (within-case)</dt><dd>Mean difference divided by the pooled SD of the two phases. With autocorrelated data, treat it as descriptive.</dd>
+        <dt>Randomization test</dt><dd>Only valid if the phase-change points were randomly chosen before data collection. The p-value is the share of possible phase arrangements giving a statistic at least as extreme as the one observed. The smallest possible p is 1 / number of arrangements.</dd>
+      </dl>
+    </div>
+    <div class="card">
+      <h2>Threats to internal validity you can simulate</h2>
+      <ul class="clean">
+        <li><b>Maturation / baseline trend:</b> the maturation-trend slider</li>
+        <li><b>History:</b> the history-event setting (multiple baseline)</li>
+        <li><b>Irreversibility / carryover:</b> reversibility and return-speed sliders</li>
+        <li><b>Spillover between tiers:</b> the spillover slider</li>
+        <li><b>Instability and autocorrelation:</b> the variability and lag-1 sliders</li>
+        <li><b>Delayed effect:</b> the "sessions for effect to develop" slider</li>
+      </ul>
+      <p class="small muted">Try the presets, then ask: would a reviewer accept this as a demonstration of experimental control?</p>
+    </div>
+    <div class="card">
+      <h2>Design-standards reference points</h2>
+      <p class="small">The design check uses commonly cited What Works Clearinghouse single-case pilot standards (Kratochwill et al., 2010, 2013): an ABAB design needs at least 4 phases and at least 3 attempts to demonstrate an effect; a multiple-baseline design needs at least 6 phases; phases need at least 5 data points to meet standards, or 3 to 4 to meet with reservations. Also required: systematic manipulation of the independent variable and interobserver agreement collected on at least 20% of sessions in each phase. Standards are revised over time, so confirm against the current WWC handbook.</p>
+    </div>
+    <div class="card">
+      <h2>Extra conditions: C, D and E</h2>
+      <p>Choose 2 to 5 conditions. A is always baseline; B to E are treatments or treatment variations. In the ABAB tab each added condition is appended as a return to baseline followed by the new condition (A B A B A C A D A E), so every treatment is compared with its own adjacent baseline. In the multiple-baseline tab each tier receives B, then C, D and E in sequence after its staggered start.</p>
+      <p class="small muted">Because the conditions run in a fixed order, differences between treatments are confounded with order, time and carryover. Read treatment-versus-treatment comparisons as descriptive, and use an alternating-treatments or counterbalanced design when a head-to-head comparison is the main question.</p>
+    </div>
+    <div class="card" style="grid-column:1/-1">
+      <h2>References</h2>
+      <ol class="refs">
+        <li>Baer, D. M., Wolf, M. M., &amp; Risley, T. R. (1968). Some current dimensions of applied behavior analysis. <i>Journal of Applied Behavior Analysis, 1</i>, 91–97.</li>
+        <li>Horner, R. H., Carr, E. G., Halle, J., McGee, G., Odom, S., &amp; Wolery, M. (2005). The use of single-subject research to identify evidence-based practice in special education. <i>Exceptional Children, 71</i>, 165–179.</li>
+        <li>Koehler, M. J., &amp; Levin, J. R. (1998). Regulated randomization: A potentially sharper analytical tool for the multiple-baseline design. <i>Psychological Methods, 3</i>, 206–217.</li>
+        <li>Kratochwill, T. R., et al. (2010). <i>Single-case designs technical documentation.</i> What Works Clearinghouse.</li>
+        <li>Kratochwill, T. R., Hitchcock, J. H., Horner, R. H., Levin, J. R., Odom, S. L., Rindskopf, D. M., &amp; Shadish, W. R. (2013). Single-case intervention research design standards. <i>Remedial and Special Education, 34</i>, 26–38.</li>
+        <li>Onghena, P. (1992). Randomization tests for extensions and variations of ABAB single-case experimental designs: A rejoinder. <i>Behavioral Assessment, 14</i>, 153–171.</li>
+        <li>Parker, R. I., &amp; Vannest, K. J. (2009). An improved effect size for single-case research: Nonoverlap of all pairs. <i>Behavior Therapy, 40</i>, 357–367.</li>
+        <li>Parker, R. I., Vannest, K. J., Davis, J. L., &amp; Sauber, S. B. (2011). Combining nonoverlap and trend for single-case research: Tau-U. <i>Behavior Therapy, 42</i>, 284–299.</li>
+      </ol>
+      <p class="small muted">Citations are provided from memory for orientation; please verify details against the originals before citing.</p>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>
+  Simulated data are illustrative. The statistics are descriptive aids; visual analysis, design logic, and measurement quality (IOA, fidelity) still carry the inference. Single file, no dependencies: drop it in a repository and enable GitHub Pages.
+</footer>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+'use strict';
+
+/* ================= basic helpers ================= */
+const $=(s,el=document)=>el.querySelector(s);
+const $$=(s,el=document)=>Array.from(el.querySelectorAll(s));
+const sum=a=>a.reduce((s,v)=>s+v,0);
+const mean=a=>a.length?sum(a)/a.length:NaN;
+const median=a=>{if(!a.length)return NaN;const s=a.slice().sort((x,y)=>x-y),m=s.length>>1;return s.length%2?s[m]:(s[m-1]+s[m])/2};
+const sd=a=>{if(a.length<2)return 0;const m=mean(a);return Math.sqrt(sum(a.map(v=>(v-m)*(v-m)))/(a.length-1))};
+const minOf=a=>{let m=Infinity;for(const v of a)if(v<m)m=v;return m};
+const maxOf=a=>{let m=-Infinity;for(const v of a)if(v>m)m=v;return m};
+function slope(a){const n=a.length;if(n<2)return 0;const mx=(n-1)/2,my=mean(a);let sxy=0,sxx=0;for(let i=0;i<n;i++){sxy+=(i-mx)*(a[i]-my);sxx+=(i-mx)*(i-mx)}return sxy/sxx}
+const f=(v,d=2)=>Number.isFinite(v)?(+v).toFixed(d):'—';
+const sgn=(v,d=1)=>Number.isFinite(v)?((v>0?'+':'')+(+v).toFixed(d)):'—';
+const pct=v=>Number.isFinite(v)?Math.round(v*100)+'%':'—';
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function makeRng(seed){const r=mulberry32((seed>>>0)||1);const n=()=>{let u=0;while(u===0)u=r();const v=r();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)};return{r,n}}
+
+/* ================= simulation ================= */
+function finish(v,p){if(p.round)v=Math.round(v);v=Math.max(0,v);if(p.cap)v=Math.min(100,v);return v}
+
+function abSequence(p){
+  const seq=[{c:'A',n:p.nA1},{c:'B',n:p.nB1},{c:'A',n:p.nA2},{c:'B',n:p.nB2}];
+  ['C','D','E'].slice(0,Math.max(0,p.nCond-2)).forEach(c=>{seq.push({c:'A',n:p.nAx},{c,n:p['n'+c]})});
+  return seq;
+}
+function simulateABAB(p){
+  const {n}=makeRng(p.seed);
+  const seq=abSequence(p),eff={B:p.effect,C:p.eC,D:p.eD,E:p.eE},cnt={};
+  const y=[],phases=[];let t=0,ev=0,e=0,first=true,lastEff=0;
+  const phi=p.ar,sdv=p.sd,rev=p.revert/100;
+  seq.forEach(sp=>{
+    const isA=sp.c==='A';
+    const target=isA?lastEff*(1-rev):eff[sp.c];
+    if(!isA)lastEff=target;
+    const speed=Math.max(1,isA?p.decay:p.onset),stp=Math.abs(target-ev)/speed,s=t;
+    for(let k=0;k<sp.n;k++){
+      const d=target-ev;ev+=Math.abs(d)<=stp?d:Math.sign(d)*stp;
+      const z=n();
+      e=first?sdv*z:phi*e+Math.sqrt(Math.max(0,1-phi*phi))*sdv*z;first=false;
+      y.push(finish(p.base+p.trend*t+ev+e,p));t++;
+    }
+    cnt[sp.c]=(cnt[sp.c]||0)+1;
+    phases.push({label:sp.c+cnt[sp.c],type:isA?'A':'B',cond:sp.c,start:s,end:t-1});
+  });
+  return {y,phases};
+}
+
+function simulateMBD(p){
+  const {r,n}=makeRng(p.seed);
+  const K=p.tiers,conds=['B','C','D','E'].slice(0,Math.max(1,p.nCond-1)),L=conds.length,cl=p.cLen;
+  const effOf={B:p.effect,C:p.eC,D:p.eD,E:p.eE};
+  let starts=[];
+  for(let i=0;i<K;i++)starts.push(p.b0+i*p.step);
+  const N=starts[K-1]+(L-1)*cl+p.post;
+  if(p.order==='random'){for(let i=K-1;i>0;i--){const j=Math.floor(r()*(i+1));[starts[i],starts[j]]=[starts[j],starts[i]]}}
+  const tiers=[],params=[];
+  for(let i=0;i<K;i++)params.push({base:p.base+p.tierSd*n(),eff:p.effect+p.effSd*n()});
+  for(let i=0;i<K;i++){
+    const st=starts[i],others=starts.filter((_,j)=>j!==i),fo=minOf(others),adj=params[i].eff-p.effect;
+    const y=[];let e=0,ev=0,ci=-1,ev0=0;const phi=p.ar;
+    for(let t=0;t<N;t++){
+      if(t<st){
+        const g=t>=fo?Math.min(1,(t-fo+1)/Math.max(1,p.onset)):0;
+        ev=(p.spill/100)*g*params[i].eff;
+      }else{
+        const idx=Math.min(L-1,Math.floor((t-st)/cl));
+        if(idx!==ci){ci=idx;ev0=ev}
+        const target=effOf[conds[idx]]+adj,stp=Math.abs(target-ev0)/Math.max(1,p.onset),d=target-ev;
+        ev+=Math.abs(d)<=stp?d:Math.sign(d)*stp;
+      }
+      const hist=(p.histAt>0&&t>=p.histAt-1)?p.histSize:0;
+      const z=n();
+      e=t===0?p.sd*z:phi*e+Math.sqrt(Math.max(0,1-phi*phi))*p.sd*z;
+      y.push(finish(params[i].base+p.trend*t+ev+hist+e,p));
+    }
+    const phases=[{label:'A',type:'A',cond:'A',start:0,end:st-1}];
+    conds.forEach((c,idx)=>phases.push({label:c,type:'B',cond:c,start:st+idx*cl,end:idx===L-1?N-1:st+(idx+1)*cl-1}));
+    tiers.push({name:`${p.unit} ${i+1}`,y,start:st,phases});
+  }
+  return {tiers,n:N};
+}
+
+/* ================= analysis ================= */
+function nap(a,b,dir){let s=0;for(const x of a)for(const y of b){const d=dir*(y-x);s+=d>0?1:d===0?0.5:0}return s/(a.length*b.length)}
+function pnd(a,b,dir){const ref=dir>0?maxOf(a):minOf(a);return b.filter(v=>dir>0?v>ref:v<ref).length/b.length}
+function pem(a,b,dir){const m=median(a);return b.filter(v=>dir*(v-m)>0).length/b.length}
+function cohend(a,b){const sa=sd(a),sb=sd(b),na=a.length,nb=b.length;if(na+nb<3)return NaN;
+  const pooled=Math.sqrt(((na-1)*sa*sa+(nb-1)*sb*sb)/(na+nb-2));const diff=mean(b)-mean(a);
+  return pooled>0?diff/pooled:(diff===0?0:NaN)}
+
+function contrasts(S,dir,thr){
+  const out=[],P=S.phases;
+  for(let i=0;i<P.length-1;i++){
+    const p=P[i],q=P[i+1]; if(p.type===q.type)continue;
+    const A=p.type==='A'?p:q,B=p.type==='A'?q:p, onset=p.type==='A';
+    const a=S.y.slice(A.start,A.end+1),b=S.y.slice(B.start,B.end+1);
+    const old=S.y.slice(p.start,p.end+1),nw=S.y.slice(q.start,q.end+1);
+    const k=Math.min(3,old.length,nw.length);
+    const im=mean(nw.slice(0,k))-mean(old.slice(-k));
+    const np=nap(a,b,dir), eff=dir*(mean(b)-mean(a));
+    out.push({label:p.label+'→'+q.label,cond:B.cond||'B',A,B,onset,a,b,meanA:mean(a),meanB:mean(b),eff,
+      immediacy:onset?dir*im:-dir*im,nap:np,tau:2*np-1,pnd:pnd(a,b,dir),pem:pem(a,b,dir),d:cohend(a,b),
+      slopeA:slope(a),slopeB:slope(b),demo:np>=thr&&eff>0});
+  }
+  return out;
+}
+
+/* randomization test for phase-change points (ABAB and generalizations) */
+function abRandTest(S,dir,m){
+  const y=S.y,n=y.length,types=S.phases.map(p=>p.type),k=types.length-1;
+  if(k<1||!types.includes('A')||!types.includes('B'))return{error:'Need at least one A and one B phase.'};
+  const minObs=minOf(S.phases.map(p=>p.end-p.start+1));
+  m=Math.max(1,Math.min(m,minObs));
+  const top=n-(k+1)*m+k; if(top<k)return{error:'Too few sessions for this minimum phase length.'};
+  let Nf=1;for(let i=1;i<=k;i++)Nf=Nf*(top-k+i)/i;
+  const pre=[0];for(let i=0;i<n;i++)pre.push(pre[i]+y[i]);
+  const b=new Array(k+2).fill(0);b[k+1]=n;
+  const stat=()=>{let sa=0,na=0,sb=0,nb=0;for(let i=0;i<=k;i++){const len=b[i+1]-b[i],s=pre[b[i+1]]-pre[b[i]];if(types[i]==='A'){sa+=s;na+=len}else{sb+=s;nb+=len}}return dir*(sb/nb-sa/na)};
+  const setObs=()=>{for(let j=1;j<=k;j++)b[j]=S.phases[j].start};
+  if(Nf>400000){
+    const R=makeRng(12345).r,draws=20000,rem=n-(k+1)*m,slots=rem+k,vals=new Float64Array(draws+1),pos=[];
+    for(let i=0;i<slots;i++)pos.push(i);
+    for(let d=0;d<draws;d++){
+      for(let i=0;i<k;i++){const j=i+Math.floor(R()*(slots-i));const tmp=pos[i];pos[i]=pos[j];pos[j]=tmp}
+      const q=pos.slice(0,k).sort((a,c)=>a-c);let prev=-1,acc=0;
+      for(let j=0;j<k;j++){acc+=m+(q[j]-prev-1);b[j+1]=acc;prev=q[j]}
+      vals[d]=stat();
+    }
+    setObs();const obs=stat();vals[draws]=obs;
+    let ge=0;for(let i=0;i<=draws;i++)if(vals[i]>=obs-1e-9)ge++;
+    return{mc:true,N:Nf,draws:draws+1,obs,p:ge/(draws+1),minP:1/Nf,vals,m};
+  }
+  const N=Math.round(Nf),vals=new Float64Array(N);let c=0;
+  (function rec(j){if(j===k+1){vals[c++]=stat();return}const lo=b[j-1]+m,hi=n-(k-j+1)*m;for(let v=lo;v<=hi;v++){b[j]=v;rec(j+1)}})(1);
+  setObs();
+  const obs=stat();let ge=0;const v=vals.subarray(0,c);for(let i=0;i<c;i++)if(v[i]>=obs-1e-9)ge++;
+  return{N:c,obs,p:ge/c,minP:1/c,vals:v,m};
+}
+
+function permsIdx(k){const res=[],a=[];for(let i=0;i<k;i++)a.push(i);
+  (function rec(i){if(i===k){res.push(a.slice());return}for(let j=i;j<k;j++){[a[i],a[j]]=[a[j],a[i]];rec(i+1);[a[i],a[j]]=[a[j],a[i]]}})(0);return res}
+
+function mbdStat(tiers,starts,dir){let t=0;for(let i=0;i<tiers.length;i++){const s=starts[i],y=tiers[i].y;if(s<1||s>=y.length)return null;t+=dir*(mean(y.slice(s))-mean(y.slice(0,s)))}return t/tiers.length}
+function mbdRandTest(tiers,dir){
+  const K=tiers.length; if(K<2)return{error:'Need at least 2 tiers.'}; if(K>7)return{error:'Test limited to 7 tiers.'};
+  const starts=tiers.map(t=>t.start), obs=mbdStat(tiers,starts,dir);
+  if(obs===null)return{error:'A tier has no baseline or no intervention data.'};
+  const vals=[];for(const p of permsIdx(K)){const t=mbdStat(tiers,p.map(i=>starts[i]),dir);if(t!==null)vals.push(t)}
+  const ge=vals.filter(v=>v>=obs-1e-9).length;
+  return{N:vals.length,obs,p:ge/vals.length,minP:1/vals.length,vals};
+}
+
+function verticalAnalysis(tiers,dir){
+  const rows=[], order=tiers.map((t,i)=>i).sort((a,b)=>tiers[a].start-tiers[b].start);
+  let bs=[];tiers.forEach(t=>bs.push(sd(t.y.slice(0,t.start))));
+  const pooled=Math.sqrt(mean(bs.map(v=>v*v)))||1;
+  order.forEach(j=>{
+    const sj=tiers[j].start, deltas=[];
+    tiers.forEach((t,i)=>{
+      if(i===j||t.start<=sj)return;
+      const before=t.y.slice(Math.max(0,sj-3),sj), after=t.y.slice(sj,Math.min(sj+3,t.start));
+      if(before.length&&after.length)deltas.push(dir*(mean(after)-mean(before)));
+    });
+    if(deltas.length)rows.push({tier:tiers[j].name,at:sj+1,k:deltas.length,delta:mean(deltas),z:mean(deltas)/pooled});
+  });
+  return{rows,pooled};
+}
+
+/* ================= parsing user data ================= */
+function nums(s){return s.split(/[\s,;\t]+/).filter(Boolean).map(Number)}
+function parseAB(text){
+  const pts=[];
+  for(const raw of text.split(/\r?\n/)){
+    const line=raw.trim(); if(!line)continue;
+    if(line.includes(':')){
+      const i=line.indexOf(':'),lab=line.slice(0,i).trim().toUpperCase(),vs=nums(line.slice(i+1));
+      if(!lab||vs.some(v=>!Number.isFinite(v)))return{error:`Could not read numbers on the line "${line.slice(0,40)}".`};
+      vs.forEach(v=>pts.push([lab[0],v]));
+    }else{
+      const t=line.split(/[\s,;\t]+/).filter(Boolean);
+      if(t.length<2)return{error:`Line "${line.slice(0,40)}" needs a phase label and a value.`};
+      const v=Number(t[1]);
+      if(!Number.isFinite(v)){if(pts.length===0)continue;return{error:`Value "${t[1]}" is not a number.`}}
+      pts.push([t[0].toUpperCase()[0],v]);
+    }
+  }
+  if(pts.length<6)return{error:'Need at least 6 observations.'};
+  const phases=[],y=[],cnt={};
+  pts.forEach(([lab,v],i)=>{
+    y.push(v);const last=phases[phases.length-1];
+    if(last&&last.base===lab){last.end=i}
+    else{cnt[lab]=(cnt[lab]||0)+1;phases.push({base:lab,start:i,end:i,type:lab==='A'?'A':'B',cond:lab==='A'?'A':(['B','C','D','E'].includes(lab)?lab:'B')})}
+  });
+  phases.forEach(p=>{p.label=p.base+cnt[p.base]});
+  const labs=new Set(phases.map(p=>p.base));
+  if(phases.length<2)return{error:'Only one phase found.'};
+  // if only one A-label count, drop numeric suffix is unnecessary; keep for consistency
+  return{S:{y,phases:phases.map(p=>({label:p.label,type:p.type,cond:p.cond,start:p.start,end:p.end}))}};
+}
+function parseMB(text){
+  const tiers=[],labs=['B','C','D','E'];
+  for(const raw of text.split(/\r?\n/)){
+    const line=raw.trim(); if(!line)continue;
+    const parts=line.split(';').map(s=>s.trim());
+    if(parts.length<3||parts.length>6)return{error:`Line "${line.slice(0,40)}" must look like: Name; baseline values; B values (; C values; D values; E values)`};
+    const vs=parts.slice(1).map(nums);
+    if(vs.some(a=>a.length<1||a.some(v=>!Number.isFinite(v))))return{error:`Check the numbers for "${parts[0]}".`};
+    const y=[].concat.apply([],vs),phases=[];let pos=0;
+    vs.forEach((a,i)=>{phases.push({label:i===0?'A':labs[i-1],type:i===0?'A':'B',cond:i===0?'A':labs[i-1],start:pos,end:pos+a.length-1});pos+=a.length});
+    tiers.push({name:parts[0]||`Tier ${tiers.length+1}`,y,start:vs[0].length,phases});
+  }
+  if(tiers.length<2)return{error:'Need at least 2 tiers.'};
+  return{tiers};
+}
+
+/* ================= chart rendering ================= */
+function pal(){const cs=getComputedStyle(document.documentElement),g=n=>cs.getPropertyValue(n).trim();
+  return{card:g('--card'),bg:g('--plot'),fg:g('--fg'),mut:g('--muted'),grid:g('--grid'),axis:g('--axis'),A:g('--colA'),B:g('--colB'),C:g('--colC'),D:g('--colD'),E:g('--colE'),tintB:g('--tintB')}}
+
+function niceScale(lo,hi,n){
+  const span=(hi-lo)||1,raw=span/n,mag=Math.pow(10,Math.floor(Math.log10(raw))),fr=raw/mag;
+  const step=(fr<1.5?1:fr<3?2:fr<7?5:10)*mag;
+  const nlo=Math.floor(lo/step)*step,nhi=Math.ceil(hi/step-1e-9)*step,t=[];
+  for(let v=nlo;v<=nhi+1e-9;v+=step)t.push(+v.toFixed(10));
+  return{lo:nlo,hi:nhi,ticks:t};
+}
+
+function marker(cond,x,y,c,bg,tip){
+  const a=`fill="${c}" stroke="${bg}" stroke-width="1"`;
+  if(!cond||cond==='A')return `<circle cx="${x}" cy="${y}" r="4.3" ${a}>${tip}</circle>`;
+  if(cond==='C')return `<polygon points="${x},${y-5.3} ${x+5.1},${y+3.9} ${x-5.1},${y+3.9}" ${a}>${tip}</polygon>`;
+  if(cond==='D')return `<polygon points="${x},${y-5.7} ${x+5.3},${y} ${x},${y+5.7} ${x-5.3},${y}" ${a}>${tip}</polygon>`;
+  if(cond==='E')return `<polygon points="${x-5.1},${y-3.9} ${x+5.1},${y-3.9} ${x},${y+5.3}" ${a}>${tip}</polygon>`;
+  return `<rect x="${x-3.9}" y="${y-3.9}" width="7.8" height="7.8" ${a}>${tip}</rect>`;
+}
+
+function panelSVG(S,o){
+  const {x0,y0,w,h,nMax,ov,dir,P,id,title,topLabels,xAxis,sc}=o;
+  const step=w/nMax,X=i=>x0+(i+0.5)*step,Y=v=>y0+h-(v-sc.lo)/(sc.hi-sc.lo)*h;
+  const col=q=>q.type==='A'?P.A:(P[q.cond]||P.B);
+  const multi=S.phases.some(q=>q.type!=='A'&&q.cond&&q.cond!=='B');
+  let s=`<clipPath id="clip${id}"><rect x="${x0}" y="${y0}" width="${w}" height="${h}"/></clipPath>`;
+  s+=`<rect x="${x0}" y="${y0}" width="${w}" height="${h}" fill="${P.bg}"/>`;
+  S.phases.forEach(p=>{if(p.type!=='A')s+=`<rect x="${x0+p.start*step}" y="${y0}" width="${(p.end-p.start+1)*step}" height="${h}" fill="${col(p)}" fill-opacity=".09"/>`});
+  sc.ticks.forEach(t=>{
+    if(ov.grid)s+=`<line x1="${x0}" x2="${x0+w}" y1="${Y(t)}" y2="${Y(t)}" stroke="${P.grid}"/>`;
+    s+=`<line x1="${x0-4}" x2="${x0}" y1="${Y(t)}" y2="${Y(t)}" stroke="${P.axis}"/><text x="${x0-8}" y="${Y(t)+4}" text-anchor="end" font-size="11" fill="${P.mut}">${+t.toFixed(2)}</text>`;
+  });
+  s+=`<line x1="${x0}" x2="${x0}" y1="${y0}" y2="${y0+h}" stroke="${P.axis}"/><line x1="${x0}" x2="${x0+w}" y1="${y0+h}" y2="${y0+h}" stroke="${P.axis}"/>`;
+  if(xAxis){
+    const every=nMax>60?10:nMax>30?5:nMax>16?2:1;
+    for(let i=0;i<nMax;i++)if((i+1)%every===0||i===0){s+=`<line x1="${X(i)}" x2="${X(i)}" y1="${y0+h}" y2="${y0+h+4}" stroke="${P.axis}"/><text x="${X(i)}" y="${y0+h+17}" text-anchor="middle" font-size="11" fill="${P.mut}">${i+1}</text>`}
+  }
+  S.phases.forEach((p,i)=>{
+    if(i>0)s+=`<line x1="${x0+p.start*step}" x2="${x0+p.start*step}" y1="${y0}" y2="${y0+h}" stroke="${P.mut}" stroke-dasharray="5 4" stroke-width="1.2"/>`;
+  });
+  s+=`<g clip-path="url(#clip${id})">`;
+  S.phases.forEach((p,pi)=>{
+    const seg=S.y.slice(p.start,p.end+1),c=col(p),xa=x0+p.start*step+3,xb=x0+(p.end+1)*step-3;
+    if(ov.overlap&&p.type==='A'){
+      const ref=dir>0?maxOf(seg):minOf(seg),from=pi>0?S.phases[pi-1]:p,to=pi<S.phases.length-1?S.phases[pi+1]:p;
+      s+=`<line x1="${x0+from.start*step+3}" x2="${x0+(to.end+1)*step-3}" y1="${Y(ref)}" y2="${Y(ref)}" stroke="${P.mut}" stroke-dasharray="1 4" stroke-width="1.6"/>`;
+    }
+    if(ov.mean)s+=`<line x1="${xa}" x2="${xb}" y1="${Y(mean(seg))}" y2="${Y(mean(seg))}" stroke="${c}" stroke-dasharray="7 4" stroke-width="1.6" opacity=".85"/>`;
+    if(ov.median)s+=`<line x1="${xa}" x2="${xb}" y1="${Y(median(seg))}" y2="${Y(median(seg))}" stroke="${c}" stroke-dasharray="2 3" stroke-width="1.6"/>`;
+    if(ov.trend&&seg.length>=3){const sl=slope(seg),my=mean(seg),mx=(seg.length-1)/2;
+      s+=`<line x1="${X(p.start)}" x2="${X(p.end)}" y1="${Y(my+sl*(0-mx))}" y2="${Y(my+sl*(seg.length-1-mx))}" stroke="${c}" stroke-width="2" opacity=".75"/>`;
+      if(ov.project&&p.type==='A'&&pi<S.phases.length-1){
+        const nx=S.phases[pi+1],endI=nx.end-p.start;
+        s+=`<line x1="${X(p.end)}" x2="${X(nx.end)}" y1="${Y(my+sl*(seg.length-1-mx))}" y2="${Y(my+sl*(endI-mx))}" stroke="${P.mut}" stroke-dasharray="3 4" stroke-width="1.6"/>`;
+      }
+    }
+    for(let i=0;i<seg.length-1;i++)s+=`<line x1="${X(p.start+i)}" x2="${X(p.start+i+1)}" y1="${Y(seg[i])}" y2="${Y(seg[i+1])}" stroke="${c}" stroke-width="1.5"/>`;
+  });
+  S.phases.forEach(p=>{
+    const c=col(p);
+    for(let i=p.start;i<=p.end;i++){
+      const tip=`<title>Session ${i+1} · ${esc(p.label)} · ${S.y[i]}</title>`;
+      s+=marker(p.type==='A'?'A':(p.cond||'B'),X(i),Y(S.y[i]),c,P.bg,tip);
+    }
+  });
+  s+='</g>';
+  S.phases.forEach(p=>{
+    const cx=x0+(p.start+(p.end-p.start+1)/2)*step;
+    if(topLabels==='outside')s+=`<text x="${cx}" y="${y0-9}" text-anchor="middle" font-size="12" font-weight="600" fill="${col(p)}">${esc(p.label)}</text>`;
+    else if(topLabels==='inside')s+=`<text x="${cx}" y="${y0+12}" text-anchor="middle" font-size="10.5" fill="${col(p)}" opacity=".95">${p.type==='A'?'Baseline':(multi?'Condition '+(p.cond||'B'):'Intervention')}</text>`;
+  });
+  if(title)s+=`<text x="${x0+8}" y="${y0+h-8}" font-size="12.5" font-weight="700" fill="${P.fg}">${esc(title)}</text>`;
+  return s;
+}
+
+function legendHTML(list,note){
+  const set=new Set();list.forEach(S=>S.phases.forEach(p=>{if(p.type!=='A')set.add(p.cond||'B')}));
+  const conds=['B','C','D','E'].filter(c=>set.has(c));
+  const icon=c=>`<svg width="14" height="14" viewBox="-7 -7 14 14" style="vertical-align:middle;margin-right:4px" aria-hidden="true">${marker(c,0,0,`var(--col${c})`,'transparent','')}</svg>`;
+  let h=`<span>${icon('A')}A = baseline</span>`;
+  if(conds.length<=1)h+=`<span>${icon('B')}B = intervention</span>`;
+  else conds.forEach(c=>{h+=`<span>${icon(c)}${c} = treatment ${c}</span>`});
+  return h+`<span>${note}</span>`;
+}
+
+function rangeFor(vals,cap,nt){
+  let lo=Math.min(0,minOf(vals)),hi=maxOf(vals);
+  if(cap)hi=100;else hi=hi*1.08+0.001;
+  if(hi<=lo)hi=lo+1;
+  const sc=niceScale(lo,hi,nt);
+  if(cap){sc.hi=100;}
+  return sc;
+}
+
+function chartSVG(list,o){
+  const P=pal(),W=920,left=62,right=16,w=W-left-right,K=list.length,N=Math.max.apply(null,list.map(s=>s.y.length));
+  const abab=o.mode==='abab';
+  const top=abab?34:10,ph=abab?320:(K<=4?132:104),gap=abab?0:12,H=top+K*ph+(K-1)*gap+46;
+  const all=[].concat.apply([],list.map(s=>s.y));
+  const shared=rangeFor(all,o.cap,abab?6:4);
+  let s=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(o.aria)}" font-family="system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif"><title>${esc(o.aria)}</title>`;
+  s+=`<rect width="${W}" height="${H}" fill="${P.card}"/>`;
+  list.forEach((S,i)=>{
+    const y0=top+i*(ph+gap),sc=(o.sharedY||abab)?shared:rangeFor(S.y,o.cap,3);
+    s+=panelSVG(S,{x0:left,y0,w,h:ph,nMax:N,ov:o.ov,dir:o.dir,P,id:(o.id||'c')+i,title:abab?'':S.name,
+      topLabels:abab?'outside':'inside',xAxis:i===K-1,sc});
+  });
+  const mid=top+(K*ph+(K-1)*gap)/2;
+  s+=`<text transform="translate(15,${mid}) rotate(-90)" text-anchor="middle" font-size="12" fill="${P.mut}">${esc(o.ylab)}</text>`;
+  s+=`<text x="${left+w/2}" y="${H-8}" text-anchor="middle" font-size="12" fill="${P.mut}">Session</text></svg>`;
+  return s;
+}
+
+/* histogram of randomization distribution */
+function histSVG(vals,obs,P){
+  const w=560,h=150,ml=34,mr=10,mt=10,mb=34,bins=28;
+  let lo=Infinity,hi=-Infinity;for(let i=0;i<vals.length;i++){const v=vals[i];if(v<lo)lo=v;if(v>hi)hi=v}
+  lo=Math.min(lo,obs);hi=Math.max(hi,obs);if(!(hi>lo)){hi=lo+1}
+  const cnt=new Array(bins).fill(0);
+  for(let i=0;i<vals.length;i++)cnt[Math.min(bins-1,Math.floor((vals[i]-lo)/(hi-lo)*bins))]++;
+  const mx=Math.max.apply(null,cnt),bw=(w-ml-mr)/bins,X=v=>ml+(v-lo)/(hi-lo)*(w-ml-mr);
+  let s=`<svg viewBox="0 0 ${w} ${h}" style="max-width:${w}px;width:100%;height:auto" role="img" aria-label="Distribution of the test statistic over all possible arrangements, with the observed value marked" font-family="system-ui,sans-serif"><rect width="${w}" height="${h}" fill="${P.card}"/>`;
+  cnt.forEach((c,i)=>{const bh=c/mx*(h-mt-mb),ctr=lo+(i+0.5)/bins*(hi-lo);
+    s+=`<rect x="${ml+i*bw+0.5}" y="${h-mb-bh}" width="${bw-1}" height="${bh}" fill="${ctr>=obs-1e-9?P.B:P.A}" opacity="${ctr>=obs-1e-9?.9:.45}"/>`});
+  s+=`<line x1="${ml}" x2="${w-mr}" y1="${h-mb}" y2="${h-mb}" stroke="${P.axis}"/>`;
+  s+=`<line x1="${X(obs)}" x2="${X(obs)}" y1="${mt}" y2="${h-mb}" stroke="${P.fg}" stroke-width="2"/><text x="${X(obs)}" y="${mt+8}" font-size="11" fill="${P.fg}" text-anchor="${X(obs)>w/2?'end':'start'}" dx="${X(obs)>w/2?-5:5}">observed</text>`;
+  for(const v of [lo,(lo+hi)/2,hi])s+=`<text x="${X(v)}" y="${h-mb+14}" font-size="10.5" fill="${P.mut}" text-anchor="middle">${f(v,1)}</text>`;
+  s+=`<text x="${(ml+w-mr)/2}" y="${h-6}" font-size="11" fill="${P.mut}" text-anchor="middle">Mean difference (therapeutic direction) across all possible arrangements</text></svg>`;
+  return s;
+}
+
+/* ================= state ================= */
+const DEF_AB={nA1:7,nB1:8,nA2:7,nB2:8,base:20,effect:15,sd:3,ar:0.15,trend:0,onset:2,revert:100,decay:2,seed:42,dir:1,round:true,cap:false,ylab:'Target behavior (units per session)',thr:0.9,minlen:3,nCond:2,nAx:5,nC:8,nD:8,nE:8,eC:8,eD:22,eE:12};
+const DEF_MB={tiers:4,b0:5,step:4,post:8,unit:'Participant',order:'ordered',base:20,tierSd:4,effect:15,effSd:3,sd:3,ar:0.15,trend:0,onset:2,spill:0,histAt:0,histSize:10,seed:7,dir:1,round:true,cap:false,ylab:'Target behavior (units per session)',thr:0.9,sharedY:true,nCond:2,cLen:6,eC:8,eD:22,eE:12};
+const st={ab:Object.assign({},DEF_AB),mb:Object.assign({},DEF_MB),
+  abOv:{mean:true,median:false,trend:false,project:false,overlap:false,grid:true},
+  mbOv:{mean:true,median:false,trend:false,project:false,overlap:false,grid:true},
+  prOv:{mean:true,median:false,trend:true,project:true,overlap:false,grid:true},
+  abCustom:null,mbCustom:null,tab:'abab',sel:{rev:'unsure',eth:'unsure',units:'no',cmp:'one',grad:'no'}};
+
+const AB_DEFS=[
+ {g:'Design (sessions per phase)',k:'nA1',l:'A1 baseline',min:3,max:25,step:1},
+ {g:'Design (sessions per phase)',k:'nB1',l:'B1 intervention',min:3,max:25,step:1},
+ {g:'Design (sessions per phase)',k:'nA2',l:'A2 withdrawal',min:3,max:25,step:1},
+ {g:'Design (sessions per phase)',k:'nB2',l:'B2 intervention',min:3,max:25,step:1},
+ {g:'Additional conditions (C, D, E)',k:'nCond',l:'Number of conditions',type:'select',num:true,opts:[[2,'2: A baseline, B'],[3,'3: A, B, C'],[4,'4: A, B, C, D'],[5,'5: A, B, C, D, E']],help:'Each added condition is appended after a return to baseline (A B A B A C A D A E)'},
+ {g:'Additional conditions (C, D, E)',k:'nAx',l:'Baseline sessions before each added condition',min:3,max:15,step:1,show:s=>s.nCond>=3},
+ {g:'Additional conditions (C, D, E)',k:'nC',l:'C sessions',min:3,max:25,step:1,show:s=>s.nCond>=3},
+ {g:'Additional conditions (C, D, E)',k:'eC',l:'C effect (raw units)',min:-50,max:50,step:1,show:s=>s.nCond>=3},
+ {g:'Additional conditions (C, D, E)',k:'nD',l:'D sessions',min:3,max:25,step:1,show:s=>s.nCond>=4},
+ {g:'Additional conditions (C, D, E)',k:'eD',l:'D effect (raw units)',min:-50,max:50,step:1,show:s=>s.nCond>=4},
+ {g:'Additional conditions (C, D, E)',k:'nE',l:'E sessions',min:3,max:25,step:1,show:s=>s.nCond>=5},
+ {g:'Additional conditions (C, D, E)',k:'eE',l:'E effect (raw units)',min:-50,max:50,step:1,show:s=>s.nCond>=5},
+ {g:'Behavior and noise',k:'base',l:'Baseline level',min:0,max:100,step:1},
+ {g:'Behavior and noise',k:'effect',l:'Intervention effect (raw units)',min:-50,max:50,step:1},
+ {g:'Behavior and noise',k:'sd',l:'Variability (SD)',min:0,max:15,step:0.5},
+ {g:'Behavior and noise',k:'ar',l:'Autocorrelation (lag-1)',min:0,max:0.9,step:0.05,fmt:v=>v.toFixed(2)},
+ {g:'Threats and dynamics',k:'trend',l:'Maturation trend (units/session)',min:-1.5,max:1.5,step:0.05,fmt:v=>v.toFixed(2)},
+ {g:'Threats and dynamics',k:'onset',l:'Sessions for effect to develop',min:1,max:10,step:1,help:'1 = immediate change'},
+ {g:'Threats and dynamics',k:'revert',l:'Reversibility on withdrawal',min:0,max:100,step:5,unit:'%',help:'Percent of the effect lost in A2. 0% = fully irreversible (learned skill)'},
+ {g:'Threats and dynamics',k:'decay',l:'Sessions to return toward baseline',min:1,max:10,step:1},
+ {g:'Measurement and display',k:'dir',l:'Therapeutic direction',type:'select',num:true,opts:[[1,'Increase is better'],[-1,'Decrease is better']]},
+ {g:'Measurement and display',k:'round',l:'Round to whole numbers (counts)',type:'check'},
+ {g:'Measurement and display',k:'cap',l:'Cap at 100 (percent measure)',type:'check'},
+ {g:'Measurement and display',k:'ylab',l:'Y-axis label',type:'text'},
+ {g:'Measurement and display',k:'seed',l:'Random seed',type:'seed'},
+];
+const MB_DEFS=[
+ {g:'Design',k:'tiers',l:'Number of tiers',min:2,max:6,step:1},
+ {g:'Design',k:'unit',l:'Tiers are',type:'select',opts:[['Participant','Participants'],['Behavior','Behaviors'],['Setting','Settings']]},
+ {g:'Design',k:'b0',l:'Baseline sessions, first tier',min:3,max:14,step:1},
+ {g:'Design',k:'step',l:'Stagger between tiers (sessions)',min:1,max:9,step:1},
+ {g:'Design',k:'post',l:'Sessions in final condition, last tier',min:3,max:16,step:1},
+ {g:'Design',k:'order',l:'Which tier starts when',type:'select',opts:[['ordered','Fixed order (tier 1 first)'],['random','Random assignment (seeded)']]},
+ {g:'Additional conditions (C, D, E)',k:'nCond',l:'Number of conditions',type:'select',num:true,opts:[[2,'2: A baseline, B'],[3,'3: A, B, C'],[4,'4: A, B, C, D'],[5,'5: A, B, C, D, E']],help:'Within each tier, conditions follow one another: B, then C, D, E'},
+ {g:'Additional conditions (C, D, E)',k:'cLen',l:'Sessions per condition before the next begins',min:3,max:14,step:1,show:s=>s.nCond>=3},
+ {g:'Additional conditions (C, D, E)',k:'eC',l:'C effect (raw units)',min:-50,max:50,step:1,show:s=>s.nCond>=3},
+ {g:'Additional conditions (C, D, E)',k:'eD',l:'D effect (raw units)',min:-50,max:50,step:1,show:s=>s.nCond>=4},
+ {g:'Additional conditions (C, D, E)',k:'eE',l:'E effect (raw units)',min:-50,max:50,step:1,show:s=>s.nCond>=5},
+ {g:'Behavior and noise',k:'base',l:'Baseline level',min:0,max:100,step:1},
+ {g:'Behavior and noise',k:'tierSd',l:'Between-tier baseline differences (SD)',min:0,max:15,step:0.5},
+ {g:'Behavior and noise',k:'effect',l:'Intervention effect (raw units)',min:-50,max:50,step:1},
+ {g:'Behavior and noise',k:'effSd',l:'Between-tier effect differences (SD)',min:0,max:12,step:0.5},
+ {g:'Behavior and noise',k:'sd',l:'Variability (SD)',min:0,max:15,step:0.5},
+ {g:'Behavior and noise',k:'ar',l:'Autocorrelation (lag-1)',min:0,max:0.9,step:0.05,fmt:v=>v.toFixed(2)},
+ {g:'Threats and dynamics',k:'trend',l:'Maturation trend (units/session)',min:-1.5,max:1.5,step:0.05,fmt:v=>v.toFixed(2)},
+ {g:'Threats and dynamics',k:'onset',l:'Sessions for effect to develop',min:1,max:10,step:1},
+ {g:'Threats and dynamics',k:'spill',l:'Spillover to untreated tiers',min:0,max:100,step:5,unit:'%',help:'Percent of the effect that appears in tiers still in baseline once another tier is treated'},
+ {g:'Threats and dynamics',k:'histAt',l:'History event at session (0 = none)',min:0,max:40,step:1,help:'An outside event that shifts every tier at the same session'},
+ {g:'Threats and dynamics',k:'histSize',l:'History event size (raw units)',min:-30,max:30,step:1},
+ {g:'Measurement and display',k:'dir',l:'Therapeutic direction',type:'select',num:true,opts:[[1,'Increase is better'],[-1,'Decrease is better']]},
+ {g:'Measurement and display',k:'sharedY',l:'Same y-axis for all tiers',type:'check'},
+ {g:'Measurement and display',k:'round',l:'Round to whole numbers (counts)',type:'check'},
+ {g:'Measurement and display',k:'cap',l:'Cap at 100 (percent measure)',type:'check'},
+ {g:'Measurement and display',k:'ylab',l:'Y-axis label',type:'text'},
+ {g:'Measurement and display',k:'seed',l:'Random seed',type:'seed'},
+];
+
+const AB_PRESETS=[
+ ['Clean reversal',{}],
+ ['Partial reversal (carryover)',{revert:40,decay:4}],
+ ['Irreversible (learned skill)',{revert:0}],
+ ['Baseline trend confound',{trend:0.8,effect:5}],
+ ['High variability',{sd:8,effect:15}],
+ ['Delayed effect',{onset:7}],
+ ['Strong autocorrelation',{ar:0.75,sd:4}],
+ ['No effect (noise only)',{effect:0}],
+ ['Reduce problem behavior',{dir:-1,base:60,effect:-35,sd:5,cap:false}],
+ ['Compare treatments B, C, D, E',{nCond:5}],
+ ['Compare B, C, D (long sequence)',{nCond:4,nA1:5,nB1:6,nA2:5,nB2:6,nAx:4,nC:6,nD:6}],
+];
+const MB_PRESETS=[
+ ['Clean demonstration',{}],
+ ['Spillover between tiers',{spill:60}],
+ ['History event hits all tiers',{histAt:9,histSize:12,effect:0}],
+ ['Baseline trend confound',{trend:0.7,effect:5}],
+ ['High variability',{sd:8}],
+ ['Delayed effect',{onset:6}],
+ ['Only 3 tiers',{tiers:3}],
+ ['Random start assignment',{order:'random',tiers:5}],
+ ['Three conditions per tier (B then C)',{nCond:3}],
+ ['Four conditions per tier (B, C, D)',{nCond:4,cLen:5}],
+ ['No effect (noise only)',{effect:0,effSd:0}],
+];
+
+/* ================= control building ================= */
+function ctrlHTML(prefix,defs,state,presets){
+  let h=`<div class="ctl"><label for="${prefix}-preset">Scenario preset</label><select id="${prefix}-preset"><option value="">Choose a preset…</option>${presets.map((p,i)=>`<option value="${i}">${esc(p[0])}</option>`).join('')}</select></div>`;
+  const groups=[];defs.forEach(d=>{if(!groups.includes(d.g))groups.push(d.g)});
+  groups.forEach((g,gi)=>{
+    h+=`<details class="grp" ${gi<3?'open':''}><summary>${esc(g)}</summary>`;
+    defs.filter(d=>d.g===g).forEach(d=>{
+      const id=`${prefix}-${d.k}`,v=state[d.k],ttl=d.help?` title="${esc(d.help)}"`:'';
+      if(d.type==='select')h+=`<div class="ctl"><label for="${id}"${ttl}>${esc(d.l)}</label><select id="${id}" data-k="${d.k}" ${d.num?'data-num="1"':''}>${d.opts.map(o=>`<option value="${o[0]}" ${String(o[0])===String(v)?'selected':''}>${esc(o[1])}</option>`).join('')}</select></div>`;
+      else if(d.type==='check')h+=`<div class="ctl check"><label><input type="checkbox" id="${id}" data-k="${d.k}" ${v?'checked':''}> ${esc(d.l)}</label></div>`;
+      else if(d.type==='text')h+=`<div class="ctl"><label for="${id}">${esc(d.l)}</label><input type="text" id="${id}" data-k="${d.k}" value="${esc(v)}"></div>`;
+      else if(d.type==='seed')h+=`<div class="ctl"><label for="${id}">${esc(d.l)}</label><div class="row"><input type="number" id="${id}" data-k="${d.k}" value="${v}" min="1" step="1" style="flex:1"><button class="small" data-act="${prefix}-rand">Randomize</button></div></div>`;
+      else h+=`<div class="ctl"><label for="${id}"${ttl}>${esc(d.l)}<output id="${id}-o">${(d.fmt?d.fmt(v):v)}${d.unit||''}</output></label><input type="range" id="${id}" data-k="${d.k}" min="${d.min}" max="${d.max}" step="${d.step}" value="${v}"></div>`;
+    });
+    h+='</details>';
+  });
+  h+=`<div class="row"><button class="small" data-act="${prefix}-reset">Reset all</button></div>`;
+  return h;
+}
+function ovHTML(prefix,ov){
+  const items=[['mean','Phase mean'],['median','Median'],['trend','Trend line'],['project','Projected baseline trend'],['overlap','Overlap line (PND)'],['grid','Grid']];
+  return items.map(([k,l])=>`<label><input type="checkbox" data-ov="${k}" data-pre="${prefix}" ${ov[k]?'checked':''}> ${l}</label>`).join('');
+}
+function applyVis(prefix,defs,state){defs.forEach(d=>{if(!d.show)return;const el=$('#'+prefix+'-'+d.k);const c=el&&el.closest('.ctl');if(c)c.hidden=!d.show(state)})}
+function syncControls(prefix,defs,state){
+  defs.forEach(d=>{const el=$('#'+prefix+'-'+d.k);if(!el)return;
+    if(d.type==='check')el.checked=!!state[d.k];else el.value=state[d.k];
+    const o=$('#'+prefix+'-'+d.k+'-o');if(o)o.textContent=(d.fmt?d.fmt(state[d.k]):state[d.k])+(d.unit||'');});
+  applyVis(prefix,defs,state);
+}
+function bindControls(prefix,state,defs,onChange,presets,def){
+  const root=$('#'+prefix+'-controls');
+  root.addEventListener('input',e=>{
+    const el=e.target;
+    if(el.id===prefix+'-preset')return;
+    const k=el.dataset.k;if(!k)return;
+    let v;
+    if(el.type==='checkbox')v=el.checked;
+    else if(el.type==='range'||el.type==='number')v=+el.value;
+    else if(el.dataset.num)v=+el.value;
+    else v=el.value;
+    if(el.type==='number'&&!(v>=1))return;
+    state[k]=v;
+    const o=$('#'+prefix+'-'+k+'-o');const d=defs.find(x=>x.k===k);
+    if(o&&d)o.textContent=(d.fmt?d.fmt(v):v)+(d.unit||'');
+    applyVis(prefix,defs,state);
+    onChange();
+  });
+  root.addEventListener('change',e=>{
+    if(e.target.id===prefix+'-preset'){
+      const i=e.target.value;if(i==='')return;
+      Object.assign(state,def,presets[+i][1],{seed:state.seed});
+      syncControls(prefix,defs,state);onChange();
+    }
+  });
+}
+
+/* ================= tables / narrative ================= */
+function tbl(head,rows){
+  return `<div class="tbl-wrap"><table><thead><tr>${head.map(h=>Array.isArray(h)?`<th title="${esc(h[1])}">${h[0]}</th>`:`<th>${h}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+}
+const pill=(txt,cls)=>`<span class="pill ${cls}">${txt}</span>`;
+
+function phaseTable(S){
+  return tbl(['Phase',['Sessions','First–last session'],'n','Mean','Median','SD','Range',['Slope','OLS slope per session']],
+    S.phases.map(p=>{const a=S.y.slice(p.start,p.end+1);
+      return[`<b>${esc(p.label)}</b>`,`${p.start+1}–${p.end+1}`,a.length,f(mean(a)),f(median(a)),f(sd(a)),`${minOf(a)}–${maxOf(a)}`,sgn(slope(a),2)]}));
+}
+
+function contrastTable(C,thr){
+  if(!C.length)return '<p class="muted">No adjacent A/B phases found.</p>';
+  const head=['Contrast',['Mean A → B','Reference (A) phase mean to intervention (B) phase mean'],
+    ['Δ level','Change in level, positive = therapeutic direction'],['Immediacy','Mean of first 3 vs last 3 points across the change, positive = expected direction'],
+    ['NAP','Nonoverlap of all pairs; 0.5 = chance, 1 = complete separation'],['Tau','2·NAP − 1 (no baseline-trend correction)'],['PND','Percent of B points beyond the most extreme A point'],
+    ['PEM','Percent of B points beyond the A median'],['d','Pooled-SD standardized mean difference'],['Trend A / B','Slope per session in each phase'],['Effect?',`Demonstration = NAP ≥ ${thr} and level change in the therapeutic direction`]];
+  const rows=C.map(c=>[`<b>${c.label}</b>${c.onset?'':' <span class="muted small">(withdrawal)</span>'}`,`${f(c.meanA,1)} → ${f(c.meanB,1)}`,sgn(c.eff),sgn(c.immediacy),f(c.nap),f(c.tau),pct(c.pnd),pct(c.pem),Number.isFinite(c.d)?f(c.d,1):'—',`${sgn(c.slopeA,2)} / ${sgn(c.slopeB,2)}`,c.demo?pill('yes','good'):pill('no','bad')]);
+  return tbl(head,rows);
+}
+
+function abNarrative(S,C,thr){
+  if(!C.length)return '';
+  const demos=C.filter(c=>c.demo).length, n=C.length;
+  const cons=C.every(c=>c.eff>0);
+  const A=S.phases.filter(p=>p.type==='A'),trendFlags=[];
+  A.forEach(p=>{const a=S.y.slice(p.start,p.end+1);if(a.length>=3)trendFlags.push({l:p.label,t:slope(a)*(a.length-1),s:sd(a)})});
+  let h=`<div class="callout"><b>Summary.</b> ${demos} of ${n} phase contrasts meet the demonstration rule (NAP ≥ ${thr}). `;
+  h+=cons?'Every contrast moves in the expected direction, which is the consistency a reversal design relies on. ':'At least one contrast does <b>not</b> move in the expected direction, which weakens the case for experimental control. ';
+  const bad=trendFlags.filter(t=>t.t>1.0*Math.max(t.s,0.0001)&&t.t*(st.currentDir||1)>0);
+  if(bad.length)h+=`Baseline phase ${bad.map(b=>b.l).join(', ')} already trends toward improvement by more than one SD, so part of the later change may be maturation. `;
+  h+='Use this as a descriptive aid next to your own visual analysis.</div>';
+  return h;
+}
+
+function stdRow(label,status,detail){return[label,pill(status.t,status.c),`<span class="muted">${detail}</span>`]}
+function pointsStatus(minN){return minN>=5?{t:'meets',c:'good'}:minN>=3?{t:'with reservations',c:'warn'}:{t:'does not meet',c:'bad'}}
+
+function stdTableAB(S,C,thr){
+  const minN=minOf(S.phases.map(p=>p.end-p.start+1)),np=S.phases.length;
+  const attempts=C.length,demos=C.filter(c=>c.demo).length;
+  const rows=[
+    stdRow('At least 4 phases (ABAB)',np>=4?{t:'yes',c:'good'}:{t:'no',c:'bad'},`${np} phases`),
+    stdRow('At least 3 attempts to show an effect',attempts>=3?{t:'yes',c:'good'}:{t:'no',c:'bad'},`${attempts} A/B phase changes`),
+    stdRow('Data points per phase',pointsStatus(minN),`smallest phase has ${minN}; 5+ meets, 3–4 meets with reservations`),
+    stdRow('Demonstrated effects (NAP ≥ '+thr+')',demos>=3?{t:'3 or more',c:'good'}:demos>=2?{t:String(demos),c:'warn'}:{t:String(demos),c:'bad'},`${demos} of ${attempts} contrasts`)
+  ];
+  return tbl(['Check','Status','Detail'],rows)+manualChecks('ab')
+   +`<div class="row small" style="margin-top:8px"><label>Demonstration threshold (NAP ≥) <input type="number" id="ab-thr" min="0.5" max="1" step="0.05" value="${thr}" style="width:70px;font:inherit;padding:2px 4px"></label></div>`;
+}
+function manualChecks(p){
+  return `<h3>Not computable from the data (tick as you confirm)</h3><ul class="clean small" style="list-style:none;padding-left:0">
+   <li><label><input type="checkbox"> Independent variable systematically manipulated by the researcher</label></li>
+   <li><label><input type="checkbox"> Interobserver agreement collected on at least 20% of sessions in every phase and acceptably high</label></li>
+   <li><label><input type="checkbox"> Procedural fidelity monitored</label></li>
+   <li><label><input type="checkbox"> Phase changes decided by pre-set rules or by randomization, not by peeking at the data</label></li></ul>`;
+}
+
+function randHTML(r,P,extra){
+  if(r.error)return `<p class="muted">${esc(r.error)}</p>`;
+  const fp=v=>v<0.001?'&lt;0.001':v.toFixed(3);
+  const sig=r.p<=0.05;
+  const arr=Math.round(r.N).toLocaleString();
+  let h=`<div class="stat"><div><b>${f(r.obs,2)}</b><span>observed statistic</span></div><div><b>${fp(r.p)}</b><span>one-sided p${r.mc?' (Monte Carlo)':''}</span></div><div><b>${r.mc?'≈ ':''}${arr}</b><span>possible arrangements${r.mc?' ('+r.draws.toLocaleString()+' sampled)':''}</span></div><div><b>${fp(r.minP)}</b><span>smallest attainable p</span></div></div>`;
+  h+=histSVG(r.vals,r.obs,P);
+  h+=`<p class="small muted">Orange bars are arrangements at least as extreme as the one observed. ${r.minP>0.05?`<b>With only ${arr} arrangements the smallest possible p is ${fp(r.minP)}, so this design cannot reach p ≤ .05 whatever the data.</b> `:''}`;
+  h+=`${r.mc?'There are too many arrangements to list, so the p-value is estimated from a random sample. ':''}${sig?'The observed arrangement falls in the extreme tail.':'The observed arrangement is not in the extreme 5% tail.'} The test is only valid if the phase-change points were randomly selected in advance; if they were chosen by looking at the data, treat the p-value as descriptive only.${extra||''}</p>`;
+  return h;
+}
+
+/* ================= condition comparison ================= */
+function condStats(S,dir){
+  const base=[],map={};
+  S.phases.forEach(p=>{
+    const seg=S.y.slice(p.start,p.end+1);
+    if(p.type==='A'){seg.forEach(v=>base.push(v));return}
+    const c=p.cond||'B';(map[c]=map[c]||{c,vals:[],labels:[]});map[c].labels.push(p.label);seg.forEach(v=>map[c].vals.push(v));
+  });
+  const rows=Object.keys(map).sort().map(c=>{const o=map[c];return{c,labels:o.labels,vals:o.vals,mean:mean(o.vals),eff:dir*(mean(o.vals)-mean(base)),nap:nap(base,o.vals,dir),d:cohend(base,o.vals)}});
+  return{base,rows};
+}
+function condHTML(S,dir){
+  const cs=condStats(S,dir);if(cs.rows.length<2)return null;
+  const t1=tbl(['Condition','Phases','n sessions','Mean',['Δ vs baseline','Therapeutic-direction change from the pooled baseline mean'],['NAP vs baseline','Nonoverlap with all baseline sessions pooled'],'d'],
+    cs.rows.map(r=>[`<b>${r.c}</b>`,r.labels.join(', '),r.vals.length,f(r.mean,1),sgn(r.eff),f(r.nap),Number.isFinite(r.d)?f(r.d,1):'—']));
+  const head=['Row better than column'].concat(cs.rows.map(r=>r.c));
+  const t2=tbl(head,cs.rows.map(a=>[`<b>${a.c}</b>`].concat(cs.rows.map(b=>a.c===b.c?'—':f(nap(b.vals,a.vals,dir))))));
+  const best=cs.rows.slice().sort((a,b)=>b.nap-a.nap)[0];
+  return `<p>Pooled across all of each condition's phases, <b>${best.c}</b> has the largest nonoverlap with baseline (NAP ${f(best.nap)}).</p>${t1}<h3>Head-to-head nonoverlap (NAP)</h3><p class="small muted">Each cell is the chance that a random session from the row condition is better than one from the column condition (0.5 = no difference).</p>${t2}<div class="callout warn">The conditions ran in a fixed order, so differences among treatments are confounded with order, time and carryover. Treat them as descriptive; a counterbalanced or alternating-treatments design is needed for a head-to-head comparison.</div>`;
+}
+function mbCondHTML(tiers,dir){
+  const set=new Set();tiers.forEach(t=>t.phases.forEach(p=>{if(p.type!=='A')set.add(p.cond||'B')}));
+  const conds=['B','C','D','E'].filter(c=>set.has(c));if(conds.length<2)return null;
+  const cells=tiers.map(t=>{const cs=condStats(t,dir);return conds.map(c=>{const r=cs.rows.find(x=>x.c===c);return r?{m:r.mean,n:r.nap}:null})});
+  const rows=tiers.map((t,i)=>[`<b>${esc(t.name)}</b>`].concat(cells[i].map(c=>c?`${f(c.m,1)} <span class="muted">(NAP ${f(c.n)})</span>`:'—')));
+  rows.push(['<b>Average</b>'].concat(conds.map((_,j)=>{const v=cells.map(r=>r[j]).filter(Boolean);return v.length?`${f(mean(v.map(x=>x.m)),1)} <span class="muted">(NAP ${f(mean(v.map(x=>x.n)))})</span>`:'—'})));
+  return `<p class="small muted">Mean level in each condition, with nonoverlap (NAP) against that tier's baseline.</p>`+tbl(['Tier'].concat(conds.map(c=>'Condition '+c)),rows)+`<div class="callout warn">Conditions follow one another in a fixed order within each tier, so differences among treatments are confounded with order and carryover.</div>`;
+}
+
+/* ================= ABAB view ================= */
+function abSeries(){
+  if(st.abCustom)return st.abCustom;
+  return simulateABAB(st.ab);
+}
+function renderAB(){
+  const p=st.ab,S=abSeries(),P=pal();
+  st.currentDir=p.dir;
+  const extra=p.nCond>2?' + '+['C','D','E'].slice(0,p.nCond-2).join(', '):'';
+  $('#ab-title').textContent=st.abCustom?'Your data':'ABAB reversal design'+extra+' (simulated)';
+  $('#ab-chart').innerHTML=chartSVG([S],{mode:'abab',ov:st.abOv,dir:p.dir,ylab:p.ylab,cap:p.cap&&!st.abCustom,aria:'ABAB single-case graph',id:'ab'});
+  $('#ab-legend').innerHTML=legendHTML([S],'Dashed vertical lines = phase changes');
+  $('#ab-phases').innerHTML=phaseTable(S);
+  const C=contrasts(S,p.dir,p.thr);
+  $('#ab-contrasts').innerHTML=abNarrative(S,C,p.thr)+contrastTable(C,p.thr);
+  const cc=condHTML(S,p.dir);$('#ab-cond-card').hidden=!cc;if(cc)$('#ab-cond').innerHTML=cc;
+  const rt=abRandTest(S,p.dir,p.minlen);
+  $('#ab-rand').innerHTML=`<div class="row small" style="margin-bottom:6px"><label>Minimum sessions per phase in the randomization scheme <input type="number" id="ab-minlen" min="1" max="20" step="1" value="${p.minlen}" style="width:64px;font:inherit;padding:2px 4px"></label></div>`+randHTML(rt,P,' The statistic is the mean of all treatment sessions (B to E) minus the mean of all A sessions, signed so positive means the therapeutic direction.');
+  $('#ab-std').innerHTML=stdTableAB(S,C,p.thr);
+}
+
+/* ================= MBD view ================= */
+function mbTiers(){
+  if(st.mbCustom)return st.mbCustom;
+  return simulateMBD(st.mb).tiers;
+}
+function renderMB(){
+  const p=st.mb,tiers=mbTiers(),P=pal();
+  $('#mb-chart').innerHTML=chartSVG(tiers,{mode:'mbd',ov:st.mbOv,dir:p.dir,ylab:p.ylab,cap:p.cap&&!st.mbCustom,sharedY:p.sharedY,aria:'Multiple-baseline single-case graph',id:'mb'});
+  $('#mb-legend').innerHTML=legendHTML(tiers,'Dashed vertical lines = when each condition began in that tier');
+  const rows=[],Cs=[];
+  tiers.forEach(t=>{const c=contrasts(t,p.dir,p.thr)[0];Cs.push(c);
+    const bs=slope(c.a);
+    rows.push([`<b>${esc(t.name)}</b>`,t.start+1,c.a.length,c.b.length,f(c.meanA,1),f(c.meanB,1),sgn(c.eff),sgn(c.immediacy),f(c.nap),pct(c.pnd),Number.isFinite(c.d)?f(c.d,1):'—',sgn(bs,2),c.demo?pill('yes','good'):pill('no','bad')]);});
+  const demos=Cs.filter(c=>c.demo).length;
+  $('#mb-tiers').innerHTML=`<div class="callout"><b>Summary.</b> ${demos} of ${tiers.length} tiers show a clear effect of the first intervention, B (NAP ≥ ${p.thr}). Experimental control in a multiple baseline rests on each tier changing <i>after</i> its own intervention starts and <i>not before</i>; see the vertical analysis below.</div>`+
+    tbl(['Tier',['First B session','Session at which intervention began'],'n A','n B','Mean A','Mean B',['Δ level','Positive = therapeutic direction'],['Immediacy','Mean of first 3 vs last 3 points across the change'],'NAP','PND','d',['Baseline slope','Slope per session during baseline'],'Effect?'],rows);
+  const mc=mbCondHTML(tiers,p.dir);$('#mb-cond-card').hidden=!mc;if(mc)$('#mb-cond').innerHTML=mc;
+  const v=verticalAnalysis(tiers,p.dir);
+  $('#mb-vert').innerHTML=v.rows.length?
+    `<p class="small muted">Each row asks: in the tiers that were <b>still in baseline</b> when this tier began intervention, did the behavior move (last 3 baseline points before vs. baseline points after)? Values near 0 support control. Large changes in the therapeutic direction suggest spillover, history, or maturation. Pooled baseline SD = ${f(v.pooled,2)}.</p>`+
+    tbl(['When this tier starts','At session','Untreated tiers',['Avg change','Therapeutic-direction change in untreated tiers'],['In SD units','Divided by pooled baseline SD'],'Reading'],
+      v.rows.map(r=>[`<b>${esc(r.tier)}</b>`,r.at,r.k,sgn(r.delta,2),sgn(r.z,2),Math.abs(r.z)>1?pill('possible threat','warn'):pill('stable','good')])):
+    '<p class="muted">Not enough staggered baseline data to evaluate.</p>';
+  const rt=mbdRandTest(tiers,p.dir);
+  $('#mb-rand').innerHTML=randHTML(rt,P,' Statistic: average over tiers of (mean of all intervention sessions − mean baseline). The reference set is every reassignment of the actual start points to the tiers.');
+  const np=tiers.reduce((s,t)=>s+t.phases.length,0),minN=minOf([].concat.apply([],tiers.map(t=>t.phases.map(q=>q.end-q.start+1))));
+  const starts=tiers.map(t=>t.start),distinct=new Set(starts).size===starts.length;
+  const rows2=[
+    stdRow('At least 6 phases',np>=6?{t:'yes',c:'good'}:{t:'no',c:'bad'},`${np} phases across ${tiers.length} tiers`),
+    stdRow('Staggered, distinct start points',distinct?{t:'yes',c:'good'}:{t:'no',c:'bad'},`first B sessions: ${starts.map(s=>s+1).join(', ')}`),
+    stdRow('Data points per phase',pointsStatus(minN),`smallest phase has ${minN}; 5+ meets, 3–4 meets with reservations`),
+    stdRow('Tiers showing an effect (NAP ≥ '+p.thr+')',demos>=3?{t:'3 or more',c:'good'}:demos>=2?{t:String(demos),c:'warn'}:{t:String(demos),c:'bad'},`${demos} of ${tiers.length}`)
+  ];
+  $('#mb-std').innerHTML=tbl(['Check','Status','Detail'],rows2)+manualChecks('mb')+
+    `<div class="row small" style="margin-top:8px"><label>Demonstration threshold (NAP ≥) <input type="number" id="mb-thr" min="0.5" max="1" step="0.05" value="${p.thr}" style="width:70px;font:inherit;padding:2px 4px"></label></div>`;
+}
+
+/* ================= Practice ================= */
+const pr={cur:null,score:{n:0,ok:0},answered:false};
+function newPractice(){
+  const r=(a,b)=>a+Math.random()*(b-a),ri=(a,b)=>Math.floor(r(a,b+1));
+  const design=Math.random()<0.5?'abab':'mbd',truth=Math.random()<0.5,seed=ri(1,1e6);
+  let info={design,truth,kind:'',explain:''};
+  if(design==='abab'){
+    const sdv=r(2,5),p=Object.assign({},DEF_AB,{seed,base:r(15,40),sd:sdv,ar:r(0,.4),nA1:ri(5,8),nB1:ri(5,8),nA2:ri(5,8),nB2:ri(5,8),dir:1,onset:ri(1,3),decay:ri(1,3),revert:r(75,100),trend:0,cap:false,round:true});
+    if(truth){p.effect=sdv*r(2.5,5);info.kind='real effect';info.explain='The behavior shifted soon after each introduction of the intervention and fell back each time it was withdrawn: three consistent demonstrations.';}
+    else{const k=Math.random();
+      if(k<0.4){p.effect=0;p.trend=r(0.5,1.0);info.kind='drift only';info.explain='There was no effect at all. A steady upward drift (maturation) makes later phases look higher, but the data do not move with the phase changes.';}
+      else if(k<0.75){p.effect=sdv*r(3,5);p.revert=0;info.kind='change that never reverses';info.explain='Behavior rose in B1 but did not return in A2. A sustained change like this might be learning, or maturation, or history, but without reversal an ABAB design cannot show that the intervention caused it.';}
+      else{p.effect=0;info.kind='noise only';info.explain='There was no effect; the differences between phases are random variation.';}
+    }
+    info.S=simulateABAB(p);info.p=p;
+  }else{
+    const sdv=r(2,5),K=ri(3,4),p=Object.assign({},DEF_MB,{seed,tiers:K,b0:ri(4,6),step:ri(3,5),post:ri(7,10),base:r(15,40),sd:sdv,ar:r(0,.4),tierSd:r(0,6),effSd:r(0,2),dir:1,onset:ri(1,3),trend:0,spill:0,histAt:0,cap:false,round:true});
+    if(truth){p.effect=sdv*r(2.5,5);info.kind='real effect';info.explain='Each tier stayed stable until its own intervention began, then changed. The staggered pattern rules out an outside event.';}
+    else if(Math.random()<0.6){p.effect=0;p.histAt=p.b0+ri(1,2)+1;p.histSize=sdv*r(3,5);info.kind='outside (history) event';info.explain='There was no effect. An outside event moved every tier at the same time, including tiers that were still in baseline: the staggered logic fails.';}
+    else{p.effect=0;info.kind='noise only';info.explain='There was no effect; the apparent shifts are random variation.';}
+    info.tiers=simulateMBD(p).tiers;info.p=p;
+  }
+  pr.cur=info;pr.answered=false;
+}
+function renderPR(){
+  const c=pr.cur;
+  $('#pr-score').textContent=pr.score.n?`Score: ${pr.score.ok} of ${pr.score.n} correct`:'';
+  $('#pr-card').hidden=!c;if(!c)return;
+  const list=c.design==='abab'?[c.S]:c.tiers;
+  $('#pr-chart').innerHTML=chartSVG(list,{mode:c.design,ov:st.prOv,dir:1,ylab:'Behavior (units per session)',cap:false,sharedY:true,aria:'Practice scenario graph',id:'pr'});
+  $('#pr-answer').hidden=pr.answered;
+  const fb=$('#pr-feedback');
+  if(!pr.answered){fb.innerHTML='';return}
+  const C=c.design==='abab'?contrasts(c.S,1,.9):contrasts(c.tiers[0],1,.9).concat(c.tiers.slice(1).map(t=>contrasts(t,1,.9)[0]));
+  const lab=c.design==='abab'?null:c.tiers.map(t=>t.name);
+  let tbHtml;
+  if(c.design==='abab')tbHtml=contrastTable(contrasts(c.S,1,.9),0.9);
+  else{const rows=c.tiers.map(t=>{const k=contrasts(t,1,.9)[0];return[`<b>${esc(t.name)}</b>`,t.start+1,sgn(k.eff),f(k.nap),pct(k.pnd)]});tbHtml=tbl(['Tier','First B session','Δ level','NAP','PND'],rows)+verticalNote(c.tiers)}
+  fb.innerHTML=`<div class="callout ${pr.last?'':'warn'}" style="margin-top:12px"><b>${pr.last?'Correct.':'Not quite.'}</b> The truth: ${c.truth?'a functional relation <b>was</b> built in':'<b>no</b> functional relation was built in'} (${esc(c.kind)}). ${esc(c.explain)}</div>`+tbHtml;
+}
+function verticalNote(tiers){
+  const v=verticalAnalysis(tiers,1);if(!v.rows.length)return '';
+  return '<h3>Vertical analysis</h3>'+tbl(['When this tier starts','Untreated tiers','Avg change (SD units)'],v.rows.map(r=>[esc(r.tier),r.k,sgn(r.z,2)]));
+}
+function answerPR(yes){
+  if(!pr.cur||pr.answered)return;
+  pr.last=(yes===pr.cur.truth);pr.score.n++;if(pr.last)pr.score.ok++;pr.answered=true;renderPR();
+}
+
+/* ================= Selector ================= */
+function renderSel(){
+  const a=st.sel;
+  const fits=[];
+  const revLvl=(a.rev==='no'||a.eth==='no')?'poor':(a.rev==='unsure'||a.eth==='unsure')?'possible':'good';
+  fits.push({n:'ABAB reversal',lvl:revLvl,why:revLvl==='good'?'The behavior should reverse and withdrawal is acceptable. You get three demonstrations of effect within one participant.':revLvl==='possible'?'Possible if you can confirm reversibility and that withdrawal is acceptable. Run a pilot or review the literature first.':a.rev==='no'?'The effect is expected to persist after withdrawal, so a return to baseline will not occur and the logic breaks down.':'Withdrawing an effective intervention is not acceptable here.'});
+  fits.push({n:'Multiple baseline',lvl:a.units==='yes'?'good':'poor',why:a.units==='yes'?'Staggering the intervention across participants, behaviors, or settings gives replication without withdrawal. Use 4+ tiers if you want a randomization test that can reach p ≤ .05, and check tiers are independent.':'You need 3 or more comparable baselines to stagger. A non-concurrent multiple baseline across separate cases is an option but weaker.'});
+  fits.push({n:'Alternating treatments',lvl:a.cmp==='two'?(a.rev==='no'?'possible':'good'):'poor',why:a.cmp==='two'?(a.rev==='no'?'Rapid alternation assumes little carryover between conditions, which is doubtful for retained skills.':'Rapidly alternating two or more interventions compares them directly within a single participant.'):'Mainly used for comparing two or more interventions. With one intervention, an ABAB or multiple baseline is usually clearer.'});
+  fits.push({n:'Changing criterion',lvl:a.grad==='yes'?'good':'poor',why:a.grad==='yes'?'Stepwise criteria shaping performance show control when behavior tracks each new criterion. Best for gradual change; no withdrawal needed.':'Suited to behavior shaped gradually toward a target level.'});
+  const rank={good:0,possible:1,poor:2};fits.sort((x,y)=>rank[x.lvl]-rank[y.lvl]);
+  const cls={good:'good',possible:'warn',poor:'bad'},txt={good:'good fit',possible:'possible',poor:'poor fit'};
+  let h=fits.map(x=>`<div class="fit"><div>${pill(txt[x.lvl],cls[x.lvl])}</div><div><div class="nm">${x.n}</div><div class="muted small">${x.why}</div></div></div>`).join('');
+  if(fits[0].lvl!=='good')h+='<div class="callout warn">No design is a clear fit. Consider adding comparable units, confirming reversibility, or combining designs.</div>';
+  else if(a.units==='yes'&&revLvl==='good')h+='<div class="callout">Both ABAB and multiple baseline fit. A multiple baseline with a reversal in each tier gives the strongest control, at the cost of a longer study.</div>';
+  $('#sel-out').innerHTML=h;
+}
+
+/* ================= downloads ================= */
+function download(name,blob){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
+function svgOf(id){return $('#'+id+' svg')}
+function exportSVG(id,name){const x=new XMLSerializer().serializeToString(svgOf(id));download(name,new Blob([x],{type:'image/svg+xml'}))}
+function exportPNG(id,name){
+  const svg=svgOf(id),vb=svg.viewBox.baseVal,sc=2;
+  const img=new Image(),xml=new XMLSerializer().serializeToString(svg);
+  img.onload=()=>{const c=document.createElement('canvas');c.width=vb.width*sc;c.height=vb.height*sc;c.getContext('2d').drawImage(img,0,0,c.width,c.height);c.toBlob(b=>download(name,b),'image/png')};
+  img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(xml);
+}
+function csvAB(){const S=abSeries();const rows=['session,phase,condition,value'];S.phases.forEach(p=>{for(let i=p.start;i<=p.end;i++)rows.push(`${i+1},${p.label},${p.cond||p.type},${S.y[i]}`)});return rows.join('\n')}
+function csvMB(){const rows=['tier,session,phase,value'];mbTiers().forEach(t=>t.y.forEach((v,i)=>{const q=t.phases.find(z=>i>=z.start&&i<=z.end);rows.push(`"${t.name}",${i+1},${q?q.label:''},${v}`)}));return rows.join('\n')}
+function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(toast.h);toast.h=setTimeout(()=>t.classList.remove('show'),2200)}
+
+/* ================= wiring ================= */
+function fillPasteAB(){const S=abSeries();$('#ab-paste').value=S.phases.map(p=>`${p.label[0]}: ${S.y.slice(p.start,p.end+1).join(' ')}`).join('\n')}
+function fillPasteMB(){$('#mb-paste').value=mbTiers().map(t=>t.name+'; '+t.phases.map(q=>t.y.slice(q.start,q.end+1).join(' ')).join('; ')).join('\n')}
+
+function showTab(id){
+  st.tab=id;
+  $$('nav.tabs button').forEach(b=>b.setAttribute('aria-selected',b.id==='t-'+id?'true':'false'));
+  $$('.tabpanel').forEach(p=>p.hidden=p.id!=='p-'+id);
+  if(id==='abab')renderAB();if(id==='mbd')renderMB();if(id==='prac')renderPR();if(id==='sel')renderSel();
+}
+
+function init(){
+  $('#ab-controls').innerHTML=ctrlHTML('ab',AB_DEFS,st.ab,AB_PRESETS);
+  $('#mb-controls').innerHTML=ctrlHTML('mb',MB_DEFS,st.mb,MB_PRESETS);
+  $('#ab-ov').innerHTML=ovHTML('abOv',st.abOv);
+  $('#mb-ov').innerHTML=ovHTML('mbOv',st.mbOv);
+  $('#pr-ov').innerHTML=ovHTML('prOv',st.prOv);
+  restoreHash();
+  syncControls('ab',AB_DEFS,st.ab);syncControls('mb',MB_DEFS,st.mb);
+  bindControls('ab',st.ab,AB_DEFS,renderAB,AB_PRESETS,DEF_AB);
+  bindControls('mb',st.mb,MB_DEFS,renderMB,MB_PRESETS,DEF_MB);
+
+  $$('nav.tabs button').forEach(b=>{
+    b.addEventListener('click',()=>showTab(b.id.slice(2)));
+    b.addEventListener('keydown',e=>{
+      const tabs=$$('nav.tabs button'),i=tabs.indexOf(b);
+      if(e.key==='ArrowRight'||e.key==='ArrowLeft'){const n=tabs[(i+(e.key==='ArrowRight'?1:tabs.length-1))%tabs.length];n.focus();n.click();e.preventDefault()}
+    });
+  });
+
+  document.addEventListener('change',e=>{
+    const t=e.target;
+    if(t.dataset&&t.dataset.ov){st[t.dataset.pre][t.dataset.ov]=t.checked;if(t.dataset.pre==='abOv')renderAB();else if(t.dataset.pre==='mbOv')renderMB();else renderPR();return}
+    if(t.name&&t.name.startsWith('q-')){st.sel[t.name.slice(2)==='cmp'?'cmp':t.name.slice(2)]=t.value;renderSel();return}
+    if(t.id==='ab-thr'){st.ab.thr=clamp(+t.value||0.9,0.5,1);renderAB()}
+    if(t.id==='mb-thr'){st.mb.thr=clamp(+t.value||0.9,0.5,1);renderMB()}
+    if(t.id==='ab-minlen'){st.ab.minlen=clamp(Math.round(+t.value)||3,1,20);renderAB()}
+  });
+
+  document.addEventListener('click',e=>{
+    const b=e.target.closest('[data-act]');if(!b)return;
+    const a=b.dataset.act;
+    if(a==='ab-rand'){st.ab.seed=1+Math.floor(Math.random()*99999);syncControls('ab',AB_DEFS,st.ab);renderAB()}
+    else if(a==='mb-rand'){st.mb.seed=1+Math.floor(Math.random()*99999);syncControls('mb',MB_DEFS,st.mb);renderMB()}
+    else if(a==='ab-reset'){Object.assign(st.ab,DEF_AB);st.abCustom=null;syncControls('ab',AB_DEFS,st.ab);renderAB()}
+    else if(a==='mb-reset'){Object.assign(st.mb,DEF_MB);st.mbCustom=null;syncControls('mb',MB_DEFS,st.mb);renderMB()}
+    else if(a==='ab-csv')download('abab-data.csv',new Blob([csvAB()],{type:'text/csv'}));
+    else if(a==='mb-csv')download('multiple-baseline-data.csv',new Blob([csvMB()],{type:'text/csv'}));
+    else if(a==='ab-svg')exportSVG('ab-chart','abab-graph.svg');
+    else if(a==='mb-svg')exportSVG('mb-chart','multiple-baseline-graph.svg');
+    else if(a==='ab-png')exportPNG('ab-chart','abab-graph.png');
+    else if(a==='mb-png')exportPNG('mb-chart','multiple-baseline-graph.png');
+    else if(a==='ab-fill')fillPasteAB();
+    else if(a==='mb-fill')fillPasteMB();
+    else if(a==='ab-use'){const r=parseAB($('#ab-paste').value);const m=$('#ab-paste-msg');
+      if(r.error){m.innerHTML=pill(esc(r.error),'bad')}else{st.abCustom=r.S;m.innerHTML=pill(`Loaded ${r.S.y.length} observations in ${r.S.phases.length} phases`,'good');renderAB()}}
+    else if(a==='mb-use'){const r=parseMB($('#mb-paste').value);const m=$('#mb-paste-msg');
+      if(r.error){m.innerHTML=pill(esc(r.error),'bad')}else{st.mbCustom=r.tiers;m.innerHTML=pill(`Loaded ${r.tiers.length} tiers`,'good');renderMB()}}
+    else if(a==='ab-sim'){st.abCustom=null;$('#ab-paste-msg').textContent='';renderAB()}
+    else if(a==='mb-sim'){st.mbCustom=null;$('#mb-paste-msg').textContent='';renderMB()}
+    else if(a==='pr-new'){newPractice();renderPR()}
+    else if(a==='pr-yes')answerPR(true);
+    else if(a==='pr-no')answerPR(false);
+  });
+
+  $('#btn-theme').addEventListener('click',()=>{
+    const cur=document.documentElement.dataset.theme||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
+    document.documentElement.dataset.theme=cur==='dark'?'light':'dark';
+    showTab(st.tab);
+  });
+  $('#btn-link').addEventListener('click',()=>{
+    try{
+      const payload=btoa(unescape(encodeURIComponent(JSON.stringify({tab:st.tab,ab:st.ab,mb:st.mb}))));
+      location.hash='s='+payload;
+      if(navigator.clipboard)navigator.clipboard.writeText(location.href).then(()=>toast('Link copied'),()=>toast('Link is in the address bar'));
+      else toast('Link is in the address bar');
+    }catch(err){toast('Could not build link')}
+  });
+  showTab(st.tab);
+}
+
+function restoreHash(){
+  try{
+    const m=/s=([^&]+)/.exec(location.hash);if(!m)return;
+    const o=JSON.parse(decodeURIComponent(escape(atob(m[1]))));
+    if(o.ab)Object.assign(st.ab,o.ab);if(o.mb)Object.assign(st.mb,o.mb);
+    if(o.tab&&['abab','mbd','prac','sel','ref'].includes(o.tab))st.tab=o.tab;
+  }catch(e){}
+}
+
+window.SCDExplorer={simulateABAB,simulateMBD,contrasts,abRandTest,mbdRandTest,verticalAnalysis,parseAB,parseMB,nap,pnd,slope,DEF_AB,DEF_MB};
+if(typeof document!=='undefined'&&document.getElementById('t-abab'))init();
+})();
+</script>
+</body>
+</html>
