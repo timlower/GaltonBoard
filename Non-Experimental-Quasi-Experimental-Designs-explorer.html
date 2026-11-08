@@ -1,0 +1,1588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Non-Experimental and Quasi-Experimental Designs Explorer</title>
+<meta name="description" content="Interactive explorer for nonexperimental and quasi-experimental research strategies: classify a study, simulate nonequivalent-group, pre-post, time-series and developmental designs, see which threats to internal validity remain, and practice judging conclusions.">
+<style>
+
+:root{
+  --bg:#f5f6f4; --card:#ffffff; --fg:#1c1f24; --muted:#5b6572; --line:#d9dde3; --grid:#eceff2;
+  --plot:#ffffff; --axis:#8b94a1; --colA:#34588a; --colB:#c0531a; --tintB:rgba(192,83,26,.07); --colC:#14806f; --colD:#7c3fb0; --colE:#8a6d00;
+  --accent:#2b62c4; --accentFg:#ffffff; --good:#1f7a43; --warn:#9a6700; --bad:#b3261e;
+  --goodBg:#e5f4ea; --warnBg:#fbf0d4; --badBg:#fbe4e2;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme=light]){
+    --bg:#13161b; --card:#1b1f26; --fg:#e8eaed; --muted:#9aa3af; --line:#2d333c; --grid:#262b33;
+    --plot:#1b1f26; --axis:#6f7886; --colA:#8fb4e8; --colB:#f59a5f; --tintB:rgba(245,154,95,.10); --colC:#4fcfb8; --colD:#c39bea; --colE:#e3c64f;
+    --accent:#7aa7ff; --accentFg:#0d1117; --good:#6fd596; --warn:#e8c05a; --bad:#ff8c84;
+    --goodBg:#16301f; --warnBg:#3a3016; --badBg:#3d1d1b;
+  }
+}
+:root[data-theme=dark]{
+  --bg:#13161b; --card:#1b1f26; --fg:#e8eaed; --muted:#9aa3af; --line:#2d333c; --grid:#262b33;
+  --plot:#1b1f26; --axis:#6f7886; --colA:#8fb4e8; --colB:#f59a5f; --tintB:rgba(245,154,95,.10); --colC:#4fcfb8; --colD:#c39bea; --colE:#e3c64f;
+  --accent:#7aa7ff; --accentFg:#0d1117; --good:#6fd596; --warn:#e8c05a; --bad:#ff8c84;
+  --goodBg:#16301f; --warnBg:#3a3016; --badBg:#3d1d1b;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+header.top{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:14px 20px 6px;max-width:1360px;margin:0 auto}
+header.top h1{font-size:1.25rem;margin:0;letter-spacing:-.01em}
+header.top p{margin:2px 0 0;color:var(--muted);font-size:.9rem;max-width:62ch}
+.hbtns{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+button,.btn{font:inherit;font-size:.85rem;border:1px solid var(--line);background:var(--card);color:var(--fg);padding:6px 11px;border-radius:7px;cursor:pointer}
+button:hover{border-color:var(--accent)}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button.primary{background:var(--accent);color:var(--accentFg);border-color:var(--accent);font-weight:600}
+button.small{padding:3px 8px;font-size:.78rem}
+nav.tabs{display:flex;gap:2px;max-width:1360px;margin:6px auto 0;padding:0 20px;border-bottom:1px solid var(--line);overflow-x:auto}
+nav.tabs button{border:none;border-bottom:3px solid transparent;border-radius:0;background:none;padding:9px 14px;font-size:.92rem;color:var(--muted);white-space:nowrap}
+nav.tabs button[aria-selected=true]{color:var(--fg);border-bottom-color:var(--colB);font-weight:600}
+main{max-width:1360px;margin:0 auto;padding:16px 20px 40px}
+.tabpanel[hidden]{display:none}
+.layout{display:grid;grid-template-columns:330px minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:980px){.layout{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:14px}
+.card h2{font-size:1rem;margin:0 0 8px}
+.card h3{font-size:.92rem;margin:14px 0 6px}
+.card p{margin:6px 0}
+.muted{color:var(--muted)}
+.small{font-size:.82rem}
+aside.controls{position:sticky;top:8px;max-height:calc(100vh - 16px);overflow:auto;padding:12px 14px}
+@media (max-width:980px){aside.controls{position:static;max-height:none}}
+details.grp{border-top:1px solid var(--line);padding:6px 0}
+details.grp:first-of-type{border-top:none}
+details.grp>summary{cursor:pointer;font-weight:600;font-size:.88rem;padding:4px 0;list-style:none}
+details.grp>summary::before{content:"▸ ";color:var(--muted)}
+details.grp[open]>summary::before{content:"▾ "}
+.ctl{margin:6px 0 10px}
+.ctl label{display:flex;justify-content:space-between;gap:8px;font-size:.82rem;color:var(--muted);margin-bottom:2px}
+.ctl output{color:var(--fg);font-variant-numeric:tabular-nums;font-weight:600}
+.ctl input[type=range]{width:100%;accent-color:var(--accent)}
+.ctl input[type=text],.ctl input[type=number],.ctl select,textarea{width:100%;font:inherit;font-size:.85rem;padding:5px 7px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--fg)}
+.ctl.check label{display:flex;justify-content:flex-start;gap:8px;align-items:center;color:var(--fg)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.toolbar{display:flex;gap:6px 14px;flex-wrap:wrap;align-items:center;margin-bottom:8px;font-size:.82rem}
+.toolbar label{display:inline-flex;gap:5px;align-items:center;cursor:pointer}
+.toolbar .sp{flex:1}
+.chart svg{width:100%;height:auto;display:block}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted);margin-top:6px}
+.legend i{display:inline-block;vertical-align:middle;margin-right:4px}
+.dotA{width:10px;height:10px;border-radius:50%;background:var(--colA)}
+.dotB{width:10px;height:10px;background:var(--colB)}
+.tbl-wrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.84rem;font-variant-numeric:tabular-nums}
+th,td{padding:5px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{font-weight:600;color:var(--muted);font-size:.78rem}
+th[title]{cursor:help;text-decoration:underline dotted;text-underline-offset:3px}
+td.l,th.l{text-align:left;white-space:normal}
+.pill{display:inline-block;padding:1px 8px;border-radius:99px;font-size:.76rem;font-weight:600}
+.pill.good{background:var(--goodBg);color:var(--good)}
+.pill.warn{background:var(--warnBg);color:var(--warn)}
+.pill.bad{background:var(--badBg);color:var(--bad)}
+.callout{border-left:4px solid var(--colA);background:var(--grid);padding:8px 12px;border-radius:0 8px 8px 0;font-size:.88rem;margin:8px 0}
+.callout.warn{border-left-color:var(--warn)}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+.stat{display:flex;gap:18px;flex-wrap:wrap;margin:6px 0 8px}
+.stat div{min-width:110px}
+.stat b{display:block;font-size:1.3rem;font-variant-numeric:tabular-nums}
+.stat span{font-size:.76rem;color:var(--muted)}
+ul.clean{padding-left:18px;margin:6px 0}
+ul.clean li{margin:3px 0}
+.q{margin:12px 0}
+.q legend{font-weight:600;font-size:.92rem;padding:0}
+.q fieldset{border:none;margin:0;padding:0}
+.q label{display:block;margin:3px 0;font-size:.9rem;cursor:pointer}
+.fit{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-top:1px solid var(--line)}
+.fit:first-child{border-top:none}
+.fit .nm{font-weight:600}
+footer{max-width:1360px;margin:0 auto;padding:0 20px 30px;color:var(--muted);font-size:.8rem}
+.sr{position:absolute;left:-9999px}
+dl.gl dt{font-weight:600;margin-top:8px}
+dl.gl dd{margin:2px 0 0 0;color:var(--muted)}
+ol.refs li{margin:5px 0;font-size:.85rem}
+#toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:8px 14px;border-radius:8px;font-size:.85rem;opacity:0;pointer-events:none;transition:opacity .2s}
+#toast.show{opacity:.95}
+
+[hidden]{display:none!important}
+.chart svg text{user-select:none}
+</style>
+</head>
+<body>
+<header class="top">
+  <div>
+    <h1>Non-Experimental and Quasi-Experimental Designs Explorer</h1>
+    <p>Compare and contrast the research strategies that look like experiments but do not manipulate an independent variable or randomly assign participants. Classify a study, simulate nonequivalent-group, pre-post, time-series and developmental designs, see which threats to internal validity each one leaves open, and practice judging causal claims.</p>
+  </div>
+  <div class="hbtns">
+    <button id="btn-link" title="Put the current settings in the page URL so you can share or bookmark them">Copy share link</button>
+    <button id="btn-theme" title="Toggle light / dark">Theme</button>
+  </div>
+</header>
+
+<nav class="tabs" role="tablist" aria-label="Sections">
+  <button role="tab" id="t-cl" aria-controls="p-cl" aria-selected="true">Strategies and classifier</button>
+  <button role="tab" id="t-ng" aria-controls="p-ng" aria-selected="false">Nonequivalent groups</button>
+  <button role="tab" id="t-ts" aria-controls="p-ts" aria-selected="false">Pre-post and time series</button>
+  <button role="tab" id="t-dv" aria-controls="p-dv" aria-selected="false">Developmental designs</button>
+  <button role="tab" id="t-th" aria-controls="p-th" aria-selected="false">Threats and control</button>
+  <button role="tab" id="t-prac" aria-controls="p-prac" aria-selected="false">Practice</button>
+  <button role="tab" id="t-ref" aria-controls="p-ref" aria-selected="false">Reference</button>
+</nav>
+
+<main>
+<noscript><div class="card">This explorer needs JavaScript enabled.</div></noscript>
+
+<!-- ================= CLASSIFIER ================= -->
+<section class="tabpanel" id="p-cl" role="tabpanel" aria-labelledby="t-cl">
+  <div class="card">
+    <h2>Three research strategies, separated by control</h2>
+    <p>Nonexperimental and quasi-experimental designs often look like experiments: they produce groups of scores that can be compared. The difference is that the groups are defined by a <b>participant variable</b> (for example gender, school or age) or by an event, rather than by a manipulated independent variable. What separates the strategies is the degree to which the design limits confounding variables and controls threats to internal validity.</p>
+    <div class="chart" id="cl-spectrum"></div>
+    <div class="grid2" style="margin-top:8px">
+      <div class="callout"><b>Nonexperimental.</b> Makes little or no attempt to minimize threats to internal validity.</div>
+      <div class="callout warn"><b>Quasi-experimental.</b> Makes some attempt to minimize threats: almost, but not quite, a true experiment. There is still no random assignment to groups and no assurance that groups are equivalent.</div>
+    </div>
+    <p class="small muted" style="margin-bottom:0">In this context the variable that distinguishes the groups is the <b>quasi-independent variable</b>, and the variable measured within each group is the <b>dependent variable</b>.</p>
+  </div>
+  <div class="grid2">
+    <div class="card">
+      <div class="row" style="justify-content:space-between"><h2 style="margin:0">Describe a study</h2><button class="small" data-act="clq-reset" title="Return every answer to its default">Reset</button></div>
+      <div class="q"><fieldset><legend>1. Does the researcher manipulate the variable of interest (create the treatment conditions)?</legend>
+        <label><input type="radio" name="q-man" value="yes"> Yes, the researcher creates the conditions</label>
+        <label><input type="radio" name="q-man" value="no" checked> No: groups come from a participant variable, an existing group, or a naturally occurring event</label></fieldset></div>
+      <div class="q"><fieldset><legend>2. Are participants randomly assigned to conditions?</legend>
+        <label><input type="radio" name="q-ran" value="yes"> Yes</label>
+        <label><input type="radio" name="q-ran" value="no" checked> No: the researcher cannot control assignment</label></fieldset></div>
+      <div class="q"><fieldset><legend>3. What is the basic structure of the comparison?</legend>
+        <label><input type="radio" name="q-str" value="between" checked> Different groups of participants are compared (between-subjects)</label>
+        <label><input type="radio" name="q-str" value="within"> One group is measured over time (within-subjects)</label>
+        <label><input type="radio" name="q-str" value="age"> The focus is development: groups differ in age, or people are followed as they age</label></fieldset></div>
+      <div class="q"><fieldset><legend>4. When is each participant measured?</legend>
+        <label><input type="radio" name="q-obs" value="once" checked> Once</label>
+        <label><input type="radio" name="q-obs" value="pre"> Before and after a treatment or event (pretest and posttest)</label>
+        <label><input type="radio" name="q-obs" value="multi"> Several times before and several times after (a series of observations)</label></fieldset></div>
+      <div class="q"><fieldset><legend>5. Is a treatment or event applied to one of the groups?</legend>
+        <label><input type="radio" name="q-trt" value="none" checked> No: the groups are simply compared as they are</label>
+        <label><input type="radio" name="q-trt" value="trt"> Yes: one group receives the treatment, another does not</label></fieldset></div>
+      <div class="q"><fieldset><legend>6. (Developmental studies) How are ages compared?</legend>
+        <label><input type="radio" name="q-age" value="cs" checked> Different age groups measured at one time</label>
+        <label><input type="radio" name="q-age" value="lg"> The same people measured repeatedly as they age</label>
+        <label><input type="radio" name="q-age" value="seq"> Several age cohorts, each measured repeatedly</label></fieldset></div>
+      <p class="small muted">Questions that do not apply to your structure are ignored.</p>
+    </div>
+    <div>
+      <div class="card"><h2>Classification</h2><div id="cl-out"></div></div>
+      <div class="card"><h2>The general structure of a nonequivalent-group study</h2><div class="chart" id="cl-struct"></div>
+        <p class="small muted">The groups are usually preexisting and the researcher has no control over who ends up in which group. The groups may experience different conditions or treatments, and one specific factor identifies each group.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= NONEQUIVALENT GROUPS ================= -->
+<section class="tabpanel" id="p-ng" role="tabpanel" aria-labelledby="t-ng" hidden>
+  <div class="layout">
+    <aside class="card controls" id="ng-controls" aria-label="Nonequivalent group controls"></aside>
+    <div>
+      <div class="card">
+        <div class="row" style="justify-content:space-between">
+          <h2 id="ng-title" style="margin:0">Nonequivalent groups</h2>
+          <div class="row">
+            <button class="small" data-dl="csv" data-t="ng">CSV</button>
+            <button class="small" data-dl="svg" data-t="ng-chart">SVG</button>
+            <button class="small" data-dl="png" data-t="ng-chart">PNG</button>
+          </div>
+        </div>
+        <p class="muted small" id="ng-sub"></p>
+        <div class="toolbar" id="ng-ov"></div>
+        <div class="chart" id="ng-chart"></div>
+        <div class="legend" id="ng-legend"></div>
+      </div>
+      <div class="card" id="ng-custom-card">
+        <details>
+          <summary><b>Use your own data</b> <span class="muted small">(paste, analyze)</span></summary>
+          <p class="small muted">One group per line as <code>Name: 23 21 28</code>, or one score per line as <code>group,value</code>. This analyzes a single measurement per participant (the differential or posttest-only view). The sample below uses the two groups in the textbook's structure figure.</p>
+          <textarea id="ng-paste" rows="5" spellcheck="false" placeholder="Group 1: 23 21 28 25 18 22 26&#10;Group 2: 14 19 13 20 19 19 13"></textarea>
+          <div class="row" style="margin-top:6px">
+            <button class="primary small" data-act="ng-use">Analyze my data</button>
+            <button class="small" data-act="ng-fill">Copy simulated data into box</button>
+            <button class="small" data-act="ng-sim">Back to simulation</button>
+          </div>
+          <div id="ng-paste-msg" class="small" role="status" style="margin-top:6px"></div>
+        </details>
+      </div>
+      <div class="card"><h2>Test of the group difference</h2><div id="ng-test"></div></div>
+      <div class="card" id="ng-mixed-card"><h2>Pretest-posttest design: two-factor mixed ANOVA</h2><div id="ng-mixed"></div></div>
+      <div class="card" id="ng-equiv-card"><h2>Are the groups equivalent?</h2><div id="ng-equiv"></div></div>
+      <div class="card" id="ng-built-card"><h2>What the observed difference contains</h2><div id="ng-built"></div></div>
+      <div class="card" id="ng-rep-card"><h2>Three designs compared: 300 repeats of this study</h2><div class="chart" id="ng-rep"></div><div id="ng-rep-txt"></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= PRE-POST / TIME SERIES ================= -->
+<section class="tabpanel" id="p-ts" role="tabpanel" aria-labelledby="t-ts" hidden>
+  <div class="layout">
+    <aside class="card controls" id="ts-controls" aria-label="Pre-post and time-series controls"></aside>
+    <div>
+      <div class="card">
+        <div class="row" style="justify-content:space-between">
+          <h2 id="ts-title" style="margin:0">One group, measured over time</h2>
+          <div class="row">
+            <button class="small" data-dl="csv" data-t="ts">CSV</button>
+            <button class="small" data-dl="svg" data-t="ts-chart">SVG</button>
+            <button class="small" data-dl="png" data-t="ts-chart">PNG</button>
+          </div>
+        </div>
+        <p class="muted small" id="ts-sub"></p>
+        <div class="toolbar" id="ts-ov"></div>
+        <div class="chart" id="ts-chart"></div>
+        <div class="legend" id="ts-legend"></div>
+      </div>
+      <div class="card" id="ts-custom-card">
+        <details>
+          <summary><b>Use your own data</b> <span class="muted small">(paste a series of averages)</span></summary>
+          <p class="small muted">Paste the average score at each observation, in order (spaces, commas or new lines), and say how many observations came before the treatment. The series is analyzed with segmented regression: the trend before treatment, the level change at treatment and the change in slope.</p>
+          <textarea id="ts-paste" rows="3" spellcheck="false" placeholder="12 14 15 17 18 19 26 28 29 31 32 34"></textarea>
+          <div class="row" style="margin-top:6px"><label class="small" for="ts-npre">Observations before treatment</label><input type="number" id="ts-npre" min="1" value="6" style="width:80px;font:inherit;font-size:.85rem;padding:4px 6px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--fg)">
+            <button class="primary small" data-act="ts-use">Analyze my data</button>
+            <button class="small" data-act="ts-fill">Copy simulated averages into box</button>
+            <button class="small" data-act="ts-sim">Back to simulation</button>
+          </div>
+          <div id="ts-paste-msg" class="small" role="status" style="margin-top:6px"></div>
+        </details>
+      </div>
+      <div class="card"><h2>Estimating the treatment effect three ways</h2><div id="ts-test"></div></div>
+      <div class="card" id="ts-built-card"><h2>What the pretest-posttest difference contains</h2><div id="ts-built"></div></div>
+      <div class="card" id="ts-rep-card"><h2>Estimator comparison: 300 repeats of this study</h2><div class="chart" id="ts-rep"></div><div id="ts-rep-txt"></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= DEVELOPMENTAL ================= -->
+<section class="tabpanel" id="p-dv" role="tabpanel" aria-labelledby="t-dv" hidden>
+  <div class="layout">
+    <aside class="card controls" id="dv-controls" aria-label="Developmental design controls"></aside>
+    <div>
+      <div class="card">
+        <div class="row" style="justify-content:space-between">
+          <h2 style="margin:0">Studying age: cross-sectional, longitudinal and cross-sectional longitudinal designs</h2>
+          <div class="row">
+            <button class="small" data-dl="csv" data-t="dv">CSV</button>
+            <button class="small" data-dl="svg" data-t="dv-chart">SVG</button>
+            <button class="small" data-dl="png" data-t="dv-chart">PNG</button>
+          </div>
+        </div>
+        <p class="muted small" id="dv-sub"></p>
+        <div class="toolbar" id="dv-ov"></div>
+        <div class="chart" id="dv-chart"></div>
+        <div class="legend" id="dv-legend"></div>
+      </div>
+      <div class="card"><h2>What each design estimates</h2><div id="dv-tbl"></div></div>
+      <div class="card"><h2>Strengths and weaknesses</h2><div id="dv-sw"></div></div>
+      <div class="card"><h2>Estimator comparison: 300 repeats</h2><div class="chart" id="dv-rep"></div><div id="dv-rep-txt"></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= THREATS ================= -->
+<section class="tabpanel" id="p-th" role="tabpanel" aria-labelledby="t-th" hidden>
+  <div class="card">
+    <h2>Which threats does each design leave open?</h2>
+    <p class="muted small">Select a row to see why. Colors describe how much of the threat the design controls: <span class="pill good">controlled</span> <span class="pill warn">partly controlled</span> <span class="pill bad">open: a plausible rival explanation</span> and a dash where the threat does not apply. This is a teaching heuristic; real studies vary.</p>
+    <div id="th-matrix"></div>
+  </div>
+  <div class="card"><h2 id="th-title">Details</h2><div id="th-detail"></div></div>
+  <div class="card">
+    <h2>The six time-related and group-related threats in plain language</h2>
+    <dl class="gl">
+      <dt>Individual differences (selection)</dt><dd>Groups were not created by random assignment, so they differ in participant characteristics before any treatment.</dd>
+      <dt>History</dt><dd>Outside events that occur between measurements, or only in one group (local history), change scores.</dd>
+      <dt>Maturation</dt><dd>Natural change in participants over time. In a nonequivalent-group study the groups may mature at different rates (selection by maturation).</dd>
+      <dt>Testing</dt><dd>Repeated testing produces practice or fatigue effects.</dd>
+      <dt>Instrumentation</dt><dd>The measurement procedure or instrument changes between observations.</dd>
+      <dt>Statistical regression</dt><dd>Participants selected for extreme scores tend to score closer to the mean when measured again.</dd>
+      <dt>Attrition</dt><dd>Participants drop out, and the dropouts differ from those who stay.</dd>
+      <dt>Cohort (generation) effects</dt><dd>People of different ages also belong to different generations that grew up under different conditions.</dd>
+    </dl>
+  </div>
+</section>
+
+<!-- ================= PRACTICE ================= -->
+<section class="tabpanel" id="p-prac" role="tabpanel" aria-labelledby="t-prac" hidden>
+  <div class="card">
+    <h2>Scenario practice: is the conclusion justified?</h2>
+    <p class="muted">A hidden scenario is generated at random: a preexisting-group difference, a pretest-posttest comparison, a time series, or an age comparison. Sometimes the design and data support the stated conclusion; more often a threat gets in the way. Read the design facts and the data, decide whether the conclusion is justified, then reveal the truth.</p>
+    <div class="row">
+      <button class="primary" data-act="pr-new">New scenario</button>
+      <button data-act="prac-reset" title="Clear the current scenario, the quiz and both scores">Reset</button>
+      <span id="pr-score" class="muted small"></span>
+    </div>
+  </div>
+  <div class="card" id="pr-card" hidden>
+    <div id="pr-desc"></div>
+    <div class="chart" id="pr-chart"></div>
+    <div id="pr-facts"></div>
+    <div class="row" id="pr-answer" style="margin-top:10px">
+      <b>Is the researcher's conclusion justified?</b>
+      <button data-act="pr-yes">Yes: justified</button>
+      <button data-act="pr-no">No: not justified</button>
+    </div>
+    <div id="pr-feedback" role="status"></div>
+  </div>
+  <div class="card">
+    <h2>Concept check</h2>
+    <div class="row"><button data-act="qz-new" class="primary small">Next question</button><span id="qz-score" class="muted small"></span></div>
+    <div id="qz-out" style="margin-top:8px"></div>
+  </div>
+</section>
+
+<!-- ================= REFERENCE ================= -->
+<section class="tabpanel" id="p-ref" role="tabpanel" aria-labelledby="t-ref" hidden>
+  <div class="grid2">
+    <div class="card">
+      <h2>Nonexperimental versus quasi-experimental</h2>
+      <p>The two strategies are separated by the degree to which they limit confounding variables and control threats to internal validity. A nonexperimental design makes little or no attempt to minimize threats. A quasi-experimental design makes some attempt, for example by adding a control group, a pretest or a long series of observations, and is almost but not quite a true experiment. Neither manipulates an independent variable in a way that rules out all alternative explanations, so conclusions about cause and effect are tentative.</p>
+    </div>
+    <div class="card">
+      <h2>Nonequivalent-group designs (between-subjects)</h2>
+      <p>Different groups of participants are formed under circumstances that do not permit the researcher to control assignment; the groups usually already exist, so random assignment is impossible. Because the groups have different participant characteristics, individual differences preclude a clear cause-and-effect explanation.</p>
+      <ul class="clean"><li><b>Differential design (ex post facto):</b> compares preexisting groups to establish differences "after the fact". Nonexperimental.</li><li><b>Posttest-only nonequivalent control group:</b> a treatment group and a similar but nonequivalent control group, measured once after treatment. Nonexperimental.</li><li><b>Pretest-posttest nonequivalent control group:</b> both groups are measured before and after, but only one is treated. The pretest and the comparison group limit several threats, so it is quasi-experimental.</li></ul>
+    </div>
+    <div class="card">
+      <h2>Pre-post designs (within-subjects)</h2>
+      <p>One group is measured before and after a treatment. The threats are history, instrumentation, testing effects, maturation and statistical regression.</p>
+      <ul class="clean"><li><b>Pretest-posttest design:</b> one observation before and one after, with no attempt to control the threats. Nonexperimental.</li><li><b>Time-series design:</b> a series of observations before and after the treatment or event. It reveals preexisting trends and shows practice, fatigue, maturation, instrumentation and regression as changes before the treatment. Quasi-experimental.</li></ul>
+    </div>
+    <div class="card">
+      <h2>Developmental designs</h2>
+      <ul class="clean"><li><b>Cross-sectional:</b> separate groups of different ages measured at one time. Fast and no waiting, but factors other than age (cohort or generation effects) differ among groups. It is a nonequivalent-group design.</li><li><b>Longitudinal:</b> the same individuals measured repeatedly. No cohort effects and it assesses individual change, but it is time-consuming, attrition may bias the sample and practice effects are possible.</li><li><b>Cross-sectional longitudinal (cohort-sequential):</b> separate samples (as in cross-sectional) obtained at different times (as in longitudinal). It can separate age from cohort and can examine the development of phenomena other than individual aging.</li></ul>
+    </div>
+    <div class="card">
+      <h2>Notation</h2>
+      <dl class="gl"><dt>O</dt><dd>An observation or measurement.</dd><dt>X</dt><dd>A treatment or event.</dd><dt>R, NR</dt><dd>Random assignment, no random assignment (nonequivalent groups).</dd><dt>Examples</dt><dd>One-group pretest-posttest: <code>O X O</code>. Time series: <code>O O O X O O O</code>. Pretest-posttest nonequivalent control group: <code>NR O X O</code> over <code>NR O&nbsp;&nbsp;&nbsp;O</code>.</dd></dl>
+    </div>
+    <div class="card">
+      <h2>Statistical analysis</h2>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th class="l">Design</th><th class="l">Numerical scores</th><th class="l">Non-numerical data</th></tr></thead>
+        <tbody>
+          <tr><td class="l">Two nonequivalent groups</td><td class="l">Independent-measures t test</td><td class="l">Chi-square for independence</td></tr>
+          <tr><td class="l">Three or more groups</td><td class="l">Single-factor ANOVA</td><td class="l">Chi-square for independence</td></tr>
+          <tr><td class="l">Pretest-posttest, one group</td><td class="l">Repeated-measures t test</td><td class="l">Wilcoxon or sign test (ordinal)</td></tr>
+          <tr><td class="l">Pretest-posttest nonequivalent control group</td><td class="l">Two-factor mixed-design ANOVA (group by time)</td><td class="l"></td></tr>
+          <tr><td class="l">Time series</td><td class="l">Segmented (interrupted time-series) regression, or repeated-measures analyses</td><td class="l"></td></tr>
+        </tbody></table></div>
+      <p class="small muted">The group-by-time interaction in the mixed ANOVA tests whether the groups changed by different amounts, which is the quasi-experimental question. Between-subjects analyses follow chapter 8 and within-subjects analyses follow chapter 9 of the course material.</p>
+    </div>
+    <div class="card">
+      <h2>Metrics used here</h2>
+      <dl class="gl">
+        <dt>Cohen's d, d<sub>z</sub></dt><dd>Mean difference divided by the pooled SD (between groups) or the SD of the difference scores (paired).</dd>
+        <dt>Partial η²</dt><dd>Share of variance in an effect relative to that effect plus its error.</dd>
+        <dt>Difference in gains</dt><dd>Mean gain of the treated group minus mean gain of the comparison group: the group-by-time interaction in a 2 × 2 mixed design.</dd>
+        <dt>Level change and slope change</dt><dd>In segmented regression, the jump in the series at the treatment point relative to the projected pre-treatment trend, and the change in slope afterwards. Autocorrelation is not modeled.</dd>
+        <dt>Regression toward the mean</dt><dd>Selected extreme scorers move toward the mean on retest by (1 − reliability) times the size of the selection.</dd>
+      </dl>
+    </div>
+    <div class="card" style="grid-column:1/-1">
+      <h2>References</h2>
+      <ol class="refs">
+        <li>Campbell, D. T., &amp; Stanley, J. C. (1963). <i>Experimental and quasi-experimental designs for research.</i> Rand McNally.</li>
+        <li>Cook, T. D., &amp; Campbell, D. T. (1979). <i>Quasi-experimentation: Design and analysis issues for field settings.</i> Houghton Mifflin.</li>
+        <li>Gravetter, F. J., &amp; Forzano, L.-A. B. <i>Research methods for the behavioral sciences</i> (chapter on nonexperimental and quasi-experimental strategies). Cengage.</li>
+        <li>Schaie, K. W. (1965). A general model for the study of developmental problems. <i>Psychological Bulletin, 64</i>, 92–107.</li>
+        <li>Shadish, W. R., Cook, T. D., &amp; Campbell, D. T. (2002). <i>Experimental and quasi-experimental designs for generalized causal inference.</i> Houghton Mifflin.</li>
+      </ol>
+      <p class="small muted">Citations are provided from memory for orientation; please verify details against the originals before citing. The terminology follows the course slides on nonexperimental and quasi-experimental strategies.</p>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>
+  Simulated data are illustrative. The statistics are descriptive aids; design logic and measurement quality still carry the inference.
+</footer>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+'use strict';
+
+/* ================= basic helpers ================= */
+const $=(s,el=document)=>el.querySelector(s);
+const $$=(s,el=document)=>Array.from(el.querySelectorAll(s));
+const sum=a=>a.reduce((s,v)=>s+v,0);
+const mean=a=>a.length?sum(a)/a.length:NaN;
+const median=a=>{if(!a.length)return NaN;const s=a.slice().sort((x,y)=>x-y),m=s.length>>1;return s.length%2?s[m]:(s[m-1]+s[m])/2};
+const vr=a=>{if(a.length<2)return 0;const m=mean(a);return sum(a.map(v=>(v-m)*(v-m)))/(a.length-1)};
+const sd=a=>Math.sqrt(vr(a));
+const minOf=a=>{let m=Infinity;for(const v of a)if(v<m)m=v;return m};
+const maxOf=a=>{let m=-Infinity;for(const v of a)if(v>m)m=v;return m};
+const f=(v,d=2)=>Number.isFinite(v)?(+v).toFixed(d):'—';
+const sgn=(v,d=1)=>Number.isFinite(v)?((v>0?'+':'')+(+v).toFixed(d)):'—';
+const pct=v=>Number.isFinite(v)?Math.round(v*100)+'%':'—';
+const pf=p=>!Number.isFinite(p)?'—':p<0.001?'< .001':p.toFixed(3).replace(/^0/,'');
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const ROM=['I','II','III','IV','V','VI'];
+
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function makeRng(seed){
+  const r=mulberry32((seed>>>0)||1);
+  const n=()=>{let u=0;while(u===0)u=r();const v=r();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)};
+  const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(r()*(i+1));const t=a[i];a[i]=a[j];a[j]=t}return a};
+  return{r,n,shuffle};
+}
+
+/* ================= distributions ================= */
+function lgam(x){const c=[76.18009172947146,-86.50532032941677,24.01409824083091,-1.231739572450155,0.1208650973866179e-2,-0.5395239384953e-5];let y=x,t=x+5.5;t-=(x+.5)*Math.log(t);let s=1.000000000190015;for(let j=0;j<6;j++)s+=c[j]/++y;return -t+Math.log(2.5066282746310005*s/x)}
+function betacf(a,b,x){
+  const FP=1e-300,qab=a+b,qap=a+1,qam=a-1;let c=1,d=1-qab*x/qap;if(Math.abs(d)<FP)d=FP;d=1/d;let h=d;
+  for(let m=1;m<=300;m++){const m2=2*m;let aa=m*(b-m)*x/((qam+m2)*(a+m2));d=1+aa*d;if(Math.abs(d)<FP)d=FP;c=1+aa/c;if(Math.abs(c)<FP)c=FP;d=1/d;h*=d*c;
+    aa=-(a+m)*(qab+m)*x/((a+m2)*(qap+m2));d=1+aa*d;if(Math.abs(d)<FP)d=FP;c=1+aa/c;if(Math.abs(c)<FP)c=FP;d=1/d;const del=d*c;h*=del;if(Math.abs(del-1)<3e-12)break}
+  return h;
+}
+function ibeta(x,a,b){if(x<=0)return 0;if(x>=1)return 1;const bt=Math.exp(lgam(a+b)-lgam(a)-lgam(b)+a*Math.log(x)+b*Math.log(1-x));return x<(a+1)/(a+b+2)?bt*betacf(a,b,x)/a:1-bt*betacf(b,a,1-x)/b}
+function gammp(a,x){
+  if(x<=0)return 0;
+  if(x<a+1){let ap=a,s=1/a,del=s;for(let n=0;n<400;n++){ap++;del*=x/ap;s+=del;if(Math.abs(del)<Math.abs(s)*3e-12)break}return s*Math.exp(-x+a*Math.log(x)-lgam(a))}
+  let b=x+1-a,c=1e300,d=1/b,h=d;
+  for(let i=1;i<400;i++){const an=-i*(i-a);b+=2;d=an*d+b;if(Math.abs(d)<1e-300)d=1e-300;c=b+an/c;if(Math.abs(c)<1e-300)c=1e-300;d=1/d;const del=d*c;h*=del;if(Math.abs(del-1)<3e-12)break}
+  return 1-Math.exp(-x+a*Math.log(x)-lgam(a))*h;
+}
+const tp2=(t,df)=>ibeta(df/(df+t*t),df/2,0.5);
+const fsf=(F,d1,d2)=>F>=0?ibeta(d2/(d2+d1*F),d2/2,d1/2):NaN;
+const chisf=(x,df)=>1-gammp(df/2,x/2);
+function erf(x){const s=x<0?-1:1;x=Math.abs(x);const t=1/(1+0.3275911*x),y=1-(((((1.061405429*t-1.453152027)*t)+1.421413741)*t-0.284496736)*t+0.254829592)*t*Math.exp(-x*x);return s*y}
+const ncdf=x=>0.5*(1+erf(x/Math.SQRT2));
+function tcrit(df,alpha){let lo=0,hi=1000;for(let i=0;i<80;i++){const m=(lo+hi)/2;if(tp2(m,df)>alpha)lo=m;else hi=m}return(lo+hi)/2}
+function binomP2(n,m){ // two-sided exact sign-test p for min count m out of n
+  let s=0;for(let i=0;i<=m;i++){s+=Math.exp(lgam(n+1)-lgam(i+1)-lgam(n-i+1)-n*Math.LN2)}return Math.min(1,2*s)}
+
+/* ================= tests ================= */
+function indT(a,b){
+  const na=a.length,nb=b.length,ma=mean(a),mb=mean(b),df=na+nb-2;
+  const sp2=((na-1)*vr(a)+(nb-1)*vr(b))/df,se=Math.sqrt(sp2*(1/na+1/nb)),diff=mb-ma;
+  const t=se>0?diff/se:(diff===0?0:Infinity),p=se>0?tp2(t,df):(diff===0?1:0),tc=tcrit(df,.05),sp=Math.sqrt(sp2);
+  return{t,df,p,diff,se,ci:[diff-tc*se,diff+tc*se],d:sp>0?diff/sp:NaN,ma,mb,sp};
+}
+function anova(gs){
+  const all=[].concat(...gs),N=all.length,k=gs.length,gm=mean(all);let ssb=0,ssw=0;
+  gs.forEach(g=>{const m=mean(g);ssb+=g.length*(m-gm)*(m-gm);g.forEach(v=>{ssw+=(v-m)*(v-m)})});
+  const dfb=k-1,dfw=N-k,msb=ssb/dfb,msw=ssw/dfw,F=msw>0?msb/msw:(msb>0?Infinity:0);
+  return{ssb,ssw,sst:ssb+ssw,dfb,dfw,msb,msw,F,p:msw>0?fsf(F,dfb,dfw):(ssb>0?0:1),eta2:(ssb+ssw)>0?ssb/(ssb+ssw):0,N,k,gm};
+}
+function pairedT(x,y){
+  const d=x.map((v,i)=>y[i]-v),n=d.length,md=mean(d),s=sd(d),se=s/Math.sqrt(n),df=n-1;
+  const t=se>0?md/se:(md===0?0:Infinity),p=se>0?tp2(t,df):(md===0?1:0),tc=tcrit(df,.05);
+  return{t,df,p,md,sd:s,se,ci:[md-tc*se,md+tc*se],dz:s>0?md/s:NaN,n,d};
+}
+function rmAnova(M){
+  const n=M.length,k=M[0].length,all=[].concat(...M),gm=mean(all);
+  let ssS=0,ssT=0;
+  M.forEach(r=>{const m=mean(r);ssS+=k*(m-gm)*(m-gm)});
+  for(let j=0;j<k;j++){const m=mean(M.map(r=>r[j]));ssT+=n*(m-gm)*(m-gm)}
+  const sst=sum(all.map(v=>(v-gm)*(v-gm))),ssE=Math.max(0,sst-ssS-ssT),dfT=k-1,dfE=(n-1)*(k-1);
+  const msT=ssT/dfT,msE=ssE/dfE,F=msE>0?msT/msE:(msT>0?Infinity:0);
+  return{ssS,ssT,ssE,sst,dfT,dfE,dfS:n-1,msT,msE,F,p:msE>0?fsf(F,dfT,dfE):(ssT>0?0:1),pEta2:(ssT+ssE)>0?ssT/(ssT+ssE):0,n,k};
+}
+function wilcoxon(x,y){
+  const d=x.map((v,i)=>y[i]-v).filter(v=>v!==0),n=d.length;if(n<1)return{n:0,p:1,W:0,z:0};
+  const idx=d.map((v,i)=>i).sort((a,b)=>Math.abs(d[a])-Math.abs(d[b])),rk=new Array(n);let i=0,tie=0;
+  while(i<n){let j=i;while(j+1<n&&Math.abs(d[idx[j+1]])===Math.abs(d[idx[i]]))j++;const r=(i+j)/2+1;for(let q=i;q<=j;q++)rk[idx[q]]=r;const t=j-i+1;tie+=t*t*t-t;i=j+1}
+  let wp=0,wm=0;d.forEach((v,q)=>{if(v>0)wp+=rk[q];else wm+=rk[q]});
+  const mu=n*(n+1)/4,s=Math.sqrt(Math.max(1e-12,n*(n+1)*(2*n+1)/24-tie/48)),W=Math.min(wp,wm),z=(Math.abs(wp-mu)-0.5)/s;
+  return{n,W,Wp:wp,Wm:wm,z,p:Math.min(1,2*(1-ncdf(Math.max(0,z))))};
+}
+function signTest(x,y){let pos=0,neg=0;x.forEach((v,i)=>{const d=y[i]-v;if(d>0)pos++;else if(d<0)neg++});const n=pos+neg;return{pos,neg,n,p:n?binomP2(n,Math.min(pos,neg)):1}}
+function chiSq(tab){
+  const R=tab.length,C=tab[0].length,rs=tab.map(sum),cs=tab[0].map((_,j)=>sum(tab.map(r=>r[j]))),N=sum(rs);
+  let x2=0,lowExp=0;
+  for(let i=0;i<R;i++)for(let j=0;j<C;j++){const e=rs[i]*cs[j]/N;if(e<5)lowExp++;if(e>0)x2+=(tab[i][j]-e)*(tab[i][j]-e)/e}
+  const df=(R-1)*(C-1);
+  return{x2,df,p:df>0?chisf(x2,df):1,V:Math.sqrt(x2/(N*Math.min(R-1,C-1))),N,rs,cs,lowExp};
+}
+function corr(a,b){const ma=mean(a),mb=mean(b);let sxy=0,sxx=0,syy=0;for(let i=0;i<a.length;i++){sxy+=(a[i]-ma)*(b[i]-mb);sxx+=(a[i]-ma)**2;syy+=(b[i]-mb)**2}return sxx>0&&syy>0?sxy/Math.sqrt(sxx*syy):NaN}
+
+/* approximate power of a two-sided t test (noncentral t, normal approximation) */
+function powerT(delta,df,alpha){
+  if(df<1)return NaN;
+  const tc=tcrit(df,alpha),a=tc*(1-1/(4*df)),s=Math.sqrt(1+tc*tc/(2*df));
+  return clamp(1-ncdf((a-delta)/s)+ncdf((-a-delta)/s),0,1);
+}
+
+/* ================= chart helpers (SVG strings) ================= */
+const COLS=['var(--colA)','var(--colB)','var(--colC)','var(--colD)','var(--colE)'];
+function ticks(min,max,cnt){
+  const span=max-min||1,raw=span/(cnt||5),mag=Math.pow(10,Math.floor(Math.log10(raw))),nm=raw/mag,step=(nm<1.5?1:nm<3?2:nm<7?5:10)*mag,t=[];
+  for(let v=Math.ceil(min/step-1e-9)*step;v<=max+step*1e-9;v+=step)t.push(+v.toPrecision(12));
+  return{t,step};
+}
+const fmtT=(v,step)=>{const d=step>=1?0:Math.min(4,Math.ceil(-Math.log10(step)-1e-9));return(+v).toFixed(d)};
+function svgWrap(W,H,inner,label){return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(label)}" xmlns="http://www.w3.org/2000/svg" font-family="system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif" font-size="11">${inner}</svg>`}
+function frame(W,H,m,xd,yd,o){
+  o=o||{};const iw=W-m.l-m.r,ih=H-m.t-m.b;
+  const sx=v=>m.l+(v-xd[0])/(xd[1]-xd[0])*iw,sy=v=>m.t+ih-(v-yd[0])/(yd[1]-yd[0])*ih;
+  let s=`<rect x="${m.l}" y="${m.t}" width="${iw}" height="${ih}" fill="var(--plot)"/>`;
+  const yt=ticks(yd[0],yd[1],o.yn||5);
+  yt.t.forEach(v=>{const y=sy(v);s+=`<line x1="${m.l}" x2="${W-m.r}" y1="${y}" y2="${y}" stroke="var(--grid)"/><text x="${m.l-6}" y="${y+4}" text-anchor="end" fill="var(--muted)">${fmtT(v,yt.step)}</text>`});
+  if(!o.xcat){const xt=ticks(xd[0],xd[1],o.xn||6);xt.t.forEach(v=>{const x=sx(v);s+=`<line x1="${x}" x2="${x}" y1="${m.t}" y2="${H-m.b}" stroke="var(--grid)"/><text x="${x}" y="${H-m.b+15}" text-anchor="middle" fill="var(--muted)">${fmtT(v,xt.step)}</text>`})}
+  s+=`<line x1="${m.l}" x2="${m.l}" y1="${m.t}" y2="${H-m.b}" stroke="var(--axis)"/><line x1="${m.l}" x2="${W-m.r}" y1="${H-m.b}" y2="${H-m.b}" stroke="var(--axis)"/>`;
+  if(o.xlab)s+=`<text x="${m.l+iw/2}" y="${H-6}" text-anchor="middle" fill="var(--muted)">${esc(o.xlab)}</text>`;
+  if(o.ylab)s+=`<text transform="translate(14 ${m.t+ih/2}) rotate(-90)" text-anchor="middle" fill="var(--muted)">${esc(o.ylab)}</text>`;
+  return{sx,sy,s,W,H,m,iw,ih};
+}
+function mk(shape,x,y,r,col,op,hollow){
+  const fill=hollow?'var(--plot)':col,st=`fill="${fill}" fill-opacity="${hollow?1:(op||.85)}" stroke="${col}" stroke-width="${hollow?1.6:.8}"`;
+  x=+x.toFixed(1);y=+y.toFixed(1);
+  switch(shape%5){
+    case 0:return `<circle cx="${x}" cy="${y}" r="${r}" ${st}/>`;
+    case 1:return `<rect x="${x-r}" y="${y-r}" width="${2*r}" height="${2*r}" ${st}/>`;
+    case 2:return `<polygon points="${x},${y-r*1.3} ${x+r*1.3},${y} ${x},${y+r*1.3} ${x-r*1.3},${y}" ${st}/>`;
+    case 3:return `<polygon points="${x},${y-r*1.25} ${x+r*1.2},${y+r} ${x-r*1.2},${y+r}" ${st}/>`;
+    default:return `<path d="M${x-r} ${y}H${x+r}M${x} ${y-r}V${y+r}" stroke="${col}" stroke-width="2.4" fill="none"/>`;
+  }
+}
+function swarm(vals,sy,r){
+  const placed=[],off=new Array(vals.length),idx=vals.map((v,i)=>i).sort((a,b)=>vals[a]-vals[b]);
+  idx.forEach(i=>{
+    const y=sy(vals[i]);let k=0,o=0;
+    for(;k<400;k++){o=k===0?0:(k%2?1:-1)*Math.ceil(k/2)*r*1.1;if(!placed.some(q=>(q.o-o)*(q.o-o)+(q.y-y)*(q.y-y)<4*r*r*0.85))break}
+    placed.push({o,y});off[i]=o;
+  });
+  return off;
+}
+
+function dotChart(groups,o){
+  o=o||{};const ov=o.ov||{},k=groups.length,W=760,H=o.H||380,m={l:58,r:16,t:14,b:o.sub?66:50};
+  const all=[].concat(...groups.map(g=>g.y));let lo=minOf(all),hi=maxOf(all);const pad=(hi-lo||1)*.08;
+  const fr=frame(W,H,m,[0,k],[lo-pad,hi+pad],{xcat:true,ylab:o.ylab||'Score'});
+  const maxn=maxOf(groups.map(g=>g.y.length)),r=maxn<=15?5.5:maxn<=40?4.2:maxn<=100?3:2.2;
+  let s=fr.s;
+  if(ov.grand){const gm=mean(all);s+=`<line x1="${m.l}" x2="${W-m.r}" y1="${fr.sy(gm)}" y2="${fr.sy(gm)}" stroke="var(--muted)" stroke-dasharray="5 4"/><text x="${W-m.r-4}" y="${fr.sy(gm)-4}" text-anchor="end" fill="var(--muted)">grand mean ${f(gm,1)}</text>`}
+  groups.forEach((g,gi)=>{
+    const cx=fr.sx(gi+.5),col=COLS[gi%5],mu=mean(g.y),sg=sd(g.y),n=g.y.length,off=swarm(g.y,fr.sy,r),hw=fr.sx(gi+.5+.34)-cx;
+    if(ov.sd)s+=`<rect x="${cx-hw}" y="${fr.sy(mu+sg)}" width="${2*hw}" height="${Math.max(1,fr.sy(mu-sg)-fr.sy(mu+sg))}" fill="${col}" fill-opacity=".13"/>`;
+    if(ov.dev)g.y.forEach((v,i)=>{s+=`<line x1="${(cx+off[i]).toFixed(1)}" x2="${(cx+off[i]).toFixed(1)}" y1="${fr.sy(v).toFixed(1)}" y2="${fr.sy(mu).toFixed(1)}" stroke="${col}" stroke-opacity=".45"/>`});
+    g.y.forEach((v,i)=>{s+=mk(gi,cx+off[i],fr.sy(v),r,col,.8)});
+    if(ov.median){const md=median(g.y);s+=`<line x1="${cx-hw}" x2="${cx+hw}" y1="${fr.sy(md)}" y2="${fr.sy(md)}" stroke="var(--fg)" stroke-width="1.5" stroke-dasharray="4 3"/>`}
+    if(ov.mean)s+=`<line x1="${cx-hw}" x2="${cx+hw}" y1="${fr.sy(mu)}" y2="${fr.sy(mu)}" stroke="var(--fg)" stroke-width="2.6"/>`;
+    if(ov.ci&&n>1){const se=sg/Math.sqrt(n),tc=tcrit(n-1,.05),x=cx+hw+9;s+=`<line x1="${x}" x2="${x}" y1="${fr.sy(mu-tc*se)}" y2="${fr.sy(mu+tc*se)}" stroke="var(--fg)" stroke-width="1.6"/><line x1="${x-4}" x2="${x+4}" y1="${fr.sy(mu-tc*se)}" y2="${fr.sy(mu-tc*se)}" stroke="var(--fg)" stroke-width="1.6"/><line x1="${x-4}" x2="${x+4}" y1="${fr.sy(mu+tc*se)}" y2="${fr.sy(mu+tc*se)}" stroke="var(--fg)" stroke-width="1.6"/><circle cx="${x}" cy="${fr.sy(mu)}" r="2.6" fill="var(--fg)"/>`}
+    s+=`<text x="${cx}" y="${H-m.b+16}" text-anchor="middle" fill="var(--fg)" font-weight="600">${esc(g.label)}</text><text x="${cx}" y="${H-m.b+30}" text-anchor="middle" fill="var(--muted)">n = ${n}, M = ${f(mu,1)}, SD = ${f(sg,1)}</text>`;
+    if(o.sub)s+=`<text x="${cx}" y="${H-m.b+44}" text-anchor="middle" fill="var(--muted)">${esc(o.sub[gi]||'')}</text>`;
+  });
+  return svgWrap(W,H,s,o.label||'Dot plot of scores by group');
+}
+
+function scatterChart(pts,o){
+  const W=o.W||760,H=o.H||360,m={l:58,r:o.W?16:78,t:14,b:44},xs=pts.map(p=>p.x),ys=pts.map(p=>p.y);
+  const xp=(maxOf(xs)-minOf(xs)||1)*.06,yp=(maxOf(ys)-minOf(ys)||1)*.08;
+  const fr=frame(W,H,m,[o.x0!==undefined?o.x0:minOf(xs)-xp,o.x1!==undefined?o.x1:maxOf(xs)+xp],[minOf(ys)-yp,maxOf(ys)+yp],{xlab:o.xlab,ylab:o.ylab});
+  let s=fr.s;
+  if(o.band)s+=`<rect x="${fr.sx(o.band[0])}" y="${m.t}" width="${fr.sx(o.band[1])-fr.sx(o.band[0])}" height="${fr.ih}" fill="var(--colB)" fill-opacity=".10"/>`;
+  pts.forEach(p=>{s+=mk(p.g||0,fr.sx(p.x),fr.sy(p.y),o.r||3.6,COLS[(p.g||0)%5],p.faded?.28:.8)});
+  (o.hlines||[]).forEach(h=>{s+=`<line x1="${m.l}" x2="${W-m.r}" y1="${fr.sy(h.y)}" y2="${fr.sy(h.y)}" stroke="${h.col}" stroke-width="2" stroke-dasharray="6 4"/><text x="${W-m.r+4}" y="${fr.sy(h.y)+4}" fill="${h.col}" font-weight="600">${esc(h.t)}</text>`});
+  if(o.fit){const a=o.fit;s+=`<line x1="${fr.sx(a.x0)}" y1="${fr.sy(a.y0)}" x2="${fr.sx(a.x1)}" y2="${fr.sy(a.y1)}" stroke="var(--fg)" stroke-width="1.6"/>`}
+  return svgWrap(W,H,s,o.label||'Scatter plot');
+}
+
+function histRows(rows,truth,o){
+  o=o||{};const W=760,rowH=o.rowH||74,top=10,bot=44,H=top+rows.length*rowH+bot,m={l:210,r:20};
+  const all=[].concat(...rows.map(r=>r.vals));let lo=Math.min(minOf(all),truth),hi=Math.max(maxOf(all),truth);const pad=(hi-lo||1)*.06;lo-=pad;hi+=pad;
+  const sx=v=>m.l+(v-lo)/(hi-lo)*(W-m.l-m.r),bins=28,bw=(hi-lo)/bins;let s='';
+  const xt=ticks(lo,hi,7);
+  xt.t.forEach(v=>{s+=`<line x1="${sx(v)}" x2="${sx(v)}" y1="${top}" y2="${H-bot}" stroke="var(--grid)"/><text x="${sx(v)}" y="${H-bot+15}" text-anchor="middle" fill="var(--muted)">${fmtT(v,xt.step)}</text>`});
+  s+=`<text x="${m.l+(W-m.l-m.r)/2}" y="${H-6}" text-anchor="middle" fill="var(--muted)">${esc(o.xlab||'Estimated effect')}</text>`;
+  rows.forEach((r,ri)=>{
+    const y0=top+ri*rowH,base=y0+rowH-10,cnt=new Array(bins).fill(0);
+    r.vals.forEach(v=>{cnt[Math.min(bins-1,Math.max(0,Math.floor((v-lo)/bw)))]++});
+    const mx=maxOf(cnt)||1,col=r.col||'var(--colA)';
+    cnt.forEach((c,i)=>{if(!c)return;const h=c/mx*(rowH-26);s+=`<rect x="${sx(lo+i*bw)+.5}" y="${base-h}" width="${Math.max(1,sx(lo+(i+1)*bw)-sx(lo+i*bw)-1)}" height="${h}" fill="${col}" fill-opacity=".75"/>`});
+    s+=`<line x1="${m.l}" x2="${W-m.r}" y1="${base}" y2="${base}" stroke="var(--axis)"/>`;
+    const mu=mean(r.vals);
+    s+=`<polygon points="${sx(mu)},${base+1} ${sx(mu)-5},${base+8} ${sx(mu)+5},${base+8}" fill="var(--fg)"/>`;
+    s+=`<text x="${m.l-8}" y="${base-24}" text-anchor="end" fill="var(--fg)" font-weight="600">${esc(r.label)}</text><text x="${m.l-8}" y="${base-10}" text-anchor="end" fill="var(--muted)">mean ${f(mu,1)}, SD ${f(sd(r.vals),1)}</text>`;
+  });
+  s+=`<line x1="${sx(truth)}" x2="${sx(truth)}" y1="${top}" y2="${H-bot}" stroke="var(--bad)" stroke-width="1.8" stroke-dasharray="6 4"/><text x="${sx(truth)+4}" y="${top+10}" fill="var(--bad)" font-weight="600">true effect ${f(truth,1)}</text>`;
+  return svgWrap(W,H,s,o.label||'Distribution of estimated effects');
+}
+
+function pairedChart(M,labels,o){
+  o=o||{};const ov=o.ov||{},k=M[0].length,W=760,H=380,m={l:58,r:16,t:14,b:46},n=M.length;
+  const view=o.mode==='pos'?'pos':'treat',D=view==='pos'?o.P:M;
+  const all=[].concat(...D);if(o.M0&&ov.truth&&view==='treat')all.push(...[].concat(...o.M0));
+  const lo=minOf(all),hi=maxOf(all),pad=(hi-lo||1)*.08;
+  const fr=frame(W,H,m,[0,k],[lo-pad,hi+pad],{xcat:true,ylab:o.ylab||'Score'}),cx=j=>fr.sx(j+.5);let s=fr.s;
+  const dotR=n<=20?4.4:n<=50?3.3:2.4;
+  if(ov.lines)D.forEach(r=>{s+=`<polyline fill="none" stroke="var(--axis)" stroke-opacity="${n<=20?.5:.25}" points="${r.map((v,j)=>cx(j).toFixed(1)+','+fr.sy(v).toFixed(1)).join(' ')}"/>`});
+  if(view==='treat'){
+    D.forEach(r=>r.forEach((v,j)=>{s+=mk(j,cx(j)+(((j*37)%7)-3)*1.2,fr.sy(v),dotR,COLS[j%5],.7)}));
+  }else{
+    D.forEach((r,i)=>r.forEach((v,j)=>{const t=o.seqOf[o.rows[i]][j];s+=mk(t,cx(j)+(((i*13+j)%7)-3)*1.2,fr.sy(v),dotR,COLS[t%5],.7)}));
+  }
+  const mu=Array.from({length:k},(_,j)=>mean(D.map(r=>r[j])));
+  if(o.M0&&ov.truth&&view==='treat'){const t0=Array.from({length:k},(_,j)=>mean(o.M0.map(r=>r[j])));
+    s+=`<polyline fill="none" stroke="var(--bad)" stroke-width="1.8" stroke-dasharray="5 4" points="${t0.map((v,j)=>cx(j)+','+fr.sy(v)).join(' ')}"/>`;
+    t0.forEach((v,j)=>{s+=mk(2,cx(j),fr.sy(v),5,'var(--bad)',1,true)});
+    s+=`<text x="${W-m.r-4}" y="${m.t+12}" text-anchor="end" fill="var(--bad)">dashed: true means (no order or carryover effects)</text>`;
+  }
+  if(ov.mean){s+=`<polyline fill="none" stroke="var(--fg)" stroke-width="2.6" points="${mu.map((v,j)=>cx(j)+','+fr.sy(v)).join(' ')}"/>`;mu.forEach((v,j)=>{s+=`<circle cx="${cx(j)}" cy="${fr.sy(v)}" r="5.5" fill="var(--fg)"/><text x="${cx(j)+9}" y="${fr.sy(v)-8}" fill="var(--fg)" font-weight="600">${f(v,1)}</text>`})}
+  const xl=view==='pos'?Array.from({length:k},(_,j)=>'Position '+(j+1)):labels;
+  xl.forEach((l,j)=>{s+=`<text x="${cx(j)}" y="${H-m.b+18}" text-anchor="middle" fill="var(--fg)" font-weight="600">${esc(l)}</text>`});
+  s+=`<text x="${m.l+fr.iw/2}" y="${H-6}" text-anchor="middle" fill="var(--muted)">${view==='pos'?'Order in which the treatment was received (marker shows which treatment)':'Treatment condition (each line is one participant)'}</text>`;
+  return svgWrap(W,H,s,o.label||'Scores of each participant across conditions');
+}
+
+function lineChart(series,o){
+  const W=760,H=o.H||340,m={l:58,r:20,t:14,b:46},fr=frame(W,H,m,o.xd,[0,1],{xlab:o.xlab,ylab:o.ylab,yn:5});let s=fr.s;
+  if(o.target!==undefined)s+=`<line x1="${m.l}" x2="${W-m.r}" y1="${fr.sy(o.target)}" y2="${fr.sy(o.target)}" stroke="var(--muted)" stroke-dasharray="5 4"/><text x="${W-m.r-4}" y="${fr.sy(o.target)-5}" text-anchor="end" fill="var(--muted)">target power ${o.target}</text>`;
+  series.forEach(se=>{
+    s+=`<polyline fill="none" stroke="${se.col}" stroke-width="2.4" ${se.dash?'stroke-dasharray="6 4"':''} points="${se.xs.map((x,i)=>fr.sx(x).toFixed(1)+','+fr.sy(se.ys[i]).toFixed(1)).join(' ')}"/>`;
+    if(se.mark!==undefined){const x=se.mark.x,y=se.mark.y;s+=mk(se.shape||0,fr.sx(x),fr.sy(y),5.5,se.col,1)}
+  });
+  if(o.vline!==undefined)s+=`<line x1="${fr.sx(o.vline)}" x2="${fr.sx(o.vline)}" y1="${m.t}" y2="${H-m.b}" stroke="var(--axis)" stroke-dasharray="2 3"/>`;
+  return svgWrap(W,H,s,o.label||'Line chart');
+}
+
+function barMeans(groups,o){
+  o=o||{};const W=760,H=o.H||320,m={l:58,r:16,t:14,b:56},k=groups.length;
+  const lo=Math.min(...groups.map(g=>mean(g.y)-2.6*sd(g.y)/Math.sqrt(g.y.length))),hi=Math.max(...groups.map(g=>mean(g.y)+2.6*sd(g.y)/Math.sqrt(g.y.length)));
+  const pad=(hi-lo||1)*.25,fr=frame(W,H,m,[0,k],[lo-pad,hi+pad],{xcat:true,ylab:o.ylab||'Score'});let s=fr.s;
+  groups.forEach((g,gi)=>{
+    const cx=fr.sx(gi+.5),mu=mean(g.y),se=sd(g.y)/Math.sqrt(g.y.length),tc=tcrit(g.y.length-1,.05),hw=fr.sx(gi+.5+.28)-cx,col=COLS[gi%5];
+    s+=`<rect x="${cx-hw}" y="${Math.min(fr.sy(mu),H-m.b)}" width="${2*hw}" height="${Math.max(0,H-m.b-fr.sy(mu))}" fill="${col}" fill-opacity=".3" stroke="${col}"/>`;
+    s+=`<line x1="${cx}" x2="${cx}" y1="${fr.sy(mu-tc*se)}" y2="${fr.sy(mu+tc*se)}" stroke="var(--fg)" stroke-width="1.8"/><line x1="${cx-6}" x2="${cx+6}" y1="${fr.sy(mu-tc*se)}" y2="${fr.sy(mu-tc*se)}" stroke="var(--fg)" stroke-width="1.8"/><line x1="${cx-6}" x2="${cx+6}" y1="${fr.sy(mu+tc*se)}" y2="${fr.sy(mu+tc*se)}" stroke="var(--fg)" stroke-width="1.8"/>`;
+    s+=`<text x="${cx}" y="${fr.sy(mu+tc*se)-8}" text-anchor="middle" fill="var(--fg)" font-weight="600">${f(mu,1)}</text>`;
+    s+=`<text x="${cx}" y="${H-m.b+17}" text-anchor="middle" fill="var(--fg)" font-weight="600">${esc(g.label)}</text><text x="${cx}" y="${H-m.b+31}" text-anchor="middle" fill="var(--muted)">n = ${g.y.length}</text>`;
+  });
+  return svgWrap(W,H,s,o.label||'Group means with 95% confidence intervals');
+}
+
+const esc2=esc;
+function ctrlHTML(prefix,defs,state,presets){
+  let h=`<div class="ctl"><label for="${prefix}-preset">Scenario preset</label><select id="${prefix}-preset"><option value="">Choose a preset…</option>${presets.map((p,i)=>`<option value="${i}">${esc(p[0])}</option>`).join('')}</select></div>`;
+  const groups=[];defs.forEach(d=>{if(!groups.includes(d.g))groups.push(d.g)});
+  groups.forEach((g,gi)=>{
+    h+=`<details class="grp" ${gi<(prefix==='ba'?1:3)?'open':''}><summary>${esc(g)}</summary>`;
+    defs.filter(d=>d.g===g).forEach(d=>{
+      const id=`${prefix}-${d.k}`,v=state[d.k],ttl=d.help?` title="${esc(d.help)}"`:'';
+      if(d.type==='select')h+=`<div class="ctl"><label for="${id}"${ttl}>${esc(d.l)}</label><select id="${id}" data-k="${d.k}" ${d.num?'data-num="1"':''}>${d.opts.map(o=>`<option value="${o[0]}" ${String(o[0])===String(v)?'selected':''}>${esc(o[1])}</option>`).join('')}</select></div>`;
+      else if(d.type==='check')h+=`<div class="ctl check"><label><input type="checkbox" id="${id}" data-k="${d.k}" ${v?'checked':''}> ${esc(d.l)}</label></div>`;
+      else if(d.type==='text')h+=`<div class="ctl"><label for="${id}">${esc(d.l)}</label><input type="text" id="${id}" data-k="${d.k}" value="${esc(v)}"></div>`;
+      else if(d.type==='seed')h+=`<div class="ctl"><label for="${id}">${esc(d.l)}</label><div class="row"><input type="number" id="${id}" data-k="${d.k}" value="${v}" min="1" step="1" style="flex:1"><button class="small" data-act="${prefix}-rand">Randomize</button></div></div>`;
+      else h+=`<div class="ctl"><label for="${id}"${ttl}>${esc(d.l)}<output id="${id}-o">${d.fmt?d.fmt(v):v}${d.unit||''}</output></label><input type="range" id="${id}" data-k="${d.k}" min="${d.min}" max="${d.max}" step="${d.step}" value="${v}"></div>`;
+    });
+    h+='</details>';
+  });
+  return h+`<div class="row"><button class="small" data-act="${prefix}-reset">Reset all</button></div>`;
+}
+function ovHTML(prefix,items,ov){return items.map(([k,l])=>`<label><input type="checkbox" data-ov="${k}" data-pre="${prefix}" ${ov[k]?'checked':''}> ${l}</label>`).join('')}
+function applyVis(prefix,defs,state){defs.forEach(d=>{if(!d.show)return;const el=$('#'+prefix+'-'+d.k);const c=el&&el.closest('.ctl');if(c)c.hidden=!d.show(state)})}
+function syncControls(prefix,defs,state){
+  defs.forEach(d=>{const el=$('#'+prefix+'-'+d.k);if(!el)return;
+    if(d.type==='check')el.checked=!!state[d.k];else el.value=state[d.k];
+    const o=$('#'+prefix+'-'+d.k+'-o');if(o)o.textContent=(d.fmt?d.fmt(state[d.k]):state[d.k])+(d.unit||'');});
+  applyVis(prefix,defs,state);
+}
+function bindControls(prefix,state,defs,onChange,presets,def){
+  const root=$('#'+prefix+'-controls');
+  root.addEventListener('input',e=>{
+    const el=e.target;if(el.id===prefix+'-preset')return;
+    const k=el.dataset.k;if(!k)return;
+    let v;
+    if(el.type==='checkbox')v=el.checked;else if(el.type==='range'||el.type==='number'||el.dataset.num)v=+el.value;else v=el.value;
+    if(el.type==='number'&&!(v>=1))return;
+    state[k]=v;
+    const o=$('#'+prefix+'-'+k+'-o'),d=defs.find(x=>x.k===k);if(o&&d)o.textContent=(d.fmt?d.fmt(v):v)+(d.unit||'');
+    applyVis(prefix,defs,state);onChange();
+  });
+  root.addEventListener('change',e=>{
+    if(e.target.id===prefix+'-preset'){const i=e.target.value;if(i==='')return;
+      Object.assign(state,def,presets[+i][1],{seed:state.seed});syncControls(prefix,defs,state);onChange();}
+  });
+}
+
+/* ================= tables / narrative ================= */
+function tbl(head,rows){
+  const isTxt=c=>{const t=String(c).replace(/<[^>]*>/g,'').trim();return t.length>14&&!/^[+\-−0-9.]/.test(t)};
+  const L=head.map((h,i)=>i===0||rows.some(r=>isTxt(r[i])));
+  const cls=i=>L[i]?' class="l"':'';
+  return `<div class="tbl-wrap"><table><thead><tr>${head.map((h,i)=>Array.isArray(h)?`<th${cls(i)} title="${esc(h[1])}">${h[0]}</th>`:`<th${cls(i)}>${h}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${r.map((c,i)=>`<td${cls(i)}>${c}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+}
+const pill=(txt,cls)=>`<span class="pill ${cls}">${txt}</span>`;
+const sigPill=p=>p<0.05?pill('p '+(p<0.001?'< .001':'= '+pf(p))+': significant','good'):pill('p = '+pf(p)+': not significant','warn');
+function legendHTML(labels){return labels.map((l,i)=>`<span><i style="display:inline-block;vertical-align:middle;margin-right:4px;width:11px;height:11px;border-radius:${i%5===0?'50%':'2px'};background:${COLS[i%5]}"></i>${esc(l)}</span>`).join('')}
+
+
+/* ================= extra statistics ================= */
+const npdf=x=>Math.exp(-x*x/2)/Math.sqrt(2*Math.PI);
+function solveLin(A,b){
+  const n=b.length;A=A.map((r,i)=>r.concat([b[i]]));
+  for(let i=0;i<n;i++){
+    let p=i;for(let r=i+1;r<n;r++)if(Math.abs(A[r][i])>Math.abs(A[p][i]))p=r;
+    [A[i],A[p]]=[A[p],A[i]];const d=A[i][i];if(Math.abs(d)<1e-12)return null;
+    for(let c=i;c<=n;c++)A[i][c]/=d;
+    for(let r=0;r<n;r++)if(r!==i){const m=A[r][i];if(m)for(let c=i;c<=n;c++)A[r][c]-=m*A[i][c]}
+  }
+  return A.map(r=>r[n]);
+}
+function ols(X,y){
+  const n=X.length,p=X[0].length;
+  const XtX=Array.from({length:p},(_,i)=>Array.from({length:p},(_,j)=>sum(X.map(r=>r[i]*r[j]))));
+  const Xty=Array.from({length:p},(_,i)=>sum(X.map((r,k)=>r[i]*y[k])));
+  const b=solveLin(XtX,Xty);if(!b)return null;
+  const inv=[];for(let j=0;j<p;j++){const e=new Array(p).fill(0);e[j]=1;inv.push(solveLin(XtX,e))}
+  const res=y.map((v,k)=>v-sum(X[k].map((x,i)=>x*b[i]))),df=n-p,s2=df>0?sum(res.map(r=>r*r))/df:NaN;
+  const se=b.map((_,i)=>Math.sqrt(s2*inv[i][i])),t=b.map((v,i)=>v/se[i]);
+  return{b,se,t,p:t.map(v=>df>0?tp2(v,df):NaN),df,s2,res};
+}
+/* 2 (group, between) x 2 (time, within) mixed ANOVA via equivalent contrasts */
+function mixed2x2(a,b){
+  const G=[a,b],d=G.map(g=>g.pre.map((v,i)=>g.post[i]-v)),s=G.map(g=>g.pre.map((v,i)=>(v+g.post[i])/2));
+  const inter=anova(d),grp=anova(s),ng=d.map(x=>x.length),N=ng[0]+ng[1],Dg=d.map(mean);
+  const se=Math.sqrt(inter.msw*(1/ng[0]+1/ng[1])/4),tt=se>0?((Dg[0]+Dg[1])/2)/se:0,df=N-2;
+  const pe=(F,d2)=>F/(F+d2);
+  return{
+    group:{F:grp.F,df1:1,df2:df,p:grp.p,pe:pe(grp.F,df)},
+    time:{F:tt*tt,df1:1,df2:df,p:se>0?tp2(tt,df):1,pe:pe(tt*tt,df)},
+    inter:{F:inter.F,df1:1,df2:df,p:inter.p,pe:pe(inter.F,df)},
+    gain:[mean(d[0]),mean(d[1])],gainT:indT(d[0],d[1])
+  };
+}
+function slopeOf(xs,ys){const mx=mean(xs),my=mean(ys);let sxy=0,sxx=0;for(let i=0;i<xs.length;i++){sxy+=(xs[i]-mx)*(ys[i]-my);sxx+=(xs[i]-mx)*(xs[i]-mx)}return sxx>0?sxy/sxx:NaN}
+
+/* ================= nonequivalent groups simulation ================= */
+function simNEG(p,seed,bench){
+  const R=makeRng(seed===undefined?p.seed:seed),n=p.n;
+  const sdTot=Math.sqrt(p.sd*p.sd+p.sdE*p.sdE+p.confEff*p.confEff);
+  const groups=[0,1].map(g=>({pre:[],post:[],conf:[]}));
+  for(let gi=0;gi<2;gi++){
+    const G=groups[gi],treated=gi===1,quasi=treated&&!bench;
+    const thr=p.base+(quasi?p.qeff+p.confEff*p.conf:0)-p.selext*sdTot;
+    let tries=0;
+    while(G.pre.length<n){
+      const conf=R.n()+(quasi?p.conf:0),person=p.sd*R.n(),e0=p.sdE*R.n(),e1=p.sdE*R.n();
+      const stable=p.base+(quasi?p.qeff:0)+p.confEff*conf+person,pre=stable+e0;
+      if(quasi&&p.selext>0&&pre>thr&&tries++<40000)continue;
+      const post=stable+p.trend+(treated?p.treat:0)+(quasi?p.mat+p.hist:0)+e1;
+      G.pre.push(pre);G.post.push(post);G.conf.push(conf);
+    }
+  }
+  return{groups};
+}
+function negEstimates(S){
+  const [a,b]=S.groups,gain=g=>g.post.map((v,i)=>v-g.pre[i]);
+  return{postOnly:mean(b.post)-mean(a.post),did:mean(gain(b))-mean(gain(a)),preDiff:mean(b.pre)-mean(a.pre)};
+}
+function repNEG(p,reps){
+  const post=[],did=[],rnd=[];
+  for(let r=0;r<reps;r++){
+    const e=negEstimates(simNEG(p,p.seed*7919+r*29+3));post.push(e.postOnly);did.push(e.did);
+    rnd.push(negEstimates(simNEG(p,p.seed*104729+r*31+5,true)).postOnly);
+  }
+  return{post,did,rnd};
+}
+function regressionTerms(p){
+  const vt=p.sd*p.sd+p.confEff*p.confEff,vo=vt+p.sdE*p.sdE,sx=Math.sqrt(vo),rho=vt/vo;
+  if(!(p.selext>0))return{rho,shift:0,gain:0,sx};
+  const lam=npdf(p.selext)/(1-ncdf(p.selext)); // inverse Mills ratio for selecting the lowest scorers
+  return{rho,shift:-rho*sx*lam,gain:(1-rho)*sx*lam,sx};
+}
+
+/* ================= pre-post / time-series simulation ================= */
+function simTS(p,seed){
+  const R=makeRng(seed===undefined?p.seed:seed),T=p.nPre+p.nPost,n=p.n,sdTot=Math.sqrt(p.sdP*p.sdP+p.sdE*p.sdE);
+  const test=t=>p.testing*(1-Math.pow(0.65,t)),Y=[];let tries=0;
+  while(Y.length<n){
+    const person=p.sdP*R.n(),e=Array.from({length:T},()=>p.sdE*R.n());
+    if(p.selext>0&&person+e[0]>-p.selext*sdTot&&tries++<40000)continue;
+    Y.push(Array.from({length:T},(_,t)=>{
+      const post=t>=p.nPre;
+      return p.base+person+p.trend*t+test(t)+(post?p.effect+p.hist+p.instr+p.effSlope*(t-p.nPre):0)+e[t];
+    }));
+  }
+  return{Y,T,test};
+}
+function tsAnalyze(M,nPre){
+  const T=M.length,X=[],y=M.slice();
+  for(let t=0;t<T;t++){const po=t>=nPre?1:0;X.push([1,t,po,po*(t-nPre)])}
+  return ols(X,y);
+}
+function tsSummary(S,p){
+  const n=S.Y.length,T=S.T,M=Array.from({length:T},(_,t)=>mean(S.Y.map(r=>r[t])));
+  const a=S.Y.map(r=>r[p.nPre-1]),b=S.Y.map(r=>r[p.nPre]);
+  const pre=S.Y.map(r=>mean(r.slice(0,p.nPre))),post=S.Y.map(r=>mean(r.slice(p.nPre)));
+  return{M,adj:pairedT(a,b),means:pairedT(pre,post),its:T>=5?tsAnalyze(M,p.nPre):null};
+}
+function repTS(p,reps){
+  const adj=[],mean2=[],its=[];
+  for(let r=0;r<reps;r++){
+    const S=simTS(p,p.seed*6007+r*17+3),a=S.Y.map(x=>x[p.nPre-1]),b=S.Y.map(x=>x[p.nPre]);
+    adj.push(mean(b)-mean(a));
+    mean2.push(mean(S.Y.map(x=>mean(x.slice(p.nPre))))-mean(S.Y.map(x=>mean(x.slice(0,p.nPre)))));
+    const M=Array.from({length:S.T},(_,t)=>mean(S.Y.map(x=>x[t]))),f=S.T>=5?tsAnalyze(M,p.nPre):null;its.push(f?f.b[2]:NaN);
+  }
+  return{adj,mean2,its:its.filter(Number.isFinite)};
+}
+
+/* ================= developmental simulation ================= */
+const Y0=2025;
+function devY(p,R,age,birth,nTests,person){return p.base+p.ageEff*(age-20)/10+p.cohort*(birth-1980)/10+p.practice*nTests+person+p.sdE*R.n()}
+function simDev(p,seed){
+  const R=makeRng(seed===undefined?p.seed:seed),ages=[20,30,40,50,60,70];
+  const cs=ages.map(a=>({age:a,y:Array.from({length:p.n},()=>devY(p,R,a,Y0-a,0,p.sdP*R.n()))}));
+  const follow=(a0,waves)=>{
+    let people=Array.from({length:p.n},()=>({person:p.sdP*R.n(),last:0}));const out=[];
+    for(let w=0;w<waves;w++){
+      if(w>0){
+        const m=Math.round(people.length*p.att/100);
+        if(m>0&&people.length-m>=3){
+          const idx=people.map((_,i)=>i);if(p.selAttr)idx.sort((i,j)=>people[i].last-people[j].last);else R.shuffle(idx);
+          const drop=new Set(idx.slice(0,m));people=people.filter((_,i)=>!drop.has(i));
+        }
+      }
+      const ys=people.map(q=>{const y=devY(p,R,a0+10*w,Y0-a0,w,q.person);q.last=y;return y});
+      out.push({age:a0+10*w,wave:w,y:ys});
+    }
+    return{a0,waves:out};
+  };
+  const lg=follow(20,6),sq=[20,40,60].map(a=>follow(a,3));
+  return{cs,lg,sq};
+}
+function devEstimates(S){
+  const flat=(arr,f)=>{const xs=[],ys=[];arr.forEach(g=>g.y.forEach(v=>{xs.push(g.age);ys.push(v)}));return slopeOf(xs,ys)*10};
+  const cs=flat(S.cs),lg=flat(S.lg.waves);
+  let sxy=0,sxx=0;
+  S.sq.forEach(c=>{const xs=[],ys=[];c.waves.forEach(g=>g.y.forEach(v=>{xs.push(g.age);ys.push(v)}));const mx=mean(xs),my=mean(ys);xs.forEach((x,i)=>{sxy+=(x-mx)*(ys[i]-my);sxx+=(x-mx)*(x-mx)})});
+  return{cs,lg,sq:sxx>0?10*sxy/sxx:NaN};
+}
+function repDev(p,reps){const o={cs:[],lg:[],sq:[]};for(let r=0;r<reps;r++){const e=devEstimates(simDev(p,p.seed*5003+r*23+1));o.cs.push(e.cs);o.lg.push(e.lg);o.sq.push(e.sq)}return o}
+
+/* ================= extra charts ================= */
+function interactionChart(groups,o){
+  o=o||{};const ov=o.ov||{},W=760,H=380,m={l:58,r:16,t:14,b:50};
+  const all=[].concat(...groups.map(g=>g.pre.concat(g.post)));const lo=minOf(all),hi=maxOf(all),pad=(hi-lo||1)*.08;
+  const fr=frame(W,H,m,[0,2],[lo-pad,hi+pad],{xcat:true,ylab:o.ylab||'Score'});let s=fr.s;
+  const cx=(j,gi)=>fr.sx(j+.5)+(gi?18:-18);
+  groups.forEach((g,gi)=>{
+    const col=COLS[gi%5];
+    if(ov.lines)g.pre.forEach((v,i)=>{s+=`<line x1="${cx(0,gi)}" y1="${fr.sy(v)}" x2="${cx(1,gi)}" y2="${fr.sy(g.post[i])}" stroke="${col}" stroke-opacity=".22"/>`});
+    const mu=[mean(g.pre),mean(g.post)];
+    s+=`<line x1="${cx(0,gi)}" y1="${fr.sy(mu[0])}" x2="${cx(1,gi)}" y2="${fr.sy(mu[1])}" stroke="${col}" stroke-width="3"/>`;
+    [g.pre,g.post].forEach((arr,j)=>{
+      const n=arr.length,se=sd(arr)/Math.sqrt(n),tc=tcrit(n-1,.05),x=cx(j,gi);
+      if(ov.ci)s+=`<line x1="${x}" x2="${x}" y1="${fr.sy(mu[j]-tc*se)}" y2="${fr.sy(mu[j]+tc*se)}" stroke="${col}" stroke-width="1.8"/><line x1="${x-5}" x2="${x+5}" y1="${fr.sy(mu[j]-tc*se)}" y2="${fr.sy(mu[j]-tc*se)}" stroke="${col}" stroke-width="1.8"/><line x1="${x-5}" x2="${x+5}" y1="${fr.sy(mu[j]+tc*se)}" y2="${fr.sy(mu[j]+tc*se)}" stroke="${col}" stroke-width="1.8"/>`;
+      s+=mk(gi,x,fr.sy(mu[j]),6,col,1);
+      s+=`<text x="${x+(gi?11:-11)}" y="${fr.sy(mu[j])+4}" text-anchor="${gi?'start':'end'}" fill="${col}" font-weight="600">${f(mu[j],1)}</text>`;
+    });
+  });
+  ['Pretest','Posttest'].forEach((l,j)=>{s+=`<text x="${fr.sx(j+.5)}" y="${H-m.b+18}" text-anchor="middle" fill="var(--fg)" font-weight="600">${l}</text>`});
+  s+=`<text x="${m.l+fr.iw/2}" y="${H-6}" text-anchor="middle" fill="var(--muted)">Only one group receives the treatment between the two testings</text>`;
+  return svgWrap(W,H,s,o.label||'Pretest and posttest means for two groups');
+}
+function fitLine(xs,ys){const b=slopeOf(xs,ys),a=mean(ys)-b*mean(xs);return{a,b}}
+function tsChart(o){
+  const M=o.M,Y=o.Y,nPre=o.nPre,T=M.length,ov=o.ov||{},W=760,H=380,m={l:58,r:16,t:22,b:58},pp=o.view==='pp';
+  const pool=(Y&&ov.lines?[].concat(...Y):M.slice());const lo0=minOf(pool),hi0=maxOf(pool),pad=(hi0-lo0||1)*.1;
+  const fr=frame(W,H,m,[-.6,T-.4],[lo0-pad,hi0+pad],{xcat:true,ylab:o.ylab||'Average score'});let s=fr.s;const cx=i=>fr.sx(i);
+  const dim=i=>pp&&i!==nPre-1&&i!==nPre;
+  if(Y&&ov.lines)Y.forEach(r=>{
+    if(pp)s+=`<line x1="${cx(nPre-1)}" y1="${fr.sy(r[nPre-1])}" x2="${cx(nPre)}" y2="${fr.sy(r[nPre])}" stroke="var(--axis)" stroke-opacity=".35"/>`;
+    else s+=`<polyline fill="none" stroke="var(--axis)" stroke-opacity="${Y.length<=20?.4:.18}" points="${r.map((v,i)=>cx(i).toFixed(1)+','+fr.sy(v).toFixed(1)).join(' ')}"/>`;
+  });
+  s+=`<line x1="${cx(nPre-.5)}" x2="${cx(nPre-.5)}" y1="${m.t}" y2="${H-m.b}" stroke="var(--colB)" stroke-width="1.8" stroke-dasharray="7 5"/><text x="${cx(nPre-.5)+6}" y="${m.t+11}" fill="var(--colB)" font-weight="600">Treatment</text>`;
+  if(ov.fit&&!pp){
+    if(nPre>=2){const fl=fitLine(Array.from({length:nPre},(_,i)=>i),M.slice(0,nPre));s+=`<line x1="${cx(0)}" y1="${fr.sy(fl.a)}" x2="${cx(T-1)}" y2="${fr.sy(fl.a+fl.b*(T-1))}" stroke="var(--colA)" stroke-width="1.8" stroke-dasharray="6 4"/><text x="${cx(T-1)}" y="${fr.sy(fl.a+fl.b*(T-1))-6}" text-anchor="end" fill="var(--colA)">pre-treatment trend continued</text>`}
+    if(T-nPre>=2){const idx=Array.from({length:T-nPre},(_,i)=>nPre+i),fl=fitLine(idx,M.slice(nPre));s+=`<line x1="${cx(nPre)}" y1="${fr.sy(fl.a+fl.b*nPre)}" x2="${cx(T-1)}" y2="${fr.sy(fl.a+fl.b*(T-1))}" stroke="var(--colB)" stroke-width="2.4"/>`}
+  }
+  if(!pp)s+=`<polyline fill="none" stroke="var(--fg)" stroke-opacity=".5" stroke-width="1.4" points="${M.map((v,i)=>cx(i).toFixed(1)+','+fr.sy(v).toFixed(1)).join(' ')}"/>`;
+  else s+=`<line x1="${cx(nPre-1)}" y1="${fr.sy(M[nPre-1])}" x2="${cx(nPre)}" y2="${fr.sy(M[nPre])}" stroke="var(--fg)" stroke-width="2.8"/>`;
+  M.forEach((v,i)=>{s+=`<g opacity="${dim(i)?.25:1}">${mk(i<nPre?0:1,cx(i),fr.sy(v),5.5,i<nPre?'var(--colA)':'var(--colB)',1)}</g>`;if(!dim(i)&&(pp||T<=14))s+=`<text x="${cx(i)}" y="${fr.sy(v)-10}" text-anchor="middle" fill="var(--fg)" font-weight="600" font-size="10">${f(v,1)}</text>`});
+  const step=T>16?2:1;
+  for(let i=0;i<T;i+=step)s+=`<text x="${cx(i)}" y="${H-m.b+16}" text-anchor="middle" fill="var(--muted)">O${i+1}</text>`;
+  s+=`<text x="${cx((nPre-1)/2)}" y="${H-m.b+34}" text-anchor="middle" fill="var(--colA)" font-weight="600">Observations before treatment</text><text x="${cx(nPre+(T-nPre-1)/2)}" y="${H-m.b+34}" text-anchor="middle" fill="var(--colB)" font-weight="600">Observations after treatment</text>`;
+  return svgWrap(W,H,s,o.label||'Time series of average scores');
+}
+function devChart(S,p,ov){
+  const W=760,H=400,m={l:58,r:16,t:14,b:46},mu=a=>mean(a),seOf=a=>sd(a)/Math.sqrt(a.length);
+  const pts=[];S.cs.forEach(g=>pts.push(mu(g.y)));S.lg.waves.forEach(g=>pts.push(mu(g.y)));S.sq.forEach(c=>c.waves.forEach(g=>pts.push(mu(g.y))));
+  const tr=a=>p.base+p.ageEff*(a-20)/10+p.cohort*(2005-1980)/10;pts.push(tr(20),tr(80));
+  const lo=minOf(pts),hi=maxOf(pts),pad=(hi-lo||1)*.15,fr=frame(W,H,m,[12,88],[lo-pad,hi+pad],{xlab:'Age (years)',ylab:'Average score',xn:7});let s=fr.s;
+  const bar=(x,y,se,n,col)=>{if(!ov.ci||n<2)return '';const tc=tcrit(n-1,.05);return `<line x1="${x}" x2="${x}" y1="${fr.sy(y-tc*se)}" y2="${fr.sy(y+tc*se)}" stroke="${col}" stroke-width="1.5"/>`};
+  if(ov.truth)s+=`<line x1="${fr.sx(20)}" y1="${fr.sy(tr(20))}" x2="${fr.sx(80)}" y2="${fr.sy(tr(80))}" stroke="var(--bad)" stroke-width="2" stroke-dasharray="7 5"/>`;
+  if(ov.cs){const x=g=>fr.sx(g.age-1.4);s+=`<polyline fill="none" stroke="var(--colA)" stroke-width="2.2" points="${S.cs.map(g=>x(g).toFixed(1)+','+fr.sy(mu(g.y)).toFixed(1)).join(' ')}"/>`;S.cs.forEach(g=>{s+=bar(x(g),mu(g.y),seOf(g.y),g.y.length,'var(--colA)')+mk(0,x(g),fr.sy(mu(g.y)),5,'var(--colA)',1)})}
+  if(ov.lg){const x=g=>fr.sx(g.age);s+=`<polyline fill="none" stroke="var(--colB)" stroke-width="2.2" points="${S.lg.waves.map(g=>x(g).toFixed(1)+','+fr.sy(mu(g.y)).toFixed(1)).join(' ')}"/>`;S.lg.waves.forEach(g=>{s+=bar(x(g),mu(g.y),seOf(g.y),g.y.length,'var(--colB)')+mk(1,x(g),fr.sy(mu(g.y)),4.8,'var(--colB)',1)})}
+  if(ov.sq)S.sq.forEach(c=>{const x=g=>fr.sx(g.age+1.4);s+=`<polyline fill="none" stroke="var(--colC)" stroke-width="2.2" points="${c.waves.map(g=>x(g).toFixed(1)+','+fr.sy(mu(g.y)).toFixed(1)).join(' ')}"/>`;c.waves.forEach(g=>{s+=bar(x(g),mu(g.y),seOf(g.y),g.y.length,'var(--colC)')+mk(2,x(g),fr.sy(mu(g.y)),4.8,'var(--colC)',1)})});
+  return svgWrap(W,H,s,'Average score by age for three developmental designs');
+}
+
+/* ================= state and definitions ================= */
+const DEF_NG={design:'prepost',n:25,qeff:6,conf:0.8,confEff:4,treat:6,trend:0,mat:0,hist:0,selext:0,sd:8,sdE:4,base:50,glab1:'Group 1',glab2:'Group 2',ylab:'Score',seed:21};
+const DEF_TS={n:30,nPre:6,nPost:6,effect:8,effSlope:0,trend:0,testing:0,hist:0,instr:0,selext:0,sdP:8,sdE:4,base:50,ylab:'Average score',seed:3};
+const DEF_DV={n:30,base:60,ageEff:-3,cohort:2,practice:0,att:0,selAttr:true,sdP:8,sdE:4,seed:9};
+
+const notDiff=s=>s.design!=='differential';
+const NG_DEFS=[
+ {g:'Design',k:'design',l:'Design',type:'select',opts:[['differential','Differential (ex post facto): compare preexisting groups'],['posttest','Posttest-only nonequivalent control group'],['prepost','Pretest-posttest nonequivalent control group']]},
+ {g:'Design',k:'n',l:'Participants per group',min:5,max:80,step:1},
+ {g:'Groups differ before any treatment',k:'qeff',l:'Effect of the grouping (participant) variable',min:-15,max:15,step:1,help:'The real difference between the groups attributable to the variable that defines them'},
+ {g:'Groups differ before any treatment',k:'conf',l:'Group 2 minus Group 1 on a confound (SD)',min:0,max:2,step:0.1,fmt:v=>v.toFixed(1),help:'Individual differences: e.g. Group 2 is older, more motivated or better prepared'},
+ {g:'Groups differ before any treatment',k:'confEff',l:'Effect of the confound on scores (per SD)',min:0,max:10,step:0.5},
+ {g:'Treatment and change over time',k:'treat',l:'True treatment effect (Group 2)',min:-20,max:20,step:1,show:notDiff},
+ {g:'Treatment and change over time',k:'trend',l:'Change over time in both groups',min:-10,max:10,step:0.5,show:notDiff,help:'Common maturation or practice: affects both groups equally'},
+ {g:'Threats that affect one group only',k:'mat',l:'Selection × maturation (extra change in Group 2)',min:-10,max:10,step:0.5,show:notDiff,help:'The groups mature or change at different rates'},
+ {g:'Threats that affect one group only',k:'hist',l:'Local history (event hits Group 2 only)',min:-10,max:10,step:0.5,show:notDiff},
+ {g:'Threats that affect one group only',k:'selext',l:'Group 2 chosen for low pretest scores (SD; 0 = no)',min:0,max:2,step:0.1,fmt:v=>v.toFixed(1),show:notDiff,help:'Selecting extreme scorers invites regression toward the mean'},
+ {g:'Variability',k:'sd',l:'Stable individual differences (SD)',min:0,max:20,step:0.5},
+ {g:'Variability',k:'sdE',l:'Testing noise (SD)',min:0.5,max:15,step:0.5},
+ {g:'Display',k:'glab1',l:'Label for Group 1',type:'text'},
+ {g:'Display',k:'glab2',l:'Label for Group 2',type:'text'},
+ {g:'Display',k:'ylab',l:'Y-axis label',type:'text'},
+ {g:'Display',k:'seed',l:'Random seed',type:'seed'},
+];
+const NG_PRESETS=[
+ ['Differential design: preexisting groups differ',{design:'differential',qeff:6,conf:1,confEff:5,treat:0}],
+ ['Differential: the whole difference is a confound',{design:'differential',qeff:0,conf:1.2,confEff:6}],
+ ['Posttest-only: a confound mimics a treatment effect',{design:'posttest',qeff:0,conf:1.2,confEff:6,treat:0}],
+ ['Pretest-posttest: stable group difference removed',{design:'prepost',qeff:8,conf:1,confEff:5,treat:6}],
+ ['Pretest-posttest: selection × maturation',{design:'prepost',qeff:4,treat:0,mat:6}],
+ ['Pretest-posttest: local history',{design:'prepost',treat:0,hist:6}],
+ ['Regression: Group 2 chosen for low pretest scores',{design:'prepost',treat:0,selext:1,qeff:0,conf:0}],
+];
+const TS_DEFS=[
+ {g:'Design',k:'nPre',l:'Observations before treatment',min:1,max:12,step:1,help:'1 = a simple pretest'},
+ {g:'Design',k:'nPost',l:'Observations after treatment',min:1,max:12,step:1,help:'1 = a simple posttest'},
+ {g:'Design',k:'n',l:'Participants',min:5,max:100,step:1},
+ {g:'Treatment',k:'effect',l:'True treatment effect (level change)',min:-20,max:20,step:1},
+ {g:'Treatment',k:'effSlope',l:'Treatment changes the slope (per observation)',min:-2,max:2,step:0.1,fmt:v=>v.toFixed(1)},
+ {g:'Threats to internal validity',k:'trend',l:'Maturation: steady change per observation',min:-2,max:2,step:0.05,fmt:v=>v.toFixed(2)},
+ {g:'Threats to internal validity',k:'testing',l:'Testing: practice effect over repeated tests',min:0,max:10,step:0.5},
+ {g:'Threats to internal validity',k:'hist',l:'History: outside event at the same time as treatment',min:-15,max:15,step:1},
+ {g:'Threats to internal validity',k:'instr',l:'Instrumentation: measurement changes at treatment',min:-15,max:15,step:1},
+ {g:'Threats to internal validity',k:'selext',l:'Regression: chosen for low first score (SD; 0 = no)',min:0,max:2,step:0.1,fmt:v=>v.toFixed(1)},
+ {g:'Variability',k:'sdP',l:'Stable individual differences (SD)',min:0,max:20,step:0.5},
+ {g:'Variability',k:'sdE',l:'Observation noise (SD)',min:0.5,max:15,step:0.5},
+ {g:'Display',k:'ylab',l:'Y-axis label',type:'text'},
+ {g:'Display',k:'seed',l:'Random seed',type:'seed'},
+];
+const TS_PRESETS=[
+ ['Pretest-posttest (O X O), no threats',{nPre:1,nPost:1,effect:8}],
+ ['One-group pre-post with a history event',{nPre:1,nPost:1,effect:0,hist:8}],
+ ['One-group pre-post with regression',{nPre:1,nPost:1,effect:0,selext:1}],
+ ['Time series: clear level shift',{effect:8}],
+ ['Time series: maturation trend only',{effect:0,trend:1.5}],
+ ['Time series: coincident history event',{effect:0,hist:8}],
+ ['Time series: practice (testing) effect',{effect:0,testing:8,nPre:5,nPost:5}],
+ ['Treatment changes the slope',{effect:0,effSlope:1.5}],
+];
+const DV_DEFS=[
+ {g:'What is really true',k:'ageEff',l:'True age effect per decade',min:-8,max:8,step:0.5},
+ {g:'What is really true',k:'cohort',l:'Cohort effect per decade of later birth',min:-5,max:5,step:0.5,help:'Younger generations score higher (positive) or lower (negative)'},
+ {g:'What is really true',k:'practice',l:'Practice effect per repeated testing',min:0,max:6,step:0.5},
+ {g:'Sampling',k:'n',l:'Participants per group or cohort',min:10,max:100,step:1},
+ {g:'Sampling',k:'att',l:'Attrition at each retest',min:0,max:40,step:5,unit:'%'},
+ {g:'Sampling',k:'selAttr',l:'Dropouts are the lowest earlier scorers (selective)',type:'check'},
+ {g:'Variability',k:'sdP',l:'Individual differences (SD)',min:0,max:20,step:0.5},
+ {g:'Variability',k:'sdE',l:'Measurement noise (SD)',min:0.5,max:15,step:0.5},
+ {g:'Display',k:'seed',l:'Random seed',type:'seed'},
+];
+const DV_PRESETS=[
+ ['Pure age effect (nothing else)',{cohort:0,practice:0,att:0}],
+ ['Cohort effects distort the cross-sectional design',{ageEff:0,cohort:3}],
+ ['Practice effects distort the longitudinal design',{cohort:0,practice:3}],
+ ['Selective attrition in the longitudinal design',{cohort:0,att:20,selAttr:true}],
+ ['Everything at once',{ageEff:-3,cohort:2,practice:2,att:15}],
+];
+
+const st={tab:'cl',ng:Object.assign({},DEF_NG),ts:Object.assign({},DEF_TS),dv:Object.assign({},DEF_DV),
+  ngOv:{mean:true,median:false,ci:true,sd:false,dev:false,lines:true},tsOv:{lines:true,fit:true,view:'ts'},dvOv:{cs:true,lg:true,sq:true,truth:true,ci:true},
+  ngCustom:null,tsCustom:null,th:4,
+  cl:{man:'no',ran:'no',str:'between',obs:'once',trt:'none',age:'cs'}};
+const DEFAULTS={ng:DEF_NG,ts:DEF_TS,dv:DEF_DV},DEFS={ng:NG_DEFS,ts:TS_DEFS,dv:DV_DEFS},PRESETS={ng:NG_PRESETS,ts:TS_PRESETS,dv:DV_PRESETS};
+
+/* ================= RENDER: classifier ================= */
+const STRAT={exp:['Experimental','good'],quasi:['Quasi-experimental','warn'],non:['Nonexperimental','bad']};
+const DES={
+  exp_b:{name:'Between-subjects experiment',s:'exp',nota:['R  G1:  X  O','R  G2:     O'],tab:null,threats:'Random assignment makes groups equivalent; differential attrition and communication between groups remain.',stat:'Independent-measures t test or ANOVA; chi-square for nominal data.',note:'See the Between- and Within-Subjects Experimental Designs Explorer.'},
+  exp_w:{name:'Within-subjects experiment (counterbalanced)',s:'exp',nota:['R  G1:  X1 O  X2 O','R  G2:  X2 O  X1 O'],tab:null,threats:'Order effects and time-related threats are spread across treatments by counterbalancing.',stat:'Repeated-measures t test or ANOVA.',note:''},
+  diff:{name:'Differential (ex post facto) design',s:'non',nota:['NR  G1:  O','NR  G2:  O'],tab:'ng',threats:'Individual differences: the groups differ in many ways besides the grouping variable, so no cause can be named.',stat:'Independent-measures t test (two groups) or single-factor ANOVA; chi-square for categories.',note:'Goal: to establish differences between preexisting groups.'},
+  post:{name:'Posttest-only nonequivalent control group design',s:'non',nota:['NR  G1:  X  O','NR  G2:     O'],tab:'ng',threats:'Individual differences, plus different histories, different maturation and differential attrition between the groups. There is no pretest to show how groups started.',stat:'Independent-measures t test or ANOVA; chi-square for categories.',note:'One group serves as the treatment condition and a similar but nonequivalent group as the control.'},
+  necg:{name:'Pretest-posttest nonequivalent control group design',s:'quasi',nota:['NR  G1:  O  X  O','NR  G2:  O     O'],tab:'ng',threats:'The pretest shows how groups started, and the comparison group absorbs common history, maturation, testing and instrumentation. Selection-by-maturation, local history and regression remain open.',stat:'Two-factor mixed-design ANOVA (group × time); the interaction is the effect of interest.',note:'It attempts to limit threats to internal validity, so it is classified as quasi-experimental.'},
+  pp:{name:'Pretest-posttest design (one group)',s:'non',nota:['O  X  O'],tab:'ts',threats:'History, maturation, testing, instrumentation and regression are all uncontrolled.',stat:'Repeated-measures t test (Wilcoxon or sign test for ordinal data).',note:'A series of observations is made over time for one group with no attempt to control the threats.'},
+  ts:{name:'Time-series design',s:'quasi',nota:['O  O  O  X  O  O  O'],tab:'ts',threats:'The series reveals preexisting trends, practice, fatigue, maturation, instrumentation and regression as change before treatment. A history event or measurement change at the treatment point is still indistinguishable from a treatment effect.',stat:'Segmented (interrupted time-series) regression or repeated-measures analysis.',note:'Multiple observations before and after the treatment or event.'},
+  cs:{name:'Cross-sectional developmental design',s:'non',nota:['NR  Age 20:  O','NR  Age 40:  O','NR  Age 60:  O   (all measured now)'],tab:'dv',threats:'Factors other than age differentiate the groups; cohort (generation) effects are confounded with age.',stat:'Independent-measures t test or ANOVA on the age groups.',note:'A between-subjects nonexperimental (nonequivalent group) design. Data are collected quickly, with no waiting for people to age.'},
+  lg:{name:'Longitudinal design',s:'non',nota:['One cohort:  O(age 20)  O(30)  O(40)  O(50) ...'],tab:'dv',threats:'Time-consuming; attrition may bias the sample; practice effects; no cohort effects.',stat:'Repeated-measures t test or ANOVA across ages.',note:'It assesses individual behavioral change.'},
+  seq:{name:'Cross-sectional longitudinal (cohort-sequential) design',s:'non',nota:['Cohort A:  O(20)  O(30)  O(40)','Cohort B:  O(40)  O(50)  O(60)','Cohort C:  O(60)  O(70)  O(80)'],tab:'dv',threats:'Separates age from cohort by comparing cohorts at the same ages; attrition and practice remain, though over a shorter span.',stat:'Mixed ANOVA or regression with age and cohort.',note:'Compares separate samples (like cross-sectional) obtained at different times (like longitudinal).'},
+  none:{name:'One observation per person cannot show change',s:'non',nota:[],tab:null,threats:'A within-subjects design needs at least two measurements for each participant.',stat:'',note:'Change a question: measure before and after, or measure repeatedly.'},
+};
+function classify(a){
+  if(a.man==='yes'&&a.ran==='yes')return a.str==='within'?'exp_w':'exp_b';
+  if(a.str==='age')return{cs:'cs',lg:'lg',seq:'seq'}[a.age];
+  if(a.str==='within')return a.obs==='multi'?'ts':a.obs==='pre'?'pp':'none';
+  if(a.trt==='none')return 'diff';
+  return a.obs==='once'?'post':'necg';
+}
+function renderSpectrum(key){
+  const W=760,H=130,xs=[20,260,500],ws=240;let s='';
+  const labs=[['Nonexperimental','little or no attempt to limit threats','var(--badBg)','var(--bad)'],['Quasi-experimental','some attempt to limit threats','var(--warnBg)','var(--warn)'],['Experimental','manipulation, control and random assignment','var(--goodBg)','var(--good)']];
+  labs.forEach((l,i)=>{s+=`<rect x="${xs[i]}" y="26" width="${ws}" height="56" rx="6" fill="${l[2]}" stroke="${l[3]}"/><text x="${xs[i]+ws/2}" y="50" text-anchor="middle" fill="var(--fg)" font-weight="700" font-size="13">${l[0]}</text><text x="${xs[i]+ws/2}" y="68" text-anchor="middle" fill="var(--muted)">${l[1]}</text>`});
+  s+=`<text x="20" y="16" fill="var(--muted)">less control of confounds and threats</text><text x="740" y="16" text-anchor="end" fill="var(--muted)">more control</text><line x1="20" y1="94" x2="740" y2="94" stroke="var(--axis)"/><polygon points="740,94 732,90 732,98" fill="var(--axis)"/>`;
+  const i=key?({non:0,quasi:1,exp:2}[DES[key].s]):-1;
+  if(i>=0)s+=`<polygon points="${xs[i]+ws/2},88 ${xs[i]+ws/2-8},104 ${xs[i]+ws/2+8},104" fill="var(--fg)"/><text x="${xs[i]+ws/2}" y="120" text-anchor="middle" fill="var(--fg)" font-weight="600">your study</text>`;
+  return svgWrap(W,H,s,'Spectrum of research strategies by degree of control');
+}
+function renderStructFig(){
+  const W=520,H=300,g1=[23,21,28,25,18,22,26],g2=[14,19,13,20,19,19,13];let s='';
+  s+=`<text x="260" y="18" text-anchor="middle" fill="var(--fg)" font-weight="600">Nonequivalent groups (usually preexisting)</text><text x="260" y="34" text-anchor="middle" fill="var(--muted)">no control over the assignment of individuals to groups</text>`;
+  s+=`<line x1="260" y1="44" x2="170" y2="78" stroke="var(--bad)" stroke-width="2"/><line x1="260" y1="44" x2="350" y2="78" stroke="var(--bad)" stroke-width="2"/>`;
+  s+=`<text x="170" y="96" text-anchor="middle" fill="var(--colA)" font-weight="700">Group 1</text><text x="350" y="96" text-anchor="middle" fill="var(--colB)" font-weight="700">Group 2</text><text x="170" y="110" text-anchor="middle" fill="var(--muted)">(Condition 1)</text><text x="350" y="110" text-anchor="middle" fill="var(--muted)">(Condition 2)</text><line x1="110" y1="118" x2="410" y2="118" stroke="var(--bad)" stroke-width="2"/>`;
+  g1.forEach((v,i)=>{s+=`<text x="170" y="${138+i*18}" text-anchor="middle" fill="var(--fg)">${v}</text><text x="350" y="${138+i*18}" text-anchor="middle" fill="var(--fg)">${g2[i]}</text>`});
+  s+=`<text x="40" y="190" fill="var(--muted)">scores for the</text><text x="40" y="204" fill="var(--muted)">individuals in</text><text x="40" y="218" fill="var(--muted)">each group</text>`;
+  s+=`<text x="260" y="286" text-anchor="middle" fill="var(--fg)" font-weight="600">Any difference? M = ${f(mean(g1),1)} vs ${f(mean(g2),1)}</text>`;
+  return svgWrap(W,H,s,'Structure of a nonequivalent-group study with example scores');
+}
+function renderCL(){
+  const key=classify(st.cl),d=DES[key],[sl,sc]=STRAT[d.s];
+  $('#cl-spectrum').innerHTML=renderSpectrum(key);
+  $('#cl-struct').innerHTML=renderStructFig();
+  $('#cl-out').innerHTML=`<p style="margin-top:0">${pill(sl,sc)}</p><h3 style="margin-top:4px">${esc(d.name)}</h3>`
+   +(d.nota.length?`<pre style="margin:6px 0;padding:8px 12px;border-radius:8px;background:var(--grid);font:13px/1.5 ui-monospace,Menlo,Consolas,monospace;overflow-x:auto">${d.nota.map(esc).join('\n')}</pre><p class="small muted" style="margin-top:0">O = observation, X = treatment or event, R = random assignment, NR = no random assignment.</p>`:'')
+   +(d.note?`<p>${esc(d.note)}</p>`:'')+`<p><b>Threats.</b> ${esc(d.threats)}</p>`+(d.stat?`<p><b>Analysis.</b> ${esc(d.stat)}</p>`:'')
+   +(d.tab?`<p><button class="primary small" data-goto="${d.tab}">Simulate this design</button></p>`:'');
+}
+
+/* ================= RENDER: threats matrix ================= */
+const TH_COLS=[['ind','Individual differences'],['hist','History'],['mat','Maturation'],['test','Testing'],['instr','Instrumentation'],['reg','Regression'],['att','Attrition'],['cohort','Cohort effects']];
+const TH_ROWS=[
+ {name:'Differential (ex post facto)',d:'diff',ind:['x','Preexisting groups differ in many ways besides the one that defines them.']},
+ {name:'Posttest-only nonequivalent control group',d:'post',ind:['x','No random assignment, so groups differ from the start.'],hist:['x','The groups may have different experiences (selection by history).'],mat:['x','Groups may change at different rates, and there is no pretest to show it.'],reg:['x','If the groups were chosen for extreme characteristics, scores regress toward the mean.'],att:['x','Different dropout between groups can bias the comparison.']},
+ {name:'Pretest-posttest nonequivalent control group',d:'necg',ind:['p','The pretest shows and removes stable group differences, not differences in change.'],hist:['p','Events common to both groups cancel; local events do not.'],mat:['p','Common maturation cancels; selection by maturation does not.'],test:['c','Both groups are tested twice, so practice cancels.'],instr:['c','Both groups share any measurement change.'],reg:['p','Not controlled when the groups were selected differently.'],att:['p','Differential attrition still threatens the comparison.']},
+ {name:'Pretest-posttest (one group)',d:'pp',ind:['c','The same individuals are measured both times.'],hist:['x','Any outside event between the two measurements looks like a treatment effect.'],mat:['x','Natural change over time looks like a treatment effect.'],test:['x','Practice or fatigue from the pretest changes the posttest.'],instr:['x','A change in the measurement looks like a change in participants.'],reg:['x','Extreme pretest scores move toward the mean on their own.'],att:['x','People who drop out may differ from those who stay.']},
+ {name:'Time series',d:'ts',ind:['c','The same individuals are followed.'],hist:['x','An event coinciding with treatment looks identical to a treatment effect.'],mat:['c','The pre-treatment trend exposes steady change.'],test:['c','Practice effects appear as change before treatment.'],instr:['p','A measurement change at the treatment point cannot be separated from a treatment effect.'],reg:['c','Regression appears as change before treatment.'],att:['p','Dropout can still bias later observations.']},
+ {name:'Cross-sectional developmental',d:'cs',ind:['x','Age groups differ in many ways other than age.'],cohort:['x','People of different ages also belong to different generations.']},
+ {name:'Longitudinal',d:'lg',ind:['c','The same individuals are followed.'],hist:['x','Events during a long study (time of measurement) affect everyone.'],test:['x','Repeated testing produces practice effects.'],instr:['p','Measures may need to change over years.'],att:['x','Participant attrition may bias the sample.'],cohort:['c','Only one generation is studied, so cohort effects do not distort the age comparison.']},
+ {name:'Cross-sectional longitudinal (cohort-sequential)',d:'seq',ind:['p','Several cohorts, each followed.'],hist:['p','Different cohorts measured at different times help separate time effects.'],test:['p','Repeated testing still produces practice effects, though with fewer retests per person.'],instr:['p','Measures must stay comparable across cohorts and years.'],att:['p','Shorter follow-up reduces, not removes, attrition.'],cohort:['c','Cohorts can be compared at the same ages.']},
+ {name:'True experiment (random assignment)',d:'exp_b',ind:['c','Random assignment makes groups equivalent on average.'],hist:['c','Both groups experience the same events.'],mat:['c','Both groups mature alike.'],test:['c','Both groups are tested alike.'],instr:['c','Both groups share the same instrument.'],reg:['c','Random groups regress alike.'],att:['p','Differential attrition can still threaten internal validity.'],cohort:['c','Groups come from the same population.']},
+];
+function renderTH(){
+  const cls={x:'bad',p:'warn',c:'good'},sym={x:'open',p:'partial',c:'controlled'};
+  const head='<tr><th class="l">Design</th><th class="l">Strategy</th>'+TH_COLS.map(c=>`<th>${c[1]}</th>`).join('')+'</tr>';
+  const body=TH_ROWS.map((r,i)=>{const sl=STRAT[DES[r.d].s];return `<tr data-th="${i}" tabindex="0" style="cursor:pointer;${i===st.th?'background:var(--grid)':''}"><td class="l"><b>${esc(r.name)}</b></td><td class="l">${pill(sl[0],sl[1])}</td>`+TH_COLS.map(c=>{const v=r[c[0]];return `<td style="text-align:center">${v?pill(sym[v[0]],cls[v[0]]):'<span class="muted">–</span>'}</td>`}).join('')+'</tr>'}).join('');
+  $('#th-matrix').innerHTML=`<div class="tbl-wrap"><table><thead>${head}</thead><tbody>${body}</tbody></table></div>`;
+  const r=TH_ROWS[st.th],d=DES[r.d];$('#th-title').textContent=r.name;
+  $('#th-detail').innerHTML=`<p>${pill(STRAT[d.s][0],STRAT[d.s][1])} ${esc(d.note||'')}</p>`+(d.nota.length?`<pre style="margin:6px 0;padding:8px 12px;border-radius:8px;background:var(--grid);font:13px/1.5 ui-monospace,Menlo,Consolas,monospace;overflow-x:auto">${d.nota.map(esc).join('\n')}</pre>`:'')
+   +'<ul class="clean">'+TH_COLS.filter(c=>r[c[0]]).map(c=>`<li><b>${c[1]}:</b> ${pill(sym[r[c[0]][0]],cls[r[c[0]][0]])} ${esc(r[c[0]][1])}</li>`).join('')+'</ul>'
+   +(d.tab?`<p><button class="small" data-goto="${d.tab}">Simulate this design</button></p>`:'');
+}
+
+/* ================= helpers for renders ================= */
+const memoC={};
+function cached(name,key,fn){const m=memoC[name];if(m&&m.k===key)return m.v;const v=fn();memoC[name]={k:key,v};return v}
+const dirTxt=(v,hi,lo)=>v>0?hi:v<0?lo:'no change';
+function setMode(id,key,html){const el=$(id);if(el.dataset.mode!==key){el.dataset.mode=key;el.innerHTML=html}}
+function statRow(label,e,t,dfTxt){return [label,sgn(e,2),`${t===undefined?'':'t('+dfTxt+') = '+f(t,2)}`]}
+function repSummary(rows,truth){
+  return tbl(['Estimator',['Mean estimate','Average of the 300 estimates'],['Bias','Mean estimate minus the true effect'],['SD','Spread of the estimates across repeats']],
+    rows.map(r=>{const m=mean(r.vals),b=m-truth;return [esc(r.label),f(m,2),`<span style="color:var(--${Math.abs(b)>Math.max(1,.15*Math.abs(truth))?'bad':'good'})"><b>${sgn(b,2)}</b></span>`,f(sd(r.vals),2)]}));
+}
+
+/* ================= RENDER: nonequivalent groups ================= */
+function ngEff(p){const q=Object.assign({},p);if(p.design==='differential'){q.treat=0;q.trend=0;q.mat=0;q.hist=0;q.selext=0}return q}
+function ngData(){
+  if(st.ngCustom)return{custom:true,groups:st.ngCustom};
+  const p=ngEff(st.ng),S=simNEG(p),labs=[p.glab1||'Group 1',p.glab2||'Group 2'];
+  return{p,S,labs,groups:S.groups.map((g,i)=>({label:labs[i],pre:g.pre,post:g.post,y:g.post,conf:g.conf}))};
+}
+const NG_SUB={
+  differential:'Differential (ex post facto) design: two preexisting groups are measured once and compared. Nonexperimental: the groups differ in many ways, not only in the grouping variable.',
+  posttest:'Posttest-only nonequivalent control group design: one group gets the treatment and a similar but nonequivalent group does not; both are measured once afterwards. Nonexperimental.',
+  prepost:'Pretest-posttest nonequivalent control group design: both groups are tested before and after the treatment, and the groups are compared on how much they changed. Quasi-experimental.'
+};
+function ngComponents(p){
+  const rt=regressionTerms(p),conf=p.confEff*p.conf;
+  return [
+    ['Real effect of the grouping variable (participant characteristic)',p.qeff,0,false],
+    ['Confound: individual differences between the groups',conf,0,false],
+    ['Regression toward the mean (group chosen for low scores)',rt.shift,rt.gain,false],
+    ['Selection × maturation (group changes at its own rate)',p.mat,p.mat,false],
+    ['Local history (event affects one group only)',p.hist,p.hist,false],
+    ['True effect of the treatment',p.treat,p.treat,true]
+  ];
+}
+function renderNG(){
+  const D=ngData(),p=st.ng,mode=D.custom?'dot':(p.design==='prepost'?'int':'dot');
+  setMode('#ng-ov',mode,ovHTML('ngOv',mode==='int'?[['lines','Individual change lines'],['ci','95% CI of means']]:[['mean','Group mean'],['median','Median'],['ci','95% CI of mean'],['sd','±1 SD band'],['dev','Deviations from group mean']],st.ngOv));
+  const showSim=!D.custom;
+  ['#ng-mixed-card','#ng-equiv-card','#ng-built-card','#ng-rep-card'].forEach(id=>{$(id).hidden=!showSim});
+  if(D.custom){
+    $('#ng-title').textContent='Your data: nonequivalent groups';$('#ng-sub').textContent='One score per participant, compared between the groups you pasted.';
+    const G=D.groups;$('#ng-chart').innerHTML=dotChart(G,{ov:st.ngOv,ylab:st.ng.ylab,label:'Dot plot of your groups'});
+    $('#ng-legend').innerHTML=legendHTML(G.map(g=>g.label));
+    $('#ng-test').innerHTML=ngTestHTML(G);return;
+  }
+  const dn=p.design,E=D.p;
+  $('#ng-title').textContent={differential:'Differential design: preexisting groups',posttest:'Posttest-only nonequivalent control group',prepost:'Pretest-posttest nonequivalent control group'}[dn];
+  $('#ng-sub').textContent=NG_SUB[dn];
+  $('#ng-legend').innerHTML=legendHTML(D.labs);
+  const G=D.groups;
+  if(dn==='prepost'){
+    $('#ng-chart').innerHTML=interactionChart(G,{ov:st.ngOv,ylab:p.ylab,label:'Pretest and posttest means for two nonequivalent groups'});
+    $('#ng-test').innerHTML=ngPrePostHTML(D);
+    const M=mixed2x2(G[0],G[1]);
+    $('#ng-mixed').innerHTML=tbl(['Effect',['F','F ratio'],['df',''],['p',''],['Partial η²','']],[
+      ['Group (between)',f(M.group.F,2),`1, ${M.group.df2}`,pf(M.group.p),f(M.group.pe,3)],
+      ['Time (within)',f(M.time.F,2),`1, ${M.time.df2}`,pf(M.time.p),f(M.time.pe,3)],
+      ['<b>Group × Time</b>',`<b>${f(M.inter.F,2)}</b>`,`1, ${M.inter.df2}`,`<b>${pf(M.inter.p)}</b>`,f(M.inter.pe,3)]])
+      +`<p>${sigPill(M.inter.p)} The interaction asks whether the groups changed by different amounts. Mean gain: ${esc(D.labs[0])} ${sgn(M.gain[0],1)}, ${esc(D.labs[1])} ${sgn(M.gain[1],1)} (difference ${sgn(M.gain[1]-M.gain[0],1)}).</p><p class="small muted">A significant interaction shows that the groups changed differently. It does not say why: selection × maturation, local history and regression produce the same pattern as a treatment effect.</p>`;
+  }else{
+    $('#ng-chart').innerHTML=dotChart(G,{ov:st.ngOv,ylab:p.ylab,label:'Dot plot of scores for two nonequivalent groups'});
+    $('#ng-test').innerHTML=ngTestHTML(G.map(g=>({label:g.label,y:g.y})));
+  }
+  /* equivalence */
+  const cm=G.map(g=>mean(g.conf)),ct=indT(G[0].conf,G[1].conf);
+  let eq=tbl(['Measure',D.labs[0],D.labs[1],'Difference','Test'],[
+    ['Confounding characteristic (SD units; unknown to a real researcher)',f(cm[0],2),f(cm[1],2),sgn(cm[1]-cm[0],2),`t(${ct.df}) = ${f(ct.t,2)}, p ${pf(ct.p)==='< .001'?'< .001':'= '+pf(ct.p)}`]
+  ].concat(dn==='prepost'?(()=>{const t=indT(G[0].pre,G[1].pre);return [['Pretest score',f(mean(G[0].pre),1),f(mean(G[1].pre),1),sgn(t.diff,1),`t(${t.df}) = ${f(t.t,2)}, p ${pf(t.p)==='< .001'?'< .001':'= '+pf(t.p)}`]]})():[]));
+  eq+=dn==='prepost'
+    ?`<p>${indT(G[0].pre,G[1].pre).p<0.05?pill('Groups differ at pretest','warn'):pill('Pretests similar','good')} The pretest shows how the groups started and lets the analysis remove stable differences. Similar pretests still do not guarantee that the groups would have changed equally.</p>`
+    :`<p>${pill('No pretest','bad')} Without a pretest there is no way to tell how much of the difference was present before any treatment or event.</p>`;
+  $('#ng-equiv').innerHTML=eq;
+  /* decomposition */
+  const comps=ngComponents(E),post=mean(G[1].post)-mean(G[0].post),did=(mean(G[1].post)-mean(G[1].pre))-(mean(G[0].post)-mean(G[0].pre));
+  const colA=comps.reduce((s,c)=>s+c[1],0),colB=comps.reduce((s,c)=>s+c[2],0);
+  const rows=comps.map(c=>{const z=v=>v===0?'<span class="muted">0</span>':(c[3]?'<b>'+sgn(v,1)+'</b>':'<span style="color:var(--bad)">'+sgn(v,1)+'</span>');return [esc(c[0]),z(c[1]),dn==='prepost'?z(c[2]):'']});
+  const head=['Source of group difference',dn==='prepost'?'Posttest-only comparison':'Observed difference','Gain-score comparison'];
+  rows.push(['<b>Expected total</b>',`<b>${sgn(colA,1)}</b>`,dn==='prepost'?`<b>${sgn(colB,1)}</b>`:'']);
+  rows.push(['Observed in this simulated study',sgn(post,1),dn==='prepost'?sgn(did,1):'']);
+  $('#ng-built').innerHTML=(dn==='prepost'?tbl(head,rows):tbl([head[0],head[1]],rows.map(r=>r.slice(0,2))))
+    +`<p class="small muted">Only the bold row is the treatment effect; red entries are rival explanations that the design cannot separate from it. Observed values vary around the expected totals because of sampling error.${dn==='prepost'?' The gain-score comparison cancels stable group differences (rows 1–2) but not changes that affect only one group.':''}</p>`;
+  /* replications */
+  if(dn==='differential'){$('#ng-rep-card').hidden=true;return}
+  const key=JSON.stringify(E),R=cached('ng',key,()=>repNEG(E,300));
+  const rowsR=[{label:'Random assignment (benchmark)',vals:R.rnd,col:'var(--colC)'},{label:'Posttest-only comparison',vals:R.post,col:'var(--colB)'}];
+  if(dn==='prepost')rowsR.push({label:'Pretest-posttest (difference in gains)',vals:R.did,col:'var(--colA)'});
+  $('#ng-rep').innerHTML=histRows(rowsR,E.treat,{xlab:'Estimated treatment effect',rowH:dn==='prepost'?96:110,label:'Distribution of treatment-effect estimates from three designs'});
+  $('#ng-rep-txt').innerHTML=repSummary(rowsR,E.treat)+`<p class="small muted">The red dashed line is the true treatment effect (${f(E.treat,1)}). Random assignment is centered on it; nonequivalent groups are not, unless the pretest-posttest comparison cancels every difference between the groups.</p>`;
+}
+function ngTestHTML(G){
+  const lab=g=>esc(g.label);
+  if(G.length===2){
+    const t=indT(G[0].y,G[1].y);
+    return tbl(['',lab(G[0]),lab(G[1]),'Difference',['t test',''],['p',''],["Cohen's d",'']],[
+      ['Mean (SD)',`${f(t.ma,2)} (${f(sd(G[0].y),2)})`,`${f(t.mb,2)} (${f(sd(G[1].y),2)})`,`${sgn(t.diff,2)} [${f(t.ci[0],1)}, ${f(t.ci[1],1)}]`,`t(${t.df}) = ${f(t.t,2)}`,pf(t.p),f(t.d,2)]])
+      +`<p>${sigPill(t.p)} ${t.p<0.05?'The groups differ reliably. Because group membership was not assigned, the grouping variable is only one of many differences between them.':'The groups do not differ reliably in these data.'}</p>`;
+  }
+  const a=anova(G.map(g=>g.y));
+  return tbl(['Group','n','Mean','SD'],G.map(g=>[lab(g),g.y.length,f(mean(g.y),2),f(sd(g.y),2)]))
+    +`<p>F(${a.dfb}, ${a.dfw}) = ${f(a.F,2)}, ${sigPill(a.p)}, η² = ${f(a.eta2,3)}. A significant F says that at least one group differs; it does not say which, and it does not identify a cause.</p>`;
+}
+function ngPrePostHTML(D){
+  const G=D.groups,gain=g=>g.post.map((v,i)=>v-g.pre[i]);
+  const rows=[['Pretest scores',G[0].pre,G[1].pre],['Posttest scores only',G[0].post,G[1].post],['Gain scores (posttest − pretest)',gain(G[0]),gain(G[1])]].map(r=>{const t=indT(r[1],r[2]);return [r[0],f(t.ma,1),f(t.mb,1),sgn(t.diff,1),`t(${t.df}) = ${f(t.t,2)}`,pf(t.p)]});
+  return tbl(['Comparison',D.labs[0],D.labs[1],'Difference',['t test',''],['p','']],rows)
+    +`<p class="small muted">The gain-score comparison is equivalent to the Group × Time interaction below. The posttest-only comparison still contains whatever differences existed before the treatment.</p>`;
+}
+
+/* ================= RENDER: pre-post and time series ================= */
+function tsData(){
+  if(st.tsCustom)return{custom:true,M:st.tsCustom.M,nPre:st.tsCustom.nPre};
+  const p=st.ts,S=simTS(p),sm=tsSummary(S,p);
+  return{p,S,sm,M:sm.M,nPre:p.nPre};
+}
+function tsComponents(p){
+  const rt=regressionTerms(Object.assign({},p,{sd:p.sdP,confEff:0,selext:p.selext})),g=rt.gain,T=p.nPre+p.nPost;
+  const test=t=>p.testing*(1-Math.pow(0.65,t));
+  const mt=a=>a.length?mean(a):0,pre=Array.from({length:p.nPre},(_,i)=>i),post=Array.from({length:p.nPost},(_,i)=>p.nPre+i);
+  return [
+    ['True treatment effect (level change)',p.effect,p.effect,true],
+    ['Change in slope after treatment',0,p.effSlope*(p.nPost-1)/2,true],
+    ['History: outside event at the same time',p.hist,p.hist,false],
+    ['Instrumentation: measurement changed',p.instr,p.instr,false],
+    ['Maturation: steady change over time',p.trend,p.trend*(T/2),false],
+    ['Testing: practice from repeated tests',test(p.nPre)-test(p.nPre-1),mt(post.map(test))-mt(pre.map(test)),false],
+    ['Regression toward the mean',p.nPre===1?g:0,g/p.nPre,false]
+  ];
+}
+function renderTS(){
+  const D=tsData(),p=st.ts,ov=st.tsOv,T=D.M.length;
+  setMode('#ts-ov','x',ovHTML('tsOv',[['lines','Individual participants'],['fit','Trend lines'],['pp','Only the two observations around the treatment']],ov));
+  const showSim=!D.custom;['#ts-built-card','#ts-rep-card'].forEach(id=>{$(id).hidden=!showSim});
+  const pp=D.nPre===1&&T-D.nPre===1;
+  $('#ts-title').textContent=D.custom?'Your data: a series of observations':(pp?'Pretest-posttest design (O X O)':'Time-series design');
+  $('#ts-sub').textContent=pp?'One group is observed once before and once after a treatment or event. Nothing else is known about the group, so every threat to internal validity is uncontrolled. Nonexperimental.'
+   :`A series of ${D.nPre} observations before and ${T-D.nPre} after a treatment or event (O O O X O O O). The series shows preexisting trends, practice and regression as change before treatment. Quasi-experimental.`;
+  $('#ts-chart').innerHTML=tsChart({M:D.M,Y:D.custom?null:D.S.Y,nPre:D.nPre,ov:ov,view:ov.pp||pp?'pp':'ts',ylab:p.ylab,label:'Average scores before and after a treatment'});
+  $('#ts-legend').innerHTML=`<span><i style="display:inline-block;vertical-align:middle;margin-right:4px;width:11px;height:11px;border-radius:50%;background:var(--colA)"></i>Before treatment</span><span><i style="display:inline-block;vertical-align:middle;margin-right:4px;width:11px;height:11px;border-radius:2px;background:var(--colB)"></i>After treatment</span>`;
+  /* tests */
+  const its=T>=5?(D.custom?tsAnalyze(D.M,D.nPre):D.sm.its):null;
+  let rows=[],extra='';
+  if(!D.custom){
+    const a=D.sm.adj,m=D.sm.means;
+    rows.push(['Last pretest vs first posttest (O X O)',sgn(a.md,2),`t(${a.df}) = ${f(a.t,2)}`,pf(a.p),'Adjacent observations']);
+    rows.push(['Mean of all pre vs mean of all post',sgn(m.md,2),`t(${m.df}) = ${f(m.t,2)}`,pf(m.p),'Each person\'s averages']);
+  }else{
+    const pre=D.M.slice(0,D.nPre),post=D.M.slice(D.nPre);rows.push(['Mean of pre vs mean of post (averages only)',sgn(mean(post)-mean(pre),2),'','','Descriptive only']);
+  }
+  if(its)rows.push(['Segmented regression: level change at treatment',sgn(its.b[2],2),`t(${its.df}) = ${f(its.t[2],2)}`,pf(its.p[2]),'Jump vs. projected trend']);
+  else extra='<p class="small muted">Segmented regression needs at least five observations in the series.</p>';
+  $('#ts-test').innerHTML=tbl(['Method','Estimate','Test','p','What it compares'],rows)
+   +(its?`<p>Segmented regression on the series: pre-treatment slope ${sgn(its.b[1],2)} per observation (p ${pf(its.p[1])==='< .001'?'< .001':'= '+pf(its.p[1])}); level change ${sgn(its.b[2],2)} (p ${pf(its.p[2])==='< .001'?'< .001':'= '+pf(its.p[2])}); change in slope ${sgn(its.b[3],2)} (p ${pf(its.p[3])==='< .001'?'< .001':'= '+pf(its.p[3])}). ${sigPill(its.p[2])}</p><p class="small muted">A reliable level change means the series jumped at the treatment point beyond what the earlier trend predicts. It cannot say whether the treatment or something else that happened at that moment caused the jump. The regression treats the observations as independent and does not model autocorrelation.</p>`:extra);
+  if(D.custom)return;
+  /* what the difference contains */
+  const comps=tsComponents(p),ca=comps.reduce((s,c)=>s+c[1],0),cb=comps.reduce((s,c)=>s+c[2],0);
+  const z=(v,t)=>v===0?'<span class="muted">0</span>':(t?'<b>'+sgn(v,1)+'</b>':'<span style="color:var(--bad)">'+sgn(v,1)+'</span>');
+  $('#ts-built').innerHTML=tbl(['Source of change','Last pre → first post','Mean pre → mean post'],comps.map(c=>[esc(c[0]),z(c[1],c[3]),z(c[2],c[3])]).concat([['<b>Expected total</b>',`<b>${sgn(ca,1)}</b>`,`<b>${sgn(cb,1)}</b>`],['Observed in this simulated study',sgn(D.sm.adj.md,1),sgn(D.sm.means.md,1)]]))
+    +`<p class="small muted">Only the bold rows are the treatment. In a pretest-posttest design every red entry is a rival explanation for the change; a time series lets the earlier observations expose several of them (trend, testing, regression) before the treatment.</p>`;
+  const key=JSON.stringify(p),R=cached('ts',key,()=>repTS(p,300)),rowsR=[{label:'Last pre → first post',vals:R.adj,col:'var(--colB)'},{label:'Mean pre → mean post',vals:R.mean2,col:'var(--colA)'}];
+  if(R.its.length)rowsR.push({label:'Segmented regression level change',vals:R.its,col:'var(--colC)'});
+  $('#ts-rep').innerHTML=histRows(rowsR,p.effect,{xlab:'Estimated treatment effect',rowH:96,label:'Distribution of treatment-effect estimates from three estimators'});
+  $('#ts-rep-txt').innerHTML=repSummary(rowsR,p.effect)+'<p class="small muted">The red dashed line is the true level change. Estimators that ignore the trend, practice and regression are biased whenever those threats are present; the segmented regression removes a steady trend but not a coincident event or a change in measurement.</p>';
+}
+
+/* ================= RENDER: developmental ================= */
+function renderDV(){
+  const p=st.dv,S=simDev(p),E=devEstimates(S),ov=st.dvOv;
+  setMode('#dv-ov','x',ovHTML('dvOv',[['cs','Cross-sectional'],['lg','Longitudinal'],['sq','Cross-sectional longitudinal'],['truth','True age effect (cohort and practice held constant)'],['ci','95% CI']],ov));
+  $('#dv-sub').textContent='Each point is an average. Cross-sectional: different people at each age, tested once. Longitudinal: one cohort followed from age 20. Cross-sectional longitudinal: three cohorts (starting at 20, 40 and 60), each followed for three testings.';
+  $('#dv-chart').innerHTML=devChart(S,p,ov);
+  $('#dv-legend').innerHTML=`<span><i style="display:inline-block;vertical-align:middle;margin-right:4px;width:11px;height:11px;border-radius:50%;background:var(--colA)"></i>Cross-sectional</span><span><i style="display:inline-block;vertical-align:middle;margin-right:4px;width:11px;height:11px;border-radius:2px;background:var(--colB)"></i>Longitudinal</span><span><i style="display:inline-block;vertical-align:middle;margin-right:4px;width:11px;height:11px;background:var(--colC);transform:rotate(45deg)"></i>Cross-sectional longitudinal</span><span><i style="display:inline-block;vertical-align:middle;margin-right:4px;width:16px;border-top:2px dashed var(--bad)"></i>True age effect</span>`;
+  const lastN=S.lg.waves[S.lg.waves.length-1].y.length,N0=S.lg.waves[0].y.length;
+  const nsq=S.sq.map(c=>c.waves[c.waves.length-1].y.length);
+  const cell=(e,expl)=>{const b=e-p.ageEff,bad=Math.abs(b)>Math.max(.8,.2*Math.abs(p.ageEff));return `<span style="color:var(--${bad?'bad':'good'})"><b>${sgn(e,2)}</b></span>`};
+  $('#dv-tbl').innerHTML=tbl(['Design','Samples and testings',['Estimated age effect per decade','Slope of score on age, per 10 years'],['Error','Estimate minus true age effect'],'What contaminates it'],[
+    ['Cross-sectional','6 age groups, each tested once',cell(E.cs),sgn(E.cs-p.ageEff,2),'Cohort effects: older people are also from earlier generations'],
+    ['Longitudinal',`1 cohort, 6 testings (n ${N0} → ${lastN})`,cell(E.lg),sgn(E.lg-p.ageEff,2),'Practice effects and attrition (cohort effects are held constant)'],
+    ['Cross-sectional longitudinal','3 cohorts, 3 testings each',cell(E.sq),sgn(E.sq-p.ageEff,2),'Practice and attrition over a shorter span; cohort effects removed by comparing cohorts at the same ages']
+  ])+`<p class="small muted">True age effect: ${sgn(p.ageEff,2)} per decade. Cohort effect: ${sgn(p.cohort,2)} per decade of later birth. Practice effect: ${sgn(p.practice,2)} per testing. Attrition: ${p.att}% per retest.</p>`;
+  $('#dv-sw').innerHTML=tbl(['Design','Strengths','Weaknesses'],[
+    ['<b>Cross-sectional</b><br><span class="small muted">between-subjects, nonequivalent groups</span>','Fast and inexpensive; no waiting for people to age; no attrition or practice effects.','Individual differences between age groups; cohort (generation) effects are confounded with age; says nothing about individual change.'],
+    ['<b>Longitudinal</b><br><span class="small muted">within-subjects</span>','Follows the same individuals, so it assesses individual behavioral change; cohort effects do not distort the age comparison.','Time-consuming and expensive; attrition biases the sample; practice effects from repeated testing; results hold for one generation.'],
+    ['<b>Cross-sectional longitudinal</b><br><span class="small muted">several cohorts, repeated testing</span>','Compares cohorts at the same ages, so cohort effects can be separated from age; covers a wide age range in a shorter time.','More complex to run and analyze; attrition and practice effects remain within each cohort.']
+  ]);
+  const key=JSON.stringify(p),R=cached('dv',key,()=>repDev(p,300)),rowsR=[{label:'Cross-sectional',vals:R.cs,col:'var(--colA)'},{label:'Longitudinal',vals:R.lg,col:'var(--colB)'},{label:'Cross-sectional longitudinal',vals:R.sq,col:'var(--colC)'}];
+  $('#dv-rep').innerHTML=histRows(rowsR,p.ageEff,{xlab:'Estimated age effect per decade',rowH:92,label:'Distribution of age-effect estimates from three developmental designs'});
+  $('#dv-rep-txt').innerHTML=repSummary(rowsR,p.ageEff)+'<p class="small muted">The red dashed line is the true age effect. With cohort effects, practice effects or selective attrition present, each design lands on a different wrong answer; with none of them present, all three agree.</p>';
+}
+
+/* ================= parsing user data ================= */
+function parseNG(txt){
+  const lines=txt.split(/\r?\n/).map(l=>l.trim()).filter(Boolean),map=new Map();
+  if(!lines.length)return{error:'Nothing to analyze: paste some data first.'};
+  for(const l of lines){
+    let m=/^([^:;]+)[:;]\s*(.+)$/.exec(l);
+    if(m){const vals=m[2].split(/[\s,;\t]+/).map(Number).filter(Number.isFinite);if(!vals.length)return{error:'No numbers found on line: '+l};const key=m[1].trim();map.set(key,(map.get(key)||[]).concat(vals));continue}
+    m=/^(.+?)[,\t]\s*(-?\d*\.?\d+)\s*$/.exec(l);
+    if(m){const key=m[1].trim();map.set(key,(map.get(key)||[]).concat([+m[2]]));continue}
+    return{error:'Could not read line: '+l};
+  }
+  const groups=[...map].map(([label,y])=>({label,y}));
+  if(groups.length<2)return{error:'Need at least two groups.'};
+  if(groups.length>6)return{error:'Up to six groups are supported.'};
+  if(groups.some(g=>g.y.length<2))return{error:'Each group needs at least two scores.'};
+  return{groups};
+}
+function parseTS(txt,nPre){
+  const M=txt.split(/[\s,;]+/).filter(Boolean).map(Number);
+  if(!M.length||M.some(v=>!Number.isFinite(v)))return{error:'Could not read the series: use numbers separated by spaces, commas or new lines.'};
+  if(M.length<2)return{error:'Need at least two observations.'};
+  if(M.length>60)return{error:'Up to 60 observations are supported.'};
+  if(!(nPre>=1&&nPre<M.length&&Number.isInteger(nPre)))return{error:`Observations before treatment must be a whole number from 1 to ${M.length-1}.`};
+  return{M,nPre};
+}
+
+/* ================= downloads ================= */
+function download(name,blob){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
+function svgText(el){let x=new XMLSerializer().serializeToString(el);const cs=getComputedStyle(document.documentElement);return x.replace(/var\((--[\w-]+)\)/g,(m,n)=>cs.getPropertyValue(n).trim()||'#000')}
+function exportSVG(id,name){const el=$('#'+id+' svg');if(el)download(name,new Blob([svgText(el)],{type:'image/svg+xml'}))}
+function exportPNG(id,name){
+  const el=$('#'+id+' svg');if(!el)return;const vb=el.viewBox.baseVal,sc=2,img=new Image(),bg=getComputedStyle(document.documentElement).getPropertyValue('--card').trim()||'#fff';
+  img.onload=()=>{const c=document.createElement('canvas');c.width=vb.width*sc;c.height=vb.height*sc;const g=c.getContext('2d');g.fillStyle=bg;g.fillRect(0,0,c.width,c.height);g.drawImage(img,0,0,c.width,c.height);c.toBlob(b=>download(name,b),'image/png')};
+  img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svgText(el));
+}
+function csvNG(){
+  const D=ngData(),rows=[];
+  if(D.custom){rows.push('group,score');D.groups.forEach(g=>g.y.forEach(v=>rows.push(`"${g.label}",${v}`)))}
+  else{rows.push('group,participant,confound,pretest,posttest');D.groups.forEach(g=>g.post.forEach((v,i)=>rows.push(`"${g.label}",${i+1},${g.conf[i].toFixed(3)},${g.pre[i].toFixed(2)},${v.toFixed(2)}`)))}
+  return rows.join('\n');
+}
+function csvTS(){
+  const D=tsData(),rows=[];
+  if(D.custom){rows.push('observation,period,mean');D.M.forEach((v,i)=>rows.push(`${i+1},${i<D.nPre?'before':'after'},${v}`))}
+  else{rows.push('participant,'+D.M.map((_,i)=>'O'+(i+1)).join(','));D.S.Y.forEach((r,i)=>rows.push((i+1)+','+r.map(v=>v.toFixed(2)).join(',')))}
+  return rows.join('\n');
+}
+function csvDV(){
+  const S=simDev(st.dv),rows=['design,cohort_start_age,age,row,score'];
+  S.cs.forEach(g=>g.y.forEach((v,i)=>rows.push(`cross-sectional,,${g.age},${i+1},${v.toFixed(2)}`)));
+  S.lg.waves.forEach(g=>g.y.forEach((v,i)=>rows.push(`longitudinal,20,${g.age},${i+1},${v.toFixed(2)}`)));
+  S.sq.forEach(c=>c.waves.forEach(g=>g.y.forEach((v,i)=>rows.push(`cross-sectional longitudinal,${c.a0},${g.age},${i+1},${v.toFixed(2)}`))));
+  return rows.join('\n');
+}
+function doDL(kind,t){
+  if(kind==='svg')exportSVG(t,t+'.svg');
+  else if(kind==='png')exportPNG(t,t+'.png');
+  else if(kind==='csv'){const txt={ng:csvNG,ts:csvTS,dv:csvDV}[t]();download(t+'-data.csv',new Blob([txt],{type:'text/csv'}))}
+}
+function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(toast.h);toast.h=setTimeout(()=>t.classList.remove('show'),2200)}
+
+/* ================= practice scenarios ================= */
+const pick=(R,a)=>a[Math.floor(R.r()*a.length)];
+const pt=p=>p<0.001?'p < .001':'p = '+pf(p);
+function scDiff(R){
+  const c=pick(R,[
+    {g1:'Non-musicians',g2:'Musicians',dv:'spatial-reasoning score',cause:'Playing a musical instrument improves spatial reasoning.',cover:'A researcher compares the spatial-reasoning scores of university students who already play a musical instrument with students who do not.'},
+    {g1:'Sedentary adults',g2:'Regular exercisers',dv:'memory score',cause:'Regular exercise improves memory.',cover:'A researcher compares the memory scores of adults who already exercise regularly with adults who do not.'},
+    {g1:'Monolingual children',g2:'Bilingual children',dv:'attention-task score',cause:'Being bilingual improves attention.',cover:'A researcher compares the attention-task scores of bilingual children and monolingual children in the same grade.'}]);
+  const p=Object.assign({},DEF_NG,{design:'differential',n:20,qeff:pick(R,[0,0,8,10,-8]),conf:1,confEff:3,seed:1+Math.floor(R.r()*1e6),glab1:c.g1,glab2:c.g2});
+  const S=simNEG(ngEff(p)),G=S.groups.map((g,i)=>({label:[c.g1,c.g2][i],y:g.post})),t=indT(G[0].y,G[1].y);
+  const kind=R.r()<.5?'cause':'descr',hi=t.diff>0;
+  let claim,ok,why;
+  if(kind==='cause'){claim=c.cause;ok=false;why='Groups that already exist differ in many ways besides the grouping variable (age, motivation, background, and so on). A differential design can show that the groups differ, but it cannot identify the cause.'}
+  else{claim=`${hi?c.g2:c.g1} scored reliably higher than ${hi?c.g1:c.g2} on the ${c.dv}.`;ok=t.p<0.05;why=ok?'A difference between preexisting groups can be described when the test supports it. The conclusion makes no causal claim, so it is justified.':'The difference is not statistically reliable (p ≥ .05), so the data do not support claiming that the groups differ.'}
+  return{desc:`<p>${c.cover}</p><p><b>Researcher's conclusion:</b> “${esc(claim)}”</p>`,chart:dotChart(G,{ov:{mean:true,ci:true},ylab:'Score',label:'Dot plot of the two groups'}),
+    test:`${sigPill(t.p)} Independent-measures t test: t(${t.df}) = ${f(t.t,2)}, ${pt(t.p)}, d = ${f(t.d,2)}.`,facts:['Design: nonequivalent groups; no manipulation and no random assignment.','Each participant was measured once.'],ok,why};
+}
+function scPost(R){
+  const c=pick(R,[
+    {g1:'Traditional curriculum class',g2:'New curriculum class',dv:'final exam score',cause:'The new curriculum raised final exam scores.',cover:'One teacher uses a new curriculum with her class this year; a colleague\'s class, taught the traditional way, serves as the comparison. Only final exam scores are collected.'},
+    {g1:'Comparison clinic',g2:'Program clinic',dv:'wellbeing score',cause:'The wellness program improved patients\' wellbeing.',cover:'A clinic offers a new wellness program; a similar clinic across town offers no program. Patients at both are surveyed once, at the end of the year.'}]);
+  const p=Object.assign({},DEF_NG,{design:'posttest',n:22,qeff:pick(R,[0,0,6]),conf:1,confEff:3,treat:pick(R,[0,6,8]),seed:1+Math.floor(R.r()*1e6),glab1:c.g1,glab2:c.g2});
+  const S=simNEG(p),G=S.groups.map((g,i)=>({label:[c.g1,c.g2][i],y:g.post})),t=indT(G[0].y,G[1].y),kind=R.r()<.6?'cause':'caut';
+  let claim,ok,why;
+  if(kind==='cause'){claim=c.cause;ok=false;why='There is no pretest, and the groups were not formed by random assignment. Individual differences, different histories and different rates of maturation could each produce the same posttest difference.'}
+  else{claim=`The treated group scored reliably higher; because group assignment was not controlled, differences other than the treatment could explain it.`;ok=t.p<0.05&&t.diff>0;why=ok?'The conclusion states only what the data show and flags the weakness of the design, so it is justified.':'The posttest difference is not reliable (or goes the other way), so the data do not support the statement that the treated group scored higher.'}
+  return{desc:`<p>${c.cover}</p><p><b>Researcher's conclusion:</b> “${esc(claim)}”</p>`,chart:dotChart(G,{ov:{mean:true,ci:true},ylab:'Score',label:'Dot plot of posttest scores'}),
+    test:`${sigPill(t.p)} Independent-measures t test: t(${t.df}) = ${f(t.t,2)}, ${pt(t.p)}.`,facts:['Design: posttest-only nonequivalent control group (NR X O / NR O).','No pretest.'],ok,why};
+}
+function scNECG(R){
+  const flaw=pick(R,['none','none','mat','hist','reg']);
+  const cover={none:'The two classes are similar in age, background and school, and nothing unusual happens to either class between the tests. One class receives a tutoring program.',
+    mat:'The tutoring program is given to a class of younger students; the comparison class is older. Younger students typically improve faster over a semester on this kind of test.',
+    hist:'The tutoring program is given to the class at one school. During the semester, only that school launches a district reading campaign, with extra library hours and family reading nights.',
+    reg:'The tutoring program is given to students who were selected because they had the lowest scores on a screening test; the comparison class is a regular class.'}[flaw];
+  const base={design:'prepost',n:25,qeff:5,conf:.8,confEff:3,trend:2,sd:8,sdE:4,treat:0,mat:0,hist:0,selext:0};
+  if(flaw==='none')base.treat=pick(R,[7,8,9]);else if(flaw==='mat')base.mat=7;else if(flaw==='hist')base.hist=7;else{Object.assign(base,{sd:6,sdE:8,qeff:0,conf:0,selext:1.2})}
+  let p,S,G,M,tries=0;
+  do{p=Object.assign({},DEF_NG,base,{seed:1+Math.floor(R.r()*1e6),glab1:'Comparison class',glab2:'Program class'});S=simNEG(p);G=S.groups;M=mixed2x2(G[0],G[1]);tries++}while((M.inter.p>=0.05||M.gain[1]<=M.gain[0])&&tries<40);
+  const ok=flaw==='none'&&M.inter.p<0.05,claim='The tutoring program improved scores more than the comparison class did.';
+  const why={none:'The pretest-posttest comparison cancels stable differences, and nothing in the description suggests a threat that affects only one group. The effect is supported, though this is still a quasi-experiment.',
+    mat:'Selection × maturation: the younger group would have improved more even without the program, so the larger gain cannot be credited to the treatment.',
+    hist:'Local history: an event that affected only the program group (the reading campaign) is confounded with the treatment.',
+    reg:'Regression toward the mean: students selected for extremely low scores improve on retest even if nothing is done, so their larger gain cannot be credited to the program.'}[flaw];
+  return{desc:`<p>${cover}</p><p><b>Researcher's conclusion:</b> “${claim}”</p>`,chart:interactionChart(G.map((g,i)=>({pre:g.pre,post:g.post})),{ov:{ci:true},ylab:'Test score',label:'Pretest and posttest means for the two classes'}),
+    test:`${sigPill(M.inter.p)} Group × Time interaction: F(1, ${M.inter.df2}) = ${f(M.inter.F,2)}, ${pt(M.inter.p)}.`,
+    facts:[`Design: pretest-posttest nonequivalent control group (NR O X O / NR O O).`,`Pretest means: comparison ${f(mean(G[0].pre),1)}, program ${f(mean(G[1].pre),1)}.`,`Mean gains: comparison ${sgn(M.gain[0],1)}, program ${sgn(M.gain[1],1)}.`],ok,why};
+}
+function scPP(R){
+  const flaw=pick(R,['hist','mat','instr','test','reg','none','null']),kind=R.r()<.35?'descr':'cause';
+  const cover={hist:'A company runs a stress-management workshop. Between the pre- and post-workshop surveys, the company announces a pay raise for everyone.',
+    mat:'Parents attend a six-week program on reading with children, and the reading scores of their young children are measured before and after.',
+    instr:'A therapist\'s clinic evaluates its new group program. The pretest is a self-report checklist; the posttest uses a revised version of the checklist with different wording.',
+    test:'Students take a memory test before and after a mnemonic-skills workshop. The posttest is the same test given a week later.',
+    reg:'A school enrolls the students with the lowest reading scores in a tutoring program and measures them again at the end.',
+    none:'A hospital measures patients\' anxiety before and after a new relaxation program. Staff report that nothing else changed.',
+    null:'A company measures employees\' morale before and after a short training session.'}[flaw];
+  const p=Object.assign({},DEF_TS,{nPre:1,nPost:1,n:30,effect:0,sdP:8,sdE:4,seed:1+Math.floor(R.r()*1e6)});
+  if(flaw==='hist')p.hist=8;else if(flaw==='mat')p.trend=8;else if(flaw==='instr')p.instr=8;else if(flaw==='test')p.testing=22;else if(flaw==='reg'){p.sdE=8;p.selext=1}else if(flaw==='none')p.effect=8;
+  const S=simTS(p),sm=tsSummary(S,p),a=sm.adj;
+  let claim,ok,why;
+  if(kind==='cause'){claim='The program caused the improvement.';ok=false;why={hist:'History: an outside event (the pay raise) occurred between the measurements and could explain the change.',mat:'Maturation: young children improve naturally over six weeks.',instr:'Instrumentation: the measure itself changed, so a difference may reflect the instrument rather than the participants.',test:'Testing: taking the same test twice produces practice effects.',reg:'Regression toward the mean: participants selected for extreme scores move toward the mean on retest.',none:'A single group measured before and after cannot rule out history, maturation, testing, instrumentation or regression, whatever the staff report.',null:'There is no comparison group and, here, no reliable change either.'}[flaw]}
+  else{claim='Scores were reliably higher after the program than before.';ok=a.p<0.05&&a.md>0;why=ok?'The conclusion only describes the change, which the paired test supports. It does not claim a cause, so it is justified.':'The change is not statistically reliable, so the data do not support the statement.'}
+  return{desc:`<p>${cover}</p><p><b>Researcher's conclusion:</b> “${claim}”</p>`,chart:tsChart({M:sm.M,Y:S.Y,nPre:1,ov:{lines:true},view:'pp',ylab:'Score',label:'Scores before and after the program'}),
+    test:`${sigPill(a.p)} Paired t test: t(${a.df}) = ${f(a.t,2)}, ${pt(a.p)}; mean change ${sgn(a.md,1)}.`,facts:['Design: one-group pretest-posttest (O X O).','No comparison group.'],ok,why};
+}
+function scTS(R){
+  const flaw=pick(R,['none','none','trend','hist','instr','flat']);
+  const cover={none:'A city introduces a new anti-litter program. Litter counts per block are recorded every month for six months before and six months after. Nothing else changes at that time.',
+    trend:'A school introduces a new reading program. Average reading scores are recorded every month for six months before and six months after. Scores have been creeping upward all year.',
+    hist:'A factory introduces a safety program. Weekly injury scores are recorded for six weeks before and after. In the same week the program starts, a new law imposes steep fines for safety violations.',
+    instr:'A hospital introduces a patient-care program. Monthly satisfaction scores are recorded before and after. At the same time the survey form is replaced with a shorter, more generous rating scale.',
+    flat:'A company introduces a wellness program. Monthly employee wellbeing scores are recorded for six months before and six months after.'}[flaw];
+  const p=Object.assign({},DEF_TS,{nPre:6,nPost:6,n:30,effect:0,seed:1+Math.floor(R.r()*1e6)});
+  if(flaw==='none')p.effect=8;else if(flaw==='trend')p.trend=1.6;else if(flaw==='hist')p.hist=8;else if(flaw==='instr')p.instr=8;
+  let S,sm,tries=0;
+  do{S=simTS(p);sm=tsSummary(S,p);p.seed=1+Math.floor(R.r()*1e6);tries++}while(flaw==='none'&&sm.its.p[2]>=0.05&&tries<30);
+  const its=sm.its,ok=flaw==='none'&&its.p[2]<0.05,claim=flaw==='trend'?'Scores after the program were higher than before, so the program worked.':'The program raised scores.';
+  const why={none:'The series jumps at the treatment point beyond its earlier flat trend, and nothing else changed at that time. A time series cannot rule out every coincident event, but nothing suggests one here.',
+    trend:'The series was already rising before the program; the later scores simply continue that trend. A time series reveals maturation that a simple before-after comparison would credit to the program.',
+    hist:'History: another event occurred at the same moment as the treatment, and the series cannot separate the two.',
+    instr:'Instrumentation: the measurement changed at the treatment point, so the jump could reflect the new instrument.',
+    flat:'The series shows no change at the treatment point, so the data do not support the claim.'}[flaw];
+  return{desc:`<p>${cover}</p><p><b>Researcher's conclusion:</b> “${claim}”</p>`,chart:tsChart({M:sm.M,Y:null,nPre:6,ov:{fit:true},ylab:'Average score',label:'Monthly averages before and after the program'}),
+    test:`${sigPill(its.p[2])} Segmented regression: level change ${sgn(its.b[2],1)} (${pt(its.p[2])}); pre-treatment slope ${sgn(its.b[1],2)} per observation (${pt(its.p[1])}).`,facts:['Design: interrupted time series (O O O O O O X O O O O O O).','Each point is the average of 30 people.'],ok,why};
+}
+function scDev(R,kind){
+  const p=Object.assign({},DEF_DV,{n:30,ageEff:-3,cohort:0,practice:0,att:0,seed:1+Math.floor(R.r()*1e6)});
+  if(kind==='cs'){
+    p.cohort=pick(R,[0,3,3]);const S=simDev(p),E=devEstimates(S),a=anova(S.cs.map(g=>g.y)),kindC=R.r()<.55?'cause':'descr';
+    let claim,ok,why;
+    if(kind==='cs'&&kindC==='cause'){claim='Scores decline because people get older: aging causes the decline.';ok=false;why='A cross-sectional study compares different people. Age groups also differ in cohort (generation) effects and other individual differences, which are confounded with age; it cannot show that aging causes the change within a person.'}
+    else{claim='The older age groups scored lower than the younger age groups in this sample.';ok=a.p<0.05&&E.cs<0;why=ok?'The conclusion describes the difference between the groups and makes no claim about aging itself, so it is justified.':'The differences among age groups are not reliable (or not in this direction), so the data do not support the statement.'}
+    return{desc:`<p>A researcher tests 30 people at each of six ages (20, 30, 40, 50, 60 and 70) in one month with a processing-speed task.</p><p><b>Researcher's conclusion:</b> “${claim}”</p>`,chart:devChart(S,p,{cs:true,ci:true}),
+      test:`${sigPill(a.p)} Single-factor ANOVA across ages: F(${a.dfb}, ${a.dfw}) = ${f(a.F,2)}, ${pt(a.p)}; slope ${sgn(E.cs,1)} per decade.`,facts:['Design: cross-sectional (between-subjects, nonequivalent groups).','Each person was tested once.'],ok,why};
+  }
+  const flaw=pick(R,['practice','attr','clean']);
+  if(flaw==='practice'){p.ageEff=0;p.practice=3}else if(flaw==='attr'){p.ageEff=0;p.att=25;p.selAttr=true}
+  const S=simDev(p),E=devEstimates(S),ns=S.lg.waves.map(w=>w.y.length),up=E.lg>0;
+  let sl=slopeOf([].concat(...S.lg.waves.map(w=>w.y.map(()=>w.age))),[].concat(...S.lg.waves.map(w=>w.y))),pp=NaN;
+  const arr=[].concat(...S.lg.waves.map(w=>w.y.map(v=>[w.age,v]))),X=arr.map(r=>[1,r[0]]),fit=ols(X,arr.map(r=>r[1]));pp=fit?fit.p[1]:NaN;
+  const claim=flaw==='clean'?'Scores decline as people age: within the same individuals, getting older lowers scores.':`Scores ${up?'increase':'decline'} as people age: development raises scores.`.replace('development raises scores','this is how aging changes people');
+  const ok=flaw==='clean'&&pp<0.05&&E.lg<0;
+  const why={practice:'Practice effects: the same test is taken six times, and improvement from repeated testing can mimic (or mask) a real age change.',attr:'Attrition: the people who drop out are not a random sample, so the group that remains scores higher at each retest even if no individual changed.',clean:'The same people are followed with no practice effects or dropout in the description, and cohort effects cannot distort a single cohort. The within-person decline is supported.'}[flaw];
+  return{desc:`<p>A researcher tests the same ${p.n} people with a processing-speed task at ages 20, 30, 40, 50, 60 and 70.${flaw==='practice'?' The same test is used each time.':''}</p><p><b>Researcher's conclusion:</b> “${claim}”</p>`,chart:devChart(S,p,{lg:true,ci:true}),
+    test:`${sigPill(pp)} Regression of score on age: slope ${sgn(E.lg,1)} per decade, ${pt(pp)}.`,facts:['Design: longitudinal (within-subjects, one cohort).',`Participants at each testing: ${ns.join(', ')}.`],ok,why};
+}
+function genScenario(){
+  const R=makeRng((Math.random()*2147483646|0)+1),type=pick(R,['diff','post','necg','necg','pp','pp','ts','ts','cs','lg']);
+  const sc={diff:scDiff,post:scPost,necg:scNECG,pp:scPP,ts:scTS,cs:R=>scDev(R,'cs'),lg:R=>scDev(R,'lg')}[type](R);
+  sc.type=type;return sc;
+}
+const pr={n:0,score:0,cur:null,answered:false};
+function renderPR(){
+  $('#pr-score').textContent=pr.n?`Score: ${pr.score} of ${pr.n}`:'';
+  const c=pr.cur;$('#pr-card').hidden=!c;if(!c)return;
+  $('#pr-desc').innerHTML=c.desc;$('#pr-chart').innerHTML=c.chart;
+  $('#pr-facts').innerHTML=`<p>${c.test}</p><b>Design facts</b><ul class="clean">${c.facts.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`;
+  $('#pr-answer').hidden=pr.answered;
+}
+function answerPR(yes){
+  const c=pr.cur;if(!c||pr.answered)return;pr.answered=true;pr.n++;const ok=yes===c.ok;if(ok)pr.score++;
+  $('#pr-feedback').innerHTML=`<div class="callout ${ok?'':'warn'}"><b>${ok?'Correct.':'Not quite.'}</b> The conclusion is ${c.ok?'<b>justified</b>':'<b>not justified</b>'}. ${esc(c.why)}</div>`;
+  renderPR();$('#pr-answer').hidden=true;
+}
+
+/* ================= concept quiz ================= */
+const QZ=[
+ {q:'What most clearly separates a quasi-experimental design from a nonexperimental design?',o:['Quasi-experiments use random assignment','Quasi-experiments make some attempt to limit threats to internal validity','Quasi-experiments manipulate the independent variable','Quasi-experiments always use more participants'],a:1,w:'Both lack random assignment and a manipulated variable. A quasi-experimental design makes some attempt to minimize threats; a nonexperimental design makes little or none.'},
+ {q:'A researcher compares the GPAs of students who already hold part-time jobs with those who do not. This is a…',o:['True experiment','Differential (ex post facto) design','Time-series design','Longitudinal design'],a:1,w:'The groups already exist and the researcher only compares them after the fact.'},
+ {q:'Why can a differential design not identify a cause?',o:['It has too few participants','The measurements are not numerical','Preexisting groups differ in many ways besides the grouping variable','It uses a within-subjects structure'],a:2,w:'Individual differences between the groups are confounded with the grouping variable.'},
+ {q:'What does the pretest add to a nonequivalent control group design?',o:['It guarantees equivalent groups','It shows how the groups started, so stable differences can be separated from change','It removes history effects completely','It makes the design a true experiment'],a:1,w:'Comparing change, not final scores, cancels stable differences, but not threats that affect only one group.'},
+ {q:'In the 2 × 2 mixed ANOVA for a pretest-posttest nonequivalent control group study, which effect is the quasi-experimental question?',o:['Main effect of group','Main effect of time','Group × Time interaction','None of them'],a:2,w:'The interaction asks whether the groups changed by different amounts.'},
+ {q:'Which threat describes the treatment group changing faster than the comparison group for reasons unrelated to the treatment?',o:['Instrumentation','Testing','Selection × maturation','Attrition'],a:2,w:'Groups that were not formed at random can mature at different rates.'},
+ {q:'A school enrolls the 20 lowest-scoring students in tutoring, and their scores rise at retest. Which threat is most obvious?',o:['Regression toward the mean','Instrumentation','Cohort effects','Practice with the apparatus'],a:0,w:'Extreme scorers tend to score closer to the mean when measured again, even with no treatment.'},
+ {q:'What is the main advantage of a time-series design over a one-group pretest-posttest design?',o:['It includes a control group','The earlier observations reveal trends, practice effects and regression before the treatment','It eliminates history','It requires fewer participants'],a:1,w:'A series shows what was happening before the treatment, which exposes several threats. History and instrumentation at the treatment point remain.'},
+ {q:'In a time series, a new law takes effect the week the program begins and scores jump. Which threat remains?',o:['History','Maturation','Testing','Regression'],a:0,w:'A coincident event cannot be separated from the treatment effect.'},
+ {q:'A cross-sectional study finds that 60-year-olds score lower than 20-year-olds. Which problem makes it hard to attribute this to aging?',o:['Attrition','Practice effects','Cohort (generation) effects','Regression toward the mean'],a:2,w:'People of different ages also belong to different generations that grew up under different conditions.'},
+ {q:'Which problem is typical of longitudinal studies but not of cross-sectional studies?',o:['Cohort differences between age groups','Attrition','Preexisting group differences','No way to measure age'],a:1,w:'Participants drop out over time, and the dropouts may differ from those who stay.'},
+ {q:'What does a cross-sectional longitudinal design do?',o:['Tests one group once','Follows several cohorts over time, so cohorts can be compared at the same ages','Randomly assigns ages to participants','Replaces the dependent variable'],a:1,w:'It combines separate samples of different ages with repeated testing over a shorter span.'},
+ {q:'Which description matches the notation NR G1: O X O / NR G2: O O?',o:['A true experiment with random assignment','A pretest-posttest nonequivalent control group design','A one-group pretest-posttest design','A posttest-only design'],a:1,w:'NR = no random assignment; O = observation; X = treatment.'},
+ {q:'Which analysis fits two nonequivalent groups measured once on a numerical scale?',o:['Repeated-measures t test','Independent-measures t test','Wilcoxon test','Segmented regression'],a:1,w:'Different participants in each group call for an independent-measures comparison.'},
+ {q:'A one-group pretest-posttest study finds a significant improvement. What can be concluded?',o:['The treatment caused it','Scores changed, but history, maturation, testing, instrumentation or regression could explain it','The treatment had no effect','Nothing at all'],a:1,w:'The change is real as a description; the cause is not identified.'},
+ {q:'In the structure figure of a nonequivalent-group study, what identifies each group?',o:['A manipulated treatment','A random draw','One specific factor, such as a participant variable or an event','The order of testing'],a:2,w:'The quasi-independent variable defines the groups but is not manipulated.'}
+];
+const qz={n:0,score:0,i:-1,done:false};
+function newQ(){let i;do{i=Math.floor(Math.random()*QZ.length)}while(QZ.length>1&&i===qz.i);qz.i=i;qz.done=false;renderQZ()}
+function renderQZ(){
+  $('#qz-score').textContent=qz.n?`Score: ${qz.score} of ${qz.n}`:'';
+  if(qz.i<0){$('#qz-out').innerHTML='<p class="muted">Press "Next question".</p>';return}
+  const q=QZ[qz.i];
+  $('#qz-out').innerHTML=`<p><b>${esc(q.q)}</b></p>`+q.o.map((t,j)=>`<div><button class="small" data-qz="${j}" style="margin:2px 0;text-align:left" ${qz.done?'disabled':''}>${'ABCD'[j]}. ${esc(t)}</button></div>`).join('');
+}
+function answerQ(j){
+  if(qz.done)return;qz.done=true;qz.n++;const q=QZ[qz.i],ok=j===q.a;if(ok)qz.score++;renderQZ();
+  $('#qz-out').insertAdjacentHTML('beforeend',`<div class="callout ${ok?'':'warn'}"><b>${ok?'Correct.':'Not quite.'}</b> The answer is ${'ABCD'[q.a]}. ${esc(q.w)}</div>`);
+  $('#qz-score').textContent=`Score: ${qz.score} of ${qz.n}`;
+}
+
+/* ================= wiring ================= */
+const TABS=['cl','ng','ts','dv','th','prac','ref'];
+function showTab(id){
+  st.tab=id;
+  $$('nav.tabs button').forEach(b=>b.setAttribute('aria-selected',b.id==='t-'+id?'true':'false'));
+  $$('.tabpanel').forEach(p=>{p.hidden=p.id!=='p-'+id});
+  if(id==='cl')renderCL();
+  else if(id==='ng')renderNG();
+  else if(id==='ts')renderTS();
+  else if(id==='dv')renderDV();
+  else if(id==='th')renderTH();
+  else if(id==='prac'){renderPR();renderQZ()}
+}
+const RENDER={ng:()=>renderNG(),ts:()=>renderTS(),dv:()=>renderDV()};
+const CL_DEF={man:'no',ran:'no',str:'between',obs:'once',trt:'none',age:'cs'};
+function syncCL(){Object.keys(st.cl).forEach(k=>{const el=$(`input[name="q-${k}"][value="${st.cl[k]}"]`);if(el)el.checked=true})}
+function clearCustom(pre){if(pre==='ng'){st.ngCustom=null;$('#ng-paste-msg').textContent=''}if(pre==='ts'){st.tsCustom=null;$('#ts-paste-msg').textContent=''}}
+
+function init(){
+  ['ng','ts','dv'].forEach(pre=>{$('#'+pre+'-controls').innerHTML=ctrlHTML(pre,DEFS[pre],st[pre],PRESETS[pre])});
+  restoreHash();
+  ['ng','ts','dv'].forEach(pre=>{
+    syncControls(pre,DEFS[pre],st[pre]);
+    bindControls(pre,st[pre],DEFS[pre],()=>{clearCustom(pre);RENDER[pre]()},PRESETS[pre],DEFAULTS[pre]);
+  });
+  syncCL();
+  $$('nav.tabs button').forEach(b=>{
+    b.addEventListener('click',()=>showTab(b.id.slice(2)));
+    b.addEventListener('keydown',e=>{
+      if(e.key!=='ArrowRight'&&e.key!=='ArrowLeft')return;
+      const i=TABS.indexOf(b.id.slice(2)),j=(i+(e.key==='ArrowRight'?1:TABS.length-1))%TABS.length;
+      showTab(TABS[j]);$('#t-'+TABS[j]).focus();e.preventDefault();
+    });
+  });
+  document.addEventListener('keydown',e=>{
+    const r=e.target.closest&&e.target.closest('tr[data-th]');
+    if(r&&(e.key==='Enter'||e.key===' ')){st.th=+r.dataset.th;renderTH();e.preventDefault()}
+  });
+  document.addEventListener('click',e=>{
+    const b=e.target.closest('[data-act],[data-dl],[data-qz],[data-goto],tr[data-th]');if(!b)return;
+    if(b.dataset.th!==undefined){st.th=+b.dataset.th;renderTH();return}
+    if(b.dataset.goto){showTab(b.dataset.goto);window.scrollTo(0,0);return}
+    if(b.dataset.qz!==undefined){answerQ(+b.dataset.qz);return}
+    if(b.dataset.dl){doDL(b.dataset.dl,b.dataset.t);return}
+    const a=b.dataset.act,pre=a.split('-')[0],op=a.split('-')[1];
+    if(a==='prac-reset'){pr.n=0;pr.score=0;pr.cur=null;pr.answered=false;qz.n=0;qz.score=0;qz.i=-1;qz.done=false;$('#pr-feedback').innerHTML='';renderPR();renderQZ();return}
+    if(a==='clq-reset'){Object.assign(st.cl,CL_DEF);syncCL();renderCL();return}
+    if(op==='rand'&&st[pre]){st[pre].seed=1+Math.floor(Math.random()*99999);syncControls(pre,DEFS[pre],st[pre]);clearCustom(pre);RENDER[pre]()}
+    else if(op==='reset'&&DEFAULTS[pre]){Object.assign(st[pre],DEFAULTS[pre]);clearCustom(pre);syncControls(pre,DEFS[pre],st[pre]);RENDER[pre]()}
+    else if(a==='ng-use'){const r=parseNG($('#ng-paste').value);if(r.error){$('#ng-paste-msg').innerHTML=`<span style="color:var(--bad)">${esc(r.error)}</span>`}else{st.ngCustom=r.groups;$('#ng-paste-msg').textContent=`Analyzing ${r.groups.length} groups from your data.`;renderNG()}}
+    else if(a==='ng-fill'){const D=ngData();$('#ng-paste').value=D.groups.map(g=>g.label+': '+g.y.map(v=>+(+v).toFixed(1)).join(' ')).join('\n')}
+    else if(a==='ng-sim'){clearCustom('ng');renderNG()}
+    else if(a==='ts-use'){const r=parseTS($('#ts-paste').value,+$('#ts-npre').value);if(r.error){$('#ts-paste-msg').innerHTML=`<span style="color:var(--bad)">${esc(r.error)}</span>`}else{st.tsCustom=r;$('#ts-paste-msg').textContent=`Analyzing ${r.M.length} observations (${r.nPre} before treatment).`;renderTS()}}
+    else if(a==='ts-fill'){const D=tsData();$('#ts-paste').value=D.M.map(v=>+(+v).toFixed(1)).join(' ');$('#ts-npre').value=D.nPre}
+    else if(a==='ts-sim'){clearCustom('ts');renderTS()}
+    else if(a==='pr-new'){pr.cur=genScenario();pr.answered=false;$('#pr-feedback').innerHTML='';renderPR()}
+    else if(a==='pr-yes')answerPR(true);
+    else if(a==='pr-no')answerPR(false);
+    else if(a==='qz-new')newQ();
+  });
+  document.addEventListener('change',e=>{
+    const el=e.target;
+    if(el.dataset&&el.dataset.ov){st[el.dataset.pre][el.dataset.ov]=el.checked;if(el.dataset.pre==='ngOv')renderNG();else if(el.dataset.pre==='tsOv')renderTS();else if(el.dataset.pre==='dvOv')renderDV();return}
+    if(el.name&&el.name.indexOf('q-')===0){st.cl[el.name.slice(2)]=el.value;renderCL()}
+  });
+  $('#btn-theme').addEventListener('click',()=>{
+    const cur=document.documentElement.dataset.theme||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
+    document.documentElement.dataset.theme=cur==='dark'?'light':'dark';showTab(st.tab);
+  });
+  $('#btn-link').addEventListener('click',()=>{
+    try{
+      const payload=btoa(unescape(encodeURIComponent(JSON.stringify({tab:st.tab,ng:st.ng,ts:st.ts,dv:st.dv,ngOv:st.ngOv,tsOv:st.tsOv,dvOv:st.dvOv,cl:st.cl,th:st.th}))));
+      location.hash='s='+payload;
+      if(navigator.clipboard)navigator.clipboard.writeText(location.href).then(()=>toast('Link copied'),()=>toast('Link is in the address bar'));
+      else toast('Link is in the address bar');
+    }catch(err){toast('Could not build link')}
+  });
+  showTab(st.tab);
+}
+function restoreHash(){
+  try{
+    const m=/s=([^&]+)/.exec(location.hash);if(!m)return;
+    const o=JSON.parse(decodeURIComponent(escape(atob(m[1]))));
+    ['ng','ts','dv','ngOv','tsOv','dvOv','cl'].forEach(k=>{if(o[k])Object.assign(st[k],o[k])});
+    if(Number.isInteger(o.th)&&o.th>=0&&o.th<TH_ROWS.length)st.th=o.th;
+    if(o.tab&&TABS.includes(o.tab))st.tab=o.tab;
+  }catch(e){}
+}
+
+const root=typeof window!=='undefined'?window:globalThis;
+root.NQExplorer={indT,anova,pairedT,rmAnova,tp2,fsf,tcrit,ols,mixed2x2,simNEG,negEstimates,repNEG,regressionTerms,simTS,tsAnalyze,tsSummary,repTS,simDev,devEstimates,repDev,classify,DES,parseNG,parseTS,DEF_NG,DEF_TS,DEF_DV,genScenario,TH_ROWS,QZ};
+if(typeof document!=='undefined'&&document.getElementById('t-cl'))init();
+})();
+</script>
+</body>
+</html>

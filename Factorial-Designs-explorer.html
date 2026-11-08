@@ -1,0 +1,1461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Factorial Designs Explorer</title>
+<meta name="description" content="Interactive explorer for factorial designs: count conditions, classify designs, read main effects and interactions, compare between-subjects, within-subjects and mixed versions, and see how a second factor reduces variance or reveals order effects.">
+<style>
+
+:root{
+  --bg:#f5f6f4; --card:#ffffff; --fg:#1c1f24; --muted:#5b6572; --line:#d9dde3; --grid:#eceff2;
+  --plot:#ffffff; --axis:#8b94a1; --colA:#34588a; --colB:#c0531a; --tintB:rgba(192,83,26,.07); --colC:#14806f; --colD:#7c3fb0; --colE:#8a6d00;
+  --accent:#2b62c4; --accentFg:#ffffff; --good:#1f7a43; --warn:#9a6700; --bad:#b3261e;
+  --goodBg:#e5f4ea; --warnBg:#fbf0d4; --badBg:#fbe4e2;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme=light]){
+    --bg:#13161b; --card:#1b1f26; --fg:#e8eaed; --muted:#9aa3af; --line:#2d333c; --grid:#262b33;
+    --plot:#1b1f26; --axis:#6f7886; --colA:#8fb4e8; --colB:#f59a5f; --tintB:rgba(245,154,95,.10); --colC:#4fcfb8; --colD:#c39bea; --colE:#e3c64f;
+    --accent:#7aa7ff; --accentFg:#0d1117; --good:#6fd596; --warn:#e8c05a; --bad:#ff8c84;
+    --goodBg:#16301f; --warnBg:#3a3016; --badBg:#3d1d1b;
+  }
+}
+:root[data-theme=dark]{
+  --bg:#13161b; --card:#1b1f26; --fg:#e8eaed; --muted:#9aa3af; --line:#2d333c; --grid:#262b33;
+  --plot:#1b1f26; --axis:#6f7886; --colA:#8fb4e8; --colB:#f59a5f; --tintB:rgba(245,154,95,.10); --colC:#4fcfb8; --colD:#c39bea; --colE:#e3c64f;
+  --accent:#7aa7ff; --accentFg:#0d1117; --good:#6fd596; --warn:#e8c05a; --bad:#ff8c84;
+  --goodBg:#16301f; --warnBg:#3a3016; --badBg:#3d1d1b;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+header.top{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:14px 20px 6px;max-width:1360px;margin:0 auto}
+header.top h1{font-size:1.25rem;margin:0;letter-spacing:-.01em}
+header.top p{margin:2px 0 0;color:var(--muted);font-size:.9rem;max-width:62ch}
+.hbtns{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+button,.btn{font:inherit;font-size:.85rem;border:1px solid var(--line);background:var(--card);color:var(--fg);padding:6px 11px;border-radius:7px;cursor:pointer}
+button:hover{border-color:var(--accent)}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button.primary{background:var(--accent);color:var(--accentFg);border-color:var(--accent);font-weight:600}
+button.small{padding:3px 8px;font-size:.78rem}
+nav.tabs{display:flex;gap:2px;max-width:1360px;margin:6px auto 0;padding:0 20px;border-bottom:1px solid var(--line);overflow-x:auto}
+nav.tabs button{border:none;border-bottom:3px solid transparent;border-radius:0;background:none;padding:9px 14px;font-size:.92rem;color:var(--muted);white-space:nowrap}
+nav.tabs button[aria-selected=true]{color:var(--fg);border-bottom-color:var(--colB);font-weight:600}
+main{max-width:1360px;margin:0 auto;padding:16px 20px 40px}
+.tabpanel[hidden]{display:none}
+.layout{display:grid;grid-template-columns:330px minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:980px){.layout{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:14px}
+.card h2{font-size:1rem;margin:0 0 8px}
+.card h3{font-size:.92rem;margin:14px 0 6px}
+.card p{margin:6px 0}
+.muted{color:var(--muted)}
+.small{font-size:.82rem}
+aside.controls{position:sticky;top:8px;max-height:calc(100vh - 16px);overflow:auto;padding:12px 14px}
+@media (max-width:980px){aside.controls{position:static;max-height:none}}
+details.grp{border-top:1px solid var(--line);padding:6px 0}
+details.grp:first-of-type{border-top:none}
+details.grp>summary{cursor:pointer;font-weight:600;font-size:.88rem;padding:4px 0;list-style:none}
+details.grp>summary::before{content:"▸ ";color:var(--muted)}
+details.grp[open]>summary::before{content:"▾ "}
+.ctl{margin:6px 0 10px}
+.ctl label{display:flex;justify-content:space-between;gap:8px;font-size:.82rem;color:var(--muted);margin-bottom:2px}
+.ctl output{color:var(--fg);font-variant-numeric:tabular-nums;font-weight:600}
+.ctl input[type=range]{width:100%;accent-color:var(--accent)}
+.ctl input[type=text],.ctl input[type=number],.ctl select,textarea{width:100%;font:inherit;font-size:.85rem;padding:5px 7px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--fg)}
+.ctl.check label{display:flex;justify-content:flex-start;gap:8px;align-items:center;color:var(--fg)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.toolbar{display:flex;gap:6px 14px;flex-wrap:wrap;align-items:center;margin-bottom:8px;font-size:.82rem}
+.toolbar label{display:inline-flex;gap:5px;align-items:center;cursor:pointer}
+.toolbar .sp{flex:1}
+.chart svg{width:100%;height:auto;display:block}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted);margin-top:6px}
+.legend i{display:inline-block;vertical-align:middle;margin-right:4px}
+.dotA{width:10px;height:10px;border-radius:50%;background:var(--colA)}
+.dotB{width:10px;height:10px;background:var(--colB)}
+.tbl-wrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.84rem;font-variant-numeric:tabular-nums}
+th,td{padding:5px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{font-weight:600;color:var(--muted);font-size:.78rem}
+th[title]{cursor:help;text-decoration:underline dotted;text-underline-offset:3px}
+td.l,th.l{text-align:left;white-space:normal}
+.pill{display:inline-block;padding:1px 8px;border-radius:99px;font-size:.76rem;font-weight:600}
+.pill.good{background:var(--goodBg);color:var(--good)}
+.pill.warn{background:var(--warnBg);color:var(--warn)}
+.pill.bad{background:var(--badBg);color:var(--bad)}
+.callout{border-left:4px solid var(--colA);background:var(--grid);padding:8px 12px;border-radius:0 8px 8px 0;font-size:.88rem;margin:8px 0}
+.callout.warn{border-left-color:var(--warn)}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+.stat{display:flex;gap:18px;flex-wrap:wrap;margin:6px 0 8px}
+.stat div{min-width:110px}
+.stat b{display:block;font-size:1.3rem;font-variant-numeric:tabular-nums}
+.stat span{font-size:.76rem;color:var(--muted)}
+ul.clean{padding-left:18px;margin:6px 0}
+ul.clean li{margin:3px 0}
+.q{margin:12px 0}
+.q legend{font-weight:600;font-size:.92rem;padding:0}
+.q fieldset{border:none;margin:0;padding:0}
+.q label{display:block;margin:3px 0;font-size:.9rem;cursor:pointer}
+.fit{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-top:1px solid var(--line)}
+.fit:first-child{border-top:none}
+.fit .nm{font-weight:600}
+footer{max-width:1360px;margin:0 auto;padding:0 20px 30px;color:var(--muted);font-size:.8rem}
+.sr{position:absolute;left:-9999px}
+dl.gl dt{font-weight:600;margin-top:8px}
+dl.gl dd{margin:2px 0 0 0;color:var(--muted)}
+ol.refs li{margin:5px 0;font-size:.85rem}
+#toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:8px 14px;border-radius:8px;font-size:.85rem;opacity:0;pointer-events:none;transition:opacity .2s}
+#toast.show{opacity:.95}
+
+[hidden]{display:none!important}
+.chart svg text{user-select:none}
+</style>
+</head>
+<body>
+<header class="top">
+  <div>
+    <h1>Factorial Designs Explorer</h1>
+    <p>Explore research designs that combine two or more factors (independent variables) in one study. Count conditions, classify a design, read main effects and interactions from a data matrix and a line graph, compare between-subjects, within-subjects and mixed versions, see how a second factor reduces variance or exposes order effects, and practice interpreting results.</p>
+  </div>
+  <div class="hbtns">
+    <button id="btn-link" title="Put the current settings in the page URL so you can share or bookmark them">Copy share link</button>
+    <button id="btn-theme" title="Toggle light / dark">Theme</button>
+  </div>
+</header>
+
+<nav class="tabs" role="tablist" aria-label="Sections">
+  <button role="tab" id="t-st" aria-controls="p-st" aria-selected="true">Structure and classifier</button>
+  <button role="tab" id="t-ef" aria-controls="p-ef" aria-selected="false">Main effects and interactions</button>
+  <button role="tab" id="t-ds" aria-controls="p-ds" aria-selected="false">Between, within and mixed</button>
+  <button role="tab" id="t-ap" aria-controls="p-ap" aria-selected="false">Applications</button>
+  <button role="tab" id="t-prac" aria-controls="p-prac" aria-selected="false">Practice</button>
+  <button role="tab" id="t-ref" aria-controls="p-ref" aria-selected="false">Reference</button>
+</nav>
+
+<main>
+<noscript><div class="card">This explorer needs JavaScript enabled.</div></noscript>
+
+<!-- ================= STRUCTURE ================= -->
+<section class="tabpanel" id="p-st" role="tabpanel" aria-labelledby="t-st">
+  <div class="grid2">
+    <div class="card">
+      <h2>Factors and factorial designs</h2>
+      <p>A <b>factor</b> is an independent variable (IV) in an experiment, especially in a study that includes two or more IVs. A <b>factorial design</b> includes two or more factors. A single-factor design has one IV; a two-factor design has two. The number of levels of each factor is written as a product: a 2 × 3 × 2 design has three factors and 2 × 3 × 2 = 12 conditions.</p>
+      <h3>Structure of a two-factor experiment</h3>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th class="l">Study time ↓ / Presentation →</th><th>On paper</th><th>On screen</th></tr></thead>
+        <tbody>
+          <tr><td class="l"><b>Fixed time</b></td><td class="l">Exam scores for participants who studied text on <b>paper</b> for a <b>fixed</b> time</td><td class="l">Exam scores for participants who studied text <b>on screen</b> for a <b>fixed</b> time</td></tr>
+          <tr><td class="l"><b>Self-regulated time</b></td><td class="l">Exam scores for participants who studied on <b>paper</b> for a <b>self-regulated</b> time</td><td class="l">Exam scores for participants who studied <b>on screen</b> for a <b>self-regulated</b> time</td></tr>
+        </tbody></table></div>
+      <p class="small muted">The levels of one factor determine the columns and the levels of the second factor determine the rows. Each cell is a separate treatment condition: a specific combination of the factors.</p>
+    </div>
+    <div class="card">
+      <h2>Count the conditions</h2>
+      <div class="row" style="align-items:flex-end">
+        <div class="ctl" style="margin:0"><label for="cn-a">Levels of A</label><select id="cn-a"><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
+        <div class="ctl" style="margin:0"><label for="cn-b">Levels of B</label><select id="cn-b"><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
+        <div class="ctl" style="margin:0"><label for="cn-c">Levels of C (1 = no third factor)</label><select id="cn-c"><option>1</option><option>2</option><option>3</option><option>4</option></select></div>
+        <div class="ctl" style="margin:0"><label for="cn-n">Participants per condition</label><input type="number" id="cn-n" min="1" value="10" style="width:80px"></div>
+      </div>
+      <div id="cn-out" style="margin-top:10px"></div>
+    </div>
+  </div>
+  <div class="grid2">
+    <div class="card">
+      <div class="row" style="justify-content:space-between"><h2 style="margin:0">Describe a design</h2><button class="small" data-act="fcl-reset" title="Return every answer to its default">Reset</button></div>
+      <div class="ctl" style="margin-top:8px"><label for="fc-ex">Start from an example</label><select id="fc-ex"></select></div>
+      <div class="q"><fieldset><legend>Factor A: what defines its levels?</legend>
+        <label><input type="radio" name="fc-at" value="man" checked> A manipulated independent variable (the researcher creates the conditions)</label>
+        <label><input type="radio" name="fc-at" value="part"> A participant characteristic (for example age group or gender)</label>
+        <label><input type="radio" name="fc-at" value="time"> Time (for example pretest versus posttest)</label></fieldset></div>
+      <div class="q"><fieldset><legend>Factor A: who experiences the levels?</legend>
+        <label><input type="radio" name="fc-aa" value="between" checked> Different participants at each level (between-subjects)</label>
+        <label><input type="radio" name="fc-aa" value="within"> The same participants at every level (within-subjects)</label></fieldset></div>
+      <div class="ctl"><label for="fc-al">Levels of Factor A</label><select id="fc-al"><option>2</option><option>3</option><option>4</option></select></div>
+      <div class="q"><fieldset><legend>Factor B: what defines its levels?</legend>
+        <label><input type="radio" name="fc-bt" value="man" checked> A manipulated independent variable</label>
+        <label><input type="radio" name="fc-bt" value="part"> A participant characteristic</label>
+        <label><input type="radio" name="fc-bt" value="time"> Time (for example pretest versus posttest)</label></fieldset></div>
+      <div class="q"><fieldset><legend>Factor B: who experiences the levels?</legend>
+        <label><input type="radio" name="fc-ba" value="between" checked> Different participants at each level (between-subjects)</label>
+        <label><input type="radio" name="fc-ba" value="within"> The same participants at every level (within-subjects)</label></fieldset></div>
+      <div class="ctl"><label for="fc-bl">Levels of Factor B</label><select id="fc-bl"><option>2</option><option>3</option><option>4</option></select></div>
+    </div>
+    <div class="card"><h2>Classification</h2><div id="fc-out"></div></div>
+  </div>
+  <div class="card">
+    <h2>Research strategies in factorial studies</h2>
+    <div class="grid2">
+      <div class="callout"><b>Experimental.</b> Both factors are true independent variables manipulated by the researcher.</div>
+      <div class="callout warn"><b>Nonexperimental or quasi-experimental.</b> Most or all factors are nonmanipulated, quasi-independent variables. They are still called factors.</div>
+      <div class="callout"><b>Combined strategies.</b> One factor is a true IV (experimental strategy) and the other is a quasi-independent variable: a preexisting participant characteristic, or time.</div>
+      <div class="callout"><b>Pretest-posttest control group.</b> Treatment versus control is a between-subjects factor and pretest versus posttest is a within-subjects factor, so the study is a two-factor mixed design. The Treatment × Time interaction is the effect of interest.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= MAIN EFFECTS AND INTERACTIONS ================= -->
+<section class="tabpanel" id="p-ef" role="tabpanel" aria-labelledby="t-ef" hidden>
+  <div id="ef-top"></div>
+  <div class="layout">
+    <aside class="card controls" id="ef-controls" aria-label="Two-factor design controls"></aside>
+    <div>
+      <div class="card">
+        <div class="row" style="justify-content:space-between">
+          <h2 id="ef-title" style="margin:0">Two-factor design</h2>
+          <div class="row">
+            <button class="small" data-dl="csv" data-t="ef">CSV</button>
+            <button class="small" data-dl="svg" data-t="ef-chart">SVG</button>
+            <button class="small" data-dl="png" data-t="ef-chart">PNG</button>
+          </div>
+        </div>
+        <p class="muted small" id="ef-sub"></p>
+        <div class="toolbar" id="ef-ov"></div>
+        <div class="chart" id="ef-chart"></div>
+        <div class="legend" id="ef-legend"></div>
+      </div>
+      <div class="card"><h2>Data matrix</h2><div id="ef-matrix"></div>
+        <p class="small muted">A main effect is the mean difference among the levels of one factor (the overall means in the margins). An interaction shows up when the differences in one row are not the same as the differences in the other rows, and likewise for columns.</p></div>
+      <div class="card" id="ef-custom-card">
+        <details>
+          <summary><b>Use your own data</b> <span class="muted small">(paste, analyze)</span></summary>
+          <p class="small muted">One score per line as <code>level of A, level of B, score</code>. Up to four levels per factor; cells may have different numbers of scores.</p>
+          <textarea id="ef-paste" rows="6" spellcheck="false" placeholder="Paper, Fixed, 22&#10;Paper, Fixed, 21&#10;Paper, Self-regulated, 18&#10;On screen, Fixed, 17&#10;On screen, Self-regulated, 14"></textarea>
+          <div class="row" style="margin-top:6px">
+            <button class="primary small" data-act="ef-use">Analyze my data</button>
+            <button class="small" data-act="ef-fill">Copy simulated data into box</button>
+            <button class="small" data-act="ef-sim">Back to simulation</button>
+          </div>
+          <div id="ef-paste-msg" class="small" role="status" style="margin-top:6px"></div>
+        </details>
+      </div>
+      <div class="card"><h2>Two-factor ANOVA</h2><div id="ef-test"></div></div>
+      <div class="card"><h2>Interpreting the results</h2><div id="ef-interp"></div><h3>Simple effects</h3><div id="ef-simple"></div>
+        <p class="small muted">A simple effect is the effect of one factor at one level of the other factor. If the interaction is not significant, the simple effects are the same apart from sampling error.</p></div>
+      <div class="card" id="ef-rep-card"><h2>Independence of the three effects: 300 repeated studies</h2><div id="ef-rep"></div></div>
+      <div class="card"><h2>Pattern gallery</h2>
+        <p class="muted small">Eight canonical patterns for a 2 × 2 design. Main effects and the interaction are separate sets of mean differences: any combination can occur.</p>
+        <div class="grid2" id="ef-gal"></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= BETWEEN / WITHIN / MIXED ================= -->
+<section class="tabpanel" id="p-ds" role="tabpanel" aria-labelledby="t-ds" hidden>
+  <div class="layout">
+    <aside class="card controls" id="ds-controls" aria-label="Design type controls"></aside>
+    <div>
+      <div class="card">
+        <div class="row" style="justify-content:space-between">
+          <h2 style="margin:0">The same 2 × 2 study run three ways</h2>
+          <div class="row">
+            <button class="small" data-dl="csv" data-t="ds">CSV</button>
+            <button class="small" data-dl="svg" data-t="ds-chart">SVG</button>
+            <button class="small" data-dl="png" data-t="ds-chart">PNG</button>
+          </div>
+        </div>
+        <p class="muted small" id="ds-sub"></p>
+        <div id="ds-struct"></div>
+        <div class="chart" id="ds-chart" style="margin-top:8px"></div>
+        <div class="legend" id="ds-legend"></div>
+      </div>
+      <div class="card"><h2>ANOVA for the selected design</h2><div id="ds-test"></div></div>
+      <div class="card"><h2>Power of the three designs: 300 repeated studies</h2><div id="ds-rep"></div></div>
+      <div class="card">
+        <h2>Trade-offs</h2>
+        <div class="tbl-wrap"><table>
+          <thead><tr><th class="l">Issue</th><th class="l">Between-subjects</th><th class="l">Within-subjects</th><th class="l">Mixed</th></tr></thead>
+          <tbody>
+            <tr><td class="l">Participants</td><td class="l">Requires a large number</td><td class="l">Requires only one group</td><td class="l">In between</td></tr>
+            <tr><td class="l">Individual differences</td><td class="l">Can become confounding variables</td><td class="l">Eliminated as a problem</td><td class="l">Removed for the within factor only</td></tr>
+            <tr><td class="l">Order and testing effects</td><td class="l">Avoided</td><td class="l">A risk: every participant undergoes many treatments</td><td class="l">Limited to the within factor</td></tr>
+            <tr><td class="l">Time and attrition</td><td class="l">One condition per participant</td><td class="l">Time consuming; contributes to attrition</td><td class="l">Moderate</td></tr>
+            <tr><td class="l">When to use</td><td class="l">When exposure to one condition would contaminate another</td><td class="l">When participants are scarce or individual differences are large</td><td class="l">When one factor is expected to threaten validity if repeated</td></tr>
+          </tbody></table></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= APPLICATIONS ================= -->
+<section class="tabpanel" id="p-ap" role="tabpanel" aria-labelledby="t-ap" hidden>
+  <div class="card">
+    <h2>Why add a second factor?</h2>
+    <p>Factorial designs are used to <b>expand and replicate</b> earlier studies, to <b>reduce variance</b> in between-subjects designs, and to <b>evaluate order effects</b> in within-subjects designs.</p>
+    <div class="grid2">
+      <div class="callout"><b>Replication and expansion.</b> Replication repeats a previous study using the same factor exactly as it was used before. Expansion adds a second factor, in the form of new conditions or new participant characteristics, to find out whether previously reported effects generalize to new situations or populations. An interaction means the effect does not generalize equally.
+        <div class="row" style="margin-top:6px"><button class="small" data-load="ef:1">See an interaction example</button><button class="small" data-load="ef:0">See a no-interaction example</button></div></div>
+      <div class="callout warn"><b>Why this matters.</b> If the original effect holds at every level of the new factor, the study has expanded the evidence (a main effect and no interaction). If the effect changes, the new factor qualifies the original conclusion (an interaction).</div>
+    </div>
+  </div>
+  <h2 style="margin:18px 2px 8px">Reducing variance in between-subjects designs</h2>
+  <div class="layout">
+    <aside class="card controls" id="vr-controls" aria-label="Variance reduction controls"></aside>
+    <div>
+      <div class="card">
+        <div class="row" style="justify-content:space-between">
+          <h2 style="margin:0">A participant variable as a second factor</h2>
+          <div class="row">
+            <button class="small" data-dl="csv" data-t="vr">CSV</button>
+            <button class="small" data-dl="svg" data-t="vr-chart">SVG</button>
+            <button class="small" data-dl="png" data-t="vr-chart">PNG</button>
+          </div>
+        </div>
+        <p class="muted small">Treatment groups differ because of the treatment, but participants within each group also differ on a variable such as ability. Treating that variable as a second factor removes its variation from the error term. The sample, and so external validity, is unchanged.</p>
+        <div class="toolbar" id="vr-ov"></div>
+        <div class="chart" id="vr-chart"></div>
+        <div class="legend" id="vr-legend"></div>
+      </div>
+      <div class="card"><h2>One factor versus two factors</h2><div id="vr-test"></div></div>
+      <div class="card"><h2>Power: 300 repeated studies</h2><div id="vr-rep"></div></div>
+    </div>
+  </div>
+  <h2 style="margin:18px 2px 8px">Evaluating order effects in within-subjects designs</h2>
+  <div class="layout">
+    <aside class="card controls" id="or-controls" aria-label="Order effects controls"></aside>
+    <div>
+      <div class="card">
+        <div class="row" style="justify-content:space-between">
+          <h2 style="margin:0">Treatment order as a second factor</h2>
+          <div class="row">
+            <button class="small" data-dl="csv" data-t="or">CSV</button>
+            <button class="small" data-dl="svg" data-t="or-chart">SVG</button>
+            <button class="small" data-dl="png" data-t="or-chart">PNG</button>
+          </div>
+        </div>
+        <p class="muted small">Participants receive Treatment A then B (order AB) or B then A (order BA). Using the order of treatments as a second, between-subjects factor makes it possible to see whether order effects exist: none, symmetrical or nonsymmetrical.</p>
+        <div class="chart" id="or-chart"></div>
+        <div class="legend" id="or-legend"></div>
+      </div>
+      <div class="card"><h2>Cell means</h2><div id="or-tbl"></div></div>
+      <div class="card"><h2>Mixed ANOVA: Treatment × Order</h2><div id="or-test"></div></div>
+      <div class="card"><h2>What this pattern means</h2><div id="or-class"></div></div>
+      <div class="card"><h2>Counterbalancing: 300 repeated studies</h2><div class="chart" id="or-rep"></div><div id="or-rep-txt"></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= PRACTICE ================= -->
+<section class="tabpanel" id="p-prac" role="tabpanel" aria-labelledby="t-prac" hidden>
+  <div class="card">
+    <h2>Scenario practice</h2>
+    <p class="muted">A scenario is generated at random: read the effects from a matrix or graph of cell means, name the type of factorial design, or name the research strategy. Answer, then see the explanation.</p>
+    <div class="row">
+      <button class="primary" data-act="pr-new">New scenario</button>
+      <button data-act="prac-reset" title="Clear the current scenario, the quiz and both scores">Reset</button>
+      <span id="pr-score" class="muted small"></span>
+    </div>
+  </div>
+  <div class="card" id="pr-card" hidden>
+    <div id="pr-desc"></div>
+    <div class="chart" id="pr-chart"></div>
+    <div class="row" id="pr-answer" style="margin-top:10px"></div>
+    <div id="pr-feedback" role="status"></div>
+  </div>
+  <div class="card">
+    <h2>Concept check</h2>
+    <div class="row"><button data-act="qz-new" class="primary small">Next question</button><span id="qz-score" class="muted small"></span></div>
+    <div id="qz-out" style="margin-top:8px"></div>
+  </div>
+</section>
+
+<!-- ================= REFERENCE ================= -->
+<section class="tabpanel" id="p-ref" role="tabpanel" aria-labelledby="t-ref" hidden>
+  <div class="grid2">
+    <div class="card">
+      <h2>Main effects</h2>
+      <p>The main effect of a factor is the set of mean differences among its levels, averaged over the levels of the other factor. A two-factor study has two main effects, one for each factor. The data can be structured to produce main effects for both factors but no interaction (parallel lines).</p>
+    </div>
+    <div class="card">
+      <h2>Interactions</h2>
+      <p>An interaction occurs when one factor has a direct influence on the effect of a second factor. Equivalent definitions: the effects of one factor depend on the level of the other; nonparallel lines in a graph of the cell means; differences that change from one row (or column) of the data matrix to another. A statistical test decides whether an apparent interaction is reliable. A drug interaction is a familiar example: one drug can exaggerate, minimize or completely block the effect of another.</p>
+    </div>
+    <div class="card">
+      <h2>Interpreting main effects and interactions</h2>
+      <ul class="clean"><li>A main effect is an average, so it may not accurately represent any of the individual effects used to compute it. When an interaction is significant, examine the simple effects.</li><li>The two main effects and the interaction are three separate and independent sets of mean differences: any combination can occur.</li><li>Independent factors have no interaction.</li></ul>
+    </div>
+    <div class="card">
+      <h2>Types of factorial design</h2>
+      <ul class="clean"><li><b>Between-subjects:</b> requires many participants; individual differences can become confounding variables; avoids order effects.</li><li><b>Within-subjects:</b> requires one group of participants and eliminates individual differences, but each participant undergoes many treatments, which is time consuming, contributes to attrition and raises the risk of testing effects.</li><li><b>Mixed:</b> combines a between-subjects factor with a within-subjects factor; used when one factor is expected to threaten validity.</li></ul>
+    </div>
+    <div class="card">
+      <h2>Strategies</h2>
+      <ul class="clean"><li><b>Experimental:</b> all factors are true independent variables.</li><li><b>Nonexperimental or quasi-experimental:</b> most or all factors are quasi-independent variables.</li><li><b>Combined:</b> one true IV plus a participant characteristic or time. A pretest-posttest control group study is a two-factor mixed design with the interaction as the effect of interest.</li></ul>
+    </div>
+    <div class="card">
+      <h2>Statistical analysis</h2>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th class="l">Design</th><th class="l">Analysis</th></tr></thead>
+        <tbody>
+          <tr><td class="l">Both factors between-subjects</td><td class="l">Two-factor ANOVA</td></tr>
+          <tr><td class="l">Both factors within-subjects</td><td class="l">Two-factor repeated-measures ANOVA</td></tr>
+          <tr><td class="l">One between, one within (mixed)</td><td class="l">Two-factor mixed-design ANOVA</td></tr>
+        </tbody></table></div>
+      <p class="small muted">Standard practice is to compute the mean for each cell and use ANOVA to test the mean differences. In this explorer the within-subjects and mixed analyses for 2 × 2 designs use equivalent contrasts (F = t²).</p>
+    </div>
+    <div class="card">
+      <h2>Metrics used here</h2>
+      <dl class="gl">
+        <dt>Partial η²</dt><dd>Share of variance for an effect relative to that effect plus its error term.</dd>
+        <dt>Simple effect</dt><dd>The effect of one factor at a single level of the other, tested against the pooled within-cell error.</dd>
+        <dt>Marginal (overall) mean</dt><dd>The mean of a row or column of cell means; the quantity compared in a main effect.</dd>
+        <dt>Power</dt><dd>Here, the share of 300 simulated studies in which an effect was significant at α = .05.</dd>
+      </dl>
+    </div>
+    <div class="card" style="grid-column:1/-1">
+      <h2>References</h2>
+      <ol class="refs">
+        <li>Fisher, R. A. (1935). <i>The design of experiments.</i> Oliver and Boyd.</li>
+        <li>Gravetter, F. J., &amp; Forzano, L.-A. B. <i>Research methods for the behavioral sciences</i> (chapter on factorial designs). Cengage.</li>
+        <li>Keppel, G., &amp; Wickens, T. D. (2004). <i>Design and analysis: A researcher's handbook</i> (4th ed.). Pearson.</li>
+        <li>Maxwell, S. E., &amp; Delaney, H. D. (2004). <i>Designing experiments and analyzing data: A model comparison perspective</i> (2nd ed.). Erlbaum.</li>
+      </ol>
+      <p class="small muted">Citations are provided from memory for orientation; please verify details against the originals before citing. The terminology follows the course slides on factorial designs.</p>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>
+  Simulated data are illustrative. The statistics are descriptive aids; design logic and measurement quality still carry the inference.
+</footer>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+'use strict';
+
+/* ================= basic helpers ================= */
+const $=(s,el=document)=>el.querySelector(s);
+const $$=(s,el=document)=>Array.from(el.querySelectorAll(s));
+const sum=a=>a.reduce((s,v)=>s+v,0);
+const mean=a=>a.length?sum(a)/a.length:NaN;
+const median=a=>{if(!a.length)return NaN;const s=a.slice().sort((x,y)=>x-y),m=s.length>>1;return s.length%2?s[m]:(s[m-1]+s[m])/2};
+const vr=a=>{if(a.length<2)return 0;const m=mean(a);return sum(a.map(v=>(v-m)*(v-m)))/(a.length-1)};
+const sd=a=>Math.sqrt(vr(a));
+const minOf=a=>{let m=Infinity;for(const v of a)if(v<m)m=v;return m};
+const maxOf=a=>{let m=-Infinity;for(const v of a)if(v>m)m=v;return m};
+const f=(v,d=2)=>Number.isFinite(v)?(+v).toFixed(d):'—';
+const sgn=(v,d=1)=>Number.isFinite(v)?((v>0?'+':'')+(+v).toFixed(d)):'—';
+const pct=v=>Number.isFinite(v)?Math.round(v*100)+'%':'—';
+const pf=p=>!Number.isFinite(p)?'—':p<0.001?'< .001':p.toFixed(3).replace(/^0/,'');
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const ROM=['I','II','III','IV','V','VI'];
+
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function makeRng(seed){
+  const r=mulberry32((seed>>>0)||1);
+  const n=()=>{let u=0;while(u===0)u=r();const v=r();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)};
+  const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(r()*(i+1));const t=a[i];a[i]=a[j];a[j]=t}return a};
+  return{r,n,shuffle};
+}
+
+/* ================= distributions ================= */
+function lgam(x){const c=[76.18009172947146,-86.50532032941677,24.01409824083091,-1.231739572450155,0.1208650973866179e-2,-0.5395239384953e-5];let y=x,t=x+5.5;t-=(x+.5)*Math.log(t);let s=1.000000000190015;for(let j=0;j<6;j++)s+=c[j]/++y;return -t+Math.log(2.5066282746310005*s/x)}
+function betacf(a,b,x){
+  const FP=1e-300,qab=a+b,qap=a+1,qam=a-1;let c=1,d=1-qab*x/qap;if(Math.abs(d)<FP)d=FP;d=1/d;let h=d;
+  for(let m=1;m<=300;m++){const m2=2*m;let aa=m*(b-m)*x/((qam+m2)*(a+m2));d=1+aa*d;if(Math.abs(d)<FP)d=FP;c=1+aa/c;if(Math.abs(c)<FP)c=FP;d=1/d;h*=d*c;
+    aa=-(a+m)*(qab+m)*x/((a+m2)*(qap+m2));d=1+aa*d;if(Math.abs(d)<FP)d=FP;c=1+aa/c;if(Math.abs(c)<FP)c=FP;d=1/d;const del=d*c;h*=del;if(Math.abs(del-1)<3e-12)break}
+  return h;
+}
+function ibeta(x,a,b){if(x<=0)return 0;if(x>=1)return 1;const bt=Math.exp(lgam(a+b)-lgam(a)-lgam(b)+a*Math.log(x)+b*Math.log(1-x));return x<(a+1)/(a+b+2)?bt*betacf(a,b,x)/a:1-bt*betacf(b,a,1-x)/b}
+function gammp(a,x){
+  if(x<=0)return 0;
+  if(x<a+1){let ap=a,s=1/a,del=s;for(let n=0;n<400;n++){ap++;del*=x/ap;s+=del;if(Math.abs(del)<Math.abs(s)*3e-12)break}return s*Math.exp(-x+a*Math.log(x)-lgam(a))}
+  let b=x+1-a,c=1e300,d=1/b,h=d;
+  for(let i=1;i<400;i++){const an=-i*(i-a);b+=2;d=an*d+b;if(Math.abs(d)<1e-300)d=1e-300;c=b+an/c;if(Math.abs(c)<1e-300)c=1e-300;d=1/d;const del=d*c;h*=del;if(Math.abs(del-1)<3e-12)break}
+  return 1-Math.exp(-x+a*Math.log(x)-lgam(a))*h;
+}
+const tp2=(t,df)=>ibeta(df/(df+t*t),df/2,0.5);
+const fsf=(F,d1,d2)=>F>=0?ibeta(d2/(d2+d1*F),d2/2,d1/2):NaN;
+const chisf=(x,df)=>1-gammp(df/2,x/2);
+function erf(x){const s=x<0?-1:1;x=Math.abs(x);const t=1/(1+0.3275911*x),y=1-(((((1.061405429*t-1.453152027)*t)+1.421413741)*t-0.284496736)*t+0.254829592)*t*Math.exp(-x*x);return s*y}
+const ncdf=x=>0.5*(1+erf(x/Math.SQRT2));
+function tcrit(df,alpha){let lo=0,hi=1000;for(let i=0;i<80;i++){const m=(lo+hi)/2;if(tp2(m,df)>alpha)lo=m;else hi=m}return(lo+hi)/2}
+function binomP2(n,m){ // two-sided exact sign-test p for min count m out of n
+  let s=0;for(let i=0;i<=m;i++){s+=Math.exp(lgam(n+1)-lgam(i+1)-lgam(n-i+1)-n*Math.LN2)}return Math.min(1,2*s)}
+
+/* ================= tests ================= */
+function indT(a,b){
+  const na=a.length,nb=b.length,ma=mean(a),mb=mean(b),df=na+nb-2;
+  const sp2=((na-1)*vr(a)+(nb-1)*vr(b))/df,se=Math.sqrt(sp2*(1/na+1/nb)),diff=mb-ma;
+  const t=se>0?diff/se:(diff===0?0:Infinity),p=se>0?tp2(t,df):(diff===0?1:0),tc=tcrit(df,.05),sp=Math.sqrt(sp2);
+  return{t,df,p,diff,se,ci:[diff-tc*se,diff+tc*se],d:sp>0?diff/sp:NaN,ma,mb,sp};
+}
+function anova(gs){
+  const all=[].concat(...gs),N=all.length,k=gs.length,gm=mean(all);let ssb=0,ssw=0;
+  gs.forEach(g=>{const m=mean(g);ssb+=g.length*(m-gm)*(m-gm);g.forEach(v=>{ssw+=(v-m)*(v-m)})});
+  const dfb=k-1,dfw=N-k,msb=ssb/dfb,msw=ssw/dfw,F=msw>0?msb/msw:(msb>0?Infinity:0);
+  return{ssb,ssw,sst:ssb+ssw,dfb,dfw,msb,msw,F,p:msw>0?fsf(F,dfb,dfw):(ssb>0?0:1),eta2:(ssb+ssw)>0?ssb/(ssb+ssw):0,N,k,gm};
+}
+function pairedT(x,y){
+  const d=x.map((v,i)=>y[i]-v),n=d.length,md=mean(d),s=sd(d),se=s/Math.sqrt(n),df=n-1;
+  const t=se>0?md/se:(md===0?0:Infinity),p=se>0?tp2(t,df):(md===0?1:0),tc=tcrit(df,.05);
+  return{t,df,p,md,sd:s,se,ci:[md-tc*se,md+tc*se],dz:s>0?md/s:NaN,n,d};
+}
+function rmAnova(M){
+  const n=M.length,k=M[0].length,all=[].concat(...M),gm=mean(all);
+  let ssS=0,ssT=0;
+  M.forEach(r=>{const m=mean(r);ssS+=k*(m-gm)*(m-gm)});
+  for(let j=0;j<k;j++){const m=mean(M.map(r=>r[j]));ssT+=n*(m-gm)*(m-gm)}
+  const sst=sum(all.map(v=>(v-gm)*(v-gm))),ssE=Math.max(0,sst-ssS-ssT),dfT=k-1,dfE=(n-1)*(k-1);
+  const msT=ssT/dfT,msE=ssE/dfE,F=msE>0?msT/msE:(msT>0?Infinity:0);
+  return{ssS,ssT,ssE,sst,dfT,dfE,dfS:n-1,msT,msE,F,p:msE>0?fsf(F,dfT,dfE):(ssT>0?0:1),pEta2:(ssT+ssE)>0?ssT/(ssT+ssE):0,n,k};
+}
+function wilcoxon(x,y){
+  const d=x.map((v,i)=>y[i]-v).filter(v=>v!==0),n=d.length;if(n<1)return{n:0,p:1,W:0,z:0};
+  const idx=d.map((v,i)=>i).sort((a,b)=>Math.abs(d[a])-Math.abs(d[b])),rk=new Array(n);let i=0,tie=0;
+  while(i<n){let j=i;while(j+1<n&&Math.abs(d[idx[j+1]])===Math.abs(d[idx[i]]))j++;const r=(i+j)/2+1;for(let q=i;q<=j;q++)rk[idx[q]]=r;const t=j-i+1;tie+=t*t*t-t;i=j+1}
+  let wp=0,wm=0;d.forEach((v,q)=>{if(v>0)wp+=rk[q];else wm+=rk[q]});
+  const mu=n*(n+1)/4,s=Math.sqrt(Math.max(1e-12,n*(n+1)*(2*n+1)/24-tie/48)),W=Math.min(wp,wm),z=(Math.abs(wp-mu)-0.5)/s;
+  return{n,W,Wp:wp,Wm:wm,z,p:Math.min(1,2*(1-ncdf(Math.max(0,z))))};
+}
+function signTest(x,y){let pos=0,neg=0;x.forEach((v,i)=>{const d=y[i]-v;if(d>0)pos++;else if(d<0)neg++});const n=pos+neg;return{pos,neg,n,p:n?binomP2(n,Math.min(pos,neg)):1}}
+function chiSq(tab){
+  const R=tab.length,C=tab[0].length,rs=tab.map(sum),cs=tab[0].map((_,j)=>sum(tab.map(r=>r[j]))),N=sum(rs);
+  let x2=0,lowExp=0;
+  for(let i=0;i<R;i++)for(let j=0;j<C;j++){const e=rs[i]*cs[j]/N;if(e<5)lowExp++;if(e>0)x2+=(tab[i][j]-e)*(tab[i][j]-e)/e}
+  const df=(R-1)*(C-1);
+  return{x2,df,p:df>0?chisf(x2,df):1,V:Math.sqrt(x2/(N*Math.min(R-1,C-1))),N,rs,cs,lowExp};
+}
+function corr(a,b){const ma=mean(a),mb=mean(b);let sxy=0,sxx=0,syy=0;for(let i=0;i<a.length;i++){sxy+=(a[i]-ma)*(b[i]-mb);sxx+=(a[i]-ma)**2;syy+=(b[i]-mb)**2}return sxx>0&&syy>0?sxy/Math.sqrt(sxx*syy):NaN}
+
+/* approximate power of a two-sided t test (noncentral t, normal approximation) */
+function powerT(delta,df,alpha){
+  if(df<1)return NaN;
+  const tc=tcrit(df,alpha),a=tc*(1-1/(4*df)),s=Math.sqrt(1+tc*tc/(2*df));
+  return clamp(1-ncdf((a-delta)/s)+ncdf((-a-delta)/s),0,1);
+}
+
+/* ================= chart helpers (SVG strings) ================= */
+const COLS=['var(--colA)','var(--colB)','var(--colC)','var(--colD)','var(--colE)'];
+function ticks(min,max,cnt){
+  const span=max-min||1,raw=span/(cnt||5),mag=Math.pow(10,Math.floor(Math.log10(raw))),nm=raw/mag,step=(nm<1.5?1:nm<3?2:nm<7?5:10)*mag,t=[];
+  for(let v=Math.ceil(min/step-1e-9)*step;v<=max+step*1e-9;v+=step)t.push(+v.toPrecision(12));
+  return{t,step};
+}
+const fmtT=(v,step)=>{const d=step>=1?0:Math.min(4,Math.ceil(-Math.log10(step)-1e-9));return(+v).toFixed(d)};
+function svgWrap(W,H,inner,label){return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(label)}" xmlns="http://www.w3.org/2000/svg" font-family="system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif" font-size="11">${inner}</svg>`}
+function frame(W,H,m,xd,yd,o){
+  o=o||{};const iw=W-m.l-m.r,ih=H-m.t-m.b;
+  const sx=v=>m.l+(v-xd[0])/(xd[1]-xd[0])*iw,sy=v=>m.t+ih-(v-yd[0])/(yd[1]-yd[0])*ih;
+  let s=`<rect x="${m.l}" y="${m.t}" width="${iw}" height="${ih}" fill="var(--plot)"/>`;
+  const yt=ticks(yd[0],yd[1],o.yn||5);
+  yt.t.forEach(v=>{const y=sy(v);s+=`<line x1="${m.l}" x2="${W-m.r}" y1="${y}" y2="${y}" stroke="var(--grid)"/><text x="${m.l-6}" y="${y+4}" text-anchor="end" fill="var(--muted)">${fmtT(v,yt.step)}</text>`});
+  if(!o.xcat){const xt=ticks(xd[0],xd[1],o.xn||6);xt.t.forEach(v=>{const x=sx(v);s+=`<line x1="${x}" x2="${x}" y1="${m.t}" y2="${H-m.b}" stroke="var(--grid)"/><text x="${x}" y="${H-m.b+15}" text-anchor="middle" fill="var(--muted)">${fmtT(v,xt.step)}</text>`})}
+  s+=`<line x1="${m.l}" x2="${m.l}" y1="${m.t}" y2="${H-m.b}" stroke="var(--axis)"/><line x1="${m.l}" x2="${W-m.r}" y1="${H-m.b}" y2="${H-m.b}" stroke="var(--axis)"/>`;
+  if(o.xlab)s+=`<text x="${m.l+iw/2}" y="${H-6}" text-anchor="middle" fill="var(--muted)">${esc(o.xlab)}</text>`;
+  if(o.ylab)s+=`<text transform="translate(14 ${m.t+ih/2}) rotate(-90)" text-anchor="middle" fill="var(--muted)">${esc(o.ylab)}</text>`;
+  return{sx,sy,s,W,H,m,iw,ih};
+}
+function mk(shape,x,y,r,col,op,hollow){
+  const fill=hollow?'var(--plot)':col,st=`fill="${fill}" fill-opacity="${hollow?1:(op||.85)}" stroke="${col}" stroke-width="${hollow?1.6:.8}"`;
+  x=+x.toFixed(1);y=+y.toFixed(1);
+  switch(shape%5){
+    case 0:return `<circle cx="${x}" cy="${y}" r="${r}" ${st}/>`;
+    case 1:return `<rect x="${x-r}" y="${y-r}" width="${2*r}" height="${2*r}" ${st}/>`;
+    case 2:return `<polygon points="${x},${y-r*1.3} ${x+r*1.3},${y} ${x},${y+r*1.3} ${x-r*1.3},${y}" ${st}/>`;
+    case 3:return `<polygon points="${x},${y-r*1.25} ${x+r*1.2},${y+r} ${x-r*1.2},${y+r}" ${st}/>`;
+    default:return `<path d="M${x-r} ${y}H${x+r}M${x} ${y-r}V${y+r}" stroke="${col}" stroke-width="2.4" fill="none"/>`;
+  }
+}
+function swarm(vals,sy,r){
+  const placed=[],off=new Array(vals.length),idx=vals.map((v,i)=>i).sort((a,b)=>vals[a]-vals[b]);
+  idx.forEach(i=>{
+    const y=sy(vals[i]);let k=0,o=0;
+    for(;k<400;k++){o=k===0?0:(k%2?1:-1)*Math.ceil(k/2)*r*1.1;if(!placed.some(q=>(q.o-o)*(q.o-o)+(q.y-y)*(q.y-y)<4*r*r*0.85))break}
+    placed.push({o,y});off[i]=o;
+  });
+  return off;
+}
+
+function dotChart(groups,o){
+  o=o||{};const ov=o.ov||{},k=groups.length,W=760,H=o.H||380,m={l:58,r:16,t:14,b:o.sub?66:50};
+  const all=[].concat(...groups.map(g=>g.y));let lo=minOf(all),hi=maxOf(all);const pad=(hi-lo||1)*.08;
+  const fr=frame(W,H,m,[0,k],[lo-pad,hi+pad],{xcat:true,ylab:o.ylab||'Score'});
+  const maxn=maxOf(groups.map(g=>g.y.length)),r=maxn<=15?5.5:maxn<=40?4.2:maxn<=100?3:2.2;
+  let s=fr.s;
+  if(ov.grand){const gm=mean(all);s+=`<line x1="${m.l}" x2="${W-m.r}" y1="${fr.sy(gm)}" y2="${fr.sy(gm)}" stroke="var(--muted)" stroke-dasharray="5 4"/><text x="${W-m.r-4}" y="${fr.sy(gm)-4}" text-anchor="end" fill="var(--muted)">grand mean ${f(gm,1)}</text>`}
+  groups.forEach((g,gi)=>{
+    const cx=fr.sx(gi+.5),col=COLS[gi%5],mu=mean(g.y),sg=sd(g.y),n=g.y.length,off=swarm(g.y,fr.sy,r),hw=fr.sx(gi+.5+.34)-cx;
+    if(ov.sd)s+=`<rect x="${cx-hw}" y="${fr.sy(mu+sg)}" width="${2*hw}" height="${Math.max(1,fr.sy(mu-sg)-fr.sy(mu+sg))}" fill="${col}" fill-opacity=".13"/>`;
+    if(ov.dev)g.y.forEach((v,i)=>{s+=`<line x1="${(cx+off[i]).toFixed(1)}" x2="${(cx+off[i]).toFixed(1)}" y1="${fr.sy(v).toFixed(1)}" y2="${fr.sy(mu).toFixed(1)}" stroke="${col}" stroke-opacity=".45"/>`});
+    g.y.forEach((v,i)=>{s+=mk(gi,cx+off[i],fr.sy(v),r,col,.8)});
+    if(ov.median){const md=median(g.y);s+=`<line x1="${cx-hw}" x2="${cx+hw}" y1="${fr.sy(md)}" y2="${fr.sy(md)}" stroke="var(--fg)" stroke-width="1.5" stroke-dasharray="4 3"/>`}
+    if(ov.mean)s+=`<line x1="${cx-hw}" x2="${cx+hw}" y1="${fr.sy(mu)}" y2="${fr.sy(mu)}" stroke="var(--fg)" stroke-width="2.6"/>`;
+    if(ov.ci&&n>1){const se=sg/Math.sqrt(n),tc=tcrit(n-1,.05),x=cx+hw+9;s+=`<line x1="${x}" x2="${x}" y1="${fr.sy(mu-tc*se)}" y2="${fr.sy(mu+tc*se)}" stroke="var(--fg)" stroke-width="1.6"/><line x1="${x-4}" x2="${x+4}" y1="${fr.sy(mu-tc*se)}" y2="${fr.sy(mu-tc*se)}" stroke="var(--fg)" stroke-width="1.6"/><line x1="${x-4}" x2="${x+4}" y1="${fr.sy(mu+tc*se)}" y2="${fr.sy(mu+tc*se)}" stroke="var(--fg)" stroke-width="1.6"/><circle cx="${x}" cy="${fr.sy(mu)}" r="2.6" fill="var(--fg)"/>`}
+    s+=`<text x="${cx}" y="${H-m.b+16}" text-anchor="middle" fill="var(--fg)" font-weight="600">${esc(g.label)}</text><text x="${cx}" y="${H-m.b+30}" text-anchor="middle" fill="var(--muted)">n = ${n}, M = ${f(mu,1)}, SD = ${f(sg,1)}</text>`;
+    if(o.sub)s+=`<text x="${cx}" y="${H-m.b+44}" text-anchor="middle" fill="var(--muted)">${esc(o.sub[gi]||'')}</text>`;
+  });
+  return svgWrap(W,H,s,o.label||'Dot plot of scores by group');
+}
+
+function scatterChart(pts,o){
+  const W=o.W||760,H=o.H||360,m={l:58,r:o.W?16:78,t:14,b:44},xs=pts.map(p=>p.x),ys=pts.map(p=>p.y);
+  const xp=(maxOf(xs)-minOf(xs)||1)*.06,yp=(maxOf(ys)-minOf(ys)||1)*.08;
+  const fr=frame(W,H,m,[o.x0!==undefined?o.x0:minOf(xs)-xp,o.x1!==undefined?o.x1:maxOf(xs)+xp],[minOf(ys)-yp,maxOf(ys)+yp],{xlab:o.xlab,ylab:o.ylab});
+  let s=fr.s;
+  if(o.band)s+=`<rect x="${fr.sx(o.band[0])}" y="${m.t}" width="${fr.sx(o.band[1])-fr.sx(o.band[0])}" height="${fr.ih}" fill="var(--colB)" fill-opacity=".10"/>`;
+  pts.forEach(p=>{s+=mk(p.g||0,fr.sx(p.x),fr.sy(p.y),o.r||3.6,COLS[(p.g||0)%5],p.faded?.28:.8)});
+  (o.hlines||[]).forEach(h=>{s+=`<line x1="${m.l}" x2="${W-m.r}" y1="${fr.sy(h.y)}" y2="${fr.sy(h.y)}" stroke="${h.col}" stroke-width="2" stroke-dasharray="6 4"/><text x="${W-m.r+4}" y="${fr.sy(h.y)+4}" fill="${h.col}" font-weight="600">${esc(h.t)}</text>`});
+  if(o.fit){const a=o.fit;s+=`<line x1="${fr.sx(a.x0)}" y1="${fr.sy(a.y0)}" x2="${fr.sx(a.x1)}" y2="${fr.sy(a.y1)}" stroke="var(--fg)" stroke-width="1.6"/>`}
+  return svgWrap(W,H,s,o.label||'Scatter plot');
+}
+
+function histRows(rows,truth,o){
+  o=o||{};const W=760,rowH=o.rowH||74,top=10,bot=44,H=top+rows.length*rowH+bot,m={l:210,r:20};
+  const all=[].concat(...rows.map(r=>r.vals));let lo=Math.min(minOf(all),truth),hi=Math.max(maxOf(all),truth);const pad=(hi-lo||1)*.06;lo-=pad;hi+=pad;
+  const sx=v=>m.l+(v-lo)/(hi-lo)*(W-m.l-m.r),bins=28,bw=(hi-lo)/bins;let s='';
+  const xt=ticks(lo,hi,7);
+  xt.t.forEach(v=>{s+=`<line x1="${sx(v)}" x2="${sx(v)}" y1="${top}" y2="${H-bot}" stroke="var(--grid)"/><text x="${sx(v)}" y="${H-bot+15}" text-anchor="middle" fill="var(--muted)">${fmtT(v,xt.step)}</text>`});
+  s+=`<text x="${m.l+(W-m.l-m.r)/2}" y="${H-6}" text-anchor="middle" fill="var(--muted)">${esc(o.xlab||'Estimated effect')}</text>`;
+  rows.forEach((r,ri)=>{
+    const y0=top+ri*rowH,base=y0+rowH-10,cnt=new Array(bins).fill(0);
+    r.vals.forEach(v=>{cnt[Math.min(bins-1,Math.max(0,Math.floor((v-lo)/bw)))]++});
+    const mx=maxOf(cnt)||1,col=r.col||'var(--colA)';
+    cnt.forEach((c,i)=>{if(!c)return;const h=c/mx*(rowH-26);s+=`<rect x="${sx(lo+i*bw)+.5}" y="${base-h}" width="${Math.max(1,sx(lo+(i+1)*bw)-sx(lo+i*bw)-1)}" height="${h}" fill="${col}" fill-opacity=".75"/>`});
+    s+=`<line x1="${m.l}" x2="${W-m.r}" y1="${base}" y2="${base}" stroke="var(--axis)"/>`;
+    const mu=mean(r.vals);
+    s+=`<polygon points="${sx(mu)},${base+1} ${sx(mu)-5},${base+8} ${sx(mu)+5},${base+8}" fill="var(--fg)"/>`;
+    s+=`<text x="${m.l-8}" y="${base-24}" text-anchor="end" fill="var(--fg)" font-weight="600">${esc(r.label)}</text><text x="${m.l-8}" y="${base-10}" text-anchor="end" fill="var(--muted)">mean ${f(mu,1)}, SD ${f(sd(r.vals),1)}</text>`;
+  });
+  s+=`<line x1="${sx(truth)}" x2="${sx(truth)}" y1="${top}" y2="${H-bot}" stroke="var(--bad)" stroke-width="1.8" stroke-dasharray="6 4"/><text x="${sx(truth)+4}" y="${top+10}" fill="var(--bad)" font-weight="600">true effect ${f(truth,1)}</text>`;
+  return svgWrap(W,H,s,o.label||'Distribution of estimated effects');
+}
+
+function pairedChart(M,labels,o){
+  o=o||{};const ov=o.ov||{},k=M[0].length,W=760,H=380,m={l:58,r:16,t:14,b:46},n=M.length;
+  const view=o.mode==='pos'?'pos':'treat',D=view==='pos'?o.P:M;
+  const all=[].concat(...D);if(o.M0&&ov.truth&&view==='treat')all.push(...[].concat(...o.M0));
+  const lo=minOf(all),hi=maxOf(all),pad=(hi-lo||1)*.08;
+  const fr=frame(W,H,m,[0,k],[lo-pad,hi+pad],{xcat:true,ylab:o.ylab||'Score'}),cx=j=>fr.sx(j+.5);let s=fr.s;
+  const dotR=n<=20?4.4:n<=50?3.3:2.4;
+  if(ov.lines)D.forEach(r=>{s+=`<polyline fill="none" stroke="var(--axis)" stroke-opacity="${n<=20?.5:.25}" points="${r.map((v,j)=>cx(j).toFixed(1)+','+fr.sy(v).toFixed(1)).join(' ')}"/>`});
+  if(view==='treat'){
+    D.forEach(r=>r.forEach((v,j)=>{s+=mk(j,cx(j)+(((j*37)%7)-3)*1.2,fr.sy(v),dotR,COLS[j%5],.7)}));
+  }else{
+    D.forEach((r,i)=>r.forEach((v,j)=>{const t=o.seqOf[o.rows[i]][j];s+=mk(t,cx(j)+(((i*13+j)%7)-3)*1.2,fr.sy(v),dotR,COLS[t%5],.7)}));
+  }
+  const mu=Array.from({length:k},(_,j)=>mean(D.map(r=>r[j])));
+  if(o.M0&&ov.truth&&view==='treat'){const t0=Array.from({length:k},(_,j)=>mean(o.M0.map(r=>r[j])));
+    s+=`<polyline fill="none" stroke="var(--bad)" stroke-width="1.8" stroke-dasharray="5 4" points="${t0.map((v,j)=>cx(j)+','+fr.sy(v)).join(' ')}"/>`;
+    t0.forEach((v,j)=>{s+=mk(2,cx(j),fr.sy(v),5,'var(--bad)',1,true)});
+    s+=`<text x="${W-m.r-4}" y="${m.t+12}" text-anchor="end" fill="var(--bad)">dashed: true means (no order or carryover effects)</text>`;
+  }
+  if(ov.mean){s+=`<polyline fill="none" stroke="var(--fg)" stroke-width="2.6" points="${mu.map((v,j)=>cx(j)+','+fr.sy(v)).join(' ')}"/>`;mu.forEach((v,j)=>{s+=`<circle cx="${cx(j)}" cy="${fr.sy(v)}" r="5.5" fill="var(--fg)"/><text x="${cx(j)+9}" y="${fr.sy(v)-8}" fill="var(--fg)" font-weight="600">${f(v,1)}</text>`})}
+  const xl=view==='pos'?Array.from({length:k},(_,j)=>'Position '+(j+1)):labels;
+  xl.forEach((l,j)=>{s+=`<text x="${cx(j)}" y="${H-m.b+18}" text-anchor="middle" fill="var(--fg)" font-weight="600">${esc(l)}</text>`});
+  s+=`<text x="${m.l+fr.iw/2}" y="${H-6}" text-anchor="middle" fill="var(--muted)">${view==='pos'?'Order in which the treatment was received (marker shows which treatment)':'Treatment condition (each line is one participant)'}</text>`;
+  return svgWrap(W,H,s,o.label||'Scores of each participant across conditions');
+}
+
+function lineChart(series,o){
+  const W=760,H=o.H||340,m={l:58,r:20,t:14,b:46},fr=frame(W,H,m,o.xd,[0,1],{xlab:o.xlab,ylab:o.ylab,yn:5});let s=fr.s;
+  if(o.target!==undefined)s+=`<line x1="${m.l}" x2="${W-m.r}" y1="${fr.sy(o.target)}" y2="${fr.sy(o.target)}" stroke="var(--muted)" stroke-dasharray="5 4"/><text x="${W-m.r-4}" y="${fr.sy(o.target)-5}" text-anchor="end" fill="var(--muted)">target power ${o.target}</text>`;
+  series.forEach(se=>{
+    s+=`<polyline fill="none" stroke="${se.col}" stroke-width="2.4" ${se.dash?'stroke-dasharray="6 4"':''} points="${se.xs.map((x,i)=>fr.sx(x).toFixed(1)+','+fr.sy(se.ys[i]).toFixed(1)).join(' ')}"/>`;
+    if(se.mark!==undefined){const x=se.mark.x,y=se.mark.y;s+=mk(se.shape||0,fr.sx(x),fr.sy(y),5.5,se.col,1)}
+  });
+  if(o.vline!==undefined)s+=`<line x1="${fr.sx(o.vline)}" x2="${fr.sx(o.vline)}" y1="${m.t}" y2="${H-m.b}" stroke="var(--axis)" stroke-dasharray="2 3"/>`;
+  return svgWrap(W,H,s,o.label||'Line chart');
+}
+
+function barMeans(groups,o){
+  o=o||{};const W=760,H=o.H||320,m={l:58,r:16,t:14,b:56},k=groups.length;
+  const lo=Math.min(...groups.map(g=>mean(g.y)-2.6*sd(g.y)/Math.sqrt(g.y.length))),hi=Math.max(...groups.map(g=>mean(g.y)+2.6*sd(g.y)/Math.sqrt(g.y.length)));
+  const pad=(hi-lo||1)*.25,fr=frame(W,H,m,[0,k],[lo-pad,hi+pad],{xcat:true,ylab:o.ylab||'Score'});let s=fr.s;
+  groups.forEach((g,gi)=>{
+    const cx=fr.sx(gi+.5),mu=mean(g.y),se=sd(g.y)/Math.sqrt(g.y.length),tc=tcrit(g.y.length-1,.05),hw=fr.sx(gi+.5+.28)-cx,col=COLS[gi%5];
+    s+=`<rect x="${cx-hw}" y="${Math.min(fr.sy(mu),H-m.b)}" width="${2*hw}" height="${Math.max(0,H-m.b-fr.sy(mu))}" fill="${col}" fill-opacity=".3" stroke="${col}"/>`;
+    s+=`<line x1="${cx}" x2="${cx}" y1="${fr.sy(mu-tc*se)}" y2="${fr.sy(mu+tc*se)}" stroke="var(--fg)" stroke-width="1.8"/><line x1="${cx-6}" x2="${cx+6}" y1="${fr.sy(mu-tc*se)}" y2="${fr.sy(mu-tc*se)}" stroke="var(--fg)" stroke-width="1.8"/><line x1="${cx-6}" x2="${cx+6}" y1="${fr.sy(mu+tc*se)}" y2="${fr.sy(mu+tc*se)}" stroke="var(--fg)" stroke-width="1.8"/>`;
+    s+=`<text x="${cx}" y="${fr.sy(mu+tc*se)-8}" text-anchor="middle" fill="var(--fg)" font-weight="600">${f(mu,1)}</text>`;
+    s+=`<text x="${cx}" y="${H-m.b+17}" text-anchor="middle" fill="var(--fg)" font-weight="600">${esc(g.label)}</text><text x="${cx}" y="${H-m.b+31}" text-anchor="middle" fill="var(--muted)">n = ${g.y.length}</text>`;
+  });
+  return svgWrap(W,H,s,o.label||'Group means with 95% confidence intervals');
+}
+
+const esc2=esc;
+function ctrlHTML(prefix,defs,state,presets){
+  let h=`<div class="ctl"><label for="${prefix}-preset">Scenario preset</label><select id="${prefix}-preset"><option value="">Choose a preset…</option>${presets.map((p,i)=>`<option value="${i}">${esc(p[0])}</option>`).join('')}</select></div>`;
+  const groups=[];defs.forEach(d=>{if(!groups.includes(d.g))groups.push(d.g)});
+  groups.forEach((g,gi)=>{
+    h+=`<details class="grp" ${gi<(prefix==='ba'?1:3)?'open':''}><summary>${esc(g)}</summary>`;
+    defs.filter(d=>d.g===g).forEach(d=>{
+      const id=`${prefix}-${d.k}`,v=state[d.k],ttl=d.help?` title="${esc(d.help)}"`:'';
+      if(d.type==='select')h+=`<div class="ctl"><label for="${id}"${ttl}>${esc(d.l)}</label><select id="${id}" data-k="${d.k}" ${d.num?'data-num="1"':''}>${d.opts.map(o=>`<option value="${o[0]}" ${String(o[0])===String(v)?'selected':''}>${esc(o[1])}</option>`).join('')}</select></div>`;
+      else if(d.type==='check')h+=`<div class="ctl check"><label><input type="checkbox" id="${id}" data-k="${d.k}" ${v?'checked':''}> ${esc(d.l)}</label></div>`;
+      else if(d.type==='text')h+=`<div class="ctl"><label for="${id}">${esc(d.l)}</label><input type="text" id="${id}" data-k="${d.k}" value="${esc(v)}"></div>`;
+      else if(d.type==='seed')h+=`<div class="ctl"><label for="${id}">${esc(d.l)}</label><div class="row"><input type="number" id="${id}" data-k="${d.k}" value="${v}" min="1" step="1" style="flex:1"><button class="small" data-act="${prefix}-rand">Randomize</button></div></div>`;
+      else h+=`<div class="ctl"><label for="${id}"${ttl}>${esc(d.l)}<output id="${id}-o">${d.fmt?d.fmt(v):v}${d.unit||''}</output></label><input type="range" id="${id}" data-k="${d.k}" min="${d.min}" max="${d.max}" step="${d.step}" value="${v}"></div>`;
+    });
+    h+='</details>';
+  });
+  return h+`<div class="row"><button class="small" data-act="${prefix}-reset">Reset all</button></div>`;
+}
+function ovHTML(prefix,items,ov){return items.map(([k,l])=>`<label><input type="checkbox" data-ov="${k}" data-pre="${prefix}" ${ov[k]?'checked':''}> ${l}</label>`).join('')}
+function applyVis(prefix,defs,state){defs.forEach(d=>{if(!d.show)return;const el=$('#'+prefix+'-'+d.k);const c=el&&el.closest('.ctl');if(c)c.hidden=!d.show(state)})}
+function syncControls(prefix,defs,state){
+  defs.forEach(d=>{const el=$('#'+prefix+'-'+d.k);if(!el)return;
+    if(d.type==='check')el.checked=!!state[d.k];else el.value=state[d.k];
+    const o=$('#'+prefix+'-'+d.k+'-o');if(o)o.textContent=(d.fmt?d.fmt(state[d.k]):state[d.k])+(d.unit||'');});
+  applyVis(prefix,defs,state);
+}
+function bindControls(prefix,state,defs,onChange,presets,def){
+  const root=$('#'+prefix+'-controls');
+  root.addEventListener('input',e=>{
+    const el=e.target;if(el.id===prefix+'-preset')return;
+    const k=el.dataset.k;if(!k)return;
+    let v;
+    if(el.type==='checkbox')v=el.checked;else if(el.type==='range'||el.type==='number'||el.dataset.num)v=+el.value;else v=el.value;
+    if(el.type==='number'&&!(v>=1))return;
+    state[k]=v;
+    const o=$('#'+prefix+'-'+k+'-o'),d=defs.find(x=>x.k===k);if(o&&d)o.textContent=(d.fmt?d.fmt(v):v)+(d.unit||'');
+    applyVis(prefix,defs,state);onChange();
+  });
+  root.addEventListener('change',e=>{
+    if(e.target.id===prefix+'-preset'){const i=e.target.value;if(i==='')return;
+      Object.assign(state,def,presets[+i][1],{seed:state.seed});syncControls(prefix,defs,state);onChange();}
+  });
+}
+
+/* ================= tables / narrative ================= */
+function tbl(head,rows){
+  const isTxt=c=>{const t=String(c).replace(/<[^>]*>/g,'').trim();return t.length>14&&!/^[+\-−0-9.]/.test(t)};
+  const L=head.map((h,i)=>i===0||rows.some(r=>isTxt(r[i])));
+  const cls=i=>L[i]?' class="l"':'';
+  return `<div class="tbl-wrap"><table><thead><tr>${head.map((h,i)=>Array.isArray(h)?`<th${cls(i)} title="${esc(h[1])}">${h[0]}</th>`:`<th${cls(i)}>${h}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${r.map((c,i)=>`<td${cls(i)}>${c}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+}
+const pill=(txt,cls)=>`<span class="pill ${cls}">${txt}</span>`;
+const sigPill=p=>p<0.05?pill('p '+(p<0.001?'< .001':'= '+pf(p))+': significant','good'):pill('p = '+pf(p)+': not significant','warn');
+function legendHTML(labels){return labels.map((l,i)=>`<span><i style="display:inline-block;vertical-align:middle;margin-right:4px;width:11px;height:11px;border-radius:${i%5===0?'50%':'2px'};background:${COLS[i%5]}"></i>${esc(l)}</span>`).join('')}
+
+/* 2 (group, between) x 2 (time, within) mixed ANOVA via equivalent contrasts */
+function mixed2x2(a,b){
+  const G=[a,b],d=G.map(g=>g.pre.map((v,i)=>g.post[i]-v)),s=G.map(g=>g.pre.map((v,i)=>(v+g.post[i])/2));
+  const inter=anova(d),grp=anova(s),ng=d.map(x=>x.length),N=ng[0]+ng[1],Dg=d.map(mean);
+  const se=Math.sqrt(inter.msw*(1/ng[0]+1/ng[1])/4),tt=se>0?((Dg[0]+Dg[1])/2)/se:0,df=N-2;
+  const pe=(F,d2)=>F/(F+d2);
+  return{
+    group:{F:grp.F,df1:1,df2:df,p:grp.p,pe:pe(grp.F,df)},
+    time:{F:tt*tt,df1:1,df2:df,p:se>0?tp2(tt,df):1,pe:pe(tt*tt,df)},
+    inter:{F:inter.F,df1:1,df2:df,p:inter.p,pe:pe(inter.F,df)},
+    gain:[mean(d[0]),mean(d[1])],gainT:indT(d[0],d[1])
+  };
+}
+
+/* ================= linear algebra / factorial statistics ================= */
+function solveLin(A,b){
+  const n=b.length;A=A.map((r,i)=>r.concat([b[i]]));
+  for(let i=0;i<n;i++){
+    let p=i;for(let r=i+1;r<n;r++)if(Math.abs(A[r][i])>Math.abs(A[p][i]))p=r;
+    [A[i],A[p]]=[A[p],A[i]];const d=A[i][i];if(Math.abs(d)<1e-12)return null;
+    for(let c=i;c<=n;c++)A[i][c]/=d;
+    for(let r=0;r<n;r++)if(r!==i){const m=A[r][i];if(m)for(let c=i;c<=n;c++)A[r][c]-=m*A[i][c]}
+  }
+  return A.map(r=>r[n]);
+}
+function olsRes(X,y){
+  const p=X[0].length;
+  const XtX=Array.from({length:p},(_,i)=>Array.from({length:p},(_,j)=>sum(X.map(r=>r[i]*r[j]))));
+  const Xty=Array.from({length:p},(_,i)=>sum(X.map((r,k)=>r[i]*y[k])));
+  const b=solveLin(XtX,Xty);if(!b)return null;
+  return y.map((v,k)=>v-sum(X[k].map((x,i)=>x*b[i])));
+}
+const balanced=cells=>{const n=cells[0][0].length;return cells.every(r=>r.every(c=>c.length===n))};
+const effCols=(k,l)=>{const r=[];for(let m=0;m<k-1;m++)r.push(l===k-1?-1:(l===m?1:0));return r};
+
+/* two-factor between-subjects ANOVA; cells[i][j] = scores for level i of A and level j of B */
+function twoWay(cells,forceGeneral){
+  const a=cells.length,b=cells[0].length;
+  if(cells.some(r=>r.some(c=>c.length<1)))return{error:'Every cell needs at least one score.'};
+  const cm=cells.map(r=>r.map(mean)),cn=cells.map(r=>r.map(c=>c.length)),cs=cells.map(r=>r.map(c=>sd(c)));
+  const N=sum(cn.map(r=>sum(r))),dfe=N-a*b;
+  if(dfe<1)return{error:'At least one cell needs two or more scores.'};
+  const gm=mean([].concat(...cm)),mA=cm.map(r=>mean(r)),mB=cm[0].map((_,j)=>mean(cm.map(r=>r[j])));
+  let ssA,ssB,ssAB,sse=0;
+  cells.forEach(r=>r.forEach(c=>{const m=mean(c);c.forEach(v=>{sse+=(v-m)*(v-m)})}));
+  if(!forceGeneral&&balanced(cells)){
+    const n=cells[0][0].length;
+    ssA=n*b*sum(mA.map(m=>(m-gm)*(m-gm)));ssB=n*a*sum(mB.map(m=>(m-gm)*(m-gm)));
+    const ssc=n*sum(cm.map(r=>sum(r.map(m=>(m-gm)*(m-gm)))));ssAB=ssc-ssA-ssB;
+  }else{
+    const obs=[];cells.forEach((r,i)=>r.forEach((c,j)=>c.forEach(v=>obs.push([i,j,v]))));
+    const y=obs.map(o=>o[2]),rows=obs.map(o=>{const ea=effCols(a,o[0]),eb=effCols(b,o[1]),ab=[];ea.forEach(x=>eb.forEach(z=>ab.push(x*z)));return{ea,eb,ab}});
+    const rss=drop=>{const res=olsRes(rows.map(r=>[1].concat(drop==='A'?[]:r.ea,drop==='B'?[]:r.eb,drop==='AB'?[]:r.ab)),y);return res?sum(res.map(v=>v*v)):NaN};
+    const full=rss(null);ssA=rss('A')-full;ssB=rss('B')-full;ssAB=rss('AB')-full;sse=full;
+    if(![ssA,ssB,ssAB,sse].every(Number.isFinite))return{error:'These data cannot be analyzed (a design matrix is singular).'};
+  }
+  ssA=Math.max(0,ssA);ssB=Math.max(0,ssB);ssAB=Math.max(0,ssAB);
+  const mse=sse/dfe,mk=(k,ss,df)=>{const ms=ss/df,F=mse>0?ms/mse:(ms>0?Infinity:0);return{k,ss,df,ms,F,p:mse>0?fsf(F,df,dfe):(ss>0?0:1),pe:(ss+sse)>0?ss/(ss+sse):0}};
+  return{a,b,N,cm,cn,cs,gm,mA,mB,dfe,sse,mse,rows:[mk('A',ssA,a-1),mk('B',ssB,b-1),mk('AB',ssAB,(a-1)*(b-1))]};
+}
+/* simple effects: the effect of one factor at each level of the other (pooled error from the full model) */
+function simpleEffects(t,cells,factor){
+  const a=t.a,b=t.b,out=[];
+  const grp=factor==='A'?Array.from({length:b},(_,j)=>cells.map(r=>r[j])):cells.map(r=>r);
+  grp.forEach((lv,idx)=>{
+    const ns=lv.map(c=>c.length),ms=lv.map(mean),tn=sum(ns),wm=sum(ms.map((m,i)=>m*ns[i]))/tn;
+    const ss=sum(ms.map((m,i)=>ns[i]*(m-wm)*(m-wm))),df=lv.length-1,F=t.mse>0?ss/df/t.mse:(ss>0?Infinity:0);
+    out.push({at:idx,diff:ms[0]-ms[ms.length-1],F,df,p:t.mse>0?fsf(F,df,t.dfe):(ss>0?0:1)});
+  });
+  return out;
+}
+
+/* ================= factorial simulation ================= */
+const cellMu=(p,i,j)=>{const ca=(p.aN-1)/2-i,cb=(p.bN-1)/2-j;return p.grand+p.effA*ca+p.effB*cb+p.effAB*ca*cb};
+const stdz=z=>{const m=mean(z),s=sd(z)||1;return z.map(v=>(v-m)/s)};
+function simCells(p,seed){
+  const R=makeRng(seed===undefined?p.seed:seed);
+  return Array.from({length:p.aN},(_,i)=>Array.from({length:p.bN},(_,j)=>{
+    let z=Array.from({length:p.n},()=>R.n());if(p.exact&&p.n>1)z=stdz(z);
+    const mu=cellMu(p,i,j);return z.map(v=>mu+p.sd*v);
+  }));
+}
+function repEF(p,reps){
+  const q=Object.assign({},p,{exact:false}),c={A:0,B:0,AB:0};
+  for(let r=0;r<reps;r++){const t=twoWay(simCells(q,p.seed*8191+r*13+7));if(t.error)continue;t.rows.forEach(x=>{if(x.p<0.05)c[x.k]++})}
+  return{A:c.A/reps,B:c.B/reps,AB:c.AB/reps};
+}
+function parseLv(str,n,pre){
+  const a=String(str).split(',').map(s=>s.trim()).filter(Boolean);
+  while(a.length<n)a.push(pre+(a.length+1));return a.slice(0,n);
+}
+
+/* ================= between / within / mixed (2 x 2) ================= */
+const mu22=(p,i,j)=>cellMu({aN:2,bN:2,grand:p.grand,effA:p.effA,effB:p.effB,effAB:p.effAB},i,j);
+function simDS(p,design,seed){
+  const R=makeRng(seed===undefined?p.seed:seed),n=p.n;
+  if(design==='between'){
+    const cells=[0,1].map(i=>[0,1].map(j=>Array.from({length:n},()=>mu22(p,i,j)+p.sdP*R.n()+p.sdE*R.n())));
+    return{design,cells};
+  }
+  if(design==='within'){
+    const M=Array.from({length:n},()=>{const pe=p.sdP*R.n();return [[0,0],[0,1],[1,0],[1,1]].map(([i,j])=>mu22(p,i,j)+pe+p.sdE*R.n())});
+    return{design,M,cells:[0,1].map(i=>[0,1].map(j=>M.map(r=>r[2*i+j])))};
+  }
+  const G=[0,1].map(i=>Array.from({length:n},()=>{const pe=p.sdP*R.n();return [0,1].map(j=>mu22(p,i,j)+pe+p.sdE*R.n())}));
+  return{design,G,cells:[0,1].map(i=>[0,1].map(j=>G[i].map(r=>r[j])))};
+}
+function analyzeDS(S){
+  const pe=(F,d2)=>F/(F+d2);
+  if(S.design==='between'){
+    const t=twoWay(S.cells);if(t.error)return{error:t.error};
+    return{rows:t.rows.map(r=>({k:r.k,F:r.F,df1:r.df,df2:t.dfe,p:r.p,pe:r.pe})),err:`one error term for every effect: variation within cells (df = ${t.dfe})`,N:S.cells[0][0].length*4};
+  }
+  if(S.design==='within'){
+    const M=S.M,n=M.length,df2=n-1,con=w=>M.map(r=>w[0]*r[0]+w[1]*r[1]+w[2]*r[2]+w[3]*r[3]);
+    const rows=[['A',[.5,.5,-.5,-.5]],['B',[.5,-.5,.5,-.5]],['AB',[1,-1,-1,1]]].map(([k,w])=>{
+      const d=con(w),s=sd(d),t=s>0?mean(d)/(s/Math.sqrt(n)):(mean(d)===0?0:Infinity),F=t*t;
+      return{k,F,df1:1,df2,p:s>0?tp2(t,df2):(mean(d)===0?1:0),pe:pe(F,df2)};
+    });
+    return{rows,err:`a separate error term for each effect, based on how consistently the effect appears across participants (df = ${df2})`,N:n};
+  }
+  const m=mixed2x2({pre:S.G[0].map(r=>r[0]),post:S.G[0].map(r=>r[1])},{pre:S.G[1].map(r=>r[0]),post:S.G[1].map(r=>r[1])});
+  return{rows:[{k:'A',F:m.group.F,df1:1,df2:m.group.df2,p:m.group.p,pe:m.group.pe},{k:'B',F:m.time.F,df1:1,df2:m.time.df2,p:m.time.p,pe:m.time.pe},{k:'AB',F:m.inter.F,df1:1,df2:m.inter.df2,p:m.inter.p,pe:m.inter.pe}],
+    err:`A (between) is tested against differences among participants; B and A × B are tested against participant-by-B variation (df = ${m.group.df2})`,N:S.G[0].length*2};
+}
+const DS_NAMES={between:'Both factors between-subjects',within:'Both factors within-subjects',mixed:'Mixed: A between, B within'};
+function repDS(p,reps){
+  const out={};
+  ['between','within','mixed'].forEach((d,di)=>{
+    const c={A:0,B:0,AB:0};
+    for(let r=0;r<reps;r++){const a=analyzeDS(simDS(p,d,p.seed*9973+r*19+di*3+1));if(a.error)continue;a.rows.forEach(x=>{if(x.p<0.05)c[x.k]++})}
+    out[d]={A:c.A/reps,B:c.B/reps,AB:c.AB/reps};
+  });
+  return out;
+}
+
+/* ================= variance reduction with a participant variable ================= */
+function simVR(p,seed){
+  const R=makeRng(seed===undefined?p.seed:seed);
+  return [0,1].map(i=>[0,1].map(j=>{
+    const mu=p.grand+p.effT*(i-.5)+p.effV*(j-.5)+p.effTV*(i-.5)*(j-.5);
+    return Array.from({length:p.n},()=>mu+p.sdE*R.n());
+  }));
+}
+function vrAnalyze(cells){
+  const g0=[].concat(...cells[0]),g1=[].concat(...cells[1]),one=indT(g0,g1),two=twoWay(cells);
+  const F1=one.t*one.t;
+  return{one,two,F1,p1:one.p,mse1:one.sp*one.sp,F2:two.rows[0].F,p2:two.rows[0].p,mse2:two.mse,pe1:F1/(F1+one.df),pe2:two.rows[0].pe,effV:two.rows[1]};
+}
+function repVR(p,reps){
+  let s1=0,s2=0,f1=0,f2=0;
+  for(let r=0;r<reps;r++){const a=vrAnalyze(simVR(p,p.seed*7001+r*11+5));if(a.p1<0.05)s1++;if(a.p2<0.05)s2++;f1+=a.F1;f2+=a.F2}
+  return{pw1:s1/reps,pw2:s2/reps,F1:f1/reps,F2:f2/reps};
+}
+
+/* ================= order effects as a second factor ================= */
+function simOR(p,seed){
+  const R=makeRng(seed===undefined?p.seed:seed),n=p.n;
+  const AB=Array.from({length:n},()=>{const pe=p.sdP*R.n();return{pre:p.grand+pe+p.sdE*R.n(),post:p.grand+p.effT+p.prac+p.carry+pe+p.sdE*R.n()}});
+  const BA=Array.from({length:n},()=>{const pe=p.sdP*R.n();return{pre:p.grand+p.prac+pe+p.sdE*R.n(),post:p.grand+p.effT+pe+p.sdE*R.n()}});
+  const G=[{pre:AB.map(r=>r.pre),post:AB.map(r=>r.post)},{pre:BA.map(r=>r.pre),post:BA.map(r=>r.post)}];
+  return{G,cells:[[G[0].pre,G[1].pre],[G[0].post,G[1].post]]};
+}
+function repOR(p,reps){
+  const fixed=[],cb=[];
+  for(let r=0;r<reps;r++){const S=simOR(p,p.seed*6113+r*17+9),d=g=>mean(g.post)-mean(g.pre);fixed.push(d(S.G[0]));cb.push((d(S.G[0])+d(S.G[1]))/2)}
+  return{fixed,cb};
+}
+
+/* ================= state and definitions ================= */
+const DEF_EF={aN:2,bN:2,n:12,grand:18,effA:4,effB:4,effAB:0,sd:4,exact:true,aLab:'Mode of presentation',aLv:'Paper, On screen',bLab:'Study time',bLv:'Fixed time, Self-regulated time',ylab:'Mean exam score',seed:5};
+const DEF_DS={design:'mixed',n:20,grand:50,effA:4,effB:4,effAB:0,sdP:8,sdE:4,seed:11};
+const DEF_VR={n:12,grand:50,effT:4,effV:10,effTV:0,sdE:5,seed:7};
+const DEF_OR={n:16,grand:50,effT:4,prac:0,carry:0,sdP:8,sdE:4,seed:13};
+const FC_DEF={at:'man',aa:'between',al:2,bt:'man',ba:'between',bl:2};
+
+const EF_DEFS=[
+ {g:'Design',k:'aN',l:'Levels of Factor A (columns)',type:'select',num:1,opts:[[2,'2 levels'],[3,'3 levels']]},
+ {g:'Design',k:'bN',l:'Levels of Factor B (rows; lines in the graph)',type:'select',num:1,opts:[[2,'2 levels'],[3,'3 levels']]},
+ {g:'Design',k:'n',l:'Participants per cell',min:2,max:60,step:1},
+ {g:'Population means',k:'grand',l:'Grand mean',min:0,max:100,step:1},
+ {g:'Population means',k:'effA',l:'Main effect of A (first level minus next level)',min:-15,max:15,step:0.5,help:'The difference between the marginal means of adjacent levels of A'},
+ {g:'Population means',k:'effB',l:'Main effect of B (first level minus next level)',min:-15,max:15,step:0.5},
+ {g:'Population means',k:'effAB',l:'Interaction A × B (change in the A effect across B levels)',min:-20,max:20,step:0.5,help:'How much the effect of A differs between the first and last level of B; 0 gives parallel lines'},
+ {g:'Variability',k:'sd',l:'Standard deviation within cells',min:0.5,max:15,step:0.5},
+ {g:'Variability',k:'exact',l:'Sample means equal population means exactly (like a textbook table)',type:'check'},
+ {g:'Labels',k:'aLab',l:'Factor A name',type:'text'},
+ {g:'Labels',k:'aLv',l:'Levels of A (comma separated)',type:'text'},
+ {g:'Labels',k:'bLab',l:'Factor B name',type:'text'},
+ {g:'Labels',k:'bLv',l:'Levels of B (comma separated)',type:'text'},
+ {g:'Labels',k:'ylab',l:'Y-axis label',type:'text'},
+ {g:'Labels',k:'seed',l:'Random seed',type:'seed'}
+];
+const EF_PRESETS=[
+ ['Table 11.2: two main effects, no interaction',{effA:4,effB:4,effAB:0}],
+ ['Table 11.3: same main effects, with an interaction',{effA:4,effB:4,effAB:-8}],
+ ['Neither factor has an effect',{effA:0,effB:0,effAB:0}],
+ ['Main effect of A only',{effA:6,effB:0,effAB:0}],
+ ['Main effect of B only',{effA:0,effB:6,effAB:0}],
+ ['Crossover interaction with no main effects',{effA:0,effB:0,effAB:10}],
+ ['Drug synergy: one drug exaggerates another',{effA:4,effB:4,effAB:8,aLab:'Drug A',aLv:'Present, Absent',bLab:'Drug B',bLv:'Present, Absent',ylab:'Response',grand:20}],
+ ['Drug blocking: one drug cancels another',{effA:4,effB:4,effAB:-8,aLab:'Drug A',aLv:'Present, Absent',bLab:'Drug B',bLv:'Present, Absent',ylab:'Response',grand:20}],
+ ['Three levels of A with an interaction',{aN:3,bN:2,effA:3,effB:3,effAB:4,aLv:'Low, Medium, High',aLab:'Difficulty',bLab:'Group',bLv:'Group 1, Group 2',ylab:'Mean score'}]
+];
+const DS_DEFS=[
+ {g:'Design',k:'design',l:'Design',type:'select',opts:[['between','Between-subjects: A and B'],['within','Within-subjects: A and B'],['mixed','Mixed: A between, B within']]},
+ {g:'Design',k:'n',l:'Observations per cell',min:5,max:60,step:1,help:'Between: 4n participants; within: n participants; mixed: 2n participants'},
+ {g:'Population means',k:'grand',l:'Grand mean',min:0,max:100,step:1},
+ {g:'Population means',k:'effA',l:'Main effect of A',min:-15,max:15,step:0.5},
+ {g:'Population means',k:'effB',l:'Main effect of B',min:-15,max:15,step:0.5},
+ {g:'Population means',k:'effAB',l:'Interaction A × B',min:-20,max:20,step:0.5},
+ {g:'Variability',k:'sdP',l:'Individual differences between participants (SD)',min:0,max:20,step:0.5,help:'Stable differences that are removed by repeated measures'},
+ {g:'Variability',k:'sdE',l:'Measurement noise (SD)',min:0.5,max:15,step:0.5},
+ {g:'Display',k:'seed',l:'Random seed',type:'seed'}
+];
+const DS_PRESETS=[
+ ['Large individual differences: within wins',{sdP:12,sdE:3,effA:3,effB:3,effAB:0}],
+ ['No individual differences: designs are similar',{sdP:0,sdE:6,effA:4,effB:4,effAB:0}],
+ ['Interaction only',{effA:0,effB:0,effAB:8}],
+ ['Small interaction, large individual differences',{effA:4,effB:4,effAB:3,sdP:12,sdE:3}]
+];
+const VR_DEFS=[
+ {g:'Effects',k:'effT',l:'Treatment effect (treated minus control)',min:-15,max:15,step:0.5},
+ {g:'Effects',k:'effV',l:'Effect of the participant variable (high minus low)',min:0,max:25,step:0.5,help:'E.g. ability, age or prior experience; it creates individual differences within each treatment group'},
+ {g:'Effects',k:'effTV',l:'Treatment × variable interaction',min:-15,max:15,step:0.5},
+ {g:'Design',k:'n',l:'Participants per cell',min:3,max:60,step:1},
+ {g:'Variability',k:'sdE',l:'Remaining variability within cells (SD)',min:0.5,max:15,step:0.5},
+ {g:'Display',k:'seed',l:'Random seed',type:'seed'}
+];
+const VR_PRESETS=[
+ ['Strong participant variable, no interaction',{effV:10,effTV:0,effT:4}],
+ ['Participant variable has no effect',{effV:0,effTV:0,effT:4}],
+ ['Treatment works only for one kind of participant',{effV:6,effTV:8,effT:4}]
+];
+const OR_DEFS=[
+ {g:'Treatment',k:'effT',l:'True treatment effect (B minus A)',min:-15,max:15,step:0.5},
+ {g:'Order effects',k:'prac',l:'Symmetrical order effect (change at the second test)',min:-10,max:10,step:0.5,help:'Practice, fatigue or adaptation that affects whatever treatment comes second'},
+ {g:'Order effects',k:'carry',l:'Nonsymmetrical carryover (only B after A)',min:-10,max:10,step:0.5,help:'Treatment A changes how people respond to B, but not the reverse'},
+ {g:'Design',k:'n',l:'Participants per order group',min:3,max:60,step:1},
+ {g:'Variability',k:'sdP',l:'Individual differences (SD)',min:0,max:20,step:0.5},
+ {g:'Variability',k:'sdE',l:'Measurement noise (SD)',min:0.5,max:15,step:0.5},
+ {g:'Display',k:'seed',l:'Random seed',type:'seed'}
+];
+const OR_PRESETS=[
+ ['No order effects',{prac:0,carry:0}],
+ ['Symmetrical order effects (practice)',{prac:5,carry:0}],
+ ['Nonsymmetrical order effects (carryover)',{prac:0,carry:6}],
+ ['Both kinds at once',{prac:3,carry:5}]
+];
+const st={tab:'st',ef:Object.assign({},DEF_EF),ds:Object.assign({},DEF_DS),vr:Object.assign({},DEF_VR),or:Object.assign({},DEF_OR),
+  efOv:{pts:true,ci:true,marg:false,swap:false},vrOv:{split:false},efCustom:null,cn:{a:2,b:2,c:1,n:10},fc:Object.assign({},FC_DEF)};
+const DEFAULTS={ef:DEF_EF,ds:DEF_DS,vr:DEF_VR,or:DEF_OR},DEFS={ef:EF_DEFS,ds:DS_DEFS,vr:VR_DEFS,or:OR_DEFS},PRESETS={ef:EF_PRESETS,ds:DS_PRESETS,vr:VR_PRESETS,or:OR_PRESETS};
+
+/* ================= charts ================= */
+function labelsFit(items,minGap){
+  items.sort((a,b)=>a.y-b.y);for(let i=1;i<items.length;i++)if(items[i].y-items[i-1].y<minGap)items[i].y=items[i-1].y+minGap;return items;
+}
+function factChart(cells,o){
+  o=o||{};const ov=o.ov||{};let aLv=o.aLv,bLv=o.bLv,aLab=o.aLab||'Factor A';
+  if(ov.swap){cells=cells[0].map((_,j)=>cells.map(r=>r[j]));[aLv,bLv]=[bLv,aLv];aLab=o.bLab||'Factor B'}
+  const a=cells.length,b=cells[0].length,W=760,H=o.H||390,m={l:58,r:150,t:14,b:56};
+  const mu=cells.map(r=>r.map(mean)),ci=cells.map(r=>r.map(c=>c.length>1?tcrit(c.length-1,.05)*sd(c)/Math.sqrt(c.length):0));
+  let lo=Infinity,hi=-Infinity;
+  cells.forEach((r,i)=>r.forEach((c,j)=>{if(ov.pts)c.forEach(v=>{lo=Math.min(lo,v);hi=Math.max(hi,v)});lo=Math.min(lo,mu[i][j]-(ov.ci?ci[i][j]:0));hi=Math.max(hi,mu[i][j]+(ov.ci?ci[i][j]:0))}));
+  const pad=(hi-lo||1)*.12,fr=frame(W,H,m,[0,a],[lo-pad,hi+pad],{xcat:true,ylab:o.ylab||'Mean score'});let s=fr.s;
+  const dx=j=>b>1&&ov.pts?(j-(b-1)/2)*18:0,X=(i,j)=>fr.sx(i+.5)+dx(j);
+  if(ov.marg){
+    const mm=mu.map(r=>mean(r));
+    s+=`<polyline fill="none" stroke="var(--muted)" stroke-width="1.6" stroke-dasharray="3 4" points="${mm.map((v,i)=>fr.sx(i+.5).toFixed(1)+','+fr.sy(v).toFixed(1)).join(' ')}"/>`;
+    mm.forEach((v,i)=>{s+=`<circle cx="${fr.sx(i+.5).toFixed(1)}" cy="${fr.sy(v).toFixed(1)}" r="5" fill="var(--plot)" stroke="var(--muted)" stroke-width="1.6"/>`});
+    
+  }
+  const labs=[];
+  for(let j=0;j<b;j++){
+    const col=COLS[j%5];
+    if(ov.pts)cells.forEach((r,i)=>r[j].forEach((v,k)=>{const jit=((k*53+j*17)%19-9)*.9;s+=`<circle cx="${(X(i,j)+jit).toFixed(1)}" cy="${fr.sy(v).toFixed(1)}" r="2.7" fill="${col}" fill-opacity=".32"/>`}));
+    s+=`<polyline fill="none" stroke="${col}" stroke-width="2.6" points="${mu.map((r,i)=>X(i,j).toFixed(1)+','+fr.sy(r[j]).toFixed(1)).join(' ')}"/>`;
+    mu.forEach((r,i)=>{
+      const x=X(i,j),y=fr.sy(r[j]);
+      if(ov.ci&&ci[i][j]>0)s+=`<line x1="${x}" x2="${x}" y1="${fr.sy(r[j]-ci[i][j])}" y2="${fr.sy(r[j]+ci[i][j])}" stroke="${col}" stroke-width="1.8"/><line x1="${x-4}" x2="${x+4}" y1="${fr.sy(r[j]-ci[i][j])}" y2="${fr.sy(r[j]-ci[i][j])}" stroke="${col}" stroke-width="1.8"/><line x1="${x-4}" x2="${x+4}" y1="${fr.sy(r[j]+ci[i][j])}" y2="${fr.sy(r[j]+ci[i][j])}" stroke="${col}" stroke-width="1.8"/>`;
+      s+=mk(j,x,y,5.5,col,1);
+      s+=`<text x="${x+9}" y="${y-8}" fill="${col}" font-weight="600" font-size="10">${f(r[j],1)}</text>`;
+    });
+    labs.push({y:fr.sy(mu[a-1][j])+4,t:bLv[j],c:col});
+  }
+  labelsFit(labs,14).forEach(l=>{s+=`<text x="${m.l+fr.iw+8}" y="${l.y}" fill="${l.c}" font-weight="600">${esc(l.t)}</text>`});
+  aLv.forEach((l,i)=>{s+=`<text x="${fr.sx(i+.5)}" y="${H-m.b+17}" text-anchor="middle" fill="var(--fg)" font-weight="600">${esc(l)}</text>`});
+  s+=`<text x="${m.l+fr.iw/2}" y="${H-8}" text-anchor="middle" fill="var(--muted)">${esc(aLab)}</text>`;
+  return svgWrap(W,H,s,o.label||'Line graph of cell means for a two-factor design');
+}
+function miniChart(mu,aN,bN,ttl){
+  const W=230,H=150,m={l:26,r:10,t:10,b:22},lo=4,hi=32,iw=W-m.l-m.r,ih=H-m.t-m.b,sy=v=>m.t+ih-(v-lo)/(hi-lo)*ih,sx=i=>m.l+(i+.5)/aN*iw;
+  let s=`<rect x="${m.l}" y="${m.t}" width="${iw}" height="${ih}" fill="var(--plot)"/><line x1="${m.l}" x2="${m.l}" y1="${m.t}" y2="${H-m.b}" stroke="var(--axis)"/><line x1="${m.l}" x2="${W-m.r}" y1="${H-m.b}" y2="${H-m.b}" stroke="var(--axis)"/>`;
+  for(let j=0;j<bN;j++){
+    s+=`<polyline fill="none" stroke="${COLS[j]}" stroke-width="2.4" points="${Array.from({length:aN},(_,i)=>sx(i).toFixed(1)+','+sy(mu[i][j]).toFixed(1)).join(' ')}"/>`;
+    for(let i=0;i<aN;i++)s+=mk(j,sx(i),sy(mu[i][j]),3.6,COLS[j],1);
+  }
+  for(let i=0;i<aN;i++)s+=`<text x="${sx(i)}" y="${H-6}" text-anchor="middle" fill="var(--muted)" font-size="10">A${i+1}</text>`;
+  return svgWrap(W,H,s,ttl);
+}
+function varChart(cells,ov,ylab){
+  const W=760,H=380,m={l:58,r:20,t:14,b:60},all=[].concat(...cells.map(r=>[].concat(...r))),lo=minOf(all),hi=maxOf(all),pad=(hi-lo||1)*.08;
+  const fr=frame(W,H,m,[0,2],[lo-pad,hi+pad],{xcat:true,ylab:ylab||'Score'});let s=fr.s;
+  const names=['Control','Treatment'],vn=['Low on the variable','High on the variable'];
+  cells.forEach((r,i)=>{
+    const cx=fr.sx(i+.5),hw=fr.sx(.5+.3)-fr.sx(.5),g=[].concat(...r),gm=mean(g),gs=sd(g);
+    if(!ov.split){
+      s+=`<rect x="${cx-hw}" y="${fr.sy(gm+gs)}" width="${2*hw}" height="${Math.max(1,fr.sy(gm-gs)-fr.sy(gm+gs))}" fill="var(--muted)" fill-opacity=".16"/>`;
+      g.forEach((v,k)=>{s+=`<circle cx="${(cx+((k*47)%25-12)*2.4).toFixed(1)}" cy="${fr.sy(v).toFixed(1)}" r="3.6" fill="var(--muted)" fill-opacity=".6"/>`});
+      s+=`<line x1="${cx-hw}" x2="${cx+hw}" y1="${fr.sy(gm)}" y2="${fr.sy(gm)}" stroke="var(--fg)" stroke-width="2.6"/><text x="${cx+hw+6}" y="${fr.sy(gm)+4}" fill="var(--fg)" font-weight="600">SD ${f(gs,1)}</text>`;
+    }else{
+      r.forEach((c,j)=>{
+        const x0=cx+(j-.5)*hw*1.05,w2=hw*.5,cm=mean(c),cs=sd(c),col=COLS[j];
+        s+=`<rect x="${x0-w2}" y="${fr.sy(cm+cs)}" width="${2*w2}" height="${Math.max(1,fr.sy(cm-cs)-fr.sy(cm+cs))}" fill="${col}" fill-opacity=".16"/>`;
+        c.forEach((v,k)=>{s+=`<circle cx="${(x0+((k*47)%15-7)*2.4).toFixed(1)}" cy="${fr.sy(v).toFixed(1)}" r="3.6" fill="${col}" fill-opacity=".75"/>`});
+        s+=`<line x1="${x0-w2}" x2="${x0+w2}" y1="${fr.sy(cm)}" y2="${fr.sy(cm)}" stroke="var(--fg)" stroke-width="2.4"/><text x="${x0}" y="${fr.sy(cm+cs)-6}" text-anchor="middle" fill="${col}" font-weight="600" font-size="10">SD ${f(cs,1)}</text>`;
+      });
+    }
+    s+=`<text x="${cx}" y="${H-m.b+18}" text-anchor="middle" fill="var(--fg)" font-weight="600">${names[i]}</text><text x="${cx}" y="${H-m.b+33}" text-anchor="middle" fill="var(--muted)">M = ${f(gm,1)}${ov.split?'':', SD = '+f(gs,1)}</text>`;
+  });
+  return svgWrap(W,H,s,'Scores by treatment group, optionally split by a participant variable');
+}
+function matrixHTML(t,aLv,bLv,aLab,bLab){
+  const a=t.a,b=t.b;
+  let h=`<div class="tbl-wrap"><table><thead><tr><th class="l">${esc(bLab)} ↓ &nbsp; ${esc(aLab)} →</th>${aLv.map(l=>`<th>${esc(l)}</th>`).join('')}<th>Overall</th></tr></thead><tbody>`;
+  for(let j=0;j<b;j++){
+    h+=`<tr><td class="l"><b>${esc(bLv[j])}</b></td>`;
+    for(let i=0;i<a;i++)h+=`<td>M = <b>${f(t.cm[i][j],1)}</b><br><span class="muted small">SD ${f(t.cs[i][j],1)}, n = ${t.cn[i][j]}</span></td>`;
+    h+=`<td>M = <b>${f(mean(t.cm.map(r=>r[j])),1)}</b></td></tr>`;
+  }
+  h+=`<tr><td class="l"><b>Overall</b></td>${t.mA.map(m=>`<td>M = <b>${f(m,1)}</b></td>`).join('')}<td>M = ${f(t.gm,1)}</td></tr></tbody></table></div>`;
+  return h;
+}
+
+/* ================= RENDER: structure and classifier ================= */
+const FC_LAB={man:'a manipulated independent variable',part:'a participant characteristic (quasi-independent)',time:'time (for example pretest versus posttest)'};
+const FC_EX=[
+ ['Mode of presentation × study time (textbook example)',{at:'man',aa:'between',al:2,bt:'man',ba:'between',bl:2}],
+ ['Pretest-posttest control group design',{at:'man',aa:'between',al:2,bt:'time',ba:'within',bl:2}],
+ ['Age group × task difficulty',{at:'part',aa:'between',al:3,bt:'man',ba:'within',bl:2}],
+ ['Treatment order as a second factor (counterbalanced)',{at:'man',aa:'within',al:2,bt:'man',ba:'between',bl:2}],
+ ['Gender × age group (nothing manipulated)',{at:'part',aa:'between',al:2,bt:'part',ba:'between',bl:3}],
+ ['Two treatments, every participant in every condition',{at:'man',aa:'within',al:2,bt:'man',ba:'within',bl:2}]
+];
+function fcResult(f0){
+  const asg=(t,a)=>t==='part'?'between':a,aa=asg(f0.at,f0.aa),ba=asg(f0.bt,f0.ba);
+  const man=[f0.at,f0.bt].filter(t=>t==='man').length,w=[aa,ba].filter(x=>x==='within').length;
+  const strat=man===2?['Experimental','good']:man===0?['Nonexperimental or quasi-experimental','bad']:['Combined strategy','warn'];
+  const dt=w===0?'between':w===2?'within':'mixed';
+  return{strat,dt,aa,ba,man,cond:f0.al*f0.bl};
+}
+function gridHTML(a,b,ttl){
+  let h=`<div class="tbl-wrap"><table><thead><tr><th class="l">${ttl||''}</th>${Array.from({length:a},(_,i)=>`<th>A${i+1}</th>`).join('')}</tr></thead><tbody>`;
+  for(let j=0;j<b;j++)h+=`<tr><td class="l"><b>B${j+1}</b></td>${Array.from({length:a},(_,i)=>`<td style="text-align:center">A${i+1}B${j+1}</td>`).join('')}</tr>`;
+  return h+'</tbody></table></div>';
+}
+function renderST(){
+  const c=st.cn,cond=c.a*c.b*c.c,n=c.n;
+  const notation=[c.a,c.b].concat(c.c>1?[c.c]:[]).join(' × ');
+  let grids='';
+  if(c.c>1)grids=`<div class="row" style="align-items:flex-start">`+Array.from({length:c.c},(_,k)=>`<div style="flex:1;min-width:220px">${gridHTML(c.a,c.b,'Factor C level '+(k+1))}</div>`).join('')+'</div>';
+  else grids=gridHTML(c.a,c.b,'Factor B ↓ / A →');
+  $('#cn-out').innerHTML=`<p style="margin-top:0"><b>${notation}</b> design: ${[c.a,c.b].concat(c.c>1?[c.c]:[]).join(' × ')} = <b>${cond} conditions</b> (${c.c>1?'three':'two'} factors).</p>`+grids
+   +tbl(['If the factors are…','Participants needed',['Each participant receives','']],[
+     ['All between-subjects',`${cond*n} (${n} per condition)`,'1 condition'],
+     ['All within-subjects',`${n}`,`all ${cond} conditions`],
+     ['Mixed: Factor A between, the rest within',`${c.a*n} (${n} per level of A)`,`${cond/c.a} conditions`]])
+   +`<p class="small muted">A design with more factors or levels grows quickly: every added level multiplies the number of conditions. Between-subjects designs pay in participants; within-subjects designs pay in time per participant (and in order effects and attrition).</p>`;
+  const f0=st.fc,r=fcResult(f0),lbl=f0.at==='part'||f0.bt==='part';
+  const desc={between:'Different participants in every condition: a two-factor between-subjects ANOVA.',within:'The same participants in every condition: a two-factor repeated-measures ANOVA.',mixed:'One between-subjects factor and one within-subjects factor: a two-factor mixed-design ANOVA.'}[r.dt];
+  let notes='';
+  if(r.man===1)notes+=`<p><b>Combined strategy.</b> The manipulated factor supports a causal conclusion about its own effect. The other factor is quasi-independent (a participant characteristic or time), so its effect is open to individual differences or time-related threats.</p>`;
+  else if(r.man===0)notes+=`<p><b>No manipulated factor.</b> Every factor is a participant characteristic or time, so the study compares existing groups or occasions. The factors are still called factors, but no cause can be named.</p>`;
+  else notes+=`<p><b>Purely experimental.</b> Both factors are true independent variables manipulated by the researcher.</p>`;
+  if(r.man===1&&[f0.at,f0.bt].includes('time')&&((f0.at==='time'&&r.ba==='between')||(f0.bt==='time'&&r.aa==='between')))
+    notes+=`<p><b>Pretest-posttest control group design.</b> The treatment-versus-control factor is between-subjects and the pretest-versus-posttest factor is within-subjects. The Treatment × Time interaction is the test of whether the groups changed differently.</p>`;
+  if(lbl)notes+=`<p class="small muted">A participant characteristic always defines groups of different people, so that factor is treated as between-subjects.</p>`;
+  $('#fc-out').innerHTML=`<p style="margin-top:0">${pill(r.strat[0],r.strat[1])} ${pill(r.dt==='between'?'Between-subjects':r.dt==='within'?'Within-subjects':'Mixed design','good')}</p><h3 style="margin-top:4px">${f0.al} × ${f0.bl} ${r.dt==='mixed'?'mixed':r.dt+'-subjects'} factorial design</h3><p>${r.cond} treatment conditions. ${desc}</p>`+gridHTML(f0.al,f0.bl,'Factor B ↓ / A →')+notes
+   +`<p class="small muted">Factor A: ${FC_LAB[f0.at]}, ${r.aa}-subjects. Factor B: ${FC_LAB[f0.bt]}, ${r.ba}-subjects.</p>`;
+}
+
+/* ================= RENDER: main effects and interactions ================= */
+const EF_GAL=[
+ ['No effects',0,0,0],['Main effect of A only',6,0,0],['Main effect of B only',0,6,0],['Both main effects, no interaction (parallel lines)',6,6,0],
+ ['Interaction only: crossover, no main effects',0,0,10],['Main effect of A, plus an interaction',6,0,8],['Both main effects and an interaction',4,4,-8],['Effect of A only at one level of B',3,0,6]
+];
+function efData(){
+  if(st.efCustom){const c=st.efCustom;return{custom:true,cells:c.cells,aLv:c.aLv,bLv:c.bLv,aLab:'Factor A',bLab:'Factor B',a:c.cells.length,b:c.cells[0].length}}
+  const p=st.ef;return{p,cells:simCells(p),aLv:parseLv(p.aLv,p.aN,'A'),bLv:parseLv(p.bLv,p.bN,'B'),aLab:p.aLab||'Factor A',bLab:p.bLab||'Factor B',a:p.aN,b:p.bN};
+}
+const effName=(k,D)=>k==='A'?'Main effect of '+D.aLab:k==='B'?'Main effect of '+D.bLab:'Interaction: '+D.aLab+' × '+D.bLab;
+function renderEF(){
+  const D=efData(),ov=st.efOv,t=twoWay(D.cells);
+  setMode('#ef-ov','x',ovHTML('efOv',[['pts','Individual scores'],['ci','95% CI of cell means'],['marg','Overall means for the columns (main effect)'],['swap','Swap factors on the x-axis']],ov));
+  $('#ef-rep-card').hidden=!!D.custom;
+  $('#ef-title').textContent=D.custom?'Your data':`${D.a} × ${D.b} between-subjects factorial design`;
+  $('#ef-sub').textContent=D.custom?'Scores you pasted, analyzed as a two-factor between-subjects design.':'Each cell is a treatment condition: one combination of a level of A and a level of B. The data provide three separate pieces of information: the main effect of A, the main effect of B and the interaction.';
+  if(t.error){$('#ef-chart').innerHTML='';$('#ef-matrix').innerHTML=`<p style="color:var(--bad)">${esc(t.error)}</p>`;$('#ef-test').innerHTML='';$('#ef-interp').innerHTML='';$('#ef-simple').innerHTML='';return}
+  $('#ef-chart').innerHTML=factChart(D.cells,{aLv:D.aLv,bLv:D.bLv,aLab:D.aLab,bLab:D.bLab,ylab:D.custom?'Mean score':st.ef.ylab,ov});
+  $('#ef-legend').innerHTML=legendHTML(ov.swap?D.aLv:D.bLv)+`<span>Nonparallel lines indicate an interaction.</span>`;
+  $('#ef-matrix').innerHTML=matrixHTML(t,D.aLv,D.bLv,D.aLab,D.bLab);
+  $('#ef-test').innerHTML=tbl(['Source','SS','df','MS','F','p','Partial η²'],t.rows.map(r=>[effName(r.k,D),f(r.ss,2),r.df,f(r.ms,2),`<b>${f(r.F,2)}</b>`,pf(r.p),f(r.pe,3)]).concat([['Within cells (error)',f(t.sse,2),t.dfe,f(t.mse,2),'','','']]))
+    +`<p>`+t.rows.map(r=>`${pill((r.k==='AB'?'Interaction':'Main '+r.k)+': '+(r.p<0.05?'significant':'not significant'),r.p<0.05?'good':'warn')}`).join(' ')+`</p>`+(balanced(D.cells)?'':'<p class="small muted">Unequal cell sizes: sums of squares use unique (Type III) contributions with effect coding.</p>');
+  const iS=t.rows[2].p<0.05,sa=simpleEffects(t,D.cells,'A'),sb=simpleEffects(t,D.cells,'B');
+  const fr=(x,dn)=>[x.df===1?sgn(x.diff,2):'—',`F(${x.df}, ${t.dfe}) = ${f(x.F,2)}`,pf(x.p)];
+  $('#ef-simple').innerHTML=tbl(['Simple effect','Difference (first − last level)','Test','p'],
+    sa.map(x=>[`Effect of ${esc(D.aLab)} at ${esc(D.bLv[x.at])}`].concat(fr(x))).concat(sb.map(x=>[`Effect of ${esc(D.bLab)} at ${esc(D.aLv[x.at])}`].concat(fr(x)))));
+  const mainS=t.rows.slice(0,2).filter(r=>r.p<0.05).map(r=>effName(r.k,D));
+  $('#ef-interp').innerHTML=(iS
+    ?`<div class="callout warn"><b>Be careful with the main effects.</b> The interaction is significant, so the effect of one factor depends on the level of the other. Each main effect is an average of the separate effects in the simple-effects table, and it may not describe any one of them accurately.</div>`
+    :`<div class="callout"><b>No reliable interaction.</b> The effect of each factor is consistent across the levels of the other factor, so each main effect describes the effect at every level.</div>`)
+    +`<p>${mainS.length?'Significant main effect'+(mainS.length>1?'s':'')+': '+mainS.map(esc).join('; ')+'.':'Neither main effect is significant.'} The three tests are independent of each other: any combination of significant and nonsignificant results is possible.</p>`;
+  if(D.custom)return;
+  const p=st.ef,R=cached('ef',JSON.stringify(p),()=>repEF(p,300)),tr={A:p.effA!==0,B:p.effB!==0,AB:p.effAB!==0};
+  $('#ef-rep').innerHTML=tbl(['Effect','True effect in the population?','Significant in 300 repeats'],['A','B','AB'].map(k=>[effName(k,D),tr[k]?'Yes':'No: false positives expected near 5%',`<div style="display:flex;align-items:center;gap:8px"><div style="flex:1;max-width:220px;height:10px;background:var(--grid);border-radius:5px"><div style="width:${Math.round(R[k]*100)}%;height:10px;background:var(--${tr[k]?'good':'warn'});border-radius:5px"></div></div><b>${pct(R[k])}</b></div>`]))
+    +`<p class="small muted">Each repeat draws a new sample of ${p.n} participants per cell. Each effect is detected (or not) on its own: a real interaction does not create or remove a main effect, and a crossover interaction can occur with no main effects at all.</p>`;
+}
+function renderGallery(){
+  $('#ef-gal').innerHTML=EF_GAL.map((g,i)=>{
+    const p={aN:2,bN:2,grand:18,effA:g[1],effB:g[2],effAB:g[3]},mu=[0,1].map(a=>[0,1].map(b=>cellMu(p,a,b)));
+    const tag=(on,l)=>`<span class="pill ${on?'good':'warn'}" style="opacity:${on?1:.55}">${l}${on?' ✓':' –'}</span>`;
+    return `<div class="card" style="margin:0;padding:10px"><div class="chart">${miniChart(mu,2,2,g[0])}</div><b class="small">${esc(g[0])}</b><div class="row" style="margin:4px 0">${tag(g[1]!==0,'A')}${tag(g[2]!==0,'B')}${tag(g[3]!==0,'A×B')}</div><button class="small" data-gal="${i}">Load in simulator</button></div>`;
+  }).join('');
+}
+function setMode(id,key,html){const el=$(id);if(el.dataset.mode!==key){el.dataset.mode=key;el.innerHTML=html}}
+const memoC={};
+function cached(name,key,fn){const m=memoC[name];if(m&&m.k===key)return m.v;const v=fn();memoC[name]={k:key,v};return v}
+
+/* ================= RENDER: between / within / mixed ================= */
+function barCell(v,real){return `<div style="display:flex;align-items:center;gap:6px"><div style="flex:1;min-width:50px;max-width:110px;height:9px;background:var(--grid);border-radius:5px"><div style="width:${Math.round(v*100)}%;height:9px;background:var(--${real?'good':'warn'});border-radius:5px"></div></div><b>${pct(v)}</b></div>`}
+function renderDS(){
+  const p=st.ds,S=simDS(p,p.design),A=analyzeDS(S),n=p.n;
+  const N={between:4*n,within:n,mixed:2*n}[p.design];
+  $('#ds-sub').textContent={between:'Different participants in all four conditions.',within:'The same participants in all four conditions.',mixed:'Factor A is between-subjects (two groups of participants); Factor B is within-subjects (each participant sees both B levels).'}[p.design]+` Observations per cell: ${n}. Participants needed: ${N}.`;
+  const dot='<span style="color:var(--colA)">●</span>',no='<span class="muted">·</span>',hd=['Participant','A1B1','A1B2','A2B1','A2B2'];
+  const rows={between:[['P1',dot,no,no,no],['P2',no,dot,no,no],['P3',no,no,dot,no],['P4',no,no,no,dot]],within:[['P1',dot,dot,dot,dot],['P2',dot,dot,dot,dot],['P3',dot,dot,dot,dot]],mixed:[['P1',dot,dot,no,no],['P2',dot,dot,no,no],['P3',no,no,dot,dot],['P4',no,no,dot,dot]]}[p.design];
+  $('#ds-struct').innerHTML=tbl(hd,rows.concat([['…','','','','']]).map(r=>r.map((c,i)=>i?`<div style="text-align:center">${c}</div>`:c)))+`<p class="small muted" style="margin-bottom:0">● = the participant is tested in that condition. ${p.design==='between'?'Each participant contributes one score.':p.design==='within'?'Each participant contributes four scores, so stable individual differences cancel.':'Each participant contributes two scores, one at each level of B.'}</p>`;
+  $('#ds-chart').innerHTML=factChart(S.cells,{aLv:['A1','A2'],bLv:['B1','B2'],aLab:'Factor A',bLab:'Factor B',ylab:'Mean score',ov:{pts:true,ci:true},label:'Line graph of cell means for the selected design'});
+  $('#ds-legend').innerHTML=legendHTML(['B1','B2']);
+  const nm=k=>k==='A'?'Main effect of A':k==='B'?'Main effect of B':'A × B interaction';
+  $('#ds-test').innerHTML=A.error?`<p style="color:var(--bad)">${esc(A.error)}</p>`:tbl(['Effect','F','df','p','Partial η²'],A.rows.map(r=>[nm(r.k),`<b>${f(r.F,2)}</b>`,`${r.df1}, ${r.df2}`,pf(r.p),f(r.pe,3)]))
+    +`<p>`+A.rows.map(r=>pill((r.k==='AB'?'Interaction':'Main '+r.k)+': '+(r.p<0.05?'significant':'not significant'),r.p<0.05?'good':'warn')).join(' ')+`</p><p class="small muted">Error term: ${A.err}.</p>`;
+  const R=cached('ds',JSON.stringify(p),()=>repDS(p,300)),real={A:p.effA!==0,B:p.effB!==0,AB:p.effAB!==0};
+  const names=['between','within','mixed'],parts={between:4*n,within:n,mixed:2*n};
+  $('#ds-rep').innerHTML=tbl(['Design','Participants',`Main effect A ${real.A?'(real)':'(none)'}`,`Main effect B ${real.B?'(real)':'(none)'}`,`A × B ${real.AB?'(real)':'(none)'}`],names.map(d=>[DS_NAMES[d],parts[d],barCell(R[d].A,real.A),barCell(R[d].B,real.B),barCell(R[d].AB,real.AB)]))
+   +`<p class="small muted">Share of 300 repeated studies in which each effect was significant (green bars: power for a real effect; amber bars: false positives where there is no effect, expected near 5%). All three designs have the same number of observations per cell; they differ in how many participants supply them and in how individual differences enter the error term. With large individual differences, the within-subjects and mixed versions detect effects that the between-subjects version misses.</p>`;
+}
+
+/* ================= RENDER: variance reduction ================= */
+function renderVR(){
+  const p=st.vr,cells=simVR(p),a=vrAnalyze(cells),ov=st.vrOv;
+  setMode('#vr-ov','x',ovHTML('vrOv',[['split','Split each group by the participant variable']],ov));
+  $('#vr-chart').innerHTML=varChart(cells,ov,'Score');
+  $('#vr-legend').innerHTML=ov.split?legendHTML(['Low on the participant variable','High on the participant variable']):'<span>Within-group variability includes differences between participants who are high or low on the variable.</span>';
+  const ssV=a.effV.ss,sse1=a.one.sp*a.one.sp*a.one.df;
+  $('#vr-test').innerHTML=tbl(['Analysis','Error variance (MS)','F for treatment','p','Partial η² for treatment'],[
+    ['Single factor: ignore the participant variable',f(a.mse1,2),`F(1, ${a.one.df}) = <b>${f(a.F1,2)}</b>`,pf(a.p1),f(a.pe1,3)],
+    ['Two factors: treatment × participant variable',f(a.mse2,2),`F(1, ${a.two.dfe}) = <b>${f(a.F2,2)}</b>`,pf(a.p2),f(a.pe2,3)]])
+   +`<p>${sigPill(a.p1)} single-factor analysis &nbsp; ${sigPill(a.p2)} two-factor analysis</p>`
+   +`<p>Treating the participant variable as a second factor removes its variation from the error term (${pct(Math.max(0,ssV/sse1))} of the single-factor error here). Smaller error variance means a larger F for the same treatment effect. The participant variable itself: F = ${f(a.effV.F,2)}, p ${pf(a.effV.p)==='< .001'?'< .001':'= '+pf(a.effV.p)}; interaction with treatment: p ${pf(a.two.rows[2].p)==='< .001'?'< .001':'= '+pf(a.two.rows[2].p)}.</p>`;
+  const R=cached('vr',JSON.stringify(p),()=>repVR(p,300)),real=p.effT!==0;
+  $('#vr-rep').innerHTML=tbl(['Analysis','Mean F for treatment',`Treatment significant in 300 repeats ${real?'(real effect: power)':'(no effect: false positives)'}`],[['Single factor',f(R.F1,2),barCell(R.pw1,real)],['Two factors',f(R.F2,2),barCell(R.pw2,real)]])
+   +`<p class="small muted">Using the participant variable as a factor reduces variance within groups without sacrificing external validity: the sample is the same, only the analysis changes. If the variable has no effect, nothing is gained and one error degree of freedom is lost.</p>`;
+}
+
+/* ================= RENDER: order effects ================= */
+function renderOR(){
+  const p=st.or,S=simOR(p),M=mixed2x2(S.G[0],S.G[1]);
+  $('#or-chart').innerHTML=factChart(S.cells,{aLv:['Treatment A','Treatment B'],bLv:['A first (order AB)','B first (order BA)'],aLab:'Treatment',bLab:'Order',ylab:'Mean score',ov:{pts:true,ci:true},label:'Treatment means for each order group'});
+  $('#or-legend').innerHTML=legendHTML(['A first (order AB)','B first (order BA)']);
+  const mg=g=>[mean(g.pre),mean(g.post)];
+  $('#or-tbl').innerHTML=tbl(['','Treatment A','Treatment B','B − A'],[
+    ['Order AB (A first)',f(mg(S.G[0])[0],1),f(mg(S.G[0])[1],1),sgn(M.gain[0],1)],
+    ['Order BA (B first)',f(mg(S.G[1])[0],1),f(mg(S.G[1])[1],1),sgn(M.gain[1],1)],
+    ['<b>Overall (both orders)</b>',f((mg(S.G[0])[0]+mg(S.G[1])[0])/2,1),f((mg(S.G[0])[1]+mg(S.G[1])[1])/2,1),`<b>${sgn((M.gain[0]+M.gain[1])/2,1)}</b>`]]);
+  $('#or-test').innerHTML=tbl(['Effect','F','df','p','Partial η²'],[['Order group (between)',M.group],['Treatment (within)',M.time],['Treatment × Order',M.inter]].map(([l,r])=>[l,f(r.F,2),`1, ${r.df2}`,pf(r.p),f(r.pe,3)]))
+   +`<p>${M.inter.p<0.05?pill('Treatment × Order is significant: order effects detected','bad'):pill('No reliable Treatment × Order interaction','good')}</p><p class="small muted">The order of treatments is the between-subjects factor; the treatment is the within-subjects factor. A Treatment × Order interaction means the treatment difference depends on the order in which the treatments were given.</p>`;
+  const kind=p.prac===0&&p.carry===0?0:p.carry===0?1:2,KN=[['No order effects','good','The treatment difference is the same in both order groups: parallel lines, no interaction, and the order groups do not differ.'],['Symmetrical order effects','warn','Whatever comes second shifts by the same amount in either order. The treatment difference gets larger in one order group and smaller in the other, so the lines are not parallel. Counterbalancing cancels it in the overall treatment difference.'],['Nonsymmetrical order effects','bad','One treatment changes the response to the other more than the reverse (carryover). The treatment difference differs between the order groups, and the overall treatment difference is biased even with counterbalancing.']][kind];
+  $('#or-class').innerHTML=`<p>${pill(KN[0],KN[1])} ${KN[2]}</p>`+tbl(['Expected value','Order AB','Order BA','Overall'],[
+    ['Treatment difference (B − A)',sgn(p.effT+p.prac+p.carry,1),sgn(p.effT-p.prac,1),sgn(p.effT+p.carry/2,1)],
+    ['Treatment × Order (difference of differences)','',sgn(2*p.prac+p.carry,1),'']]);
+  const R=cached('or',JSON.stringify(p),()=>repOR(p,300)),rows=[{label:'Fixed order (A then B)',vals:R.fixed,col:'var(--colB)'},{label:'Counterbalanced',vals:R.cb,col:'var(--colA)'}];
+  $('#or-rep').innerHTML=histRows(rows,p.effT,{xlab:'Estimated treatment effect (B − A)',rowH:110,label:'Distribution of treatment-effect estimates with and without counterbalancing'});
+  $('#or-rep-txt').innerHTML=repSummary(rows,p.effT);
+}
+function repSummary(rows,truth){
+  return tbl(['Estimator',['Mean estimate','Average of the 300 estimates'],['Bias','Mean estimate minus the true effect'],['SD','Spread across repeats']],
+    rows.map(r=>{const m=mean(r.vals),b=m-truth;return [esc(r.label),f(m,2),`<span style="color:var(--${Math.abs(b)>Math.max(.8,.15*Math.abs(truth))?'bad':'good'})"><b>${sgn(b,2)}</b></span>`,f(sd(r.vals),2)]}));
+}
+
+/* ================= parsing user data ================= */
+function parseEF(txt){
+  const lines=txt.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
+  if(!lines.length)return{error:'Nothing to analyze: paste some data first.'};
+  const aL=[],bL=[],rec=[];
+  for(const l of lines){
+    const m=/^(.+?)[,;\t]\s*(.+?)[,;\t]\s*(-?\d*\.?\d+)\s*$/.exec(l);
+    if(!m)return{error:'Could not read line: '+l+' (use: level of A, level of B, score)'};
+    const a=m[1].trim(),b=m[2].trim();if(!aL.includes(a))aL.push(a);if(!bL.includes(b))bL.push(b);rec.push([a,b,+m[3]]);
+  }
+  if(aL.length<2||bL.length<2)return{error:'Need at least two levels of each factor.'};
+  if(aL.length>4||bL.length>4)return{error:'Up to four levels per factor are supported.'};
+  const cells=aL.map(()=>bL.map(()=>[]));rec.forEach(([a,b,v])=>cells[aL.indexOf(a)][bL.indexOf(b)].push(v));
+  for(let i=0;i<aL.length;i++)for(let j=0;j<bL.length;j++)if(!cells[i][j].length)return{error:`No scores for the cell ${aL[i]} / ${bL[j]}.`};
+  return{cells,aLv:aL,bLv:bL};
+}
+
+/* ================= downloads ================= */
+function download(name,blob){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
+function svgText(el){let x=new XMLSerializer().serializeToString(el);const cs=getComputedStyle(document.documentElement);return x.replace(/var\((--[\w-]+)\)/g,(m,n)=>cs.getPropertyValue(n).trim()||'#000')}
+function exportSVG(id,name){const el=$('#'+id+' svg');if(el)download(name,new Blob([svgText(el)],{type:'image/svg+xml'}))}
+function exportPNG(id,name){
+  const el=$('#'+id+' svg');if(!el)return;const vb=el.viewBox.baseVal,sc=2,img=new Image(),bg=getComputedStyle(document.documentElement).getPropertyValue('--card').trim()||'#fff';
+  img.onload=()=>{const c=document.createElement('canvas');c.width=vb.width*sc;c.height=vb.height*sc;const g=c.getContext('2d');g.fillStyle=bg;g.fillRect(0,0,c.width,c.height);g.drawImage(img,0,0,c.width,c.height);c.toBlob(b=>download(name,b),'image/png')};
+  img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svgText(el));
+}
+const q=s=>/[",\n]/.test(s)?'"'+String(s).replace(/"/g,'""')+'"':s;
+function csvEF(){const D=efData(),rows=['factor_a,factor_b,score'];D.cells.forEach((r,i)=>r.forEach((c,j)=>c.forEach(v=>rows.push(`${q(D.aLv[i])},${q(D.bLv[j])},${(+v).toFixed(2)}`))));return rows.join('\n')}
+function csvDS(){
+  const p=st.ds,S=simDS(p,p.design),rows=['participant,factor_a,factor_b,score'];
+  if(p.design==='between'){let k=0;S.cells.forEach((r,i)=>r.forEach((c,j)=>c.forEach(v=>rows.push(`${++k},A${i+1},B${j+1},${v.toFixed(2)}`))))}
+  else if(p.design==='within')S.M.forEach((r,k)=>r.forEach((v,c)=>rows.push(`${k+1},A${(c>>1)+1},B${(c&1)+1},${v.toFixed(2)}`)));
+  else S.G.forEach((g,i)=>g.forEach((r,k)=>r.forEach((v,j)=>rows.push(`${i*g.length+k+1},A${i+1},B${j+1},${v.toFixed(2)}`))));
+  return rows.join('\n');
+}
+function csvVR(){const c=simVR(st.vr),rows=['treatment,participant_variable,score'];c.forEach((r,i)=>r.forEach((x,j)=>x.forEach(v=>rows.push(`${i?'treatment':'control'},${j?'high':'low'},${v.toFixed(2)}`))));return rows.join('\n')}
+function csvOR(){const S=simOR(st.or),rows=['order,participant,treatment_A,treatment_B'];S.G.forEach((g,i)=>g.pre.forEach((v,k)=>rows.push(`${i?'BA':'AB'},${k+1},${v.toFixed(2)},${g.post[k].toFixed(2)}`)));return rows.join('\n')}
+function doDL(kind,t){
+  if(kind==='svg')exportSVG(t,t+'.svg');
+  else if(kind==='png')exportPNG(t,t+'.png');
+  else if(kind==='csv'){const txt={ef:csvEF,ds:csvDS,vr:csvVR,or:csvOR}[t]();download(t+'-data.csv',new Blob([txt],{type:'text/csv'}))}
+}
+function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(toast.h);toast.h=setTimeout(()=>t.classList.remove('show'),2200)}
+
+/* ================= practice scenarios ================= */
+const pick=(R,a)=>a[Math.floor(R.r()*a.length)];
+const FX_CTX=[
+ {aLab:'Mode of presentation',aLv:['Paper','On screen'],bLab:'Study time',bLv:['Fixed','Self-regulated'],dv:'exam score'},
+ {aLab:'Caffeine',aLv:['Placebo','Caffeine'],bLab:'Sleep',bLv:['Rested','Sleep-deprived'],dv:'reaction-time score'},
+ {aLab:'Teaching method',aLv:['Lecture','Active learning'],bLab:'Class size',bLv:['Small','Large'],dv:'final grade'},
+ {aLab:'Practice',aLv:['Massed','Spaced'],bLab:'Test delay',bLv:['1 day','1 week'],dv:'recall score'}
+];
+function scFX(R){
+  const c=pick(R,FX_CTX),hA=pick(R,[0,2,3,4]),hB=pick(R,[0,2,3,4]),hI=pick(R,[0,0,3,4]),base=pick(R,[16,18,20,22]);
+  const s=[1,-1],mu=[0,1].map(i=>[0,1].map(j=>base+s[i]*hA+s[j]*hB+s[i]*s[j]*hI)),cells=mu.map(r=>r.map(v=>[v]));
+  const show=pick(R,['both','both','graph']);
+  let h=`<p>A researcher measures <b>${c.dv}</b> in a 2 × 2 between-subjects study: <b>${esc(c.aLab)}</b> (${c.aLv.join(' or ')}) × <b>${esc(c.bLab)}</b> (${c.bLv.join(' or ')}). Cell means are exact (no sampling error), as in a textbook table.</p>`;
+  if(show!=='graph')h+=tbl([`${esc(c.bLab)} ↓ / ${esc(c.aLab)} →`,c.aLv[0],c.aLv[1],'Overall'],[0,1].map(j=>[`<b>${c.bLv[j]}</b>`,`M = ${mu[0][j]}`,`M = ${mu[1][j]}`,`M = ${(mu[0][j]+mu[1][j])/2}`]).concat([['<b>Overall</b>',`M = ${(mu[0][0]+mu[0][1])/2}`,`M = ${(mu[1][0]+mu[1][1])/2}`,'']]));
+  else h+='<p class="muted">Only the line graph is shown: read the pattern from the graph.</p>';
+  const mA=[(mu[0][0]+mu[0][1])/2,(mu[1][0]+mu[1][1])/2],mB=[(mu[0][0]+mu[1][0])/2,(mu[0][1]+mu[1][1])/2],e0=mu[0][0]-mu[1][0],e1=mu[0][1]-mu[1][1];
+  const why=`Main effect of ${c.aLab}: overall means ${mA[0]} vs ${mA[1]} → ${hA>0?'present':'absent'}. Main effect of ${c.bLab}: overall means ${mB[0]} vs ${mB[1]} → ${hB>0?'present':'absent'}. Interaction: the effect of ${c.aLab} is ${e0} at ${c.bLv[0]} and ${e1} at ${c.bLv[1]} → ${hI>0?'different, so the lines are not parallel (interaction present)':'the same, so the lines are parallel (no interaction)'}.`;
+  return{kind:'fx',desc:h,chart:factChart(cells,{aLv:c.aLv,bLv:c.bLv,aLab:c.aLab,bLab:c.bLab,ylab:'Mean '+c.dv,ov:{}}),truth:[hA>0,hB>0,hI>0],why,aLab:c.aLab,bLab:c.bLab};
+}
+const DZ=[
+ ['Participants are randomly assigned to one of four groups formed by two drug doses and two kinds of therapy. Each person is tested once.',0],
+ ['Twelve participants each complete a memory task under every combination of two lighting levels and two noise levels, in counterbalanced order.',1],
+ ['One group of patients receives a new therapy and another does not. Both groups are tested before and after the therapy period.',2],
+ ['Young and older adults (two separate groups) each solve easy and hard puzzles. Every participant does both difficulty levels.',2],
+ ['Four groups of children are formed by two reading programs and two classroom types; each child completes one posttest.',0],
+ ['Each participant rates ads under two music conditions and two voice-over conditions; all participants see all four combinations.',1],
+ ['Participants are assigned to a caffeine or placebo group; each participant is tested in the morning and again in the afternoon.',2]
+];
+function scDZ(R){
+  const d=pick(R,DZ),why=['Different participants appear in every condition, so both factors are between-subjects.','The same participants appear in every condition, so both factors are within-subjects.','One factor divides participants into separate groups (between) while every participant experiences both levels of the other factor (within): a mixed design.'][d[1]];
+  return{kind:'mc',desc:`<p>${d[0]}</p><p><b>What type of factorial design is this?</b></p>`,chart:'',opts:['Both factors between-subjects','Both factors within-subjects','Mixed (one between, one within)'],a:d[1],why};
+}
+const STR=[
+ ['A researcher manipulates the type of feedback (praise or criticism) and the difficulty of a task (easy or hard); participants are randomly assigned to the four conditions.',0],
+ ['A researcher compares the scores of men and women in two age groups, measured once.',1],
+ ['A researcher randomly assigns participants to a treatment or a control group and tests both groups before and after (a pretest-posttest control group design).',2],
+ ['A researcher manipulates room temperature and compares participants who are introverts versus extroverts.',2],
+ ['A researcher manipulates font size and noise level, and every participant sees all four combinations.',0],
+ ['A researcher compares students in two schools at two grade levels on a standardized test.',1]
+];
+function scST(R){
+  const d=pick(R,STR),why=['Both factors are manipulated by the researcher: a purely experimental factorial design.','Neither factor is manipulated; both are participant characteristics, so this is a nonexperimental (quasi-experimental) factorial study.','One factor is a manipulated independent variable and the other is a participant characteristic or time: a combined strategy.'][d[1]];
+  return{kind:'mc',desc:`<p>${d[0]}</p><p><b>Which research strategy does this design use?</b></p>`,chart:'',opts:['Experimental (both factors manipulated)','Nonexperimental or quasi-experimental (no factor manipulated)','Combined (one manipulated factor, one quasi-independent factor)'],a:d[1],why};
+}
+function genScenario(){const R=makeRng((Math.random()*2147483646|0)+1),k=pick(R,['fx','fx','fx','dz','dz','st']);return {fx:scFX,dz:scDZ,st:scST}[k](R)}
+const pr={n:0,score:0,cur:null,answered:false};
+function renderPR(){
+  $('#pr-score').textContent=pr.n?`Score: ${pr.score} of ${pr.n}`:'';
+  const c=pr.cur;$('#pr-card').hidden=!c;if(!c)return;
+  $('#pr-desc').innerHTML=c.desc;$('#pr-chart').innerHTML=c.chart;
+  if(pr.answered){$('#pr-answer').innerHTML='';return}
+  $('#pr-answer').innerHTML=c.kind==='fx'
+    ?`<b>Which effects are present?</b> <label><input type="checkbox" id="ck-a"> Main effect of ${esc(c.aLab)}</label> <label><input type="checkbox" id="ck-b"> Main effect of ${esc(c.bLab)}</label> <label><input type="checkbox" id="ck-ab"> Interaction</label> <button class="primary small" data-act="pr-submit">Check my answer</button>`
+    :c.opts.map((o,j)=>`<button data-pro="${j}">${esc(o)}</button>`).join(' ');
+}
+function finishPR(ok,why){
+  pr.answered=true;pr.n++;if(ok)pr.score++;
+  $('#pr-feedback').innerHTML=`<div class="callout ${ok?'':'warn'}"><b>${ok?'Correct.':'Not quite.'}</b> ${esc(why)}</div>`;renderPR();
+}
+function answerFX(){
+  const c=pr.cur;if(!c||pr.answered||c.kind!=='fx')return;
+  const got=[$('#ck-a').checked,$('#ck-b').checked,$('#ck-ab').checked];finishPR(got.every((v,i)=>v===c.truth[i]),c.why);
+}
+function answerMC(j){const c=pr.cur;if(!c||pr.answered||c.kind!=='mc')return;finishPR(j===c.a,c.why)}
+
+/* ================= concept quiz ================= */
+const QZ=[
+ {q:'A 2 × 3 × 2 design has how many treatment conditions?',o:['7','10','12','6'],a:2,w:'Multiply the numbers of levels: 2 × 3 × 2 = 12.'},
+ {q:'In a two-factor design, the main effect of Factor A is…',o:['The effect of A at one level of B','The mean differences among the levels of A, averaged over the levels of B','Always the same as the interaction','The difference between the two factors'],a:1,w:'A main effect compares the overall (marginal) means of one factor, ignoring the other.'},
+ {q:'What does it mean when the lines in a line graph of a two-factor study are not parallel?',o:['Neither factor has an effect','There is evidence of an interaction','There is a main effect of both factors','The data are invalid'],a:1,w:'Nonparallel lines mean the effect of one factor depends on the level of the other; a statistical test decides whether the interaction is reliable.'},
+ {q:'Cell means are 20, 20, 20 and 12. Which statement is correct?',o:['No interaction','An interaction is present: the effect of one factor appears at only one level of the other','Only one main effect','The overall means are equal'],a:1,w:'The difference between levels is 0 in one row and 8 in the other, so the differences change from one row to another.'},
+ {q:'Which is true about main effects and interactions in a two-factor study?',o:['A significant interaction guarantees both main effects are significant','They are independent: any combination can occur','Main effects cannot occur with an interaction','The interaction is always larger than the main effects'],a:1,w:'The three sets of mean differences are separate pieces of information.'},
+ {q:'Why can a main effect give a distorted view when an interaction is present?',o:['It uses the wrong error term','It is an average that may not represent any of the individual effects','It has too few degrees of freedom','It ignores the grand mean'],a:1,w:'A main effect averages across levels of the other factor; if those effects differ, the average describes none of them well.'},
+ {q:'A factorial study with one between-subjects factor and one within-subjects factor is called…',o:['A quasi-experiment','A mixed design','A matched-subjects design','A single-factor design'],a:1,w:'A mixed design combines between-subjects and within-subjects factors.'},
+ {q:'In a pretest-posttest control group design viewed as a two-factor study, which effect shows whether the treatment worked relative to control?',o:['Main effect of treatment group','Main effect of time','Treatment × Time interaction','None of them'],a:2,w:'The groups should change by different amounts; that is the interaction.'},
+ {q:'Which is a disadvantage of a between-subjects factorial design relative to a within-subjects one?',o:['Order effects','It requires many participants and individual differences can confound','Attrition from many sessions','Testing effects'],a:1,w:'Each condition needs its own participants, and individual differences remain in the error term.'},
+ {q:'A researcher manipulates drug dose and compares men and women. What strategy is this?',o:['Purely experimental','Nonexperimental','Combined: one true independent variable and one quasi-independent variable','Single-factor'],a:2,w:'Dose is manipulated; gender is a participant characteristic.'},
+ {q:'Why add a participant variable (for example, ability) as a second factor in a between-subjects study?',o:['To remove the treatment effect','To reduce variance within groups and increase power','To make the study within-subjects','To avoid random assignment'],a:1,w:'The variable\'s influence leaves the error term, so the treatment effect is tested against less noise.'},
+ {q:'Treatment order is added as a factor in a counterbalanced within-subjects study. A significant Treatment × Order interaction indicates…',o:['No order effects','Order effects','Perfect counterbalancing','A weak treatment'],a:1,w:'The treatment difference depends on the order, which is what an order effect is.'},
+ {q:'Which outcome describes a nonsymmetrical order effect?',o:['Practice improves whichever treatment comes second equally','One treatment changes the response to the other more than the reverse','Scores are the same in both orders','Participants drop out'],a:1,w:'Carryover from one treatment to the other is not balanced by reversing the order.'},
+ {q:'Replicating a study and adding a second factor (new participants or new conditions) mainly tests…',o:['Whether the original result generalizes to new situations or populations','Whether the study is within-subjects','Whether individual differences exist','Whether the mean is zero'],a:0,w:'Expansion asks whether the previously reported effect holds in new situations or populations; an interaction signals that it does not hold equally.'}
+];
+const qz={n:0,score:0,i:-1,done:false};
+function newQ(){let i;do{i=Math.floor(Math.random()*QZ.length)}while(QZ.length>1&&i===qz.i);qz.i=i;qz.done=false;renderQZ()}
+function renderQZ(){
+  $('#qz-score').textContent=qz.n?`Score: ${qz.score} of ${qz.n}`:'';
+  if(qz.i<0){$('#qz-out').innerHTML='<p class="muted">Press "Next question".</p>';return}
+  const x=QZ[qz.i];
+  $('#qz-out').innerHTML=`<p><b>${esc(x.q)}</b></p>`+x.o.map((t,j)=>`<div><button class="small" data-qz="${j}" style="margin:2px 0;text-align:left" ${qz.done?'disabled':''}>${'ABCD'[j]}. ${esc(t)}</button></div>`).join('');
+}
+function answerQ(j){
+  if(qz.done)return;qz.done=true;qz.n++;const x=QZ[qz.i],ok=j===x.a;if(ok)qz.score++;renderQZ();
+  $('#qz-out').insertAdjacentHTML('beforeend',`<div class="callout ${ok?'':'warn'}"><b>${ok?'Correct.':'Not quite.'}</b> The answer is ${'ABCD'[x.a]}. ${esc(x.w)}</div>`);
+  $('#qz-score').textContent=`Score: ${qz.score} of ${qz.n}`;
+}
+
+/* ================= wiring ================= */
+const TABS=['st','ef','ds','ap','prac','ref'];
+function showTab(id){
+  st.tab=id;
+  $$('nav.tabs button').forEach(b=>b.setAttribute('aria-selected',b.id==='t-'+id?'true':'false'));
+  $$('.tabpanel').forEach(p=>{p.hidden=p.id!=='p-'+id});
+  if(id==='st')renderST();
+  else if(id==='ef'){renderEF();renderGallery()}
+  else if(id==='ds')renderDS();
+  else if(id==='ap'){renderVR();renderOR()}
+  else if(id==='prac'){renderPR();renderQZ()}
+}
+const RENDER={ef:()=>renderEF(),ds:()=>renderDS(),vr:()=>renderVR(),or:()=>renderOR()};
+function syncFC(){
+  const f0=st.fc;['at','aa','bt','ba'].forEach(k=>{const el=$(`input[name="fc-${k}"][value="${f0[k]}"]`);if(el)el.checked=true});
+  $('#fc-al').value=f0.al;$('#fc-bl').value=f0.bl;
+  ['a','b','c'].forEach(k=>{$('#cn-'+k).value=st.cn[k]});$('#cn-n').value=st.cn.n;
+}
+function clearCustom(pre){if(pre==='ef'){st.efCustom=null;$('#ef-paste-msg').textContent=''}}
+function applyPreset(pre,i){Object.assign(st[pre],DEFAULTS[pre],PRESETS[pre][i][1],{seed:st[pre].seed});clearCustom(pre);syncControls(pre,DEFS[pre],st[pre])}
+
+function init(){
+  ['ef','ds','vr','or'].forEach(pre=>{$('#'+pre+'-controls').innerHTML=ctrlHTML(pre,DEFS[pre],st[pre],PRESETS[pre])});
+  $('#fc-ex').innerHTML='<option value="">Choose an example…</option>'+FC_EX.map((e,i)=>`<option value="${i}">${esc(e[0])}</option>`).join('');
+  restoreHash();
+  ['ef','ds','vr','or'].forEach(pre=>{
+    syncControls(pre,DEFS[pre],st[pre]);
+    bindControls(pre,st[pre],DEFS[pre],()=>{clearCustom(pre);RENDER[pre]()},PRESETS[pre],DEFAULTS[pre]);
+  });
+  syncFC();
+  $$('nav.tabs button').forEach(b=>{
+    b.addEventListener('click',()=>showTab(b.id.slice(2)));
+    b.addEventListener('keydown',e=>{
+      if(e.key!=='ArrowRight'&&e.key!=='ArrowLeft')return;
+      const i=TABS.indexOf(b.id.slice(2)),j=(i+(e.key==='ArrowRight'?1:TABS.length-1))%TABS.length;
+      showTab(TABS[j]);$('#t-'+TABS[j]).focus();e.preventDefault();
+    });
+  });
+  document.addEventListener('click',e=>{
+    const b=e.target.closest('[data-act],[data-dl],[data-qz],[data-goto],[data-gal],[data-pro],[data-load]');if(!b)return;
+    if(b.dataset.gal!==undefined){const g=EF_GAL[+b.dataset.gal];Object.assign(st.ef,{aN:2,bN:2,effA:g[1],effB:g[2],effAB:g[3],exact:true});clearCustom('ef');syncControls('ef',EF_DEFS,st.ef);renderEF();$('#ef-top').scrollIntoView();return}
+    if(b.dataset.load){const [pre,i]=b.dataset.load.split(':');applyPreset(pre,+i);showTab(pre==='ef'?'ef':'ap');window.scrollTo(0,0);return}
+    if(b.dataset.goto){showTab(b.dataset.goto);window.scrollTo(0,0);return}
+    if(b.dataset.pro!==undefined){answerMC(+b.dataset.pro);return}
+    if(b.dataset.qz!==undefined){answerQ(+b.dataset.qz);return}
+    if(b.dataset.dl){doDL(b.dataset.dl,b.dataset.t);return}
+    const a=b.dataset.act,pre=a.split('-')[0],op=a.split('-')[1];
+    if(a==='prac-reset'){pr.n=0;pr.score=0;pr.cur=null;pr.answered=false;qz.n=0;qz.score=0;qz.i=-1;qz.done=false;$('#pr-feedback').innerHTML='';renderPR();renderQZ();return}
+    if(a==='fcl-reset'){st.fc=Object.assign({},FC_DEF);st.cn={a:2,b:2,c:1,n:10};syncFC();$('#fc-ex').value='';renderST();return}
+    if(op==='rand'&&DEFAULTS[pre]){st[pre].seed=1+Math.floor(Math.random()*99999);syncControls(pre,DEFS[pre],st[pre]);clearCustom(pre);RENDER[pre]()}
+    else if(op==='reset'&&DEFAULTS[pre]){Object.assign(st[pre],DEFAULTS[pre]);clearCustom(pre);syncControls(pre,DEFS[pre],st[pre]);RENDER[pre]()}
+    else if(a==='ef-use'){const r=parseEF($('#ef-paste').value);if(r.error){$('#ef-paste-msg').innerHTML=`<span style="color:var(--bad)">${esc(r.error)}</span>`}else{st.efCustom=r;$('#ef-paste-msg').textContent=`Analyzing a ${r.aLv.length} × ${r.bLv.length} design with ${sum(r.cells.map(x=>sum(x.map(c=>c.length))))} scores.`;renderEF()}}
+    else if(a==='ef-fill'){const D=efData();$('#ef-paste').value=D.cells.map((r,i)=>r.map((c,j)=>c.map(v=>`${D.aLv[i]}, ${D.bLv[j]}, ${(+v).toFixed(1)}`).join('\n')).join('\n')).join('\n')}
+    else if(a==='ef-sim'){clearCustom('ef');renderEF()}
+    else if(a==='pr-new'){pr.cur=genScenario();pr.answered=false;$('#pr-feedback').innerHTML='';renderPR()}
+    else if(a==='pr-submit')answerFX();
+    else if(a==='qz-new')newQ();
+  });
+  document.addEventListener('change',e=>{
+    const el=e.target;
+    if(el.dataset&&el.dataset.ov){st[el.dataset.pre][el.dataset.ov]=el.checked;if(el.dataset.pre==='efOv')renderEF();else if(el.dataset.pre==='vrOv')renderVR();return}
+    if(el.name&&el.name.indexOf('fc-')===0){st.fc[el.name.slice(3)]=el.value;$('#fc-ex').value='';renderST();return}
+    if(el.id==='fc-al'||el.id==='fc-bl'){st.fc[el.id.slice(3)]=+el.value;$('#fc-ex').value='';renderST();return}
+    if(el.id==='fc-ex'){if(el.value!==''){Object.assign(st.fc,FC_EX[+el.value][1]);syncFC();renderST()}return}
+    if(el.id&&el.id.indexOf('cn-')===0){st.cn[el.id.slice(3)]=Math.max(1,+el.value||1);renderST()}
+  });
+  $('#btn-theme').addEventListener('click',()=>{
+    const cur=document.documentElement.dataset.theme||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
+    document.documentElement.dataset.theme=cur==='dark'?'light':'dark';showTab(st.tab);
+  });
+  $('#btn-link').addEventListener('click',()=>{
+    try{
+      const payload=btoa(unescape(encodeURIComponent(JSON.stringify({tab:st.tab,ef:st.ef,ds:st.ds,vr:st.vr,or:st.or,efOv:st.efOv,vrOv:st.vrOv,cn:st.cn,fc:st.fc}))));
+      location.hash='s='+payload;
+      if(navigator.clipboard)navigator.clipboard.writeText(location.href).then(()=>toast('Link copied'),()=>toast('Link is in the address bar'));
+      else toast('Link is in the address bar');
+    }catch(err){toast('Could not build link')}
+  });
+  showTab(st.tab);
+}
+function restoreHash(){
+  try{
+    const m=/s=([^&]+)/.exec(location.hash);if(!m)return;
+    const o=JSON.parse(decodeURIComponent(escape(atob(m[1]))));
+    ['ef','ds','vr','or','efOv','vrOv','cn','fc'].forEach(k=>{if(o[k])Object.assign(st[k],o[k])});
+    if(o.tab&&TABS.includes(o.tab))st.tab=o.tab;
+  }catch(e){}
+}
+
+const root=typeof window!=='undefined'?window:globalThis;
+root.FXExplorer={twoWay,simpleEffects,simCells,cellMu,simDS,analyzeDS,repDS,simVR,vrAnalyze,repVR,simOR,repOR,repEF,mixed2x2,parseEF,fcResult,genScenario,QZ,DEF_EF,DEF_DS,DEF_VR,DEF_OR,indT,anova,parseLv};
+if(typeof document!=='undefined'&&document.getElementById('t-st'))init();
+})();
+</script>
+</body>
+</html>
