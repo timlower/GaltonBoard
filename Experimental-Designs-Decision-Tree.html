@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Experimental Designs Decision Tree</title>
+<meta name="description" content="Interactive decision tree for choosing a research design: group or single-case, one or several factors, manipulated or not, random assignment or not, between-subjects or within-subjects, factorial, single-case and developmental designs, with notation, threats, analysis and general considerations.">
+<style>
+
+:root{
+  --bg:#f5f6f4; --card:#ffffff; --fg:#1c1f24; --muted:#5b6572; --line:#d9dde3; --grid:#eceff2;
+  --plot:#ffffff; --axis:#8b94a1; --colA:#34588a; --colB:#c0531a; --tintB:rgba(192,83,26,.07); --colC:#14806f; --colD:#7c3fb0; --colE:#8a6d00;
+  --accent:#2b62c4; --accentFg:#ffffff; --good:#1f7a43; --warn:#9a6700; --bad:#b3261e;
+  --goodBg:#e5f4ea; --warnBg:#fbf0d4; --badBg:#fbe4e2;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme=light]){
+    --bg:#13161b; --card:#1b1f26; --fg:#e8eaed; --muted:#9aa3af; --line:#2d333c; --grid:#262b33;
+    --plot:#1b1f26; --axis:#6f7886; --colA:#8fb4e8; --colB:#f59a5f; --tintB:rgba(245,154,95,.10); --colC:#4fcfb8; --colD:#c39bea; --colE:#e3c64f;
+    --accent:#7aa7ff; --accentFg:#0d1117; --good:#6fd596; --warn:#e8c05a; --bad:#ff8c84;
+    --goodBg:#16301f; --warnBg:#3a3016; --badBg:#3d1d1b;
+  }
+}
+:root[data-theme=dark]{
+  --bg:#13161b; --card:#1b1f26; --fg:#e8eaed; --muted:#9aa3af; --line:#2d333c; --grid:#262b33;
+  --plot:#1b1f26; --axis:#6f7886; --colA:#8fb4e8; --colB:#f59a5f; --tintB:rgba(245,154,95,.10); --colC:#4fcfb8; --colD:#c39bea; --colE:#e3c64f;
+  --accent:#7aa7ff; --accentFg:#0d1117; --good:#6fd596; --warn:#e8c05a; --bad:#ff8c84;
+  --goodBg:#16301f; --warnBg:#3a3016; --badBg:#3d1d1b;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+header.top{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:14px 20px 6px;max-width:1360px;margin:0 auto}
+header.top h1{font-size:1.25rem;margin:0;letter-spacing:-.01em}
+header.top p{margin:2px 0 0;color:var(--muted);font-size:.9rem;max-width:62ch}
+.hbtns{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+button,.btn{font:inherit;font-size:.85rem;border:1px solid var(--line);background:var(--card);color:var(--fg);padding:6px 11px;border-radius:7px;cursor:pointer}
+button:hover{border-color:var(--accent)}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button.primary{background:var(--accent);color:var(--accentFg);border-color:var(--accent);font-weight:600}
+button.small{padding:3px 8px;font-size:.78rem}
+nav.tabs{display:flex;gap:2px;max-width:1360px;margin:6px auto 0;padding:0 20px;border-bottom:1px solid var(--line);overflow-x:auto}
+nav.tabs button{border:none;border-bottom:3px solid transparent;border-radius:0;background:none;padding:9px 14px;font-size:.92rem;color:var(--muted);white-space:nowrap}
+nav.tabs button[aria-selected=true]{color:var(--fg);border-bottom-color:var(--colB);font-weight:600}
+main{max-width:1360px;margin:0 auto;padding:16px 20px 40px}
+.tabpanel[hidden]{display:none}
+.layout{display:grid;grid-template-columns:330px minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:980px){.layout{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:14px}
+.card h2{font-size:1rem;margin:0 0 8px}
+.card h3{font-size:.92rem;margin:14px 0 6px}
+.card p{margin:6px 0}
+.muted{color:var(--muted)}
+.small{font-size:.82rem}
+aside.controls{position:sticky;top:8px;max-height:calc(100vh - 16px);overflow:auto;padding:12px 14px}
+@media (max-width:980px){aside.controls{position:static;max-height:none}}
+details.grp{border-top:1px solid var(--line);padding:6px 0}
+details.grp:first-of-type{border-top:none}
+details.grp>summary{cursor:pointer;font-weight:600;font-size:.88rem;padding:4px 0;list-style:none}
+details.grp>summary::before{content:"▸ ";color:var(--muted)}
+details.grp[open]>summary::before{content:"▾ "}
+.ctl{margin:6px 0 10px}
+.ctl label{display:flex;justify-content:space-between;gap:8px;font-size:.82rem;color:var(--muted);margin-bottom:2px}
+.ctl output{color:var(--fg);font-variant-numeric:tabular-nums;font-weight:600}
+.ctl input[type=range]{width:100%;accent-color:var(--accent)}
+.ctl input[type=text],.ctl input[type=number],.ctl select,textarea{width:100%;font:inherit;font-size:.85rem;padding:5px 7px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--fg)}
+.ctl.check label{display:flex;justify-content:flex-start;gap:8px;align-items:center;color:var(--fg)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.toolbar{display:flex;gap:6px 14px;flex-wrap:wrap;align-items:center;margin-bottom:8px;font-size:.82rem}
+.toolbar label{display:inline-flex;gap:5px;align-items:center;cursor:pointer}
+.toolbar .sp{flex:1}
+.chart svg{width:100%;height:auto;display:block}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted);margin-top:6px}
+.legend i{display:inline-block;vertical-align:middle;margin-right:4px}
+.dotA{width:10px;height:10px;border-radius:50%;background:var(--colA)}
+.dotB{width:10px;height:10px;background:var(--colB)}
+.tbl-wrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.84rem;font-variant-numeric:tabular-nums}
+th,td{padding:5px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{font-weight:600;color:var(--muted);font-size:.78rem}
+th[title]{cursor:help;text-decoration:underline dotted;text-underline-offset:3px}
+td.l,th.l{text-align:left;white-space:normal}
+.pill{display:inline-block;padding:1px 8px;border-radius:99px;font-size:.76rem;font-weight:600}
+.pill.good{background:var(--goodBg);color:var(--good)}
+.pill.warn{background:var(--warnBg);color:var(--warn)}
+.pill.bad{background:var(--badBg);color:var(--bad)}
+.callout{border-left:4px solid var(--colA);background:var(--grid);padding:8px 12px;border-radius:0 8px 8px 0;font-size:.88rem;margin:8px 0}
+.callout.warn{border-left-color:var(--warn)}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+.stat{display:flex;gap:18px;flex-wrap:wrap;margin:6px 0 8px}
+.stat div{min-width:110px}
+.stat b{display:block;font-size:1.3rem;font-variant-numeric:tabular-nums}
+.stat span{font-size:.76rem;color:var(--muted)}
+ul.clean{padding-left:18px;margin:6px 0}
+ul.clean li{margin:3px 0}
+.q{margin:12px 0}
+.q legend{font-weight:600;font-size:.92rem;padding:0}
+.q fieldset{border:none;margin:0;padding:0}
+.q label{display:block;margin:3px 0;font-size:.9rem;cursor:pointer}
+.fit{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-top:1px solid var(--line)}
+.fit:first-child{border-top:none}
+.fit .nm{font-weight:600}
+footer{max-width:1360px;margin:0 auto;padding:0 20px 30px;color:var(--muted);font-size:.8rem}
+.sr{position:absolute;left:-9999px}
+dl.gl dt{font-weight:600;margin-top:8px}
+dl.gl dd{margin:2px 0 0 0;color:var(--muted)}
+ol.refs li{margin:5px 0;font-size:.85rem}
+#toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:8px 14px;border-radius:8px;font-size:.85rem;opacity:0;pointer-events:none;transition:opacity .2s}
+#toast.show{opacity:.95}
+button.opt{display:block;width:100%;text-align:left;margin:6px 0;padding:9px 12px;border-radius:8px}
+button.opt b{display:block;font-size:.92rem}
+button.opt span{display:block;font-size:.8rem;color:var(--muted);margin-top:2px}
+button.opt:hover{background:var(--grid)}
+ol.crumbs{list-style:none;margin:6px 0 10px;padding:0;font-size:.8rem}
+ol.crumbs li{margin:2px 0}
+button.crumb{border:none;background:none;padding:2px 0;color:var(--muted);text-align:left;font-size:.8rem;cursor:pointer}
+button.crumb b{color:var(--fg)}
+button.crumb:hover{color:var(--accent)}
+pre.nota{background:var(--grid);border-radius:8px;padding:8px 12px;font:600 .85rem/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;margin:6px 0;overflow-x:auto;white-space:pre}
+.treewrap{overflow-x:auto}
+.treewrap svg{min-width:900px}
+.treewrap [data-tn]{cursor:pointer}
+.ck{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-top:1px solid var(--line)}
+.ck:first-child{border-top:none}
+.ck input{margin-top:4px}
+.ck .t{font-weight:600}
+.ck.done .t{text-decoration:line-through;color:var(--muted)}
+.opts4{display:grid;gap:6px}
+.progress{height:8px;background:var(--grid);border-radius:99px;overflow:hidden;margin:6px 0}
+.progress i{display:block;height:100%;background:var(--good)}
+
+[hidden]{display:none!important}
+.chart svg text{user-select:none}
+</style>
+</head>
+<body>
+<header class="top">
+  <div>
+    <h1>Experimental Designs Decision Tree</h1>
+    <p>Answer a short series of questions to find the experimental research design that fits your study. The tree separates group studies from N-of-1 studies, one factor from several, manipulated from nonmanipulated variables, and random from nonrandom assignment. It then shifts to focused selectors for between-subjects versus within-subjects choices, factorial designs, N-of-1 designs and developmental designs. Each result shows the notation, the main threats, the usual analysis and the general considerations that go with it.</p>
+  </div>
+  <div class="hbtns">
+    <button id="btn-link" title="Put your answers in the page URL so you can share or bookmark them">Copy share link</button>
+    <button id="btn-theme" title="Toggle light / dark">Theme</button>
+  </div>
+</header>
+
+<nav class="tabs" role="tablist" aria-label="Sections">
+  <button role="tab" id="t-tree" aria-controls="p-tree" aria-selected="true">Decision tree</button>
+  <button role="tab" id="t-cat" aria-controls="p-cat" aria-selected="false">Design catalog</button>
+  <button role="tab" id="t-con" aria-controls="p-con" aria-selected="false">General considerations</button>
+  <button role="tab" id="t-prac" aria-controls="p-prac" aria-selected="false">Practice</button>
+  <button role="tab" id="t-ref" aria-controls="p-ref" aria-selected="false">Reference</button>
+</nav>
+
+<main>
+<noscript><div class="card">This decision tree needs JavaScript enabled.</div></noscript>
+
+<!-- ================= TREE ================= -->
+<section class="tabpanel" id="p-tree" role="tabpanel" aria-labelledby="t-tree">
+  <div class="card">
+    <div class="toolbar"><b>The tree and your path</b><span class="sp"></span><button class="small" data-dl="svg">Download SVG</button><button class="small" data-dl="png">Download PNG</button></div>
+    <div class="treewrap chart" id="tree-chart"></div>
+    <p class="small muted">Click an answered question in the tree, or in the list of answers, to go back to it.</p>
+  </div>
+  <div class="layout">
+    <aside class="card controls" id="q-card" aria-live="polite"></aside>
+    <div id="res"></div>
+  </div>
+</section>
+
+<!-- ================= CATALOG ================= -->
+<section class="tabpanel" id="p-cat" role="tabpanel" aria-labelledby="t-cat" hidden>
+  <div class="card">
+    <div class="row" style="justify-content:space-between;align-items:flex-end">
+      <div><h2 style="margin:0">Every design the tree can recommend</h2><p class="small muted">The research strategies range from nonexperimental (little or no attempt to limit threats) to experimental (manipulation, control and random assignment, or replication within a case).</p></div>
+      <div class="ctl" style="margin:0;min-width:210px"><label for="cat-f">Show</label><select id="cat-f"><option value="all">All designs</option><option value="exp">Experimental</option><option value="single">N-of-1 experimental</option><option value="quasi">Quasi-experimental</option><option value="non">Nonexperimental</option><option value="dev">Developmental</option></select></div>
+    </div>
+    <div id="cat-out"></div>
+  </div>
+  <div class="card">
+    <h2>Three strategies, one question</h2>
+    <p>Every choice in the tree answers a form of the same question: <b>how well can this design rule out explanations other than the treatment?</b> Manipulation determines the direction of the relationship, control (holding constant, matching and randomization) addresses third variables, and comparison conditions or replication show what would have happened without the treatment.</p>
+    <div class="chart" id="cat-spec"></div>
+  </div>
+</section>
+
+<!-- ================= CONSIDERATIONS ================= -->
+<section class="tabpanel" id="p-con" role="tabpanel" aria-labelledby="t-con" hidden>
+  <div class="layout">
+    <aside class="card controls">
+      <div class="row" style="justify-content:space-between"><h2 style="margin:0">Choose a design</h2><button class="small" data-act="con-reset" title="Clear every tick and follow the tree result again">Reset</button></div>
+      <div class="ctl"><label for="cs-key">Design</label><select id="cs-key"></select></div>
+      <div id="cs-note"></div>
+      <div id="cs-prog"></div>
+      <p class="small muted">Tick each consideration once your study plan addresses it.</p>
+    </aside>
+    <div>
+      <div class="card"><h2>Considerations for: <span id="cs-name"></span></h2><div id="cs-on"></div></div>
+      <div class="card" id="cs-off-wrap"><details><summary style="cursor:pointer;font-weight:600">Other considerations (<span id="cs-off-n"></span>) that apply less directly</summary><div id="cs-off"></div></details></div>
+      <div class="card">
+        <h2>Counterbalancing: how many orders?</h2>
+        <div class="ctl" style="max-width:220px"><label for="cb-k">Treatment conditions to highlight</label><select id="cb-k"><option>2</option><option>3</option><option selected>4</option><option>5</option><option>6</option><option>7</option><option>8</option></select></div>
+        <div id="cb-out"></div>
+        <p class="small muted">Complete counterbalancing uses every possible order, so it quickly becomes impractical. A Latin square uses k selected sequences in which each treatment appears once in each position. It balances carryover from the immediately preceding treatment when k is even (for odd k, two squares, 2k rows, are needed). Neither fixes asymmetrical order effects.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= PRACTICE ================= -->
+<section class="tabpanel" id="p-prac" role="tabpanel" aria-labelledby="t-prac" hidden>
+  <div class="card">
+    <div class="row" style="justify-content:space-between"><h2 style="margin:0">Choose the best design</h2><div class="row"><span id="pr-score" class="small muted"></span><button class="small primary" data-act="pr-new">New scenario</button><button class="small" data-act="prac-reset" title="Clear the score and the current scenario">Reset</button></div></div>
+    <p class="small muted">Read the scenario, pick the design that best fits it, then open the same path in the decision tree to see how the answers lead there.</p>
+    <div id="pr-card" hidden>
+      <div class="callout" id="pr-text" style="font-size:.95rem"></div>
+      <div class="opts4" id="pr-choices"></div>
+      <div id="pr-fb"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= REFERENCE ================= -->
+<section class="tabpanel" id="p-ref" role="tabpanel" aria-labelledby="t-ref" hidden>
+  <div class="grid2">
+    <div class="card">
+      <h2>How the tree decides</h2>
+      <ol class="clean">
+        <li><b>Unit of study.</b> Group comparisons use many participants; N-of-1 or single-case designs observe one participant (or a few) repeatedly across phases.</li>
+        <li><b>Number of independent variables.</b> Two or more factors make a factorial design.</li>
+        <li><b>Manipulation.</b> Manipulating the IV sets the direction of the relationship; leaving it unmanipulated limits conclusions to differences and relationships.</li>
+        <li><b>Random assignment.</b> Randomization (or randomized order) gives a true experiment; without it, the best available design is quasi-experimental.</li>
+        <li><b>Selectors.</b> Where several designs remain, a short set of questions scores them and the highest-scoring design is recommended.</li>
+      </ol>
+      <p class="small muted">The scores are a heuristic aid. They do not replace design judgment, ethics review or the standards of your field.</p>
+    </div>
+    <div class="card">
+      <h2>Notation</h2>
+      <dl class="gl">
+        <dt>O</dt><dd>An observation or measurement of the dependent variable.</dd>
+        <dt>X</dt><dd>A treatment or intervention.</dd>
+        <dt>R</dt><dd>Random assignment to groups or orders.</dd>
+        <dt>NR</dt><dd>Groups formed without random assignment (nonequivalent groups).</dd>
+        <dt>A, B</dt><dd>In N-of-1 or single-case work, baseline (A) and treatment (B) phases. In factorial work, the two factors.</dd>
+      </dl>
+    </div>
+    <div class="card">
+      <h2>Glossary</h2>
+      <dl class="gl">
+        <dt>Confounding variable</dt><dd>An extraneous variable that influences the DV and varies systematically with the IV.</dd>
+        <dt>Third-variable problem</dt><dd>An unidentified variable may be responsible for an observed relationship.</dd>
+        <dt>Directionality problem</dt><dd>A relationship does not show which variable is the cause.</dd>
+        <dt>Counterbalancing</dt><dd>Presenting treatments in different orders to spread order effects evenly across conditions.</dd>
+        <dt>Nonequivalent control group</dt><dd>A comparison group formed without random assignment.</dd>
+        <dt>Cohort effect</dt><dd>A difference caused by belonging to a generation, confounded with age in cross-sectional studies.</dd>
+        <dt>Functional relation</dt><dd>In N-of-1 or single-case research, a demonstrated dependence of the behavior on the intervention, shown by replication.</dd>
+      </dl>
+    </div>
+    <div class="card">
+      <h2>Related explorers</h2>
+      <p class="small">Each design reached here has a companion interactive explorer with simulated data: the Between- and Within-Subjects Experimental Designs Explorer, the Non-Experimental and Quasi-Experimental Designs Explorer, the Factorial Designs Explorer and the N-of-1 Explorer.</p>
+    </div>
+    <div class="card" style="grid-column:1/-1">
+      <h2>References</h2>
+      <ol class="refs">
+        <li>Campbell, D. T., &amp; Stanley, J. C. (1963). <i>Experimental and quasi-experimental designs for research.</i> Rand McNally.</li>
+        <li>Shadish, W. R., Cook, T. D., &amp; Campbell, D. T. (2002). <i>Experimental and quasi-experimental designs for generalized causal inference.</i> Houghton Mifflin.</li>
+        <li>Kazdin, A. E. (2011). <i>Single-case research designs: Methods for clinical and applied settings</i> (2nd ed.). Oxford University Press.</li>
+        <li>Gravetter, F. J., &amp; Forzano, L.-A. B. <i>Research methods for the behavioral sciences.</i> Cengage.</li>
+        <li>Keppel, G., &amp; Wickens, T. D. (2004). <i>Design and analysis: A researcher's handbook</i> (4th ed.). Pearson.</li>
+      </ol>
+      <p class="small muted">Citations are provided from memory for orientation; please verify details against the originals before citing. The terminology and the general considerations follow the course slides on experimental strategies, between-subjects designs, within-subjects designs, nonexperimental and quasi-experimental strategies, and factorial designs.</p>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>
+  The recommendations are heuristics. Design logic, measurement quality and ethics review still carry the inference.
+</footer>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+'use strict';
+const $=(s,el=document)=>el.querySelector(s);
+const $$=(s,el=document)=>Array.from(el.querySelectorAll(s));
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const pill=(t,c)=>`<span class="pill ${c}">${t}</span>`;
+function svgWrap(W,H,inner,label){return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(label)}" xmlns="http://www.w3.org/2000/svg" font-family="system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif" font-size="11">${inner}</svg>`}
+function tbl(head,rows){
+  return `<div class="tbl-wrap"><table><thead><tr>${head.map(h=>`<th class="l">${h}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${r.map(c=>`<td class="l">${c}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+}
+
+/* ================= design catalog ================= */
+const EXP_B='See the Between- and Within-Subjects Experimental Designs Explorer.';
+const DES={
+  exp_b:{name:'Between-subjects experiment',sh:'Between-subjects',s:'exp',fam:'Experimental, group',man:'Yes',ran:'Yes',ctl:'Control group or comparison condition',
+    nota:['R  G1:  X1  O','R  G2:  X2  O'],
+    what:'Different participants are randomly assigned to each treatment condition, so the groups can be treated as equivalent and a cause-and-effect conclusion is supported.',
+    threats:'Individual differences add variance within treatments (randomization balances them on average but does not remove them). Differential attrition and communication between groups (diffusion, compensatory equalization, compensatory rivalry, resentful demoralization) remain.',
+    stat:'Independent-measures t test (two groups) or single-factor ANOVA; chi-square for nominal data.',
+    up:[['exp_m','Match participants on a variable that predicts the DV to reduce variance.'],['exp_w','Test every participant in every condition if order effects can be managed.']],ex:EXP_B},
+  exp_w:{name:'Within-subjects experiment (complete counterbalancing)',sh:'Within-subjects',s:'exp',fam:'Experimental, group',man:'Yes',ran:'Order randomized or counterbalanced',ctl:'Each participant is his or her own control',
+    nota:['R  G1:  X1 O  X2 O','R  G2:  X2 O  X1 O'],
+    what:'Each participant receives every treatment in a counterbalanced order, so individual differences are held constant and the design needs the fewest participants.',
+    threats:'Time-related threats (history, maturation, instrumentation) and order effects (practice, fatigue, carryover). Counterbalancing spreads order effects evenly but cannot remove asymmetrical order effects. Participants must complete every condition, so attrition matters.',
+    stat:'Repeated-measures (paired) t test or repeated-measures ANOVA.',
+    up:[['exp_l','With three or more conditions, use a Latin square instead of every possible order.'],['exp_m','If order effects are severe, move to a matched-subjects design.']],ex:EXP_B},
+  exp_l:{name:'Within-subjects experiment (Latin square counterbalancing)',sh:'Within, Latin square',s:'exp',fam:'Experimental, group',man:'Yes',ran:'Sequences randomized or counterbalanced',ctl:'Each participant is his or her own control',
+    nota:['R  G1:  X1 O  X2 O  X3 O','R  G2:  X2 O  X3 O  X1 O','R  G3:  X3 O  X1 O  X2 O'],
+    what:'A Latin square uses a selected set of sequences in which each treatment appears once in each position, giving partial counterbalancing with a manageable number of orders.',
+    threats:'The same time-related threats and order effects as any within-subjects design. A Latin square balances symmetrical order effects only; asymmetrical order effects (where the order of treatments does not balance the order effect) remain a problem.',
+    stat:'Repeated-measures ANOVA (with a factor for sequence if the design allows).',
+    up:[['exp_m','If order effects are asymmetrical, use separate participants (between-subjects or matched).']],ex:EXP_B},
+  exp_m:{name:'Matched-subjects experiment',sh:'Matched-subjects',s:'exp',fam:'Experimental, group',man:'Yes',ran:'Yes, within matched sets',ctl:'Matching on a relevant variable plus random assignment',
+    nota:['Match on X  →  sets of similar participants','R  G1:  X1  O','R  G2:  X2  O'],
+    what:'Each participant in one group is matched one-to-one with a participant in every other group on a variable strongly related to the DV, and the members of each set are randomly assigned to conditions.',
+    threats:'Matching only helps if the variable really predicts the DV, and it requires extra measurement. It needs as many participants as a between-subjects design and may increase attrition if more time is required.',
+    stat:'Repeated-measures (paired) t test or repeated-measures ANOVA on the matched sets.',
+    up:[['exp_w','If participants are scarce and order effects are manageable, test everyone in every condition.']],ex:EXP_B},
+  fact:{name:'Factorial design',sh:'Factorial design',s:'exp',fam:'Factorial',man:'Depends on factors',ran:'Depends on factors',ctl:'Depends on factors',
+    nota:[],what:'',threats:'',stat:'',up:[],ex:'See the Factorial Designs Explorer.'},
+  post:{name:'Posttest-only nonequivalent control group design',sh:'Posttest-only NECG',s:'non',fam:'Nonexperimental or quasi-experimental, group',man:'Sometimes',ran:'No',ctl:'A similar but nonequivalent comparison group',
+    nota:['NR  G1:  X  O','NR  G2:     O'],
+    what:'One group receives the treatment and a similar but nonequivalent group serves as the control. Differences at the posttest cannot be attributed to the treatment alone.',
+    threats:'Individual differences between groups, different histories, different maturation and differential attrition. With no pretest there is no way to see how the groups started.',
+    stat:'Independent-measures t test or ANOVA; chi-square for categories.',
+    up:[['necg','Add a pretest so you can see how the groups started.']],ex:'See the Non-Experimental and Quasi-Experimental Designs Explorer.'},
+  necg:{name:'Pretest-posttest nonequivalent control group design',sh:'Pretest-posttest NECG',s:'quasi',fam:'Quasi-experimental, group',man:'Sometimes',ran:'No',ctl:'Nonequivalent comparison group with a pretest',
+    nota:['NR  G1:  O  X  O','NR  G2:  O     O'],
+    what:'The pretest shows how the groups started, and the comparison group absorbs common history, maturation, testing and instrumentation. It attempts to limit threats, so it is classified as quasi-experimental.',
+    threats:'Selection-by-maturation (groups changing at different rates), local history and regression toward the mean remain open.',
+    stat:'Two-factor mixed-design ANOVA (group × time); the interaction is the effect of interest.',
+    up:[['exp_b','If any form of random assignment is possible, randomize and gain a true experiment.']],ex:'See the Non-Experimental and Quasi-Experimental Designs Explorer.'},
+  pp:{name:'Pretest-posttest design (one group)',sh:'Pre-post, one group',s:'non',fam:'Nonexperimental, group',man:'Sometimes',ran:'No',ctl:'None',
+    nota:['O  X  O'],
+    what:'One group is measured before and after a treatment or event. It shows that change occurred, not what caused it.',
+    threats:'History, maturation, testing, instrumentation and regression toward the mean are all uncontrolled.',
+    stat:'Repeated-measures (paired) t test; Wilcoxon or sign test for ordinal or nominal data.',
+    up:[['ts','Add several observations before and after the treatment (a time series).'],['necg','Add a comparison group that is also measured twice.']],ex:'See the Non-Experimental and Quasi-Experimental Designs Explorer.'},
+  ts:{name:'Time-series design',sh:'Time series',s:'quasi',fam:'Quasi-experimental, group',man:'Sometimes',ran:'No',ctl:'The pre-treatment series is the baseline',
+    nota:['O  O  O  X  O  O  O'],
+    what:'Multiple observations before and after the treatment show preexisting trends, practice, fatigue, maturation, instrumentation and regression as change before the treatment.',
+    threats:'A history event or a change in measurement at the same moment as the treatment is still indistinguishable from a treatment effect.',
+    stat:'Segmented (interrupted time-series) regression or repeated-measures analysis.',
+    up:[['necg','Add a comparison series from a group that did not receive the treatment.']],ex:'See the Non-Experimental and Quasi-Experimental Designs Explorer.'},
+  diff:{name:'Differential (ex post facto) design',sh:'Differential design',s:'non',fam:'Nonexperimental, group',man:'No',ran:'No',ctl:'None',
+    nota:['NR  G1:  O','NR  G2:  O'],
+    what:'The goal is to establish differences between preexisting groups. No cause can be named.',
+    threats:'Individual differences: the groups differ in many ways besides the grouping variable (third-variable problem), and the direction of any relationship is unclear (directionality problem).',
+    stat:'Independent-measures t test (two groups) or single-factor ANOVA; chi-square for categories.',
+    up:[['post','If a treatment or event distinguishes the groups, treat it as a posttest-only comparison (still nonequivalent).'],['exp_b','If the grouping variable can be manipulated, create the groups yourself by random assignment.']],ex:'See the Non-Experimental and Quasi-Experimental Designs Explorer.'},
+  none:{name:'One observation per person cannot show change',sh:'One-shot (no design)',s:'non',fam:'Not a design',man:'Sometimes',ran:'No',ctl:'None',
+    nota:['X  O'],
+    what:'A single group measured once after a treatment has no comparison, so nothing can be concluded about the treatment.',
+    threats:'Every threat to internal validity is uncontrolled and there is nothing to compare with.',
+    stat:'None that supports a conclusion about change.',
+    up:[['pp','Measure before and after.'],['post','Add a comparison group.']],ex:''},
+  cs:{name:'Cross-sectional developmental design',sh:'Cross-sectional',s:'non',fam:'Nonexperimental, developmental',man:'No',ran:'No',ctl:'None',
+    nota:['NR  Age 20:  O','NR  Age 40:  O','NR  Age 60:  O   (all measured now)'],
+    what:'A between-subjects nonexperimental design that compares different age groups measured at the same time. Data are collected quickly, with no waiting for people to age.',
+    threats:'Factors other than age differentiate the groups; cohort (generation) effects are confounded with age. It does not show individual change.',
+    stat:'Independent-measures t test or ANOVA on the age groups.',
+    up:[['seq','Add cohorts followed over time to separate age from cohort.']],ex:'See the Non-Experimental and Quasi-Experimental Designs Explorer (Developmental designs tab).'},
+  lg:{name:'Longitudinal design',sh:'Longitudinal',s:'non',fam:'Nonexperimental, developmental',man:'No',ran:'No',ctl:'None',
+    nota:['One cohort:  O(age 20)  O(30)  O(40)  O(50) ...'],
+    what:'The same individuals are measured repeatedly over time, so the design assesses individual behavioral change.',
+    threats:'Time-consuming; attrition may bias the sample; practice effects from repeated testing; results describe one cohort, which may not generalize to other generations.',
+    stat:'Repeated-measures t test or ANOVA across ages.',
+    up:[['seq','Follow several cohorts over a shorter span each.']],ex:'See the Non-Experimental and Quasi-Experimental Designs Explorer (Developmental designs tab).'},
+  seq:{name:'Cross-sectional longitudinal (cohort-sequential) design',sh:'Cohort-sequential',s:'non',fam:'Nonexperimental, developmental',man:'No',ran:'No',ctl:'Cohort comparison at the same ages',
+    nota:['Cohort A:  O(20)  O(30)  O(40)','Cohort B:  O(40)  O(50)  O(60)','Cohort C:  O(60)  O(70)  O(80)'],
+    what:'Separate samples (cohorts) are obtained at different times and followed for a shorter span. Comparing cohorts at the same ages separates age from cohort.',
+    threats:'Attrition and practice remain, though over a shorter span, and the design is more complex and costly to run.',
+    stat:'Mixed ANOVA or regression with age and cohort.',
+    up:[],ex:'See the Non-Experimental and Quasi-Experimental Designs Explorer (Developmental designs tab).'},
+  abab:{name:'ABAB reversal design',sh:'ABAB reversal',s:'single',fam:'N-of-1',man:'Yes',ran:'No (phases are sequenced)',ctl:'The participant’s own baseline',
+    nota:['A (baseline)  →  B (treatment)  →  A (withdrawal)  →  B (reinstatement)'],
+    what:'Behavior changes when the treatment is introduced, returns toward baseline when it is withdrawn, and changes again when it is reinstated: three demonstrations of an effect within one participant.',
+    threats:'The behavior may not reverse (skills and learning are retained), withdrawal may be unsafe or unethical, and carryover between phases blurs the logic.',
+    stat:'Visual analysis of level, trend and variability across phases, supported by overlap or effect-size indices and a randomization test.',
+    up:[['mbd','Stagger the intervention across three or more baselines if behavior will not reverse.']],ex:'See the N-of-1 Explorer.'},
+  mbd:{name:'Multiple baseline design',sh:'Multiple baseline',s:'single',fam:'N-of-1',man:'Yes',ran:'No (start points are staggered)',ctl:'Baselines that have not yet received the treatment',
+    nota:['Tier 1:  A A A | B B B B B B','Tier 2:  A A A A A | B B B B','Tier 3:  A A A A A A A | B B'],
+    what:'The intervention starts at different times across three or more comparable baselines (participants, behaviors or settings). Change that appears only when each tier’s own intervention begins rules out an outside event.',
+    threats:'The tiers must be independent (no spillover), an outside event that moves every tier at once defeats the staggered logic, and too few tiers weakens the logic.',
+    stat:'Visual analysis within and across tiers (vertical analysis); a randomization test needs four or more tiers to be able to reach p ≤ .05.',
+    up:[['abab','Add a reversal in each tier for the strongest control, at the cost of a longer study.']],ex:'See the N-of-1 Explorer.'},
+  atd:{name:'Alternating treatments design',sh:'Alternating treatments',s:'single',fam:'N-of-1',man:'Yes',ran:'Order of conditions randomized or counterbalanced',ctl:'Each condition is compared with the others in the same participant',
+    nota:['Rapid alternation:  B1  B2  B2  B1  B2  B1  B1  B2 ...'],
+    what:'Two or more interventions are rapidly alternated within one participant and compared directly.',
+    threats:'Multiple-treatment interference (carryover between conditions); it assumes little carryover, which is doubtful for retained skills.',
+    stat:'Visual analysis of separation between the condition series; a randomization test.',
+    up:[['abab','Use a reversal if you have one intervention to compare with baseline.']],ex:'See the N-of-1 Explorer.'},
+  cc:{name:'Changing criterion design',sh:'Changing criterion',s:'single',fam:'N-of-1',man:'Yes',ran:'No',ctl:'Behavior is expected to track each new criterion',
+    nota:['Criterion:  3  →  5  →  7  →  9   (behavior shaped step by step)'],
+    what:'The criterion for performance is raised or lowered in steps, and control is shown when the behavior tracks each new criterion. No withdrawal is needed.',
+    threats:'Only suitable for behavior shaped gradually; coincidental tracking of criteria is possible when steps are few or the behavior is already trending.',
+    stat:'Visual analysis of how closely behavior follows each criterion.',
+    up:[['mbd','Combine with a multiple baseline to strengthen the demonstration.']],ex:'See the N-of-1 Explorer.'}
+};
+const STRAT={exp:['Experimental','good'],quasi:['Quasi-experimental','warn'],non:['Nonexperimental','bad'],single:['N-of-1 experimental','good']};
+
+/* ================= forms (selectors) ================= */
+const o3=(a,b,c)=>[a,b,c];
+const FORMS={
+  nof:{sh:'N-of-1 selector',title:'N-of-1 selector',intro:'Five questions about the behavior and the setting.',qs:[
+    {k:'rev',t:'1. Is the target behavior likely to return toward baseline when the intervention is withdrawn?',o:[['yes','Yes, it depends on the intervention being in place'],['unsure','Not sure'],['no','No: skills, learning or knowledge will be retained']]},
+    {k:'eth',t:'2. Is it safe and ethical to withdraw an effective intervention?',o:[['ok','Yes, withdrawal is acceptable'],['unsure','Not sure'],['no','No: harm risk (e.g. self-injury) or withdrawal is unacceptable']]},
+    {k:'units',t:'3. Do you have 3 or more comparable baselines (participants, behaviors, or settings) that can be staggered?',o:[['yes','Yes'],['no','No: one participant, one behavior, one setting']]},
+    {k:'cmp',t:'4. Are you comparing two or more interventions against each other?',o:[['one','No: one intervention vs. baseline'],['two','Yes: 2 or more interventions']]},
+    {k:'grad',t:'5. Will the behavior be shaped in steps toward a criterion (e.g. gradually raise a performance level)?',o:[['no','No'],['yes','Yes']]}]},
+  bw:{sh:'Between/within fit',title:'Between-subjects or within-subjects?',intro:'Seven questions about the treatments, the participants and the measurement.',qs:[
+    {k:'order',t:'1. Are the treatments prone to practice, fatigue, boredom, carryover, or is the effect irreversible (e.g. learning)?',o:[['prone','Yes, order effects are likely'],['unsure','Not sure'],['ok','No, treatments are brief, reversible and independent']]},
+    {k:'time',t:'2. Can participants realistically complete every condition (time, travel, dropout risk)?',o:[['ok','Yes'],['unsure','Not sure'],['hard','No: long study, high attrition risk']]},
+    {k:'ind',t:'3. How large are stable individual differences in the DV compared with the treatment effect?',o:[['large','Large (people differ a lot, effect is modest)'],['unsure','Not sure'],['small','Small']]},
+    {k:'pool',t:'4. Are participants scarce or expensive?',o:[['scarce','Yes'],['unsure','Somewhat'],['plenty','No, plenty are available']]},
+    {k:'match',t:'5. Do you have a measurable variable that strongly predicts the DV (a pretest, age, ability) to match on?',o:[['yes','Yes'],['unsure','Not sure'],['no','No']]},
+    {k:'k',t:'6. How many treatment conditions?',o:[['2','Two'],['34','Three or four'],['5','Five or more']]},
+    {k:'scale',t:'7. Scale of measurement of the DV',o:[['num','Interval or ratio (numerical scores)'],['ord','Ordinal (ranks)'],['nom','Nominal (categories, proportions)']]}]},
+  fact:{sh:'Factorial selector',title:'Describe the factorial design',intro:'Describe each factor. A participant variable is always between-subjects.',qs:[
+    {k:'at',t:'Factor A is…',o:[['man','Manipulated by the researcher'],['part','A participant variable (age, gender, diagnosis)'],['time','Time (before and after, or repeated sessions)']]},
+    {k:'aa',t:'Factor A: each participant is in…',show:a=>a.at!=='part',o:[['between','One level (between-subjects)'],['within','Every level (within-subjects)']]},
+    {k:'al',t:'Levels of factor A',num:1,o:[[2,'2'],[3,'3'],[4,'4'],[5,'5']]},
+    {k:'bt',t:'Factor B is…',o:[['man','Manipulated by the researcher'],['part','A participant variable (age, gender, diagnosis)'],['time','Time (before and after, or repeated sessions)']]},
+    {k:'ba',t:'Factor B: each participant is in…',show:a=>a.bt!=='part',o:[['between','One level (between-subjects)'],['within','Every level (within-subjects)']]},
+    {k:'bl',t:'Levels of factor B',num:1,o:[[2,'2'],[3,'3'],[4,'4'],[5,'5']]}]},
+  dev:{sh:'Developmental fit',title:'Cross-sectional, longitudinal or sequential?',intro:'Five questions about the developmental question and the resources available.',qs:[
+    {k:'chg',t:'1. Do you need to see how individuals change over time, not only differences between age groups?',o:[['yes','Yes, within-person change'],['unsure','Not sure'],['no','No, group differences are enough']]},
+    {k:'wait',t:'2. How long can you wait for the data?',o:[['now','Collect it now (days to months)'],['few','A few years'],['many','Many years']]},
+    {k:'cohort',t:'3. Are generation (cohort) differences likely to matter for this behavior (e.g. technology use, attitudes)?',o:[['yes','Yes'],['unsure','Not sure'],['no','No']]},
+    {k:'attr',t:'4. Is attrition likely (participants lost over the years)?',o:[['yes','Yes'],['unsure','Somewhat'],['no','No']]},
+    {k:'prac',t:'5. Are repeated tests prone to practice effects?',o:[['yes','Yes'],['unsure','Not sure'],['no','No']]}]}
+};
+const FDEF={
+  nof:{rev:'unsure',eth:'unsure',units:'no',cmp:'one',grad:'no'},
+  bw:{order:'unsure',time:'unsure',ind:'unsure',pool:'unsure',match:'unsure',k:'2',scale:'num'},
+  fact:{at:'man',aa:'between',al:2,bt:'man',ba:'between',bl:2},
+  dev:{chg:'unsure',wait:'now',cohort:'unsure',attr:'unsure',prac:'unsure'}
+};
+const FC_EX=[
+ ['Mode of presentation × study time (textbook example)',{at:'man',aa:'between',al:2,bt:'man',ba:'between',bl:2}],
+ ['Pretest-posttest control group design',{at:'man',aa:'between',al:2,bt:'time',ba:'within',bl:2}],
+ ['Age group × task difficulty',{at:'part',aa:'between',al:3,bt:'man',ba:'within',bl:2}],
+ ['Treatment order as a second factor (counterbalanced)',{at:'man',aa:'within',al:2,bt:'man',ba:'between',bl:2}],
+ ['Gender × age group (nothing manipulated)',{at:'part',aa:'between',al:2,bt:'part',ba:'between',bl:3}],
+ ['Two treatments, every participant in every condition',{at:'man',aa:'within',al:2,bt:'man',ba:'within',bl:2}]
+];
+
+/* ---- N-of-1 fit (N-of-1 selector logic) ---- */
+function nofFits(a){
+  const fits=[];
+  const revLvl=(a.rev==='no'||a.eth==='no')?'poor':(a.rev==='unsure'||a.eth==='unsure')?'possible':'good';
+  fits.push({k:'abab',n:'ABAB reversal',lvl:revLvl,why:revLvl==='good'?'The behavior should reverse and withdrawal is acceptable. You get three demonstrations of effect within one participant.':revLvl==='possible'?'Possible if you can confirm reversibility and that withdrawal is acceptable. Run a pilot or review the literature first.':a.rev==='no'?'The effect is expected to persist after withdrawal, so a return to baseline will not occur and the logic breaks down.':'Withdrawing an effective intervention is not acceptable here.'});
+  fits.push({k:'mbd',n:'Multiple baseline',lvl:a.units==='yes'?'good':'poor',why:a.units==='yes'?'Staggering the intervention across participants, behaviors, or settings gives replication without withdrawal. Use 4+ tiers if you want a randomization test that can reach p ≤ .05, and check tiers are independent.':'You need 3 or more comparable baselines to stagger. A non-concurrent multiple baseline across separate cases is an option but weaker.'});
+  fits.push({k:'atd',n:'Alternating treatments',lvl:a.cmp==='two'?(a.rev==='no'?'possible':'good'):'poor',why:a.cmp==='two'?(a.rev==='no'?'Rapid alternation assumes little carryover between conditions, which is doubtful for retained skills.':'Rapidly alternating two or more interventions compares them directly within a single participant.'):'Mainly used for comparing two or more interventions. With one intervention, an ABAB or multiple baseline is usually clearer.'});
+  fits.push({k:'cc',n:'Changing criterion',lvl:a.grad==='yes'?'good':'poor',why:a.grad==='yes'?'Stepwise criteria shaping performance show control when behavior tracks each new criterion. Best for gradual change; no withdrawal needed.':'Suited to behavior shaped gradually toward a target level.'});
+  const rank={good:0,possible:1,poor:2};
+  const pr=x=>((x.k==='atd'&&a.cmp==='two')||(x.k==='cc'&&a.grad==='yes'))?0:1;
+  fits.sort((x,y)=>rank[x.lvl]-rank[y.lvl]||pr(x)-pr(y));
+  return fits;
+}
+function nofResult(a){
+  const fits=nofFits(a),top=fits[0],notes=[];
+  if(top.lvl!=='good')notes.push(['warn','No design is a clear fit. Consider adding comparable units, confirming reversibility, or combining designs.']);
+  else if(a.units==='yes'&&fits.find(x=>x.k==='abab').lvl==='good')notes.push(['','Both ABAB and multiple baseline fit. A multiple baseline with a reversal in each tier gives the strongest control, at the cost of a longer study.']);
+  return{key:top.k,fits,notes,lvl:top.lvl};
+}
+
+/* ---- between / within fit (Between-Within selector logic) ---- */
+function bwScores(a){
+  const S={between:50,within:50,latin:50,matched:50},why={between:[],within:[],latin:[],matched:[]};
+  const add=(ds,v,t)=>ds.forEach(d=>{S[d]+=v;why[d].push((v>0?'+ ':'− ')+t)});
+  if(a.order==='prone'){add(['between'],25,'separate groups avoid practice, fatigue and carryover');add(['matched'],20,'separate participants per condition avoid order effects');add(['within'],-35,'order effects are likely; counterbalancing spreads them but does not remove them');add(['latin'],-30,'order effects are likely; a Latin square only balances symmetric ones')}
+  else if(a.order==='unsure'){add(['within','latin'],-8,'order effects cannot be ruled out')}
+  else{add(['within','latin'],8,'order effects are not expected')}
+  if(a.time==='hard'){add(['between'],15,'each participant is tested once');add(['matched'],10,'each participant is tested once');add(['within','latin'],-25,'every participant must complete every condition; attrition is a risk')}
+  else if(a.time==='unsure')add(['within','latin'],-5,'completing every condition may cost participants');
+  if(a.ind==='large'){add(['between'],-20,'individual differences inflate variance within treatments');add(['within','latin'],25,'each participant is his or her own control');if(a.match!=='no')add(['matched'],15,'matching removes part of the individual-difference variance')}
+  else if(a.ind==='small'){add(['between'],10,'little variance from individual differences to worry about');add(['within','latin','matched'],-5,'pairing buys little when people barely differ')}
+  if(a.pool==='scarce'){add(['between'],-20,'needs the most participants');add(['matched'],-15,'needs as many participants as between-subjects');add(['within','latin'],20,'needs the fewest participants')}
+  else if(a.pool==='plenty'){add(['between'],10,'plenty of participants available');add(['matched'],5,'plenty of participants available');add(['within','latin'],-5,'its main advantage (few participants) is not needed')}
+  if(a.match==='yes')add(['matched'],15,'a strong matching variable is available');
+  else if(a.match==='no')add(['matched'],-25,'no good variable to match on');
+  if(a.k==='2'){add(['within'],8,'complete counterbalancing needs only 2 orders');add(['latin'],4,'two orders are simple to run')}
+  else if(a.k==='34'){add(['within'],-10,'complete counterbalancing needs 6 or 24 orders');add(['latin'],5,'a Latin square keeps the number of orders manageable');add(['matched'],-5,'matching across three or more groups is harder')}
+  else{add(['within'],-35,'complete counterbalancing needs 120 or more orders');add(['latin'],-10,'order balance across many treatments is hard');add(['matched'],-15,'matching across many groups is hard');add(['between'],10,'adding conditions costs only more participants, not complexity')}
+  Object.keys(S).forEach(k=>{S[k]=clamp(S[k],0,100)});
+  return{S,why};
+}
+const BWKEY={between:'exp_b',within:'exp_w',latin:'exp_l',matched:'exp_m'};
+const BWNAME={between:'Between-subjects',within:'Within-subjects, complete counterbalancing',latin:'Within-subjects, Latin square',matched:'Matched-subjects'};
+function bwStat(key,a){
+  const k2=a.k==='2',w=key==='within'||key==='latin'||key==='matched';
+  if(a.scale==='num')return w?(k2?'Repeated-measures (paired) t test':'Repeated-measures ANOVA'):(k2?'Independent-measures t test':'Single-factor ANOVA (independent measures)');
+  if(a.scale==='ord')return w?(k2?'Wilcoxon signed-rank test':'Friedman test'):(k2?'Mann-Whitney U test':'Kruskal-Wallis test');
+  return w?(k2?'Sign test or McNemar test':'Cochran Q test'):'Chi-square test for independence';
+}
+function bwResult(a){
+  const {S,why}=bwScores(a),order=['between','within','latin','matched'];
+  const ranked=order.slice().sort((x,y)=>S[y]-S[x]);
+  const top=ranked[0],notes=[];
+  if(S[top]-S[ranked[1]]<=5)notes.push(['warn',`Close call: ${BWNAME[top]} and ${BWNAME[ranked[1]]} score within 5 points. Weigh the practical constraints that matter most to you.`]);
+  if(S[top]<60)notes.push(['warn','No design is a strong fit. Consider a pilot study, or combine designs (for example, a mixed design).']);
+  return{key:BWKEY[top],bw:top,S,why,ranked,notes,stat:bwStat(top,a)};
+}
+
+/* ---- factorial classifier (Factorial Designs Explorer logic) ---- */
+function fcResult(f0){
+  const asg=(t,a)=>t==='part'?'between':a,aa=asg(f0.at,f0.aa),ba=asg(f0.bt,f0.ba);
+  const man=[f0.at,f0.bt].filter(t=>t==='man').length,w=[aa,ba].filter(x=>x==='within').length;
+  const strat=man===2?['Experimental','good']:man===0?['Nonexperimental or quasi-experimental','bad']:['Combined strategy','warn'];
+  const dt=w===0?'between':w===2?'within':'mixed';
+  return{strat,dt,aa,ba,man,cond:f0.al*f0.bl};
+}
+const TYPE_L={man:'manipulated',part:'participant variable',time:'time'};
+function factResult(a){
+  const r=fcResult(a),notes=[];
+  const dtL={between:'Between-subjects (both factors)',within:'Within-subjects (both factors)',mixed:'Mixed (one between, one within)'}[r.dt];
+  const stat={between:'Two-factor ANOVA',within:'Two-factor repeated-measures ANOVA',mixed:'Two-factor mixed-design ANOVA'}[r.dt];
+  const thr=[];
+  if(r.dt!=='within')thr.push('individual differences and differential attrition across the between-subjects factor');
+  if(r.dt!=='between')thr.push('order effects and time-related threats for the within-subjects factor (counterbalance manipulated within factors)');
+  if(a.at==='part'||a.bt==='part')thr.push('a participant variable is not randomly assigned, so differences on that factor cannot be attributed to it as a cause');
+  if(a.at==='time'||a.bt==='time')thr.push('a time factor brings history, maturation, testing and instrumentation (a comparison group controls them)');
+  if(r.man===0)notes.push(['warn','Nothing is manipulated, so this is a nonexperimental or quasi-experimental factorial design: it can describe main effects and an interaction but cannot establish cause and effect.']);
+  else if(r.man===1)notes.push(['','One factor is manipulated and one is not (a participant variable or time). The effect of the manipulated factor can be interpreted causally only to the extent participants were randomly assigned to it; the other factor remains correlational.']);
+  if(r.cond>=12)notes.push(['warn',`${r.cond} conditions is a lot. Every added factor multiplies the conditions, the participants needed and the complexity of the interactions to interpret.`]);
+  const sName=`${a.al} × ${a.bl} factorial design`;
+  const s=r.man===2?'exp':r.man===0?'non':'quasi';
+  const nota=[`Factor A: ${a.al} levels (${TYPE_L[a.at]}, ${r.aa})`,`Factor B: ${a.bl} levels (${TYPE_L[a.bt]}, ${r.ba})`,`${a.al} × ${a.bl} = ${r.cond} conditions (cells)`];
+  return{key:'fact',r,notes,over:{name:`${sName}: ${dtL}`,sh:`${a.al} × ${a.bl} factorial`,s,nota,what:`Two factors are combined so that every level of one appears with every level of the other. The design tests the main effect of each factor and the interaction between them. Strategy: ${r.strat[0].toLowerCase()}.`,threats:'Main concerns: '+(thr.join('; ')||'confounds across cells')+'.',stat:stat+'. Interpret a significant interaction before the main effects; check the pattern of cell means.',up:r.man<2?[['exp_b','Where possible, manipulate the factor and randomly assign participants to its levels.']]:[],man:r.man===0?'No':r.man===2?'Yes (both)':'One factor',ran:r.man===2?'Yes for manipulated between factors':'Not for participant variables',ctl:'Cell comparisons across factors'}};
+}
+
+/* ---- developmental fit ---- */
+function devScores(a){
+  const S={cs:50,lg:50,seq:45},why={cs:[],lg:[],seq:[]};
+  const add=(ds,v,t)=>ds.forEach(d=>{S[d]+=v;why[d].push((v>0?'+ ':'− ')+t)});
+  if(a.chg==='yes'){add(['cs'],-30,'it compares different people and cannot show individual change');add(['lg'],30,'it follows the same individuals');add(['seq'],15,'it follows individuals within each cohort')}
+  else if(a.chg==='no')add(['cs'],10,'group differences are all that is needed');
+  if(a.wait==='now'){add(['cs'],25,'data are collected quickly');add(['lg'],-40,'it requires waiting for people to age');add(['seq'],-25,'it still requires following people over time')}
+  else if(a.wait==='few'){add(['seq'],10,'a shorter span per cohort is workable');add(['lg'],-10,'a few years may be too short to span the ages of interest')}
+  else add(['lg'],10,'a long span is available');
+  if(a.cohort==='yes'){add(['cs'],-30,'cohort effects are confounded with age');add(['seq'],30,'comparing cohorts at the same ages separates age from cohort');add(['lg'],-5,'follows one cohort, which may not generalize')}
+  else if(a.cohort==='unsure')add(['cs'],-8,'cohort effects cannot be ruled out');
+  if(a.attr==='yes'){add(['lg'],-25,'attrition over many years may bias the sample');add(['seq'],-10,'attrition remains, though over a shorter span');add(['cs'],15,'each person is tested once, so there is no attrition')}
+  if(a.prac==='yes'){add(['lg'],-20,'repeated testing produces practice effects');add(['seq'],-10,'repeated testing produces practice effects');add(['cs'],10,'each person is tested once, so there is no practice')}
+  Object.keys(S).forEach(k=>{S[k]=clamp(S[k],0,100)});
+  return{S,why};
+}
+function devResult(a){
+  const {S,why}=devScores(a),ranked=['cs','lg','seq'].sort((x,y)=>S[y]-S[x]),notes=[];
+  if(S[ranked[0]]-S[ranked[1]]<=5)notes.push(['warn',`Close call: ${DES[ranked[0]].sh} and ${DES[ranked[1]].sh} score within 5 points.`]);
+  return{key:ranked[0],S,why,ranked,notes};
+}
+
+/* ================= the tree ================= */
+const T={
+  root:{sh:'Unit of study',q:'What is the unit of study?',opts:[
+    {l:'One or more groups of participants',d:'Compare conditions, groups or ages with scores from many participants.',s:'group',to:'nvar'},
+    {l:'One participant, or a few cases, studied intensively',d:'Behavior is observed repeatedly across phases (N-of-1 or single-case research).',s:'N-of-1',to:'form:nof'}]},
+  nvar:{sh:'Number of IVs',q:'How many independent variables (factors) will the study include?',opts:[
+    {l:'One independent variable',d:'A single-factor design.',s:'one IV',to:'manip'},
+    {l:'Two or more independent variables',d:'A factorial design: every level of one factor combined with every level of the other.',s:'2+ IVs',to:'form:fact'}]},
+  manip:{sh:'Manipulate the IV?',q:'Will you manipulate the independent variable?',opts:[
+    {l:'Yes: I will create the treatment conditions',d:'Manipulation lets you determine the direction of the relationship and start to control third variables.',s:'manipulate',to:'rand'},
+    {l:'No: participants already differ, or the event is outside my control',d:'The IV is a preexisting characteristic, an event you did not assign, or time and age.',s:'no manip.',to:'cmpN'}]},
+  rand:{sh:'Random assignment?',q:'Can you assign participants to conditions at random (or randomize the order of conditions)?',opts:[
+    {l:'Yes',d:'Random assignment (or random or counterbalanced order) gives a true experiment.',s:'random',to:'form:bw'},
+    {l:'No: intact groups, or assignment is not up to me',d:'Without randomization the groups are nonequivalent, so the design is quasi-experimental at best.',s:'not random',to:'cmpQ'}]},
+  cmpQ:{sh:'What is compared?',q:'You manipulate the IV but cannot randomize. What is your comparison?',opts:[
+    {l:'Different groups, measured once after the treatment',d:'One group gets the treatment, a similar group does not.',s:'post only',to:'leaf:post'},
+    {l:'Different groups, measured before and after',d:'A nonequivalent comparison group with a pretest.',s:'pre + post',to:'leaf:necg'},
+    {l:'One group, measured once before and once after',d:'No comparison group.',s:'one group',to:'leaf:pp'},
+    {l:'One group, measured many times before and after',d:'A series of observations on either side of the treatment.',s:'many obs.',to:'leaf:ts'},
+    {l:'One group, measured once after the treatment',d:'Nothing to compare with.',s:'one shot',to:'leaf:none'}]},
+  cmpN:{sh:'What is compared?',q:'You do not manipulate the IV. What do you want to compare?',opts:[
+    {l:'Groups that differ on an existing characteristic (no treatment)',d:'For example, musicians and nonmusicians, or two diagnostic groups.',s:'existing groups',to:'leaf:diff'},
+    {l:'Groups with and without a treatment or event, measured once after',d:'The treatment or event was not assigned by you.',s:'post only',to:'leaf:post'},
+    {l:'Groups with and without a treatment or event, measured before and after',d:'A comparison group that was also measured before the event.',s:'pre + post',to:'leaf:necg'},
+    {l:'The same people, measured once before and once after an event',d:'One group, no comparison group.',s:'one group',to:'leaf:pp'},
+    {l:'The same people, measured many times before and after an event',d:'A series of observations on either side of the event.',s:'many obs.',to:'leaf:ts'},
+    {l:'Age groups, or change across development',d:'Cross-sectional, longitudinal or cross-sectional longitudinal designs.',s:'age',to:'form:dev'}]}
+};
+function isTerm(to){return to.startsWith('form:')||to.startsWith('leaf:')}
+function walk(path){
+  let id='root';const steps=[];
+  for(const i of path){
+    const n=T[id],o=n&&n.opts[i];if(!o)break;
+    steps.push({id,i});
+    if(isTerm(o.to))return{steps,cur:null,term:{type:o.to.slice(0,4),key:o.to.slice(5)}};
+    id=o.to;
+  }
+  return{steps,cur:id,term:null};
+}
+function resolve(term,forms){
+  if(!term)return null;
+  if(term.type==='leaf')return{key:term.key,notes:[]};
+  const a=forms[term.key];
+  if(term.key==='nof')return Object.assign({form:'nof'},nofResult(a));
+  if(term.key==='bw')return Object.assign({form:'bw'},bwResult(a));
+  if(term.key==='fact')return Object.assign({form:'fact'},factResult(a));
+  return Object.assign({form:'dev'},devResult(a));
+}
+function desOf(res){const d=DES[res.key];return res.over?Object.assign({},d,res.over):d}
+function statOf(res){return res.stat||desOf(res).stat}
+
+/* ================= general considerations ================= */
+const G=(...k)=>new Set(k);
+const EXPG=G('exp_b','exp_w','exp_l','exp_m','fact','abab','mbd','atd','cc');
+const GROUPD=G('exp_b','exp_w','exp_l','exp_m','fact','post','necg','pp','ts','diff','none','cs','lg','seq');
+const BETW=G('exp_b','exp_m','post','necg','diff','cs','fact');
+const COMM=G('exp_b','exp_m','post','necg','fact');
+const TIMEW=G('exp_w','exp_l','pp','ts','lg','seq','necg','fact');
+const ORDERS=G('exp_w','exp_l','atd','fact');
+const CONS=[
+  {id:'c1',t:'Establish cause and effect: manipulation, measurement, comparison and control',a:EXPG,b:'An experiment needs all four elements: the researcher manipulates one variable to create two or more treatment conditions, measures a second variable in each, compares the scores across conditions, and controls other variables so they cannot influence the two variables being examined. Manipulation shows that the cause happens before the effect.'},
+  {id:'c2',t:'Third-variable and directionality problems',a:G('diff','post','necg','pp','ts','none','cs','lg','seq','fact'),b:'Showing that two variables are related does not show that one causes the other. A third, unidentified variable may produce the relationship, and the direction of the relationship may be unclear. Designs without manipulation and random assignment cannot rule these out, so describe results as differences or relationships, not causes.'},
+  {id:'c3',t:'Confounding versus extraneous variables',a:null,b:'An extraneous variable becomes a confound only if it influences the DV and varies systematically with the IV. A variable that changes randomly, or that has no relation to the DV, is not a threat. Eliminate confounds first and do not spend effort on harmless extraneous variables.'},
+  {id:'c4',t:'Control extraneous variables: hold constant, match, randomize',a:GROUPD,b:'Holding a variable constant and matching require extra effort or extra measurement, and holding constant also limits external validity. Randomization controls a wide variety of variables at once but is not guaranteed to balance them in any one study.'},
+  {id:'c5',t:'Control conditions: no-treatment and placebo',a:G('exp_b','exp_w','exp_l','exp_m','fact','post','necg'),b:'A no-treatment control condition does not receive the treatment. A placebo control receives an ineffective treatment, separating the placebo effect from the active components. Outcome research asks whether a treatment works; process research asks which components are active and so needs the placebo comparison.'},
+  {id:'c6',t:'Manipulation checks',a:G('exp_b','exp_w','exp_l','exp_m','fact','post','necg','abab','mbd','atd','cc'),b:'A manipulation check directly measures whether the IV had the intended effect on the participant, by measuring the IV explicitly or by asking questions about the manipulation after the study. They matter most for participant manipulations, subtle manipulations, simulations and placebo controls.'},
+  {id:'c7',t:'Individual differences and equivalent groups',a:BETW,b:'Different participants in each condition differ in many ways. Create equivalent groups by random assignment, by matching on a relevant variable, or by holding a variable constant. Individual differences also add variance within treatments, which lowers power.'},
+  {id:'c8',t:'Differential attrition',a:G('exp_b','exp_m','post','necg','lg','seq','fact','exp_w','exp_l'),b:'Participants who drop out can leave the groups unlike each other. Large differences in dropout between groups create problems, and within-subjects and longitudinal studies lose more people because everyone must complete more sessions. Record and report dropout by condition.'},
+  {id:'c9',t:'Communication between groups',a:COMM,b:'Four threats: diffusion (the treatment spreads to the control group), compensatory equalization (participants demand the treatment the other group received), compensatory rivalry (the control group works extra hard) and resentful demoralization (the control group becomes less motivated). Separate groups in time and place where possible.'},
+  {id:'c10',t:'Time-related threats',a:TIMEW,b:'History (outside events), maturation, testing, instrumentation and regression toward the mean can all change scores between observations. A comparison group or a long baseline series shows how much change would have occurred without the treatment.'},
+  {id:'c11',t:'Order effects and counterbalancing',a:ORDERS,b:'Practice, fatigue, boredom and carryover accumulate across conditions. Complete counterbalancing uses every possible order (k! orders for k conditions); partial counterbalancing uses a selected set, for example a Latin square. Asymmetrical order effects, where the order of treatments does not balance the order effect, cannot be fixed by counterbalancing.'},
+  {id:'c12',t:'Matching procedure',a:G('exp_m','necg'),b:'Match each participant to participants in every other group on a variable strongly related to the DV, then randomly assign within each set. Matching on a variable unrelated to the DV gains nothing and costs participants.'},
+  {id:'c13',t:'Cohort effects',a:G('cs','seq','lg'),b:'Age groups measured at the same time are also different generations, so age and cohort are confounded in cross-sectional studies. A longitudinal study follows one cohort, whose results may not generalize. Following several cohorts separates age from cohort.'},
+  {id:'c14',t:'Replication and stable baselines',a:G('abab','mbd','atd','cc'),b:'N-of-1 or single-case designs get their control from replication within the case. Collect enough baseline observations to judge level, trend and variability, change one thing at a time, and make sure each replication would not be expected by chance or by an outside event.'},
+  {id:'c15',t:'Interactions and the number of conditions',a:G('fact'),b:'Every added factor multiplies the number of conditions (a 2 × 3 × 2 design has 12). Interpret an interaction before the main effects, because the effect of one factor depends on the level of the other.'},
+  {id:'c16',t:'External validity: simulation and field studies',a:null,b:'Simulation creates conditions that closely duplicate the natural environment (mundane realism and experimental realism). Field studies take place where the participant perceives the setting as natural. Both allow lifelike situations but let nature intrude, reduce control and risk internal validity.'},
+  {id:'c17',t:'Ethics and feasibility',a:null,b:'Check that withdrawing an effective treatment, withholding treatment from a control group, deception and the demands on participants are acceptable. Obtain ethics review, informed consent and a plan for debriefing before collecting data.'}
+];
+function consFor(key){return CONS.map(c=>({c,on:c.a===null||c.a.has(key)}))}
+function factorial(n){let r=1;for(let i=2;i<=n;i++)r*=i;return r}
+function cbRow(k){return{k,complete:factorial(k),latin:k,balanced:k%2===0?k:2*k}}
+
+/* ================= practice scenarios ================= */
+const BWF=(o)=>Object.assign({},FDEF.bw,o);
+const SC=[
+  {key:'exp_b',text:'A researcher randomly assigns 80 students to read a passage on paper or on a screen, then gives each a comprehension test. Reading changes what a person knows, there are plenty of students, and no good matching variable is available.',why:'The IV is manipulated with random assignment. Learning is irreversible and participants are plentiful, so separate groups avoid order effects.',path:[0,0,0,0],forms:{bw:BWF({order:'prone',time:'ok',ind:'small',pool:'plenty',match:'no',k:'2'})}},
+  {key:'exp_w',text:'A vision scientist compares reaction times under two lighting conditions. Each trial is brief and reversible, people differ greatly in baseline speed, and only 12 volunteers are available.',why:'Brief reversible treatments, large individual differences and scarce participants all favor testing everyone in both conditions in a counterbalanced order.',path:[0,0,0,0],forms:{bw:BWF({order:'ok',time:'ok',ind:'large',pool:'scarce',match:'no',k:'2'})}},
+  {key:'exp_l',text:'A usability researcher compares four menu layouts. Each participant tries every layout, brief tasks are not expected to cause lasting order effects, participants are scarce and differ greatly in skill, and there is no good matching variable.',why:'Within-subjects fits, but four conditions need 24 orders for complete counterbalancing, so a Latin square gives a manageable partial counterbalancing.',path:[0,0,0,0],forms:{bw:BWF({order:'unsure',time:'ok',ind:'large',pool:'scarce',match:'no',k:'34'})}},
+  {key:'exp_m',text:'A teacher tests two tutoring methods, but each student can attend only one (it takes a semester). Pretest scores strongly predict final scores and there is no way to run both methods on the same students.',why:'Participants cannot complete every condition, individual differences are large, and a pretest is available to match on: pair students on the pretest and randomly assign within each pair.',path:[0,0,0,0],forms:{bw:BWF({order:'prone',time:'hard',ind:'large',pool:'unsure',match:'yes',k:'2'})}},
+  {key:'post',text:'A school district lets two schools try a new reading curriculum and compares end-of-year scores with two similar schools. No scores were collected before the year began.',why:'The researcher cannot randomize, and the schools are measured once after the treatment: a posttest-only nonequivalent control group design.',path:[0,0,0,1,0]},
+  {key:'necg',text:'Two classrooms are tested on arithmetic in September. One adopts a new teaching method and the other continues as before. Both are tested again in June.',why:'Intact classrooms (no random assignment) with a pretest and posttest in both groups: a pretest-posttest nonequivalent control group design.',path:[0,0,0,1,1]},
+  {key:'pp',text:'A counselor measures the anxiety of one group of workers before and after a stress-reduction workshop. There is no comparison group.',why:'One group is measured before and after with no comparison: a one-group pretest-posttest design, with history, maturation and testing uncontrolled.',path:[0,0,0,1,2]},
+  {key:'ts',text:'A city records the number of traffic accidents at an intersection each month for 12 months before and 12 months after a new signal is installed.',why:'Many observations on either side of the treatment: a time-series design, which shows pre-existing trends and regular fluctuations.',path:[0,0,0,1,3]},
+  {key:'none',text:'A company runs a motivational seminar for one department and then measures job satisfaction once, afterward.',why:'One group measured once after the treatment has nothing to compare with, so no design supports a conclusion about the seminar.',path:[0,0,0,1,4]},
+  {key:'diff',text:'A researcher compares working-memory scores of professional musicians and nonmusicians. Neither group is assigned by the researcher and nothing is manipulated.',why:'The groups already exist and nothing is manipulated: a differential design, which can describe a difference but cannot name a cause.',path:[0,0,1,0]},
+  {key:'cs',text:'A researcher measures vocabulary size this semester in groups of 20-, 40- and 60-year-olds. The goal is to describe group differences quickly, and there is no wish to follow individuals.',why:'Different age groups measured at the same time: a cross-sectional design. It is fast but confounds age with cohort.',path:[0,0,1,5],forms:{dev:{chg:'no',wait:'now',cohort:'unsure',attr:'unsure',prac:'unsure'}}},
+  {key:'lg',text:'A team will follow the same 200 children from age 5 to age 15 to see how each child’s reading skill changes. Dropout is not a major concern and the study may last a decade.',why:'The question is within-person change and there is time to wait, so the same individuals are measured repeatedly: a longitudinal design.',path:[0,0,1,5],forms:{dev:{chg:'yes',wait:'many',cohort:'no',attr:'no',prac:'no'}}},
+  {key:'seq',text:'A researcher wants to describe how attitudes change from age 20 to 80 but suspects each generation grew up with very different technology, and a five-year study is feasible.',why:'Generation effects matter and the researcher can follow people for a few years: following several cohorts across overlapping ages separates age from cohort.',path:[0,0,1,5],forms:{dev:{chg:'yes',wait:'few',cohort:'yes',attr:'unsure',prac:'unsure'}}},
+  {key:'abab',text:'A therapist measures a child’s out-of-seat behavior daily. The behavior should return to its earlier rate if the token system is removed, and removing it for a short time is safe.',why:'One participant, a reversible behavior and acceptable withdrawal: an ABAB reversal design.',path:[1],forms:{nof:{rev:'yes',eth:'ok',units:'no',cmp:'one',grad:'no'}}},
+  {key:'mbd',text:'A teacher introduces a new reading strategy to four students one after another. Once learned, the skill will not disappear if the strategy is withdrawn.',why:'The skill is retained, so a reversal would fail; staggering the intervention across several comparable students gives replication without withdrawal: a multiple baseline design.',path:[1],forms:{nof:{rev:'no',eth:'unsure',units:'yes',cmp:'one',grad:'no'}}},
+  {key:'atd',text:'A clinician wants to know which of two reinforcers increases a client’s on-task behavior more. The effects of each reinforcer disappear quickly when it is removed.',why:'Two interventions are compared within one participant by rapidly alternating them: an alternating treatments design.',path:[1],forms:{nof:{rev:'yes',eth:'ok',units:'no',cmp:'two',grad:'no'}}},
+  {key:'cc',text:'A coach gradually raises the number of daily practice minutes a patient must complete: 10, then 20, then 30, then 40.',why:'Behavior is shaped in steps toward a criterion and tracks each new criterion: a changing criterion design.',path:[1],forms:{nof:{rev:'unsure',eth:'unsure',units:'no',cmp:'one',grad:'yes'}}},
+  {key:'fact',text:'A researcher randomly assigns participants to caffeine or placebo, and also records whether each participant is a morning or evening person. The DV is a vigilance score.',why:'Two factors, one manipulated and one a participant variable: a combined-strategy factorial design analyzed with a two-factor ANOVA.',path:[0,1],forms:{fact:{at:'man',aa:'between',al:2,bt:'part',ba:'between',bl:2}}},
+  {key:'fact',text:'Participants are randomly assigned to one of two instruction types, and every participant is tested before and after training. The researcher wants to know whether the gain depends on the instruction type.',why:'Two factors (instruction between-subjects, time within-subjects): a mixed factorial design whose group × time interaction is the effect of interest.',path:[0,1],forms:{fact:{at:'man',aa:'between',al:2,bt:'time',ba:'within',bl:2}}}
+];
+const DISTR={exp:['exp_b','exp_w','exp_l','exp_m'],quasi:['post','necg','pp','ts','diff','none'],dev:['cs','lg','seq'],single:['abab','mbd','atd','cc']};
+function famOf(key){for(const f in DISTR)if(DISTR[f].includes(key))return f;return null}
+function choicesFor(sc,rnd){
+  const fam=famOf(sc.key),pool=(fam?DISTR[fam]:[]).filter(k=>k!==sc.key);
+  let others=Object.keys(DES).filter(k=>k!==sc.key&&!pool.includes(k));
+  const shuf=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(rnd()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+  const pick=shuf(pool).slice(0,3);
+  while(pick.length<3)pick.push(shuf(others).find(k=>!pick.includes(k)));
+  return shuf([sc.key].concat(pick));
+}
+const LONG={fact:'Factorial design (two or more factors)'};
+const nm=k=>LONG[k]||DES[k].name;
+
+const root=typeof window!=='undefined'?window:globalThis;
+root.DTCore={T,DES,FORMS,FDEF,FC_EX,walk,resolve,desOf,statOf,nofResult,bwResult,bwScores,fcResult,factResult,devResult,devScores,SC,CONS,consFor,cbRow,factorial,choicesFor,famOf,STRAT,nm,isTerm,bwStat};
+root.DTU={$,$$,esc,clamp,pill,svgWrap,tbl};
+})();
+(function(){
+'use strict';
+const C=DTCore,{$,$$,esc,pill,svgWrap,tbl}=DTU,{T,DES,FORMS,FDEF,STRAT,walk,resolve,desOf,statOf,nm}=C;
+const clone=o=>JSON.parse(JSON.stringify(o));
+const st={tab:'tree',path:[],forms:clone(FDEF),cons:null,ck:{},cat:'all'};
+const pr={n:0,ok:0,idx:-1,choices:[],answered:false,last:null};
+const TABS=['tree','cat','con','prac','ref'];
+let LAY=null;
+
+/* ================= tree layout ================= */
+function buildLayout(){
+  let row=0;const nodes=[];
+  function mk(tid,depth,id){
+    const n=T[tid],node={id,kind:'q',tid,label:n.sh,depth,kids:[]};
+    n.opts.forEach((o,i)=>{
+      const cid=id+'.'+i;let kid;
+      if(o.to.startsWith('form:')){const fk=o.to.slice(5);kid={id:cid,kind:'form',fk,label:FORMS[fk].sh,depth:depth+1,kids:[]}}
+      else if(o.to.startsWith('leaf:')){const k=o.to.slice(5);kid={id:cid,kind:'leaf',key:k,label:DES[k].sh,depth:depth+1,kids:[]}}
+      else kid=mk(o.to,depth+1,cid);
+      kid.el=o.s;node.kids.push(kid);
+    });
+    return node;
+  }
+  const rootN=mk('root',0,'r');
+  (function place(nd){
+    if(!nd.kids.length)nd.row=row++;else{nd.kids.forEach(place);nd.row=(nd.kids[0].row+nd.kids[nd.kids.length-1].row)/2}
+    nodes.push(nd);
+  })(rootN);
+  return{root:rootN,nodes,rows:row};
+}
+const CW=140,GAP=70,RH=31,PX=8,PY=12,NH=24;
+function treeSVG(w,res){
+  if(!LAY)LAY=buildLayout();
+  const ids=['r'];w.steps.forEach((s,k)=>ids.push(['r'].concat(st.path.slice(0,k+1)).join('.')));
+  const onPath=new Set(ids),maxD=Math.max(...LAY.nodes.map(n=>n.depth));
+  const W=PX*2+(maxD+1)*CW+maxD*GAP,H=LAY.rows*RH+PY*2+22;
+  const X=n=>PX+n.depth*(CW+GAP),Y=n=>PY+n.row*RH+RH/2;
+  const curId=w.cur?ids[ids.length-1]:null;
+  let edges='',nodes='';
+  LAY.nodes.forEach(p=>p.kids.forEach(k=>{
+    const x1=X(p)+CW,y1=Y(p),x2=X(k),y2=Y(k),on=onPath.has(k.id);
+    edges+=`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${on?'var(--accent)':'var(--line)'}" stroke-width="${on?2.6:1.3}"/>`;
+  }));
+  LAY.nodes.forEach(p=>p.kids.forEach(k=>{
+    const x1=X(p)+CW,y1=Y(p),x2=X(k),y2=Y(k),on=onPath.has(k.id);
+    edges+=`<text x="${x2-5}" y="${y2-4}" text-anchor="end" font-size="10.5" fill="${on?'var(--accent)':'var(--muted)'}" font-weight="${on?700:400}" stroke="var(--card)" stroke-width="3.5" paint-order="stroke">${esc(k.el)}</text>`;
+  }));
+  LAY.nodes.forEach(n=>{
+    const x=X(n),y=Y(n)-NH/2,on=onPath.has(n.id),reached=on&&n.id===ids[ids.length-1]&&w.term;
+    let fill='var(--card)',stroke='var(--line)',sw=1.2,dash='',label=n.label;
+    if(n.kind==='leaf'||n.kind==='form'){
+      const key=n.kind==='leaf'?n.key:null;
+      const tone=n.kind==='form'?'var(--colA)':({exp:'var(--good)',single:'var(--good)',quasi:'var(--warn)',non:'var(--bad)'})[DES[key].s];
+      stroke=tone;sw=on?2.6:1.4;if(n.kind==='form')dash='4 3';
+      if(reached){fill=n.kind==='leaf'?'var(--goodBg)':'var(--grid)';if(n.kind==='form'&&res)label=desOf(res).sh}
+    }else if(on){fill='var(--grid)';stroke='var(--accent)';sw=2.4}
+    if(n.id===curId){stroke='var(--accent)';sw=3;dash='5 3'}
+    const click=on&&n.kind==='q'&&n.id!==curId?` data-tn="${n.id}" tabindex="0" role="button" aria-label="Go back to: ${esc(T[n.tid].q)}"`:'';
+    nodes+=`<g${click}><rect x="${x}" y="${y}" width="${CW}" height="${NH}" rx="6" fill="${fill}" stroke="${stroke}" stroke-width="${sw}" ${dash?`stroke-dasharray="${dash}"`:''}/><text x="${x+CW/2}" y="${y+NH/2+3.6}" text-anchor="middle" font-size="11.5" fill="var(--fg)" font-weight="${on?700:400}">${esc(label)}</text></g>`;
+  });
+  const ly=H-6;
+  const leg=`<text x="${PX}" y="${ly}" font-size="11" fill="var(--muted)">Blue path: your answers. Dashed outline: next question. Green, amber, red: experimental or N-of-1, quasi-experimental, nonexperimental. Dashed blue: a selector decides.</text>`;
+  return svgWrap(W,H,edges+nodes+leg,'Decision tree for choosing a research design, with your path highlighted');
+}
+
+/* ================= spectrum ================= */
+function spectrum(s){
+  const W=760,H=130,xs=[20,260,500],ws=240;let o='';
+  const labs=[['Nonexperimental','little or no attempt to limit threats','var(--badBg)','var(--bad)'],['Quasi-experimental','some attempt to limit threats','var(--warnBg)','var(--warn)'],['Experimental','manipulation, control, replication','var(--goodBg)','var(--good)']];
+  labs.forEach((l,i)=>{o+=`<rect x="${xs[i]}" y="26" width="${ws}" height="56" rx="6" fill="${l[2]}" stroke="${l[3]}"/><text x="${xs[i]+ws/2}" y="50" text-anchor="middle" fill="var(--fg)" font-weight="700" font-size="13">${l[0]}</text><text x="${xs[i]+ws/2}" y="68" text-anchor="middle" fill="var(--muted)" font-size="10">${l[1]}</text>`});
+  o+=`<text x="20" y="16" fill="var(--muted)">less control of confounds and threats</text><text x="740" y="16" text-anchor="end" fill="var(--muted)">more control</text><line x1="20" y1="94" x2="740" y2="94" stroke="var(--axis)"/><polygon points="740,94 732,90 732,98" fill="var(--axis)"/>`;
+  const i={non:0,quasi:1,exp:2,single:2}[s];
+  if(i!==undefined)o+=`<polygon points="${xs[i]+ws/2},88 ${xs[i]+ws/2-8},104 ${xs[i]+ws/2+8},104" fill="var(--fg)"/><text x="${xs[i]+ws/2}" y="120" text-anchor="middle" fill="var(--fg)" font-weight="600">${s==='single'?'your design (N-of-1)':'your design'}</text>`;
+  return svgWrap(W,H,o,'Spectrum of research strategies by degree of control');
+}
+
+/* ================= question card ================= */
+function formHTML(fk){
+  const F=FORMS[fk],a=st.forms[fk];
+  let h=`<p class="small muted">${esc(F.intro)}</p>`;
+  if(fk==='fact')h+=`<div class="ctl"><label for="fc-ex">Load an example</label><select id="fc-ex"><option value="">Choose an example…</option>${C.FC_EX.map((e,i)=>`<option value="${i}">${esc(e[0])}</option>`).join('')}</select></div>`;
+  F.qs.forEach(q=>{
+    if(q.show&&!q.show(a))return;
+    h+=`<div class="q"><fieldset><legend>${esc(q.t)}</legend>${q.o.map(o=>`<label><input type="radio" name="f-${fk}-${q.k}" value="${o[0]}" ${String(a[q.k])===String(o[0])?'checked':''}> ${esc(o[1])}</label>`).join('')}</fieldset></div>`;
+  });
+  return h;
+}
+function renderQ(w){
+  const steps=w.steps;
+  let h=`<div class="row" style="justify-content:space-between"><h2 style="margin:0">${w.cur?'Question '+(steps.length+1):w.term.type==='form'?esc(FORMS[w.term.key].title):'Design reached'}</h2><div class="row"><button class="small" data-act="back" ${steps.length?'':'disabled'}>Back</button><button class="small" data-act="reset" title="Clear every answer and start again">Reset</button></div></div>`;
+  if(steps.length)h+=`<ol class="crumbs" aria-label="Your answers">${steps.map((s,k)=>`<li><button class="crumb" data-jump="${k}" title="Return to this question">${esc(T[s.id].sh)} → <b>${esc(T[s.id].opts[s.i].s)}</b></button></li>`).join('')}</ol>`;
+  if(w.cur){
+    const n=T[w.cur];
+    h+=`<p style="font-weight:600;margin:8px 0">${esc(n.q)}</p>`+n.opts.map((o,i)=>`<button class="opt" data-pick="${i}"><b>${esc(o.l)}</b><span>${esc(o.d)}</span></button>`).join('');
+  }else if(w.term.type==='form'){
+    h+=formHTML(w.term.key)+`<div class="row"><button class="small" data-act="form-reset" title="Return this selector to its default answers">Reset answers</button></div>`;
+  }else h+=`<p class="small muted">This path leads straight to one design. Use Back to revisit an answer.</p>`;
+  $('#q-card').innerHTML=h;
+}
+
+/* ================= result ================= */
+function notesHTML(res){return (res.notes||[]).map(n=>`<div class="callout ${n[0]}">${esc(n[1])}</div>`).join('')}
+function fitsHTML(res){
+  if(res.form==='nof'){
+    const cls={good:'good',possible:'warn',poor:'bad'},txt={good:'good fit',possible:'possible',poor:'poor fit'};
+    return '<h3>Fit of each N-of-1 design</h3>'+res.fits.map(x=>`<div class="fit"><div>${pill(txt[x.lvl],cls[x.lvl])}</div><div><div class="nm">${x.n}</div><div class="muted small">${esc(x.why)}</div></div></div>`).join('');
+  }
+  if(res.form==='bw'){
+    const N={between:'Between-subjects',within:'Within-subjects (complete counterbalancing)',latin:'Within-subjects (Latin square)',matched:'Matched-subjects'};
+    return '<h3>Fit of each design (0–100)</h3>'+res.ranked.map(k=>{const sc=res.S[k];return `<div class="fit"><div style="min-width:60px">${pill(sc,sc>=70?'good':sc>=50?'warn':'bad')}</div><div style="flex:1"><div class="nm">${N[k]}</div><div class="progress"><i style="width:${sc}%"></i></div><details><summary class="small muted" style="cursor:pointer">Why this score</summary><ul class="clean small muted">${res.why[k].map(t=>`<li>${esc(t)}</li>`).join('')||'<li>No answers moved this score.</li>'}</ul></details></div></div>`}).join('');
+  }
+  if(res.form==='dev'){
+    return '<h3>Fit of each developmental design (0–100)</h3>'+res.ranked.map(k=>{const sc=res.S[k];return `<div class="fit"><div style="min-width:60px">${pill(sc,sc>=70?'good':sc>=50?'warn':'bad')}</div><div style="flex:1"><div class="nm">${esc(DES[k].name)}</div><div class="progress"><i style="width:${sc}%"></i></div><details><summary class="small muted" style="cursor:pointer">Why this score</summary><ul class="clean small muted">${res.why[k].map(t=>`<li>${esc(t)}</li>`).join('')||'<li>No answers moved this score.</li>'}</ul></details></div></div>`}).join('');
+  }
+  return '';
+}
+function pathSummary(w){
+  const items=w.steps.map(s=>`<li>${esc(T[s.id].q)} <b>${esc(T[s.id].opts[s.i].l)}</b></li>`);
+  return items.length?`<h3>How you got here</h3><ol class="clean small">${items.join('')}</ol>`:'';
+}
+function renderRes(w,res){
+  if(!res){
+    $('#res').innerHTML=`<div class="card"><h2>Recommended design</h2><p class="muted">Answer the questions above and the recommended design, its notation, its main threats and the usual analysis appear here.</p><div class="chart">${spectrum(null)}</div></div>`;
+    return;
+  }
+  const d=desOf(res),sp=STRAT[d.s];
+  const ups=(d.up||[]).map(u=>`<li><b>${esc(nm(u[0]))}:</b> ${esc(u[1])}</li>`).join('');
+  $('#res').innerHTML=`<div class="card">
+    <div class="row" style="justify-content:space-between"><h2 style="margin:0">Recommended design: ${esc(d.name)}</h2><div>${pill(sp[0],sp[1])}</div></div>
+    <p>${esc(d.what)}</p>${notesHTML(res)}
+    <div class="grid2" style="margin-top:6px">
+      <div><h3>Notation</h3>${d.nota&&d.nota.length?`<pre class="nota">${esc(d.nota.join('\n'))}</pre><p class="small muted">O = observation or measurement, X = treatment, R = random assignment, NR = no random assignment.</p>`:'<p class="muted small">No notation for this design.</p>'}</div>
+      <div><h3>Position on the control spectrum</h3><div class="chart">${spectrum(d.s)}</div></div>
+    </div>
+    <div class="grid2">
+      <div><h3>Main threats</h3><p>${esc(d.threats)}</p></div>
+      <div><h3>Usual analysis</h3><p>${esc(statOf(res))||'None.'}</p></div>
+    </div>
+    ${fitsHTML(res)}
+    ${ups?`<h3>Ways to strengthen the design</h3><ul class="clean small">${ups}</ul>`:''}
+    ${pathSummary(w)}
+    <div class="row" style="margin-top:10px"><button class="primary" data-goto="con">General considerations for this design</button><button data-goto="cat">Compare with other designs</button></div>
+    ${d.ex?`<p class="small muted">${esc(d.ex)}</p>`:''}
+  </div>`;
+}
+
+/* ================= tree tab ================= */
+function current(){const w=walk(st.path);return{w,res:resolve(w.term,st.forms)}}
+function renderTree(){
+  const {w,res}=current();
+  renderQ(w);
+  $('#tree-chart').innerHTML=treeSVG(w,res);
+  renderRes(w,res);
+}
+
+/* ================= catalog ================= */
+const FIRST={};C.SC.forEach((s,i)=>{if(!(s.key in FIRST))FIRST[s.key]=i});
+function renderCat(){
+  const f=st.cat;
+  const keys=Object.keys(DES).filter(k=>f==='all'||DES[k].s===f||(f==='dev'&&DES[k].fam.indexOf('developmental')>=0));
+  const rows=keys.map(k=>{const d=DES[k],sp=STRAT[d.s];return [`<b>${esc(d.name)}</b>`,pill(sp[0],sp[1]),esc(d.man),esc(d.ran),esc(d.ctl),esc(d.threats||'Depends on the factors and the way participants are assigned.'),`<button class="small" data-open="${FIRST[k]}">Show in tree</button>`]});
+  $('#cat-spec').innerHTML=spectrum(null);
+  $('#cat-out').innerHTML=tbl(['Design','Strategy','Manipulates IV?','Random assignment?','Source of control','Main threats',''],rows)+(keys.length?'':'<p class="muted">No designs match this filter.</p>');
+}
+
+/* ================= considerations ================= */
+function consKey(){const {res}=current();return st.cons||(res?res.key:'exp_b')}
+function renderCon(){
+  const {res}=current(),key=consKey();
+  const sel=$('#cs-key');
+  if(!sel.options.length)sel.innerHTML='<option value="">Same as my tree result</option>'+Object.keys(DES).map(k=>`<option value="${k}">${esc(nm(k))}</option>`).join('');
+  sel.value=st.cons||'';
+  const list=C.consFor(key),on=list.filter(x=>x.on),off=list.filter(x=>!x.on);
+  const done=on.filter(x=>st.ck[x.c.id]).length;
+  const item=x=>`<label class="ck ${st.ck[x.c.id]?'done':''}"><input type="checkbox" data-ck="${x.c.id}" ${st.ck[x.c.id]?'checked':''}><span><span class="t">${esc(x.c.t)}</span><br><span class="small muted">${esc(x.c.b)}</span></span></label>`;
+  $('#cs-note').innerHTML=!st.cons&&!res?'<div class="callout warn">You have not reached a design in the tree yet, so the checklist shows a between-subjects experiment. Choose a design above or finish the tree.</div>':'';
+  $('#cs-name').textContent=nm(key);
+  $('#cs-prog').innerHTML=`<div class="small muted">${done} of ${on.length} relevant considerations addressed</div><div class="progress"><i style="width:${on.length?100*done/on.length:0}%"></i></div>`;
+  $('#cs-on').innerHTML=on.map(item).join('');
+  $('#cs-off').innerHTML=off.map(item).join('');
+  $('#cs-off-wrap').hidden=!off.length;
+  $('#cs-off-n').textContent=off.length;
+  const k=+$('#cb-k').value;
+  const rows=[2,3,4,5,6,7,8].map(n=>{const r=C.cbRow(n);return `<tr${n===k?' style="font-weight:700"':''}><td>${n}</td><td>${r.complete.toLocaleString()}</td><td>${r.latin}</td><td>${r.balanced}</td></tr>`}).join('');
+  $('#cb-out').innerHTML=`<div class="tbl-wrap"><table><thead><tr><th>Conditions (k)</th><th>Complete counterbalancing (k! orders)</th><th>Latin square (rows)</th><th>Latin square balanced for carryover</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+
+/* ================= practice ================= */
+function newSC(){
+  let i;do{i=Math.floor(Math.random()*C.SC.length)}while(C.SC.length>1&&i===pr.idx);
+  pr.idx=i;pr.choices=C.choicesFor(C.SC[i],Math.random);pr.answered=false;pr.last=null;renderPR();
+}
+function renderPR(){
+  $('#pr-score').textContent=pr.n?`Score: ${pr.ok} of ${pr.n} correct`:'';
+  const card=$('#pr-card');card.hidden=pr.idx<0;if(pr.idx<0)return;
+  const s=C.SC[pr.idx];
+  $('#pr-text').textContent=s.text;
+  $('#pr-choices').innerHTML=pr.choices.map((k,j)=>`<button class="opt" data-ch="${j}" ${pr.answered?'disabled':''}><b>${esc(nm(k))}</b></button>`).join('');
+  $('#pr-fb').innerHTML=pr.answered?`<div class="callout ${pr.last?'':'warn'}"><b>${pr.last?'Correct.':'Not quite.'}</b> The best design is <b>${esc(nm(s.key))}</b>. ${esc(s.why)}</div><div class="row"><button class="small" data-open="${pr.idx}">Open this path in the decision tree</button><button class="small primary" data-act="pr-new">Next scenario</button></div>`:'';
+}
+function answerPR(j){
+  if(pr.answered)return;const s=C.SC[pr.idx];
+  pr.last=pr.choices[j]===s.key;pr.n++;if(pr.last)pr.ok++;pr.answered=true;renderPR();
+}
+
+/* ================= downloads / toast ================= */
+function download(name,blob){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
+function svgText(el){let x=new XMLSerializer().serializeToString(el);const cs=getComputedStyle(document.documentElement);return x.replace(/var\((--[\w-]+)\)/g,(m,n)=>cs.getPropertyValue(n).trim()||'#000')}
+function exportSVG(id,name){const el=$('#'+id+' svg');if(el)download(name,new Blob([svgText(el)],{type:'image/svg+xml'}))}
+function exportPNG(id,name){
+  const el=$('#'+id+' svg');if(!el)return;const vb=el.viewBox.baseVal,sc=2,img=new Image(),bg=getComputedStyle(document.documentElement).getPropertyValue('--card').trim()||'#fff';
+  img.onload=()=>{const c=document.createElement('canvas');c.width=vb.width*sc;c.height=vb.height*sc;const g=c.getContext('2d');g.fillStyle=bg;g.fillRect(0,0,c.width,c.height);g.drawImage(img,0,0,c.width,c.height);c.toBlob(b=>download(name,b),'image/png')};
+  img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svgText(el));
+}
+function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(toast.h);toast.h=setTimeout(()=>t.classList.remove('show'),2200)}
+
+/* ================= tabs / wiring ================= */
+function showTab(id){
+  st.tab=id;
+  $$('nav.tabs button').forEach(b=>b.setAttribute('aria-selected',b.id==='t-'+id?'true':'false'));
+  $$('.tabpanel').forEach(p=>{p.hidden=p.id!=='p-'+id});
+  if(id==='tree')renderTree();else if(id==='cat')renderCat();else if(id==='con')renderCon();else if(id==='prac')renderPR();
+}
+function openScenario(i){
+  const s=C.SC[i];st.path=s.path.slice();st.forms=Object.assign(clone(FDEF),clone(s.forms||{}));st.cons=null;showTab('tree');window.scrollTo(0,0);
+}
+function formChange(el){
+  const m=/^f-(\w+)-(\w+)$/.exec(el.name);if(!m)return false;
+  const q=FORMS[m[1]].qs.find(x=>x.k===m[2]);
+  st.forms[m[1]][m[2]]=q.num?+el.value:el.value;renderTree();return true;
+}
+function init(){
+  document.addEventListener('click',e=>{
+    const g=e.target.closest('[data-tn]');
+    if(g){const id=g.dataset.tn,k=id.split('.').length-1;st.path=st.path.slice(0,k);renderTree();return}
+    const b=e.target.closest('[data-act],[data-pick],[data-jump],[data-goto],[data-open],[data-ch],[data-dl]');if(!b)return;
+    if(b.dataset.pick!==undefined){st.path.push(+b.dataset.pick);renderTree();return}
+    if(b.dataset.jump!==undefined){st.path=st.path.slice(0,+b.dataset.jump);renderTree();return}
+    if(b.dataset.goto){showTab(b.dataset.goto);window.scrollTo(0,0);return}
+    if(b.dataset.open!==undefined){openScenario(+b.dataset.open);return}
+    if(b.dataset.ch!==undefined){answerPR(+b.dataset.ch);return}
+    if(b.dataset.dl){const k=b.dataset.dl;if(k==='svg')exportSVG('tree-chart','decision-tree.svg');else exportPNG('tree-chart','decision-tree.png');return}
+    const a=b.dataset.act;
+    if(a==='back'){st.path.pop();renderTree()}
+    else if(a==='reset'){st.path=[];st.forms=clone(FDEF);renderTree()}
+    else if(a==='form-reset'){const w=walk(st.path);if(w.term&&w.term.type==='form'){st.forms[w.term.key]=clone(FDEF[w.term.key]);renderTree()}}
+    else if(a==='pr-new')newSC();
+    else if(a==='prac-reset'){pr.n=0;pr.ok=0;pr.idx=-1;pr.answered=false;pr.last=null;renderPR()}
+    else if(a==='con-reset'){st.ck={};st.cons=null;renderCon()}
+  });
+  document.addEventListener('keydown',e=>{
+    if((e.key==='Enter'||e.key===' ')&&e.target.dataset&&e.target.dataset.tn){const id=e.target.dataset.tn;st.path=st.path.slice(0,id.split('.').length-1);renderTree();e.preventDefault()}
+  });
+  document.addEventListener('change',e=>{
+    const el=e.target;
+    if(el.name&&el.name.indexOf('f-')===0){formChange(el);return}
+    if(el.id==='fc-ex'){if(el.value!==''){Object.assign(st.forms.fact,C.FC_EX[+el.value][1]);renderTree()}return}
+    if(el.id==='cs-key'){st.cons=el.value||null;renderCon();return}
+    if(el.id==='cat-f'){st.cat=el.value;renderCat();return}
+    if(el.id==='cb-k'){renderCon();return}
+    if(el.dataset&&el.dataset.ck){st.ck[el.dataset.ck]=el.checked;renderCon()}
+  });
+  $$('nav.tabs button').forEach(b=>{
+    b.addEventListener('click',()=>showTab(b.id.slice(2)));
+    b.addEventListener('keydown',e=>{
+      if(e.key!=='ArrowRight'&&e.key!=='ArrowLeft')return;
+      const i=TABS.indexOf(b.id.slice(2)),j=(i+(e.key==='ArrowRight'?1:TABS.length-1))%TABS.length;
+      showTab(TABS[j]);$('#t-'+TABS[j]).focus();e.preventDefault();
+    });
+  });
+  $('#btn-theme').addEventListener('click',()=>{
+    const cur=document.documentElement.dataset.theme||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
+    document.documentElement.dataset.theme=cur==='dark'?'light':'dark';showTab(st.tab);
+  });
+  $('#btn-link').addEventListener('click',()=>{
+    try{
+      const payload=btoa(unescape(encodeURIComponent(JSON.stringify({tab:st.tab,path:st.path,forms:st.forms,cons:st.cons,ck:st.ck}))));
+      location.hash='s='+payload;
+      if(navigator.clipboard)navigator.clipboard.writeText(location.href).then(()=>toast('Link copied'),()=>toast('Link is in the address bar'));
+      else toast('Link is in the address bar');
+    }catch(err){toast('Could not build link')}
+  });
+  restoreHash();
+  $('#cat-f').value=st.cat;
+  showTab(st.tab);
+}
+function restoreHash(){
+  try{
+    const m=/s=([^&]+)/.exec(location.hash);if(!m)return;
+    const o=JSON.parse(decodeURIComponent(escape(atob(m[1]))));
+    if(Array.isArray(o.path))st.path=o.path.filter(x=>Number.isInteger(x));
+    if(o.forms)Object.keys(FDEF).forEach(k=>{if(o.forms[k])Object.assign(st.forms[k],o.forms[k])});
+    if(o.cons&&DES[o.cons])st.cons=o.cons;
+    if(o.ck&&typeof o.ck==='object')st.ck=o.ck;
+    if(o.tab&&TABS.includes(o.tab))st.tab=o.tab;
+    st.path=st.path.slice(0,walk(st.path).steps.length);
+  }catch(e){}
+}
+const root=typeof window!=='undefined'?window:globalThis;
+root.DTUI={st,pr,walk,treeSVG,buildLayout};
+if(typeof document!=='undefined'&&document.getElementById('t-tree'))init();
+})();
+</script>
+</body>
+</html>
