@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JARS Decision Tree: Results – Which Journal Article Reporting Standards apply?</title>
+<meta name="description" content="Interactive decision tree that determines which APA Journal Article Reporting Standards (JARS) apply to a research project and builds a checklist of the reporting requirements.">
+<style>
+:root{
+  --bg:#f6f3ee; --panel:#ffffff; --ink:#23201d; --muted:#6a645d; --line:#e0d9cf;
+  --accent:#a52f2a; --accent-ink:#ffffff; --accent-soft:#f4dfd6; --accent-line:#e3bfb0;
+  --ok:#2d6a4a; --guid:#f1ede6; --shadow:0 1px 2px rgba(40,30,20,.06),0 4px 14px rgba(40,30,20,.05);
+  --serif:Georgia,"Iowan Old Style","Palatino Linotype",Palatino,"Times New Roman",serif;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#171618; --panel:#212024; --ink:#ece8e2; --muted:#a39d95; --line:#38353a;
+    --accent:#e0776e; --accent-ink:#1b1112; --accent-soft:#3a2724; --accent-line:#6a3f39;
+    --ok:#7fd1a2; --guid:#2a282d; --shadow:none}
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important}}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 var(--sans);-webkit-text-size-adjust:100%}
+a{color:var(--accent)}
+.wrap{max-width:1180px;margin:0 auto;padding:0 20px}
+header.top{padding:34px 0 18px}
+header.top .kicker{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);font-weight:700}
+header.top h1{font:700 clamp(26px,4vw,38px)/1.15 var(--serif);margin:6px 0 8px}
+header.top p{margin:0;max-width:760px;color:var(--muted)}
+header.top p.scope{margin-top:10px;color:var(--ink)}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:24px;align-items:start;padding-bottom:60px}
+@media (max-width:920px){.layout{grid-template-columns:1fr}.side{order:-1;position:static!important}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow)}
+.q{padding:20px 22px;margin-bottom:14px;position:relative;transition:border-color .2s}
+.q.current{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft),var(--shadow)}
+.q .step{display:inline-block;font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);background:var(--accent-soft);border-radius:99px;padding:2px 10px;margin-bottom:8px}
+.q h2{font:600 clamp(18px,2.4vw,22px)/1.3 var(--serif);margin:0 0 6px;padding-right:90px}
+.q .help{margin:0 0 14px;color:var(--muted);font-size:14.5px}
+.q .done{position:absolute;right:18px;top:18px;color:var(--ok);font-size:13px;font-weight:700;display:none}
+.q.answered .done{display:block}
+.q.answered:not(.current) .help{display:none}
+.opts{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(215px,1fr))}
+.opt{display:block;cursor:pointer;position:relative}
+.opt input{position:absolute;opacity:0;pointer-events:none}
+.opt .ob{display:block;height:100%;border:1.5px solid var(--line);border-radius:11px;padding:12px 14px;background:var(--bg);transition:border-color .15s,background .15s,transform .1s}
+.opt:hover .ob{border-color:var(--accent-line);transform:translateY(-1px)}
+.opt input:focus-visible+.ob{outline:3px solid var(--accent);outline-offset:2px}
+.opt input:checked+.ob{border-color:var(--accent);background:var(--accent-soft)}
+.opt .ob b{display:block;font-size:16px}
+.opt .ob small{display:block;color:var(--muted);font-size:13.5px;margin-top:3px;line-height:1.4}
+.opt .ob em{display:block;font-style:normal;font-size:12.5px;font-weight:700;color:var(--accent);margin-top:8px}
+.side{position:sticky;top:16px}
+.side .card{padding:18px 18px 16px;margin-bottom:14px}
+.side h3{font:700 12px/1 var(--sans);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0 0 12px}
+.fc{display:grid;gap:9px}
+.fc .row{display:grid;grid-template-columns:54px 1fr;gap:8px;align-items:center;padding:0}
+.fc .lab{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.fc .chips{display:flex;flex-wrap:wrap;gap:5px}
+.chip{font-size:12px;font-weight:600;border-radius:7px;padding:4px 8px;border:1.5px solid var(--line);color:var(--muted)}
+.chip.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.chip.off{opacity:.4;text-decoration:line-through}
+.chip.maybe{border-style:dashed}
+.applist{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.applist li{font-size:13.5px;border-left:3px solid var(--accent);padding-left:10px}
+.applist b{display:block;font-size:14px}
+.applist span{color:var(--muted)}
+.empty{color:var(--muted);font-size:14px;margin:0}
+.btn{font:600 14px var(--sans);border:1.5px solid var(--line);background:var(--panel);color:var(--ink);border-radius:9px;padding:8px 13px;cursor:pointer}
+.btn:hover{border-color:var(--accent)}
+.btn:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+#result{margin-top:26px}
+.res-head{padding:20px 22px;margin-bottom:14px}
+.res-head h2{font:700 clamp(22px,3vw,28px)/1.2 var(--serif);margin:0 0 6px}
+.res-head p{margin:0 0 12px;color:var(--muted);font-size:14.5px}
+.tags{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px}
+.tag{background:var(--accent-soft);border:1px solid var(--accent-line);border-radius:8px;padding:5px 10px;font-size:13px;font-weight:600}
+.toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.seg{display:inline-flex;border:1.5px solid var(--line);border-radius:9px;overflow:hidden}
+.seg button{font:600 13.5px var(--sans);border:0;background:var(--panel);color:var(--ink);padding:8px 12px;cursor:pointer}
+.seg button[aria-pressed=true]{background:var(--accent);color:var(--accent-ink)}
+.seg button:focus-visible{outline:3px solid var(--accent);outline-offset:-3px}
+.tg{display:inline-flex;gap:7px;align-items:center;font-size:14px;cursor:pointer}
+.prog{position:sticky;top:0;z-index:5;background:var(--bg);padding:10px 0 8px;margin-bottom:6px}
+.prog .bar{height:9px;border-radius:99px;background:var(--line);overflow:hidden}
+.prog .bar i{display:block;height:100%;width:0;background:var(--ok);transition:width .25s}
+.prog .txt{font-size:13px;color:var(--muted);margin-top:5px;display:flex;justify-content:space-between}
+#checklist{padding:6px 22px 24px}
+.bucket{font:700 clamp(21px,2.6vw,26px)/1.2 var(--serif);margin:30px 0 4px;padding-bottom:6px;border-bottom:2px solid var(--accent)}
+.tbl-title{font:700 clamp(19px,2.4vw,23px)/1.25 var(--serif);margin:30px 0 2px;padding-bottom:6px;border-bottom:2px solid var(--accent)}
+.note{color:var(--muted);font-size:13.5px;margin:6px 0 2px;font-style:italic}
+.tbl-sub{color:var(--muted);font-size:14px;margin:6px 0 4px}
+.blk-title{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font:700 17px var(--serif);margin:22px 0 4px}
+.blk-title .src{font:700 11.5px var(--sans);letter-spacing:.03em;background:var(--accent-soft);color:var(--accent);border:1px solid var(--accent-line);border-radius:6px;padding:2px 8px}
+.h2{font:700 15.5px var(--sans);margin:16px 0 2px}
+.h3{font:600 14.5px var(--sans);margin:12px 0 2px;color:var(--muted);padding-left:12px;border-left:3px solid var(--line)}
+ul.entries,ul.sub{list-style:none;margin:0;padding:0}
+ul.sub{margin-left:26px}
+li.entry{margin:3px 0}
+#checklist .row{display:flex;gap:9px;align-items:flex-start;padding:5px 6px;border-radius:7px}
+#checklist .row:hover{background:var(--guid)}
+.chk{display:flex;gap:10px;align-items:flex-start;cursor:pointer;width:100%}
+.chk input{margin-top:5px;width:17px;height:17px;flex:none;accent-color:var(--ok);cursor:pointer}
+.chk .txt{flex:1}
+.chk input:checked~.txt{color:var(--muted)}
+ul.sub .txt{font-size:15px}
+.guid{margin:6px 0 8px 26px;background:var(--guid);border-radius:9px;padding:8px 12px;font-size:14px}
+.guid .gl{font-weight:700;font-style:italic;font-size:13px;color:var(--muted)}
+.guid ul{margin:4px 0 0;padding-left:18px}
+.guid li{margin:2px 0}
+.guid li.l3{margin-left:16px;list-style:circle}
+.hide-guid .guid{display:none}
+.foot{border-top:1px solid var(--line);margin-top:30px;padding:18px 0 40px;color:var(--muted);font-size:13px}
+.foot p{margin:0 0 6px;max-width:900px}
+@media print{
+  body{background:#fff;color:#000}
+  header.top p,.side,#questions,.toolbar,.prog{display:none!important}
+  .layout{display:block}.card{box-shadow:none;border:0}
+  #checklist{padding:0}.chk input{accent-color:#000}
+  .tbl-title,.bucket,.blk-title,.h2,.h3{break-after:avoid}li.entry{break-inside:avoid}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="kicker">APA Style · JARS · Results</div>
+    <h1>Which Journal Article Reporting Standards apply to your study?</h1>
+    <p>Answer a few questions about your research. The decision tree follows the American Psychological Association's Journal Article Reporting Standards (JARS) flowchart, works out which reporting-standards tables apply, and assembles their requirements into one checklist.</p>
+    <p class="scope">This version builds the checklist for the <b>Results section</b> of your article.</p>
+  </header>
+  <div class="layout">
+    <main>
+      <section id="questions" aria-label="Decision panel"></section>
+      <section id="result" aria-live="polite"></section>
+    </main>
+    <aside class="side" aria-label="Your path">
+      <div class="card">
+        <h3>Applicable standards</h3>
+        <ul class="applist" id="applist"></ul>
+        <p class="empty" id="applist-empty">Answer the first question to begin.</p>
+      </div>
+      <div class="card">
+        <h3>Quantitative flowchart map</h3>
+        <div class="fc" id="fc"></div>
+      </div>
+      <button class="btn" id="restart" type="button">↺ Start over</button>
+    </aside>
+  </div>
+  <footer class="foot">
+    <p><strong>Source.</strong> Checklist text is taken verbatim from the APA Style JARS tables (Quantitative Tables 1–6 including Table 2 Modules A–C, Qualitative Tables 1–2, and Mixed Table 1), © 2020 American Psychological Association, <a href="https://apastyle.apa.org/jars" target="_blank" rel="noopener">apastyle.apa.org/jars</a>. Routing follows the Quantitative flowchart.</p>
+    <p>This is an independent tool and is not produced or endorsed by the American Psychological Association. Confirm requirements against the current official JARS tables and your target journal’s author guidelines.</p>
+  </footer>
+</div>
+<script id="jars-data" type="application/json">{"q1":{"short":"Quantitative Table 1","title":"","sub":"Information Recommended for Inclusion in Manuscripts That Report New Data Collections Regardless of Research Design","nodes":[["h1","Title and Title Page"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["h1","Abstract"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["h1","Introduction"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["h1","Method"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["h1","Results"],["h2","Participant Flow"],["i",1,"Report the flow of participants, including"],["i",2,"total number of participants in each group at each stage of the study"],["i",2,"flow of participants through each stage of the study (include figure depicting flow, when possible; see the JARS–Quant Participant Flowchart)"],["h2","Recruitment"],["i",1,"Provide dates defining the periods of recruitment and repeated measures or follow-up."],["h2","Statistics and Data Analysis"],["i",1,"Provide information detailing the statistical and data-analytic methods used, including"],["i",2,"missing data"],["i",3,"frequency or percentages of missing data"],["i",3,"empirical evidence and/or theoretical arguments for the causes of data that are missing—for example, missing completely at random (MCAR), missing at random (MAR), or missing not at random (MNAR)"],["i",3,"methods actually used for addressing missing data, if any"],["i",2,"descriptions of each primary and secondary outcome, including the total sample and each subgroup, that includes the number of cases, cell means, standard deviations, and other measures that characterize the data used"],["i",2,"inferential statistics, including"],["i",3,"results of all inferential tests conducted, including exact p values if null hypothesis significance testing (NHST) methods were used, and reporting the minimally sufficient set of statistics (e.g., dfs, mean square [MS] effect, MS error) needed to construct the tests"],["i",3,"effect-size estimates and confidence intervals on estimates that correspond to each inferential test conducted, when possible"],["i",3,"clear differentiation between primary hypotheses and their tests–estimates, secondary hypotheses and their tests–estimates, and exploratory hypotheses and their test–estimates"],["i",2,"complex data analyses—for example, structural equation modeling analyses (see also Table 7), hierarchical linear models, factor analysis, multivariate analyses, and so forth, including"],["i",3,"details of the models estimated"],["i",3,"associated variance–covariance (or correlation) matrix or matrices"],["i",3,"identification of the statistical software used to run the analyses (e.g., SAS PROC GLM or the particular R package)"],["i",2,"estimation problems (e.g., failure to converge, bad solution spaces), regression diagnostics, or analytic anomalies that were detected and solutions to those problems."],["i",2,"other data analyses performed, including adjusted analyses, if performed, indicating those that were planned and those that were not planned (though not necessarily in the level of detail of primary analyses)."],["i",1,"Report any problems with statistical assumptions and/or data distributions that could affect the validity of findings."],["h1","Discussion"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"]]},"q2":{"short":"Quantitative Table 2","title":"","sub":"Reporting Standards for Studies With an Experimental Manipulation (In Addition to Material Presented in Table 1)","nodes":[["h1","Method"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["h1","Results"],["h2","Participant Flow"],["i",1,"Report the total number of groups (if experimental manipulation was administered at the group level) and the number of participants assigned to each group, including"],["i",2,"number of participants approached for inclusion"],["i",2,"number of participants who began the experiment"],["i",2,"number of participants who did not complete the experiment or crossed over to other conditions, with reasons"],["i",2,"number of participants included in primary analyses"],["i",1,"Include a figure describing the flow of participants through each stage of the study (see JARS–Quant Participant Flowchart)."],["h2","Treatment Fidelity"],["i",1,"Provide evidence on whether the experimental manipulation was implemented as intended."],["h2","Baseline Data"],["i",1,"Describe baseline demographic and clinical characteristics of each group."],["h2","Adverse Events and Side Effects"],["i",1,"Report all important adverse events or side effects in each experimental condition. If none, state so."],["h1","Discussion"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"]]},"q2a":{"short":"Quantitative Table 2, Module A","title":"","sub":"Module A: Reporting Standards for Studies Using Random Assignment","nodes":[["h1","Method"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"]]},"q2b":{"short":"Quantitative Table 2, Module B","title":"","sub":"Module B: Reporting Standards for Studies Using Nonrandom Assignment","nodes":[["h1","Method"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"]]},"q2c":{"short":"Quantitative Table 2, Module C","title":"","sub":"Module C: Reporting Standards for Studies Involving Clinical Trials","nodes":[["h1","Title and Title Page"],["x"],["h1","Abstract"],["x"],["x"],["h1","Introduction"],["x"],["x"],["x"],["x"],["h1","Method"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["h1","Results"],["i",1,"Describe how treatment fidelity (i.e., therapist adherence and competence ratings) and participant adherence was related to intervention outcome."],["i",1,"Describe the method of assessing clinical significance, including if the threshold for clinical significance was prespecified (e.g., as part of a publicly available protocol)."],["i",1,"Identify possible differences in treatment effects due to intervention deliverer."],["i",1,"Describe possible differences in treatment effects due to data collection site if a multisite study."],["i",1,"Describe results of analyses of moderation–mediation effects, if tested."],["i",1,"Explain why the study was discontinued, if appropriate."],["i",1,"Describe the frequency and type of adverse effects that occurred (or state that none occurred)."],["h1","Discussion"],["x"]]},"q3":{"short":"Quantitative Table 3","title":"","sub":"Reporting Standards for Studies Using No Experimental Manipulation (Single-Group Designs, Natural-Group Comparisons, etc.; In Addition to Material Presented in Table 1)","nodes":[["h1","Title/Abstract"],["x"],["x"],["x"],["x"],["h1","Method"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["h1","Discussion"],["x"],["x"]]},"q4":{"short":"Quantitative Table 4","title":"","sub":"Reporting Standards for Longitudinal Studies (In Addition to Material Presented in Table 1)","nodes":[["h1","General Reporting Expectation"],["x"],["x"],["x"],["x"],["x"],["x"],["h1","Sample Recruitment and Retention Methods"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"]]},"q5":{"short":"Quantitative Table 5","title":"","sub":"Reporting Standards for N-of-1 Studies (In Addition to Material Presented in Table 1)","nodes":[["h1","Design"],["x"],["x"],["x"],["h1","Type of Design"],["x"],["x"],["x"],["x"],["x"],["x"],["h1","Analysis"],["x"],["x"],["x"],["x"],["x"]]},"q6":{"short":"Quantitative Table 6","title":"","sub":"Reporting Standards for Replication Studies (In Addition to Material Presented in Table 1)","nodes":[["h1","Study Type"],["x"],["x"],["x"],["x"],["h1","Participants"],["x"],["x"],["h1","Instrumentation"],["x"],["x"],["x"],["x"],["h1","Analysis"],["x"],["x"],["x"]]},"ql1":{"short":"Qualitative Table 1","title":"","sub":"Information Recommended for Inclusion in Manuscripts That Report Primary Qualitative Research","nodes":[["h1","Title Page"],["x"],["x"],["x"],["x"],["x"],["h1","Abstract"],["x"],["x"],["x"],["x"],["x"],["x"],["h1","Introduction"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["h1","Method"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["h1","Findings/Results"],["h2","Findings/Results Subsections"],["i",1,"Describe research findings (e.g., themes, categories, narratives) and the meaning and understandings that the researcher has derived from the data analysis."],["i",1,"Demonstrate the analytic process of reaching findings (e.g., quotes, excerpts of data)."],["i",1,"Present research findings in a way that is compatible with the study design."],["i",1,"Present synthesizing illustrations (e.g., diagrams, tables, models), if useful in organizing and conveying findings. Photographs or links to videos can be used."],["g","Guidance for Authors"],["i",2,"Findings presented in an artistic manner (e.g., a link to a dramatic presentation of findings) should also include information in the reporting standards to support the research presentation."],["i",2,"Use quotes or excerpts to augment data description (e.g., thick, evocative description, field notes, text excerpts), but these should not replace the description of the findings of the analysis."],["g","Guidance for Reviewers"],["i",2,"The findings section tends to be longer than in quantitative papers because of the demonstrative rhetoric needed to permit the evaluation of the analytic procedure."],["i",2,"Depending on the approach to inquiry, findings and discussion may be combined or a personalized discursive style might be used to portray the researchers’ involvement in the analysis."],["i",2,"Findings may or may not include quantified information, depending upon the study’s goals, approach to inquiry, and study characteristics."],["h1","Discussion"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"]]},"ql2":{"short":"Qualitative Table 2","title":"Qualitative Meta-Analysis Article Reporting Standards","sub":"Information Recommended for Inclusion in Manuscripts Reporting Qualitative Meta-Analyses","nodes":[["h1","Title and Title Page"],["x"],["x"],["x"],["x"],["x"],["x"],["h1","Abstract"],["x"],["x"],["x"],["x"],["x"],["x"],["h1","Introduction"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["h1","Method"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["h1","Findings/Results"],["h2","Findings/Results Subsections"],["i",1,"Describe the research findings and the meaning and understandings that the researcher has derived from the analysis of the studies."],["i",1,"Provide quotations from the primary studies to illustrate and ground the themes or codes identified, when relevant."],["i",1,"Explore whether differences in themes across primary studies appear to reflect differences in the phenomena under study or differences in the rhetoric or conceptual stances of the researchers."],["i",1,"Present findings in a manner that is coherent within the study design and goals (e.g., common themes, common interpretations, situated differences)."],["i",1,"Consider the contexts of the meta-analytic findings as well as contradictions and ambiguities among the reviewed studies so that findings are presented in a coherent manner or discrepancies are addressed."],["i",1,"Present synthesizing illustrations (e.g., diagrams, tables, models) if helpful in organizing and conveying findings."],["g","Guidance for Reviewers"],["i",2,"Results section tends to be longer than in quantitative meta-analyses because of the demonstrative rhetoric needed to permit the evaluation of the meta-analytic method."],["i",2,"Findings may or may not include the quantified presentation of relevant codes, depending on the study goals, approach to inquiry, and study characteristics."],["h2","Situatedness"],["i",1,"Reflect on the situatedness of the studies reviewed (e.g., the positions and contexts of the primary researchers and their studies)."],["i",1,"Simplify the complexity of displaying trends in studies by using tables as is helpful."],["g","Guidance for Reviewers"],["i",2,"Situatedness can be considered in the Results or Discussion section."],["h1","Discussion"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"]]},"mx1":{"short":"Mixed Table 1","title":"Mixed Methods Article Reporting Standards (MMARS)","sub":"Information Recommended for Inclusion in Manuscripts That Report the Collection and Integration of Qualitative and Quantitative Data","nodes":[["h1","Title Page"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["h1","Abstract"],["x"],["x"],["x"],["x"],["x"],["x"],["h1","Introduction"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["h1","Method"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["x"],["h1","Findings/Results"],["h2","Findings/Results Subsections"],["i",1,"See the JARS–Qual and JARS–Quant Standards."],["i",1,"Indicate how the qualitative and quantitative results were “mixed” or integrated (e.g., discussion; tables of joint displays; graphs; data transformation in which one form of data is transformed to the other, such as qualitative text, codes, themes are transformed into quantitative counts or variables)."],["g","Guidance for Authors"],["i",2,"In mixed methods research, the Findings section typically includes sections on qualitative findings, quantitative results, and mixed methods results. This section should mirror the type of mixed methods design in terms of sequence (i.e., whether quantitative strand or qualitative strand comes first; if both are gathered at the same time, either qualitative findings or quantitative results could be presented first)."],["g","Guidance for Reviewers"],["i",2,"In mixed methods Results sections (or in the Discussion section to follow), authors are conveying their mixed methods analysis through “joint display” tables or graphs that array the qualitative results (e.g., themes) against the quantitative results (e.g., categorical or continuous data). This enables researchers to directly compare results or to see how results differ between the quantitative and qualitative strands."],["h1","Discussion"],["x"],["x"],["x"],["x"]]}}</script>
+<script>
+(function(){
+'use strict';
+var DOCS = JSON.parse(document.getElementById('jars-data').textContent);
+var ORDER = ['mx1','ql1','ql2','q1','q2','q2a','q2b','q2c','q3','q4','q5','q6'];
+var BUCKETS = ['Title Page & Abstract','Introduction','Method','Results','Discussion','Design-specific standards'];
+var SCOPE=["Results"],SCOPE_NAME="Results";
+var STORE='jars-decision-tree-v1-results';
+var REDUCED=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+var state={a:{},checks:{},view:'section',guid:true};
+try{var s=JSON.parse(localStorage.getItem(STORE)||'null');if(s){state.a=s.a||{};state.checks=s.checks||{};state.view=s.view||'section';state.guid=s.guid!==false;}}catch(e){}
+function save(){try{localStorage.setItem(STORE,JSON.stringify(state));}catch(e){}}
+
+function isQuant(a){return a.type==='quant'||a.type==='mixed';}
+var Q=[
+ {id:'type',step:'Start',text:'Is your research qualitative or quantitative in nature?',
+  help:'Quantitative research analyzes numerical data statistically; qualitative research analyzes non-numerical data such as interviews, documents or observations. Choose hybrid or mixed if your manuscript collects and integrates both.',
+  show:function(){return true;},
+  opts:[
+   {v:'quant',label:'Quantitative',desc:'Numerical data analyzed with statistical methods.',out:'Follow the Quantitative flowchart'},
+   {v:'qual',label:'Qualitative',desc:'Non-numerical data such as interviews, text or observation.',out:'Qualitative'},
+   {v:'mixed',label:'Hybrid or Mixed',desc:'Collection and integration of qualitative and quantitative data.',out:'Mixed + Qualitative + Quantitative'}]},
+ {id:'qualKind',step:'Qualitative',text:'What kind of qualitative manuscript are you writing?',
+  help:'The Qualitative standards have one table for reports of primary qualitative research and one for qualitative meta-analyses.',
+  show:function(a){return a.type==='qual';},
+  opts:[
+   {v:'primary',label:'Primary qualitative research',desc:'You are reporting your own qualitative study.',out:'Qualitative Table 1'},
+   {v:'meta',label:'Qualitative meta-analysis',desc:'You are synthesizing findings across qualitative studies.',out:'Qualitative Table 2'}]},
+ {id:'design',step:'Flowchart · Step 2',text:'Does your study involve an experimental manipulation?',
+  help:'Step 1 already applies: all quantitative studies follow Quantitative Table 1. Now pick the design that best describes your study. Nonexperimental designs include observational designs, epidemiological designs and natural history studies (single-group designs or multiple-group comparisons).',
+  show:function(a){return isQuant(a);},
+  opts:[
+   {v:'exp',label:'Yes — experimental manipulation',desc:'Conditions were manipulated by the researcher.',out:'Quantitative Table 2'},
+   {v:'nonexp',label:'No — no experimental manipulation',desc:'Single-group designs, natural-group comparisons, etc.',out:'Quantitative Table 3'},
+   {v:'nof1',label:'Single individual (N-of-1)',desc:'The study was conducted on a single individual.',out:'Quantitative Table 5'}]},
+ {id:'assign',step:'Flowchart · Step 3',text:'Did you randomly assign participants to conditions?',
+  help:'This determines which module of Table 2 applies.',
+  show:function(a){return isQuant(a)&&a.design==='exp';},
+  opts:[
+   {v:'random',label:'Yes — random assignment',desc:'Participants were randomly assigned to conditions.',out:'Quantitative Table 2, Module A'},
+   {v:'nonrandom',label:'No — nonrandom assignment',desc:'Participants were not randomly assigned to conditions.',out:'Quantitative Table 2, Module B'}]},
+ {id:'trial',step:'Flowchart · Step 3',text:'Does your study qualify as a clinical trial?',
+  help:'Module C is applied in addition to Module A (with randomization) or Module B (without randomization).',
+  show:function(a){return isQuant(a)&&a.design==='exp';},
+  opts:[
+   {v:'yes',label:'Yes — clinical trial',desc:'The study qualifies as a clinical trial.',out:'Adds Quantitative Table 2, Module C'},
+   {v:'no',label:'No',desc:'The study is not a clinical trial.',out:'No additional module'}]},
+ {id:'long',step:'Flowchart · Step 4',text:'Did your study collect data on more than one occasion (longitudinal)?',
+  help:'This applies to any quantitative design, in addition to the tables chosen above.',
+  show:function(a){return isQuant(a);},
+  opts:[
+   {v:'yes',label:'Yes — longitudinal',desc:'Data were collected on more than one occasion.',out:'Adds Quantitative Table 4'},
+   {v:'no',label:'No',desc:'Data were collected on a single occasion.',out:'No additional table'}]},
+ {id:'repl',step:'Flowchart · Step 5',text:'Was your study a replication of an earlier study?',
+  help:'This applies to any quantitative design, in addition to the tables chosen above.',
+  show:function(a){return isQuant(a);},
+  opts:[
+   {v:'yes',label:'Yes — replication',desc:'The study replicates an earlier study.',out:'Adds Quantitative Table 6'},
+   {v:'no',label:'No',desc:'The study is not a replication.',out:'No additional table'}]}
+];
+function visibleQs(a){return Q.filter(function(q){return q.show(a);});}
+function prune(){var vis={};visibleQs(state.a).forEach(function(q){vis[q.id]=1;});Object.keys(state.a).forEach(function(k){if(!vis[k])delete state.a[k];});}
+function complete(a){return visibleQs(a).every(function(q){return a[q.id]!==undefined;});}
+function applicable(a){
+  var out=[];function add(k,why){out.push({k:k,why:why});}
+  if(a.type==='mixed'){add('mx1','Mixed-methods study (collection and integration of qualitative and quantitative data).');
+    add('ql1','Mixed Table 1 refers authors to the Qualitative Standards for the qualitative component.');}
+  if(a.type==='qual'){
+    if(a.qualKind==='primary')add('ql1','Primary qualitative research.');
+    if(a.qualKind==='meta')add('ql2','Qualitative meta-analysis.');}
+  if(isQuant(a)){
+    add('q1','Flowchart Step 1: all quantitative studies.');
+    if(a.design==='exp'){add('q2','Flowchart Step 2: experimental manipulation.');
+      if(a.assign==='random')add('q2a','Flowchart Step 3: participants randomly assigned.');
+      if(a.assign==='nonrandom')add('q2b','Flowchart Step 3: participants not randomly assigned.');
+      if(a.trial==='yes')add('q2c','Flowchart Step 3: qualifies as a clinical trial.');}
+    if(a.design==='nonexp')add('q3','Flowchart Step 2: no experimental manipulation.');
+    if(a.design==='nof1')add('q5','Flowchart Step 2: conducted on a single individual (N-of-1).');
+    if(a.long==='yes')add('q4','Flowchart Step 4: data collected on more than one occasion.');
+    if(a.repl==='yes')add('q6','Flowchart Step 5: replication of an earlier study.');}
+  out.sort(function(x,y){return ORDER.indexOf(x.k)-ORDER.indexOf(y.k);});
+  return out;
+}
+function el(tag,cls,text){var e=document.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;return e;}
+function sections(key){
+  var ns=DOCS[key].nodes,out=[],cur=null;
+  for(var i=0;i<ns.length;i++){if(ns[i][0]==='h1'){if(cur)cur.to=i;cur={h1:ns[i][1],from:i+1,to:ns.length};out.push(cur);}}
+  return out;
+}
+function bucketOf(h1){
+  var s=h1.toLowerCase();
+  if(/^title/.test(s)||s==='abstract')return BUCKETS[0];
+  if(s==='introduction')return BUCKETS[1];
+  if(s==='method')return BUCKETS[2];
+  if(s==='results'||s==='findings/results')return BUCKETS[3];
+  if(s==='discussion')return BUCKETS[4];
+  return BUCKETS[5];
+}
+var lastCurrent=null;
+function renderQuestions(){
+  var host=document.getElementById('questions');host.innerHTML='';
+  var current=null,vis=visibleQs(state.a);
+  for(var i=0;i<vis.length;i++){
+    (function(q){
+      var answered=state.a[q.id]!==undefined;
+      var card=el('div','card q'+(answered?' answered':'')+(!answered?' current':''));
+      card.setAttribute('role','radiogroup');card.setAttribute('aria-labelledby','qh-'+q.id);card.id='q-'+q.id;
+      card.appendChild(el('span','step',q.step));
+      card.appendChild(el('span','done','✓ Answered'));
+      var h=el('h2',null,q.text);h.id='qh-'+q.id;card.appendChild(h);
+      card.appendChild(el('p','help',q.help));
+      var opts=el('div','opts');
+      q.opts.forEach(function(o){
+        var lab=el('label','opt'),inp=document.createElement('input');
+        inp.type='radio';inp.name='q-'+q.id;inp.value=o.v;inp.checked=state.a[q.id]===o.v;
+        inp.addEventListener('change',function(){answer(q.id,o.v);});
+        var ob=el('span','ob');ob.appendChild(el('b',null,o.label));ob.appendChild(el('small',null,o.desc));ob.appendChild(el('em',null,'→ '+o.out));
+        lab.appendChild(inp);lab.appendChild(ob);opts.appendChild(lab);
+      });
+      card.appendChild(opts);host.appendChild(card);
+      if(!answered&&!current)current=q.id;
+    })(vis[i]);
+    if(current)break;
+  }
+  return current;
+}
+function answer(id,v){state.a[id]=v;prune();save();refresh(true);}
+function renderSide(){
+  var list=document.getElementById('applist'),empty=document.getElementById('applist-empty');
+  list.innerHTML='';var app=applicable(state.a);
+  empty.style.display=app.length?'none':'block';
+  app.forEach(function(x){var li=el('li');li.appendChild(el('b',null,DOCS[x.k].short));li.appendChild(el('span',null,x.why));list.appendChild(li);});
+  var set={};app.forEach(function(x){set[x.k]=1;});
+  var a=state.a,quant=isQuant(a);
+  var rows=[
+   ['Step 1',[['q1','Table 1']],function(k){return quant?'on':'maybe';}],
+   ['Step 2',[['q2','Table 2'],['q3','Table 3'],['q5','Table 5']],function(k){if(!quant||a.design===undefined)return 'maybe';return set[k]?'on':'off';}],
+   ['Step 3',[['q2a','Module A'],['q2b','Module B'],['q2c','Module C']],function(k){
+      if(!quant||a.design===undefined)return 'maybe';if(a.design!=='exp')return 'off';
+      if(k==='q2c')return a.trial===undefined?'maybe':(set[k]?'on':'off');
+      return a.assign===undefined?'maybe':(set[k]?'on':'off');}],
+   ['Step 4',[['q4','Table 4']],function(k){if(!quant)return 'maybe';return a.long===undefined?'maybe':(set[k]?'on':'off');}],
+   ['Step 5',[['q6','Table 6']],function(k){if(!quant)return 'maybe';return a.repl===undefined?'maybe':(set[k]?'on':'off');}]
+  ];
+  var fc=document.getElementById('fc');fc.innerHTML='';
+  rows.forEach(function(r){
+    var row=el('div','row');row.appendChild(el('div','lab',r[0]));var chips=el('div','chips');
+    r[1].forEach(function(c){var st=r[2](c[0]);var chip=el('span','chip '+st,c[1]);chip.title=st==='on'?'Applies':(st==='off'?'Does not apply':'Not yet determined');chips.appendChild(chip);});
+    row.appendChild(chips);fc.appendChild(row);
+  });
+}
+function checkbox(id){
+  var inp=document.createElement('input');inp.type='checkbox';inp.className='cb';inp.dataset.id=id;inp.checked=!!state.checks[id];
+  inp.addEventListener('change',onCheck);return inp;
+}
+function entryLi(key,i,text,depth){
+  var li=el('li','entry'),row=el('div','row'),lab=el('label','chk');
+  lab.appendChild(checkbox(key+':'+i));
+  var t=el('span','txt',text);t.dataset.kind='item';t.dataset.d=depth;lab.appendChild(t);
+  row.appendChild(lab);li.appendChild(row);return li;
+}
+function subUl(li){
+  var u=null;for(var c=li.firstChild;c;c=c.nextSibling){if(c.nodeType===1&&c.classList.contains('sub')){u=c;break;}}
+  if(!u){u=el('ul','sub');var g=null;for(var d=li.firstChild;d;d=d.nextSibling){if(d.nodeType===1&&d.classList.contains('guid')){g=d;break;}}li.insertBefore(u,g);}
+  return u;
+}
+function buildNodes(key,from,to){
+  var ns=DOCS[key].nodes,root=el('div','nodes');
+  var entriesUl=null,curL1=null,curL2=null,guid=false,afterLabel=false,guidUl=null;
+  function reset(){entriesUl=null;curL1=null;curL2=null;guid=false;afterLabel=false;guidUl=null;}
+  for(var i=from;i<to;i++){
+    var n=ns[i],t=n[0];
+    if(t==='h2'||t==='h3'){reset();var h=el('div',t,n[1]);h.dataset.kind=t;root.appendChild(h);continue;}
+    if(t==='g'){
+      guid=true;afterLabel=true;
+      var box=el('div','guid'),gl=el('div','gl',n[1]);gl.dataset.kind='glabel';box.appendChild(gl);
+      guidUl=el('ul');box.appendChild(guidUl);
+      if(curL1)curL1.appendChild(box);else root.appendChild(box);
+      continue;
+    }
+    var lvl=n[1],text=n[2];
+    if(guid&&(lvl>1||afterLabel)){
+      var gi=el('li',lvl===3?'l3':'l2');var gt=el('span',null,text);gt.dataset.kind='gitem';gt.dataset.d=lvl;gi.appendChild(gt);guidUl.appendChild(gi);afterLabel=false;continue;
+    }
+    guid=false;afterLabel=false;
+    if(lvl===1||!curL1){
+      if(!entriesUl){entriesUl=el('ul','entries');root.appendChild(entriesUl);}
+      var li=entryLi(key,i,text,0);entriesUl.appendChild(li);curL1=li;curL2=null;
+    }else if(lvl===2){
+      var l2=entryLi(key,i,text,1);subUl(curL1).appendChild(l2);curL2=l2;
+    }else{
+      var l3=entryLi(key,i,text,2);subUl(curL2||curL1).appendChild(l3);
+    }
+  }
+  return root;
+}
+function renderChecklist(host,app){
+  host.innerHTML='';
+  if(state.view==='table'){
+    app.forEach(function(x){
+      var d=DOCS[x.k];
+      var t=el('h3','tbl-title',d.short+(d.title?' — '+d.title:''));t.dataset.kind='tbl';host.appendChild(t);
+      if(d.sub){var s=el('p','tbl-sub',d.sub);s.dataset.kind='sub';host.appendChild(s);}
+      var ss=scoped(x.k);if(!ss.length)host.appendChild(el('p','note','This table has no requirements for the '+SCOPE_NAME+'.'));
+      ss.forEach(function(sec){
+        var b=el('div','blk-title');var bt=el('span',null,sec.h1);bt.dataset.kind='blk';b.appendChild(bt);host.appendChild(b);
+        host.appendChild(buildNodes(x.k,sec.from,sec.to));
+      });
+    });
+  }else{
+    SCOPE.forEach(function(bk){
+      var parts=[];
+      app.forEach(function(x){sections(x.k).forEach(function(sec){if(bucketOf(sec.h1)===bk)parts.push({k:x.k,sec:sec});});});
+      if(!parts.length)return;
+      var h=el('h3','bucket',bk);h.dataset.kind='tbl';host.appendChild(h);
+      if(bk===BUCKETS[5])host.appendChild(el('p','note','These tables are organized by topic rather than by article section, so they are grouped here to ensure no requirement is omitted.'));
+      parts.forEach(function(p){
+        var b=el('div','blk-title');b.appendChild(el('span','src',DOCS[p.k].short));
+        var bt=el('span',null,p.sec.h1);bt.dataset.kind='blk';b.appendChild(bt);host.appendChild(b);
+        host.appendChild(buildNodes(p.k,p.sec.from,p.sec.to));
+      });
+    });
+  }
+  if(!host.querySelector('input.cb'))host.appendChild(el('p','note','None of the applicable tables lists requirements for the '+SCOPE_NAME+'.'));
+  host.classList.toggle('hide-guid',!state.guid);
+  syncParents(host);updateProgress();
+}
+function directBoxes(li){return Array.prototype.slice.call(li.querySelectorAll(':scope > ul.sub > li.entry > .row input.cb'));}
+function syncParents(host){
+  var lis=Array.prototype.slice.call(host.querySelectorAll('li.entry')).reverse();
+  lis.forEach(function(li){
+    var kids=directBoxes(li);if(!kids.length)return;
+    var cb=li.querySelector(':scope > .row input.cb');
+    var all=kids.every(function(k){return k.checked;}),some=kids.some(function(k){return k.checked||k.indeterminate;});
+    cb.checked=all;cb.indeterminate=!all&&some;
+  });
+}
+function onCheck(e){
+  var cb=e.target,li=cb.closest('li.entry');
+  Array.prototype.forEach.call(li.querySelectorAll('input.cb'),function(c){c.checked=cb.checked;c.indeterminate=false;});
+  var host=document.getElementById('checklist');syncParents(host);
+  Array.prototype.forEach.call(host.querySelectorAll('input.cb'),function(c){state.checks[c.dataset.id]=c.checked;});
+  save();updateProgress();
+}
+function updateProgress(){
+  var all=document.querySelectorAll('#checklist input.cb'),done=0;
+  for(var i=0;i<all.length;i++)if(all[i].checked)done++;
+  var pct=all.length?Math.round(done/all.length*100):0;
+  var bar=document.getElementById('bar'),txt=document.getElementById('ptxt');
+  if(bar)bar.style.width=pct+'%';
+  if(txt){txt.firstChild.textContent=done+' of '+all.length+' items checked';txt.lastChild.textContent=pct+'%';}
+}
+function scoped(key){return sections(key).filter(function(s){return SCOPE.indexOf(bucketOf(s.h1))>-1;});}
+function indent(n){return new Array(n+1).join('  ');}
+function exportText(md){
+  var host=document.getElementById('checklist'),lines=[],hide=host.classList.contains('hide-guid');
+  lines.push(md?'# JARS reporting checklist: '+SCOPE_NAME:'JARS REPORTING CHECKLIST: '+SCOPE_NAME.toUpperCase());
+  lines.push(applicable(state.a).map(function(x){return DOCS[x.k].short;}).join('; '));
+  Array.prototype.forEach.call(host.querySelectorAll('[data-kind]'),function(n){
+    var k=n.dataset.kind,t=n.textContent,d=+n.dataset.d||0;
+    if((k==='gitem'||k==='glabel')&&hide)return;
+    if(k==='tbl')lines.push('',md?'## '+t:t.toUpperCase());
+    else if(k==='sub')lines.push(t);
+    else if(k==='blk'){var src=n.parentNode.querySelector('.src');var lab=(src?src.textContent+' · ':'')+t;lines.push('',md?'### '+lab:'-- '+lab+' --');}
+    else if(k==='h2')lines.push('',md?'#### '+t:t);
+    else if(k==='h3')lines.push(md?'##### '+t:'  '+t);
+    else if(k==='item'){var c=n.parentNode.querySelector('input');lines.push(indent(d)+(md?'- ['+(c.checked?'x':' ')+'] ':(c.checked?'[x] ':'[ ] '))+t);}
+    else if(k==='glabel')lines.push(indent(1)+(md?'*'+t+'*':t));
+    else if(k==='gitem')lines.push(indent(d)+'  - '+t);
+  });
+  return lines.join('\n')+'\n';
+}
+function copyText(){
+  var txt=exportText(false);
+  function fallback(){var ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');flash('Copied');}catch(e){flash('Copy failed');}document.body.removeChild(ta);}
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(function(){flash('Copied');},fallback);}else fallback();
+}
+function download(){
+  var blob=new Blob([exportText(true)],{type:'text/markdown'}),a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);a.download='jars-checklist.md';document.body.appendChild(a);a.click();document.body.removeChild(a);setTimeout(function(){URL.revokeObjectURL(a.href);},1000);
+}
+function flash(msg){var b=document.getElementById('copy');if(!b)return;var o=b.textContent;b.textContent='✓ '+msg;setTimeout(function(){b.textContent=o;},1400);}
+var wasComplete=false;
+function renderResult(scroll){
+  var host=document.getElementById('result');
+  if(!complete(state.a)){host.innerHTML='';wasComplete=false;return;}
+  var app=applicable(state.a);
+  host.innerHTML='';
+  var head=el('div','card res-head');
+  head.appendChild(el('h2',null,'Your JARS checklist: '+SCOPE_NAME));
+  head.appendChild(el('p',null,'These tables apply to your study. Their requirements for the '+SCOPE_NAME+' are combined below.'));
+  var tags=el('div','tags');app.forEach(function(x){tags.appendChild(el('span','tag',DOCS[x.k].short));});head.appendChild(tags);
+  var tb=el('div','toolbar');
+  var seg=el('div','seg');seg.setAttribute('role','group');seg.setAttribute('aria-label','Group checklist by');
+  [['section','By article section'],['table','By source table']].forEach(function(v){
+    var b=el('button',null,v[1]);b.type='button';b.setAttribute('aria-pressed',String(state.view===v[0]));
+    b.addEventListener('click',function(){state.view=v[0];save();renderResult(false);});seg.appendChild(b);
+  });
+  tb.appendChild(seg);
+  var tg=el('label','tg');var gc=document.createElement('input');gc.type='checkbox';gc.checked=state.guid;
+  gc.addEventListener('change',function(){state.guid=gc.checked;save();document.getElementById('checklist').classList.toggle('hide-guid',!state.guid);});
+  tg.appendChild(gc);tg.appendChild(document.createTextNode('Show “Guidance” notes'));tb.appendChild(tg);
+  var bc=el('button','btn','Copy as text');bc.id='copy';bc.type='button';bc.addEventListener('click',copyText);tb.appendChild(bc);
+  var bd=el('button','btn','Download .md');bd.type='button';bd.addEventListener('click',download);tb.appendChild(bd);
+  var bp=el('button','btn','Print');bp.type='button';bp.addEventListener('click',function(){window.print();});tb.appendChild(bp);
+  var br=el('button','btn','Clear checkmarks');br.type='button';br.addEventListener('click',function(){state.checks={};save();renderResult(false);});tb.appendChild(br);
+  head.appendChild(tb);host.appendChild(head);
+  var prog=el('div','prog');var bar=el('div','bar');var i=el('i');i.id='bar';bar.appendChild(i);prog.appendChild(bar);
+  var pt=el('div','txt');pt.id='ptxt';pt.appendChild(el('span',null,''));pt.appendChild(el('span',null,''));prog.appendChild(pt);host.appendChild(prog);
+  var cl=el('div','card');cl.id='checklist';host.appendChild(cl);
+  renderChecklist(cl,app);
+  if(scroll&&!wasComplete){head.scrollIntoView({behavior:REDUCED?'auto':'smooth',block:'start'});}
+  wasComplete=true;
+}
+function refresh(scroll){
+  var cur=renderQuestions();renderSide();renderResult(scroll);
+  if(scroll&&cur&&cur!==lastCurrent){var c=document.getElementById('q-'+cur);if(c)c.scrollIntoView({behavior:REDUCED?'auto':'smooth',block:'center'});}
+  lastCurrent=cur;
+}
+document.getElementById('restart').addEventListener('click',function(){state.a={};save();wasComplete=false;lastCurrent=null;refresh(false);window.scrollTo(0,0);});
+prune();refresh(false);
+})();
+</script>
+</body>
+</html>
