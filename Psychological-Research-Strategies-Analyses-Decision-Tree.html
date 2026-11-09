@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Psychological Research Strategies and Analyses Decision Tree</title>
+<meta name="description" content="Interactive decision tree for choosing a psychological research strategy (descriptive, correlational, experimental and related), the specific design, and the descriptive and inferential statistics that go with it.">
+<style>
+  :root {
+    --bg: #f5f4f0; --card: #ffffff; --ink: #1c1e23; --muted: #5c6270; --line: #aeb3bf; --border: #d9dbe1;
+    --c1: #4f58b0; --c1bg: #e5e7f8;
+    --c2: #86489f; --c2bg: #f0e3f5;
+    --c3: #ad513a; --c3bg: #f8e3db;
+    --neutral: #3a3f4b; --neutralbg: #e8e9ed;
+    --ok: #1f7a4d; --warn: #9a6700; --bad: #b3261e;
+    --okbg: #e5f4ea; --warnbg: #fbf0d4; --badbg: #fbe4e2;
+    --shadow: 0 1px 2px rgba(20,22,30,.06), 0 4px 14px rgba(20,22,30,.06);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #14161b; --card: #1d2027; --ink: #eceef2; --muted: #a2a8b6; --line: #4a5060; --border: #2e323d;
+      --c1: #8f98f0; --c1bg: #262a4d;
+      --c2: #c892e0; --c2bg: #3a2646;
+      --c3: #f0937a; --c3bg: #4a2a21;
+      --neutral: #d5d8e0; --neutralbg: #2b2e38;
+      --ok: #5fd39a; --warn: #e8c05a; --bad: #ff8c84;
+      --okbg: #1c3a2b; --warnbg: #3b3216; --badbg: #432022;
+      --shadow: none;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+    font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+  [data-cat="c1"] { --acc: var(--c1); --accbg: var(--c1bg); }
+  [data-cat="c2"] { --acc: var(--c2); --accbg: var(--c2bg); }
+  [data-cat="c3"] { --acc: var(--c3); --accbg: var(--c3bg); }
+  [data-cat=""]   { --acc: var(--neutral); --accbg: var(--neutralbg); }
+  [hidden] { display: none !important; }
+
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 28px 20px 56px; }
+  header h1 { font-size: clamp(1.4rem, 3.2vw, 2rem); margin: 0 0 6px; letter-spacing: -.01em; }
+  header p { margin: 0; color: var(--muted); max-width: 76ch; }
+
+  .toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; margin: 22px 0 14px; }
+  .seg { display: inline-flex; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; background: var(--card); flex-wrap: wrap; }
+  .seg button { appearance: none; border: 0; background: transparent; color: var(--ink); padding: 8px 16px; font: inherit; font-size: .92rem; cursor: pointer; }
+  .seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); font-weight: 600; }
+  .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn { appearance: none; border: 1px solid var(--border); background: var(--card); color: var(--ink);
+    padding: 8px 14px; border-radius: 10px; font: inherit; font-size: .92rem; cursor: pointer; }
+  .btn:hover:not(:disabled) { border-color: var(--muted); }
+  .btn:disabled { opacity: .45; cursor: default; }
+  button:focus-visible, input:focus-visible { outline: 3px solid #3b82f6; outline-offset: 2px; }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: .85rem; color: var(--muted); margin-bottom: 14px; }
+  .legend span::before { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 3px; background: var(--acc); margin-right: 6px; }
+
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; box-shadow: var(--shadow); padding: 22px; }
+
+  .crumbs { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 18px; }
+  .crumb { appearance: none; border: 1.5px solid var(--acc); background: var(--accbg); color: var(--ink);
+    border-radius: 999px; padding: 3px 12px; font: inherit; font-size: .82rem; cursor: pointer; max-width: 100%; text-align: left; }
+  .crumb.here { background: var(--acc); color: var(--card); font-weight: 600; }
+  .sep { color: var(--muted); font-size: .8rem; }
+
+  .stepno { font-size: .78rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 0 0 4px; }
+  h2.q { font-size: clamp(1.15rem, 2.4vw, 1.45rem); margin: 0 0 16px; outline: none; letter-spacing: -.005em; }
+
+  .opts { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); }
+  .opts.vertical { grid-template-columns: 1fr; max-width: 760px; }
+  .opt { appearance: none; text-align: left; font: inherit; color: var(--ink); cursor: pointer;
+    background: var(--accbg); border: 2px solid var(--acc); border-radius: 14px; padding: 14px 16px;
+    display: flex; flex-direction: column; gap: 4px; position: relative; transition: transform .12s ease, box-shadow .12s ease; }
+  .opt:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,.12); }
+  .opt .t { font-weight: 650; padding-right: 22px; }
+  .opt .h { font-size: .88rem; color: var(--muted); }
+  .opt .tag { font-size: .72rem; font-weight: 700; color: var(--acc); letter-spacing: .05em; text-transform: uppercase; }
+  .opt::after { content: "→"; position: absolute; right: 14px; top: 12px; color: var(--acc); font-weight: 700; }
+
+  /* results */
+  .result { animation: pop .25s ease; }
+  @keyframes pop { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  .result-head { display: flex; align-items: center; gap: 8px; color: var(--ok); font-weight: 700; margin-bottom: 6px; }
+  h3.rname { font-size: clamp(1.25rem, 2.6vw, 1.7rem); margin: 0 0 8px; letter-spacing: -.01em; }
+  .pills { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+  .pill { display: inline-block; font-size: .78rem; font-weight: 650; padding: 2px 10px; border-radius: 999px; border: 1px solid var(--border); }
+  .pill.good { background: var(--okbg); color: var(--ok); border-color: transparent; }
+  .pill.warn { background: var(--warnbg); color: var(--warn); border-color: transparent; }
+  .pill.bad { background: var(--badbg); color: var(--bad); border-color: transparent; }
+  .pill.cat { background: var(--accbg); color: var(--ink); border-color: var(--acc); }
+  .sec { margin-top: 18px; }
+  .sec > h4 { margin: 0 0 6px; font-size: .78rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+  .sec p { margin: 0 0 6px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
+  .fact { border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; }
+  .fact b { display: block; font-size: .72rem; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); font-weight: 700; }
+  pre.nota { background: var(--neutralbg); border-radius: 10px; padding: 10px 14px; margin: 0; overflow-x: auto;
+    font: 600 .85rem/1.55 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; white-space: pre; }
+  ul.sw { margin: 0; padding-left: 1.1em; } ul.sw li { margin: 2px 0; }
+  .swbox { border-radius: 12px; padding: 10px 14px; }
+  .swbox.g { background: var(--okbg); } .swbox.b { background: var(--badbg); }
+  .swbox h5 { margin: 0 0 4px; font-size: .85rem; }
+  .flow { display: grid; grid-template-columns: 1fr auto 1fr; gap: 12px; align-items: stretch; }
+  .box { border: 2px solid var(--acc); background: var(--accbg); border-radius: 14px; padding: 14px 16px; }
+  .box.inf { background: var(--acc); color: var(--card); }
+  .box .lab { font-size: .72rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; opacity: .8; margin-bottom: 4px; }
+  .box .name { font-size: 1.08rem; font-weight: 700; line-height: 1.3; }
+  .box .det { margin-top: 6px; font-size: .92rem; }
+  .box.desc .det { color: var(--muted); }
+  .arrow { align-self: center; font-size: 1.6rem; color: var(--muted); }
+  .note { margin-top: 12px; font-size: .9rem; color: var(--muted); border-left: 3px solid var(--acc); padding-left: 10px; }
+  .callout { margin-top: 12px; font-size: .9rem; border-radius: 10px; padding: 8px 12px; background: var(--warnbg); color: var(--ink); border-left: 4px solid var(--warn); }
+  .src { margin-top: 12px; font-size: .82rem; color: var(--muted); }
+  .res-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 18px; }
+  .related { display: grid; gap: 8px; }
+  .rel { appearance: none; text-align: left; font: inherit; color: var(--ink); cursor: pointer; background: var(--card);
+    border: 1px solid var(--border); border-radius: 10px; padding: 8px 12px; }
+  .rel:hover { border-color: var(--acc); }
+  .rel b { display: block; }
+  .rel span { font-size: .88rem; color: var(--muted); }
+  @media (max-width: 680px) {
+    .flow, .grid2 { grid-template-columns: 1fr; }
+    .arrow { transform: rotate(90deg); justify-self: center; }
+  }
+
+  /* tree explorer */
+  .tree-scroll { overflow-x: auto; padding: 6px 2px 10px; }
+  .tree { min-width: max-content; }
+  .branch { display: flex; align-items: center; }
+  .stem { width: 26px; border-top: 2px solid var(--line); flex: none; }
+  .kids { display: flex; flex-direction: column; }
+  .kid { position: relative; padding: 5px 0 5px 26px; display: flex; align-items: center; }
+  .kid::before { content: ""; position: absolute; left: 0; top: 50%; width: 26px; border-top: 2px solid var(--line); }
+  .kid::after { content: ""; position: absolute; left: 0; top: 0; bottom: 0; border-left: 2px solid var(--line); }
+  .kid:first-child::after { top: 50%; } .kid:last-child::after { bottom: 50%; } .kid:only-child::after { display: none; }
+  .node { appearance: none; text-align: left; font: inherit; font-size: .86rem; line-height: 1.3; color: var(--ink);
+    background: var(--accbg); border: 2px solid var(--acc); border-radius: 10px; padding: 8px 12px; width: 230px; cursor: pointer; flex: none; }
+  .node .lt { display: block; font-weight: 600; }
+  .node .lr { display: block; font-size: .78rem; margin-top: 3px; opacity: .85; }
+  .node .plus { float: right; color: var(--acc); font-weight: 800; margin-left: 6px; }
+  .node.on { background: var(--acc); color: var(--card); } .node.on .plus { color: var(--card); }
+  .node.cur { box-shadow: 0 0 0 4px color-mix(in srgb, var(--acc) 35%, transparent); }
+  .node.leaf { border-style: dashed; } .node.leaf.on { border-style: solid; }
+  .hint { color: var(--muted); font-size: .85rem; margin: 10px 0 0; }
+
+  /* catalog */
+  .cat-tools { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 14px; }
+  .cat-tools input { flex: 1 1 220px; font: inherit; padding: 8px 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--card); color: var(--ink); }
+  .chip { appearance: none; border: 1.5px solid var(--acc); background: var(--accbg); color: var(--ink); border-radius: 999px; padding: 4px 12px; font: inherit; font-size: .85rem; cursor: pointer; }
+  .chip[aria-pressed="true"] { background: var(--acc); color: var(--card); font-weight: 600; }
+  .cat-grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); }
+  .dcard { appearance: none; text-align: left; font: inherit; color: var(--ink); cursor: pointer; background: var(--accbg);
+    border: 2px solid var(--acc); border-radius: 14px; padding: 12px 14px; display: flex; flex-direction: column; gap: 4px; }
+  .dcard:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,.12); }
+  .dcard .t { font-weight: 650; } .dcard .f { font-size: .75rem; font-weight: 700; color: var(--acc); text-transform: uppercase; letter-spacing: .05em; }
+  .dcard .w { font-size: .86rem; color: var(--muted); }
+
+  footer { margin-top: 28px; font-size: .82rem; color: var(--muted); max-width: 90ch; }
+  #toast { position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); background: var(--ink); color: var(--bg);
+    padding: 8px 14px; border-radius: 8px; font-size: .85rem; opacity: 0; pointer-events: none; transition: opacity .2s; }
+  #toast.show { opacity: .95; }
+  @media print {
+    body { background: #fff; } .toolbar, .legend, .res-actions, .crumbs, footer, #toast { display: none !important; }
+    .card { box-shadow: none; border-color: #999; } .wrap { padding: 0; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Psychological Research Strategies and Analyses Decision Tree</h1>
+    <p>Answer a few questions to find the research strategy and specific design that fit your question, together with the descriptive and inferential statistics that go with it. Or start from data you already have and go straight to the statistic. The tree combines descriptive, correlational, and experimental and related strategies.</p>
+  </header>
+
+  <div class="toolbar">
+    <div class="seg" role="group" aria-label="View">
+      <button id="modeGuided" aria-pressed="true">Guided</button>
+      <button id="modeTree" aria-pressed="false">Explore full tree</button>
+      <button id="modeCat" aria-pressed="false">Design catalog</button>
+    </div>
+    <div class="actions">
+      <button class="btn" id="expandBtn" hidden>Expand all</button>
+      <button class="btn" id="backBtn">← Back</button>
+      <button class="btn" id="resetBtn">Start over</button>
+    </div>
+  </div>
+
+  <div class="legend" aria-hidden="true">
+    <span data-cat="c1">Descriptive strategies</span>
+    <span data-cat="c2">Correlational strategies</span>
+    <span data-cat="c3">Experimental and related strategies</span>
+  </div>
+
+  <main>
+    <noscript><div class="card">This decision tree needs JavaScript enabled.</div></noscript>
+    <section class="card" id="panel" aria-live="polite"></section>
+    <section id="resultWrap" style="margin-top:16px" hidden></section>
+  </main>
+
+  <footer>
+    The recommendations are heuristics that summarize standard course content on descriptive, correlational, experimental and related strategies. Notation values are illustrative. Design logic, measurement quality and ethics review still carry the inference.
+  </footer>
+</div>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ================= Design data (merged from the four source trees) ================= */
+  var DES = {"pearson":{"name":"Pearson correlation","sh":"Pearson r","fam":"Correlational strategy","tone":"good","cat":"c2","data":"Two numerical (interval or ratio) scores from each individual","cause":"No","nota":["r = +.62    direction: positive, form: linear","r² = .38    38% of the variability in Y is predicted by X","n = 40, p < .001   (illustrative values)"],"what":"Describes and measures a linear relationship. The data points in the scatter plot tend to cluster around a straight line, so each time X increases by one point, Y changes by a consistently predictable amount. The sign of r gives the direction and its absolute value (0.0 to 1.0) gives the strength or consistency.","threats":"It cannot assess causality: a third variable may produce the relationship and the direction of influence is unclear, so internal validity is low. It captures only linear trends, and a small sample can produce a strong-looking correlation by chance.","stat":"Pearson correlation with a test of significance; interpret strength with r² (the coefficient of determination).","sg":["Describes relationships between variables","Nonintrusive: observes natural behavior","High external validity"],"wk":["Cannot assess causality","Third-variable problem: another variable may produce the relationship","Directionality problem: it is unclear which variable influences the other","Low internal validity"],"swLevel":"strategy","man":"","ran":"","ctl":"","ex":"","ap":"","up":[["spearman","If the trend is one-directional but curved, or the scores are ranks, use Spearman."],["reg","If the goal is to predict Y from X, add a regression equation."],["mreg","If a third variable may be responsible, measure it and use multiple regression."],["exp_b","If you need a causal conclusion, manipulate the variable and randomly assign participants."]],"an":{"desc":{"name":"Pearson correlation","detail":"Describes the degree and direction of the linear relationship."},"inf":{"name":"t test","detail":"A t test determines the significance of the Pearson correlation."}}},"spearman":{"name":"Spearman correlation","sh":"Spearman ρ","fam":"Correlational strategy","tone":"good","cat":"c2","data":"Ranks, or numerical scores with a one-directional (monotonic) trend","cause":"No","nota":["ρ = +.85    direction: positive, form: monotonic","ρ² = .72","n = 25, p < .001   (illustrative values)"],"what":"Evaluates a monotonic relationship: as X increases Y tends to move in one direction only, though not necessarily along a straight line. It is the Pearson correlation computed on the ranks of the scores, so it also handles ordinal data.","threats":"The same limits as any correlation: no cause and effect, the third-variable and directionality problems, and strong-looking values from small samples by chance. It describes the consistency of direction, not the amount of change in Y per unit of X.","stat":"Spearman correlation on the ranks, with a test of significance.","sg":["Describes relationships between variables","Nonintrusive: observes natural behavior","High external validity"],"wk":["Cannot assess causality","Third-variable problem: another variable may produce the relationship","Directionality problem: it is unclear which variable influences the other","Low internal validity"],"swLevel":"strategy","man":"","ran":"","ctl":"","ex":"","ap":"","up":[["pearson","If the scores are numerical and the trend is a straight line, Pearson describes it more fully."],["reg","If the goal is prediction and the relationship is linear, add regression."],["exp_b","If you need a causal conclusion, manipulate the variable and randomly assign participants."]],"an":{"desc":{"name":"Spearman correlation","detail":"Describes the degree and direction of a monotonic relationship."},"inf":{"name":"Consult an advanced statistics text","detail":""}}},"pb":{"name":"Point-biserial correlation","sh":"Point-biserial r","fam":"Correlational strategy","tone":"good","cat":"c2","data":"One numerical score and one variable with two categories","cause":"No","nota":["Code the categories 0 and 1","r(pb) = .33    positive: category 1 scores higher","p = .04   (same test as the t test)"],"what":"When one variable is non-numerical with two categories, the categories are coded numerically as 0 and 1 and the Pearson correlation is calculated. The non-numerical variable also organizes the scores into two groups, which can be compared directly.","threats":"Group membership is not assigned, so the groups differ in many ways besides the category (third-variable problem) and the direction of influence is unclear. The correlation tests the same hypothesis as the independent-measures t test.","stat":"Pearson correlation on the 0/1 coding (point-biserial), equivalent to an independent-measures t test.","sg":["Describes relationships between variables","Nonintrusive: observes natural behavior","High external validity"],"wk":["Cannot assess causality","Third-variable problem: another variable may produce the relationship","Directionality problem: it is unclear which variable influences the other","Low internal validity"],"swLevel":"strategy","man":"","ran":"","ctl":"","ex":"","ap":"","up":[["diff","If the focus is the difference between the groups, report it as a group comparison."],["exp_b","If the two categories can be created by the researcher, randomly assign participants."]],"an":{"desc":{"name":"Point-biserial correlation","detail":"Describes the strength of the relationship."},"inf":{"name":"Independent-measures t test","detail":"The data can be listed as two groups suitable for the independent-measures t test."}}},"chi":{"name":"Chi-square test for independence","sh":"Chi-square","fam":"Correlational strategy","tone":"good","cat":"c2","data":"Two non-numerical (categorical) variables","cause":"No","nota":["Rows: categories of one variable","Columns: categories of the other","χ²(1) = 3.13, p = .077   (Figure 12.4 counts)"],"what":"When both variables are non-numerical, the data are organized in a matrix with the categories of one variable forming the rows and the categories of the second forming the columns. The chi-square test evaluates whether the two variables are related.","threats":"It shows association only, with the same third-variable and directionality problems. It needs enough individuals in each cell (expected counts of at least 5), and significance does not say how strong the association is.","stat":"Chi-square test for independence; φ (or Cramér’s V) for the strength of association.","sg":["Describes relationships between variables","Nonintrusive: observes natural behavior","High external validity"],"wk":["Cannot assess causality","Third-variable problem: another variable may produce the relationship","Directionality problem: it is unclear which variable influences the other","Low internal validity"],"swLevel":"strategy","man":"","ran":"","ctl":"","ex":"","ap":"","up":[["pb","If one variable can be measured numerically, a correlation is more informative."],["exp_b","If a variable can be manipulated, randomly assign participants to its categories."]],"an":{"desc":{"name":"Phi-coefficient or frequency distribution matrix","detail":"Phi describes the strength when both variables are dichotomous; otherwise regroup the data as a frequency distribution matrix."},"inf":{"name":"Chi-square test for independence","detail":"Evaluates the relationship between the variables (a 2 × 2 chi-square when both are dichotomous)."}}},"reg":{"name":"Regression (prediction)","sh":"Regression","fam":"Correlational strategy","tone":"good","cat":"c2","data":"A predictor (X) and a criterion (Y), both numerical","cause":"No","nota":["Ŷ = a + bX","r = .60, r² = .36","Prediction at a chosen X, ± about 1.96 standard errors of estimate"],"what":"Once a correlational study shows a relationship, knowledge about the predictor variable helps predict or explain the criterion. Regression is the statistical process for finding the equation that produces the most accurate predictions of Y for each value of X. The predictor is usually simple and well defined, while the criterion is more complex and unknown.","threats":"Predictions are only as good as the correlation: weak relationships give predictions close to the average. Predicting is not explaining, and extrapolating beyond the observed range is risky.","stat":"Simple linear regression: slope, intercept, r² and the standard error of estimate.","sg":["Describes relationships between variables","Nonintrusive: observes natural behavior","High external validity"],"wk":["Cannot assess causality","Third-variable problem: another variable may produce the relationship","Directionality problem: it is unclear which variable influences the other","Low internal validity"],"swLevel":"strategy","man":"","ran":"","ctl":"","ex":"","ap":"","up":[["mreg","Use several predictors together, or control other variables."],["pearson","If you only need to describe the relationship, report the correlation."]],"an":{"desc":{"name":"Regression equation","detail":"Identifies the slope and Y-intercept for the best-fitting line."},"inf":{"name":"Analysis of regression","detail":"Determines the significance of the regression equation."}}},"mreg":{"name":"Multiple regression","sh":"Multiple regression","fam":"Correlational strategy","tone":"good","cat":"c2","data":"Three or more variables measured on each individual","cause":"No","nota":["Ŷ = a + b1·X1 + b2·X2 + …","Each b: effect of one predictor with the others held constant"],"what":"Examines multivariate relationships. It can be used to study the relationship between two specific variables while statistically controlling the influence of other, potentially confounding variables.","threats":"Predictor variables only predict. Relationships can be described, not explained, and variables that were not measured can still be responsible for the relationship.","stat":"Multiple regression: coefficients with tests, R² and partial correlations.","sg":["Describes relationships between variables","Nonintrusive: observes natural behavior","High external validity"],"wk":["Cannot assess causality","Third-variable problem: another variable may produce the relationship","Directionality problem: it is unclear which variable influences the other","Low internal validity"],"swLevel":"strategy","man":"","ran":"","ctl":"","ex":"","ap":"","up":[["exp_b","If you need a causal conclusion, manipulate the variable and randomly assign participants."],["reg","If only one predictor matters, simple regression is easier to interpret."]],"an":{"desc":{"name":"Multiple regression equation","detail":"Coefficients for each predictor, R² and partial correlations."},"inf":{"name":"Tests of the coefficients and of R²","detail":"Consult an advanced statistics text for the details."}}},"relval":{"name":"Reliability or validity of a measure","sh":"Reliability / validity","fam":"Correlational strategy","tone":"good","cat":"c2","data":"Two sets of scores for the same individuals (two testings, or a test and a criterion)","cause":"No","nota":["Test-retest reliability: r between two testings","Validity: r between the measure and its criterion"],"what":"Both reliability and validity are commonly defined by relationships established with the correlational design. Reliability asks whether scores are consistent (for example across two testings); validity asks whether scores relate to the criterion they are supposed to reflect.","threats":"A correlation measures consistency or association, not that a test measures what it claims. A restricted range of scores and small samples weaken or distort the coefficient.","stat":"Pearson correlation between the two sets of scores (Spearman for ranks).","sg":["Describes relationships between variables","Nonintrusive: observes natural behavior","High external validity"],"wk":["Cannot assess causality","Third-variable problem: another variable may produce the relationship","Directionality problem: it is unclear which variable influences the other","Low internal validity"],"swLevel":"strategy","man":"","ran":"","ctl":"","ex":"","ap":"","up":[["pearson","Report the correlation with its significance and r²."],["spearman","Use Spearman if the scores are ranks."]],"an":{"desc":{"name":"Pearson correlation (Spearman for ranks)","detail":"Describes the consistency or association between the two sets of scores."},"inf":{"name":"t test","detail":"Determines the significance of the correlation."}}},"theory":{"name":"Correlational test of a theory","sh":"Theory test","fam":"Correlational strategy","tone":"good","cat":"c2","data":"Pairs of scores that a theory predicts will be related","cause":"No","nota":["Theory predicts: r(twin 1, twin 2) is high","Observed: r = .80 (illustrative)"],"what":"The correlational design can address many theoretical questions. For example, a theory about the contribution of heredity to intelligence predicts a relationship between the IQ scores of identical twins, which can be evaluated with a correlation.","threats":"A correlation consistent with the theory does not exclude other explanations: a shared environment, for instance, could produce the same relationship. The study cannot show cause and effect.","stat":"Pearson correlation (or Spearman), compared with the theory’s predictions.","sg":["Describes relationships between variables","Nonintrusive: observes natural behavior","High external validity"],"wk":["Cannot assess causality","Third-variable problem: another variable may produce the relationship","Directionality problem: it is unclear which variable influences the other","Low internal validity"],"swLevel":"strategy","man":"","ran":"","ctl":"","ex":"","ap":"","up":[["mreg","Measure and control competing explanations statistically."],["exp_b","If you need a causal conclusion, manipulate the variable and randomly assign participants."]],"an":{"desc":{"name":"Pearson or Spearman correlation","detail":"Describes the relationship the theory predicts."},"inf":{"name":"t test (Pearson) or advanced text (Spearman)","detail":"Determines the significance of the correlation."}}},"curv":{"name":"Curvilinear relationship: neither Pearson nor Spearman fits","sh":"Curvilinear","fam":"Correlational: extension beyond the chapter","tone":"warn","cat":"c2","data":"Two numerical scores whose pattern rises then falls (or the reverse)","cause":"No","nota":["Plot the scores first","Pearson r ≈ 0 can hide a strong curved pattern"],"what":"A curvilinear pattern is not a straight line and not one-directional, so neither Pearson nor Spearman describes it. A correlation near zero would wrongly suggest no relationship.","threats":"Reporting r alone would misrepresent the data. This topic goes beyond the chapter’s linear and monotonic forms.","stat":"Describe the pattern with the scatter plot; use a method for curved relationships (outside this chapter), or analyze separate ranges of X.","sg":["A scatter plot reveals patterns that a single coefficient hides"],"wk":["Pearson and Spearman do not describe it; this is beyond the chapter"],"swLevel":"strategy","man":"","ran":"","ctl":"","ex":"","ap":"","up":[["pearson","If a straight line fits part of the range, describe that part."]],"an":{"desc":{"name":"Scatter plot","detail":"Describe the pattern visually; a correlation near zero would misrepresent it."},"inf":{"name":"Consult an advanced statistics text","detail":""}}},"nat":{"name":"Naturalistic observation","sh":"Naturalistic obs.","fam":"Descriptive: observational design","tone":"good","cat":"c1","data":"Recorded behavior, scored as counts, durations or interval codes","cause":"No: describes variables as they occur","nota":["Frequency: count of instances","Duration: total time the behavior lasts","Interval: proportion of intervals in which it occurred"],"what":"No researcher intervention: behavior is watched where it naturally occurs and is systematically recorded.","threats":"The observer’s presence can change behavior (reactivity and demand characteristics), and judgments are partly subjective (reliability).","stat":"Frequencies, durations or proportions of intervals, summarized with descriptive statistics; inter-rater reliability (percent agreement or κ)","sg":["Behavior observed in the real world","Useful for nonmanipulated behaviors","Actual behaviors observed and recorded"],"wk":["Time-consuming","Potential for observer influence","Potential for subjective interpretation"],"swLevel":"design","man":"","ran":"","ctl":"","ex":"","ap":"Quantitative","up":[["par","If natural observation is impossible, join the group as a participant observer."],["con","If the behavior is too rare to wait for, set up a situation likely to produce it."],["et","To understand meanings and social relations from the inside, consider ethnography."]],"an":{"desc":{"name":"Frequency, duration or interval proportions","detail":"Summarize the recorded behavior and report inter-rater reliability (percent agreement or κ)."},"inf":{"name":"Chi-square test for goodness of fit","detail":"Use the sample frequencies to test a hypothesis about the proportions in the population. Applies only if a reasonable hypothesis exists."}}},"par":{"name":"Participant observation","sh":"Participant obs.","fam":"Descriptive: observational design","tone":"good","cat":"c1","data":"Recorded behavior, scored as counts, durations or interval codes","cause":"No: describes variables as they occur","nota":["Frequency: count of instances","Duration: total time the behavior lasts","Interval: proportion of intervals in which it occurred"],"what":"The researcher interacts with participants and becomes one of them while recording behavior.","threats":"Loss of objectivity and an increased chance of observer influence.","stat":"Frequencies, durations or proportions of intervals, summarized with descriptive statistics; inter-rater reliability (percent agreement or κ)","sg":["Useful when natural observation is impossible","Gets information not accessible otherwise","Participation gives a unique perspective"],"wk":["Time-consuming","Potential for loss of objectivity","Increased chance for observer influence"],"swLevel":"design","man":"","ran":"","ctl":"","ex":"","ap":"Quantitative","up":[["nat","If you can watch without joining, naturalistic observation limits the researcher’s influence."],["et","To describe a culture or setting from inside, with both external and internal observations, consider ethnography."]],"an":{"desc":{"name":"Frequency, duration or interval proportions","detail":"Summarize the recorded behavior and report inter-rater reliability (percent agreement or κ)."},"inf":{"name":"Chi-square test for goodness of fit","detail":"Use the sample frequencies to test a hypothesis about the proportions in the population. Applies only if a reasonable hypothesis exists."}}},"con":{"name":"Contrived observation","sh":"Contrived obs.","fam":"Descriptive: observational design","tone":"good","cat":"c1","data":"Recorded behavior, scored as counts, durations or interval codes","cause":"No: describes variables as they occur","nota":["Frequency: count of instances","Duration: total time the behavior lasts","Interval: proportion of intervals in which it occurred"],"what":"The researcher sets up a situation likely to produce the desired behavior, then observes it.","threats":"The situation is less natural than the real world; observer influence and subjective judgment still apply.","stat":"Frequencies, durations or proportions of intervals, summarized with descriptive statistics; inter-rater reliability (percent agreement or κ)","sg":["Do not have to wait for a behavior to occur"],"wk":["Less natural"],"swLevel":"design","man":"","ran":"","ctl":"","ex":"","ap":"Quantitative","up":[["nat","If the behavior occurs often enough, naturalistic observation keeps the setting natural."],["exp_b","If you need to show that the situation causes the behavior, an experimental strategy is required."]],"an":{"desc":{"name":"Frequency, duration or interval proportions","detail":"Summarize the recorded behavior and report inter-rater reliability (percent agreement or κ)."},"inf":{"name":"Chi-square test for goodness of fit","detail":"Use the sample frequencies to test a hypothesis about the proportions in the population. Applies only if a reasonable hypothesis exists."}}},"cont":{"name":"Content analysis","sh":"Content analysis","fam":"Descriptive: content analysis or archival research","tone":"good","cat":"c1","data":"Occurrences of defined events in literature, movies, television programs or similar media","cause":"No: describes variables as they occur","nota":["Frequency: count of each category","Agreement between two coders"],"what":"Uses the techniques of behavioral observation to measure the occurrence of specific events in literature, movies, television programs or similar media.","threats":"Vague categories, subjective coding and unreliable coders.","stat":"Counts or proportions per category, with agreement between coders (inter-rater reliability)","sg":["Measures events already recorded in media","Uses the same explicit measurement rules as behavioral observation: categories, a numerical scoring method and multiple coders"],"wk":["Depends on clear definitions of the categories","Needs reliable coding by more than one coder"],"swLevel":"design","man":"","ran":"","ctl":"","ex":"","ap":"Quantitative","up":[["arch","If the material is a historical record of past behavior or events, use archival research."],["he","To interpret meaning in a text rather than count events, consider hermeneutics."]],"an":{"desc":{"name":"Counts or proportions per category","detail":"Report agreement between coders."},"inf":{"name":"Chi-square test for goodness of fit","detail":"Use the sample frequencies to test a hypothesis about the proportions in the population. Applies only if a reasonable hypothesis exists."}}},"arch":{"name":"Archival research","sh":"Archival research","fam":"Descriptive: content analysis or archival research","tone":"good","cat":"c1","data":"Behaviors or events recorded in historical records","cause":"No: describes variables as they occur","nota":["Frequency: count of events per period","Agreement between two coders"],"what":"Looks at historical records to measure behaviors or events that occurred in the past, using the same measurement rules as behavioral observation.","threats":"Records may be incomplete, and coding categories can be subjective.","stat":"Counts or rates per period, with agreement between coders on at least part of the records","sg":["Measures behavior or events that occurred in the past","Uses existing records, so participants are not disturbed"],"wk":["Limited to what was recorded","Needs clear categories and multiple coders"],"swLevel":"design","man":"","ran":"","ctl":"","ex":"","ap":"Quantitative","up":[["cont","If the material is current media rather than records, use content analysis."],["hist","To describe one person’s history in detail, use a case history."]],"an":{"desc":{"name":"Counts or proportions per category","detail":"Report agreement between coders."},"inf":{"name":"Chi-square test for goodness of fit","detail":"Use the sample frequencies to test a hypothesis about the proportions in the population. Applies only if a reasonable hypothesis exists."}}},"net":{"name":"Internet survey","sh":"Internet survey","fam":"Descriptive: survey design","tone":"good","cat":"c1","data":"Responses to open-ended, restricted or rating-scale questions","cause":"No: describes variables as they occur","nota":["Percentage = f / n × 100","Total score = sum of the item ratings"],"what":"A survey delivered online that gives a “snapshot” of a particular group at a particular time.","threats":"The sample may not be representative, and you cannot control the composition of the sample.","stat":"Tallies and percentages for categories; sums, means and standard deviations for ratings; response rate and margin of error","sg":["Efficient to administer to a large number of participants","Access to large numbers of individuals with common characteristics","Can be individualized based on participant responses"],"wk":["Initial expense for the site","Sample may not be representative","Cannot control composition of the sample"],"swLevel":"design","man":"","ran":"","ctl":"","ex":"","ap":"Quantitative","up":[["per","When a high response rate matters and participants can gather, an in-person survey reaches everyone present."],["mail","If participants lack internet access, consider a mail survey."]],"an":{"desc":{"name":"Percentages; sums, means and standard deviations","detail":"Percentages for categories; sums, means and standard deviations for ratings; response rate and margin of error."},"inf":{"name":"Single-sample t test or chi-square goodness of fit","detail":"Test a hypothesis about a population mean (interval or ratio ratings) or about population proportions. Applies only if a reasonable hypothesis exists."}}},"mail":{"name":"Mail survey","sh":"Mail survey","fam":"Descriptive: survey design","tone":"good","cat":"c1","data":"Responses to open-ended, restricted or rating-scale questions","cause":"No: describes variables as they occur","nota":["Percentage = f / n × 100","Total score = sum of the item ratings"],"what":"A survey sent to participants by mail that gives a “snapshot” of a particular group.","threats":"A low response rate and nonresponse bias; you cannot be sure who completes the survey.","stat":"Tallies and percentages for categories; sums, means and standard deviations for ratings; response rate and margin of error","sg":["Convenient and anonymous","Nonthreatening to participants","Easy to administer"],"wk":["Can be expensive","Low response rate and nonresponse bias","Unsure exactly who completes the survey"],"swLevel":"design","man":"","ran":"","ctl":"","ex":"","ap":"Quantitative","up":[["net","If participants are online, an internet survey is cheaper but has its own sampling problems."],["per","If participants can gather, an in-person survey avoids nonresponse."]],"an":{"desc":{"name":"Percentages; sums, means and standard deviations","detail":"Percentages for categories; sums, means and standard deviations for ratings; response rate and margin of error."},"inf":{"name":"Single-sample t test or chi-square goodness of fit","detail":"Test a hypothesis about a population mean (interval or ratio ratings) or about population proportions. Applies only if a reasonable hypothesis exists."}}},"tel":{"name":"Telephone survey","sh":"Phone survey","fam":"Descriptive: survey design","tone":"good","cat":"c1","data":"Responses to open-ended, restricted or rating-scale questions","cause":"No: describes variables as they occur","nota":["Percentage = f / n × 100","Total score = sum of the item ratings"],"what":"Participants answer questions by phone, giving a “snapshot” of a particular group.","threats":"Interviewer bias, and calls take time.","stat":"Tallies and percentages for categories; sums, means and standard deviations for ratings; response rate and margin of error","sg":["Can be conducted from home or office","Participants can stay at home or office"],"wk":["Time-consuming","Potential for interviewer bias"],"swLevel":"design","man":"","ran":"","ctl":"","ex":"","ap":"Quantitative","up":[["per","If participants can gather, in-person administration is faster for groups."],["net","If many respondents are needed cheaply, an internet survey is more efficient."]],"an":{"desc":{"name":"Percentages; sums, means and standard deviations","detail":"Percentages for categories; sums, means and standard deviations for ratings; response rate and margin of error."},"inf":{"name":"Single-sample t test or chi-square goodness of fit","detail":"Test a hypothesis about a population mean (interval or ratio ratings) or about population proportions. Applies only if a reasonable hypothesis exists."}}},"per":{"name":"In-person survey or interview","sh":"In-person survey","fam":"Descriptive: survey design","tone":"good","cat":"c1","data":"Responses to open-ended, restricted or rating-scale questions","cause":"No: describes variables as they occur","nota":["Percentage = f / n × 100","Total score = sum of the item ratings"],"what":"Questions are administered face to face, to groups or to individuals.","threats":"Interviewer bias, and individual interviews are time-consuming.","stat":"Tallies and percentages for categories; sums, means and standard deviations for ratings; response rate and margin of error","sg":["Efficient to administer with groups","100% response rate","Flexible (groups or individual interviews)"],"wk":["Time-consuming with individual interviews","Risk of interviewer bias"],"swLevel":"design","man":"","ran":"","ctl":"","ex":"","ap":"Quantitative","up":[["net","If participants are dispersed, an internet survey reaches them more cheaply."],["gt","If the interviews are open-ended and the aim is to build a theory, consider grounded theory."]],"an":{"desc":{"name":"Percentages; sums, means and standard deviations","detail":"Percentages for categories; sums, means and standard deviations for ratings; response rate and margin of error."},"inf":{"name":"Single-sample t test or chi-square goodness of fit","detail":"Test a hypothesis about a population mean (interval or ratio ratings) or about population proportions. Applies only if a reasonable hypothesis exists."}}},"dstat":{"name":"Descriptive statistics","sh":"Desc. statistics","fam":"Descriptive statistics","tone":"good","cat":"c1","data":"A set of scores you already have (numerical, or nominal and ordinal categories)","cause":"No: describes variables as they occur","nota":["M = ΣX / n","s² = SS / (n − 1)","s = √s²"],"what":"Organize, summarize and simplify results. Inferential statistics generalize from samples to populations; descriptive statistics describe the data in hand.","threats":"Averages can hide the individual, and a sample statistic is not a population parameter.","stat":"Frequency distribution; mean, median and mode; variance and standard deviation; percentages, proportions and the mode for nominal and ordinal data","sg":["Organizes and simplifies a set of scores","Works with any of the quantitative designs"],"wk":["Describes the sample only; it does not generalize to a population","Cannot repair poor measurement or an unrepresentative sample"],"swLevel":"design","man":"","ran":"","ctl":"","ex":"","ap":"Quantitative","up":[["net","If you still need to collect scores from people, choose a survey or observation design first."]],"an":{"desc":{"name":"Mean and standard deviation; median; mode; proportions","detail":"Choose by scale: mean and standard deviation (interval or ratio), median (ordinal), mode (nominal); proportions or percentages for categories."},"inf":{"name":"Single-sample t test or chi-square goodness of fit","detail":"Applies only if a reasonable hypothesis exists."}}},"case":{"name":"Case study","sh":"Case study","fam":"Descriptive: case study design","tone":"good","cat":"c1","data":"A detailed record of one individual or a very small group: numerical scores, narrative accounts, or both","cause":"No: describes variables as they occur","nota":["Case study: includes a treatment or intervention","Case history: no treatment or intervention"],"what":"In-depth study and detailed description of a single individual or a very small group, which may include an intervention or treatment given by the researcher. It can be quantitative, qualitative or both, depending on the data.","threats":"Limited generalization, selective bias and subjective interpretation.","stat":"Numerical records can be plotted and summarized over time; narrative records are described and interpreted. Both can be reported together.","sg":["Not averaged over a diverse group","Detailed description","Vivid, powerful, convincing","Compatible with clinical work","Can study rare and unusual events","Can identify exceptions to the rule"],"wk":["Limited generalization","Potential for selective bias","Potential for subjective interpretation"],"swLevel":"design","man":"","ran":"","ctl":"","ex":"","ap":"Quantitative, qualitative or both","up":[["mix","Keep numerical and narrative strands intact and report both: a mixed approach."],["exp_b","To test whether a treatment works, move to an experimental strategy; a single case cannot show cause and effect."]],"an":{"desc":{"name":"Plots and summaries over time; narrative description","detail":"Numerical records can be plotted and summarized over time; narrative records are described and interpreted."},"inf":{"name":"Usually none","detail":"A single case or very small group does not support inferences about a population."}}},"hist":{"name":"Case history","sh":"Case history","fam":"Descriptive: case study design","tone":"good","cat":"c1","data":"A detailed record of one individual or a very small group: numerical scores, narrative accounts, or both","cause":"No: describes variables as they occur","nota":["Case history: no treatment or intervention"],"what":"A case study without any treatment or intervention: the individual or small group is described in detail, in numbers, in narrative, or in both.","threats":"Limited generalization, selective bias and subjective interpretation.","stat":"Numerical records can be plotted and summarized over time; narrative records are described and interpreted. Both can be reported together.","sg":["Not averaged over a diverse group","Detailed description","Can study rare and unusual events","Can identify exceptions to the rule"],"wk":["Limited generalization","Potential for selective bias","Potential for subjective interpretation"],"swLevel":"design","man":"","ran":"","ctl":"","ex":"","ap":"Quantitative, qualitative or both","up":[["case","If you will deliver a treatment or intervention, it becomes a case study."],["mix","Keep numerical and narrative strands intact and report both: a mixed approach."]],"an":{"desc":{"name":"Plots and summaries over time; narrative description","detail":"Numerical records can be plotted and summarized over time; narrative records are described and interpreted."},"inf":{"name":"Usually none","detail":"A single case or very small group does not support inferences about a population."}}},"gt":{"name":"Grounded theory","sh":"Grounded theory","fam":"Descriptive: qualitative design","tone":"good","cat":"c1","data":"Language and field data, such as interviews and field notes","cause":"No: describes variables as they occur","nota":[],"what":"Discovers underlying theories through inductive methods.","threats":"The theory depends on the researcher’s coding choices and must stay grounded in the data.","stat":"Typical techniques: Coding; memoing to connect and elaborate codes; theory development; theoretical sampling to “ground” theoretical advances in the data itself.","sg":["Builds theory directly from the data","Theoretical sampling directs further data collection to what the theory needs"],"wk":["Coding and memoing are time-intensive","Interpretation rests on the researcher’s judgment"],"swLevel":"design","man":"","ran":"","ctl":"","ex":"Origin: Developed by Glaser and Strauss in sociology in the late 1960s and extended to psychology. Can be used by both positivist and constructivist researchers.","ap":"Qualitative","up":[["mix","To test the emerging theory with numbers, add a quantitative strand (mixed methods)."],["et","If the aim is to understand a culture rather than build a theory, consider ethnography."]],"an":{"desc":{"name":"Qualitative analysis","detail":"Typical techniques: Coding; memoing to connect and elaborate codes; theory development; theoretical sampling to “ground” theoretical advances in the data itself."},"inf":{"name":"Not typically used","detail":"Qualitative designs seek understanding rather than statistical inference."}}},"he":{"name":"Hermeneutics","sh":"Hermeneutics","fam":"Descriptive: qualitative design","tone":"good","cat":"c1","data":"Language: texts and other expressions to be interpreted","cause":"No: describes variables as they occur","nota":[],"what":"Interprets texts and phenomena by moving between parts and whole.","threats":"Interpretation is shaped by the interpreter’s own assumptions, which must be isolated and examined.","stat":"Typical techniques: Repeatedly shifting the focus between the parts and the whole, or the thing and its context (the hermeneutic circle); isolating influences on interpretation to move closer to the thing itself.","sg":["Attends to context by moving between the parts and the whole","Makes the influences on interpretation explicit"],"wk":["Interpretations are not final or unique","Depends on the interpreter’s knowledge and judgment"],"swLevel":"design","man":"","ran":"","ctl":"","ex":"Origin: Developed in antiquity and into the Renaissance to interpret texts, particularly religious texts; applied to the social sciences through twentieth-century philosophers such as Heidegger (Being and Time) and Gadamer (Truth and Method).","ap":"Qualitative","up":[["cont","To count defined events in a text rather than interpret it, use content analysis."],["ph","To describe the essence of a lived experience, consider phenomenology."]],"an":{"desc":{"name":"Qualitative analysis","detail":"Typical techniques: Repeatedly shifting the focus between the parts and the whole, or the thing and its context (the hermeneutic circle); isolating influences on interpretation to move closer to the thing itself."},"inf":{"name":"Not typically used","detail":"Qualitative designs seek understanding rather than statistical inference."}}},"ph":{"name":"Phenomenology","sh":"Phenomenology","fam":"Descriptive: qualitative design","tone":"good","cat":"c1","data":"Language: participants’ descriptions of their conscious experience","cause":"No: describes variables as they occur","nota":[],"what":"Understands conscious experience as lived intuitively and delineates its essences.","threats":"Presuppositions that are not bracketed; experiences are co-constituted by the observer and the observed.","stat":"Typical techniques: Bracketing and phenomenological reduction to identify the essences of an experience or event.","sg":["Stays close to experience as it is lived","Bracketing makes the researcher’s presuppositions explicit"],"wk":["Setting aside presuppositions completely is difficult","Findings describe essences, not frequencies"],"swLevel":"design","man":"","ran":"","ctl":"","ex":"Origin: Introduced in philosophy by Husserl; Amedeo Giorgi’s descriptive phenomenology is most predominant in psychology. All conscious experiences and events are co-constituted by the observer and the observed, and are thus complex phenomena.","ap":"Qualitative","up":[["he","To interpret how context and the researcher’s assumptions shape meaning, consider hermeneutics."],["hist","To describe one person’s experience over time, a case history is also possible."]],"an":{"desc":{"name":"Qualitative analysis","detail":"Typical techniques: Bracketing and phenomenological reduction to identify the essences of an experience or event."},"inf":{"name":"Not typically used","detail":"Qualitative designs seek understanding rather than statistical inference."}}},"et":{"name":"Ethnography","sh":"Ethnography","fam":"Descriptive: qualitative design","tone":"good","cat":"c1","data":"Field observations (external and internal) and language","cause":"No: describes variables as they occur","nota":[],"what":"Seeks greater understanding of the social relations, customs and lived experiences of various peoples and situations.","threats":"The researcher is part of what is studied, and field research takes long immersion.","stat":"Typical techniques: Field research typified by participatory observation, with both external and internal observations.","sg":["Understanding from the inside of a group or setting","Combines external and internal observations"],"wk":["Time-consuming","Participation can change the setting"],"swLevel":"design","man":"","ran":"","ctl":"","ex":"Origin: Identified by Muller in the eighteenth century; contemporary methods were popularized by Malinowski in cultural anthropology, then advanced in education and sociology; psychology imports the techniques in related subdisciplines.","ap":"Qualitative","up":[["par","To count specific behaviors while participating, participant observation records them quantitatively."],["gt","To build a theory from field data, consider grounded theory."]],"an":{"desc":{"name":"Qualitative analysis","detail":"Typical techniques: Field research typified by participatory observation, with both external and internal observations."},"inf":{"name":"Not typically used","detail":"Qualitative designs seek understanding rather than statistical inference."}}},"pv":{"name":"Photovoice","sh":"Photovoice","fam":"Descriptive: qualitative design","tone":"good","cat":"c1","data":"Visual imagery captured by cultural participants, with their group discussion","cause":"No: describes variables as they occur","nota":[],"what":"A Community-Based Participatory Research design in which cultural participants capture visual imagery.","threats":"Depends on participants’ power to shape the project, and on whether findings reach policymakers.","stat":"Typical techniques: Participants photograph their community’s strengths and concerns; large and small group discussion of the photographs promotes critical dialogue; findings are taken to policymakers.","sg":["Participants record and reflect their community’s strengths and concerns","Group discussion promotes critical dialogue","Findings are taken to policymakers"],"wk":["Needs sustained participation from community members","Impact depends on reaching policymakers"],"swLevel":"design","man":"","ran":"","ctl":"","ex":"Origin: Developed by Wang and Burris in the late twentieth century, derived from Wendy Ewald’s photographic work with children in Appalachia.","ap":"Qualitative","up":[["lb","If the central aim is to challenge assumptions in existing knowledge systems, consider liberating methods."],["mix","To add numerical data about the community, combine with a quantitative strand."]],"an":{"desc":{"name":"Qualitative analysis","detail":"Typical techniques: Participants photograph their community’s strengths and concerns; large and small group discussion of the photographs promotes critical dialogue; findings are taken to policymakers."},"inf":{"name":"Not typically used","detail":"Qualitative designs seek understanding rather than statistical inference."}}},"lb":{"name":"Liberating methods","sh":"Liberating methods","fam":"Descriptive: qualitative design","tone":"good","cat":"c1","data":"Language and field data produced with participants as partners","cause":"No: describes variables as they occur","nota":[],"what":"Challenge fundamental assumptions in existing knowledge systems and often integrate advocacy and activism.","threats":"The researcher’s own position within power structures, and advocacy that is integrated with inquiry.","stat":"Typical techniques: Critical Theory and Critical Race Theory, Decolonizing Methods, Feminist Theory, Indigenous Theory, Liberation Psychology, Marxist Theory and Queer Theory.","sg":["Challenges fundamental assumptions in existing knowledge systems","Integrates advocacy and activism with research"],"wk":["Advocacy goals must be made explicit","Depends on a sustained partnership with participants"],"swLevel":"design","man":"","ran":"","ctl":"","ex":"Origin: Often inspired in part by Paulo Freire’s Pedagogy of the Oppressed; developed during the latter half of the twentieth century and embrace power/knowledge paradigms. Community-Based Participatory Research and Performance and Artistic Representation are also listed among the qualitative designs in the course content.","ap":"Qualitative","up":[["pv","To involve community members through images, consider photovoice."]],"an":{"desc":{"name":"Qualitative analysis","detail":"Typical techniques: Critical Theory and Critical Race Theory, Decolonizing Methods, Feminist Theory, Indigenous Theory, Liberation Psychology, Marxist Theory and Queer Theory."},"inf":{"name":"Not typically used","detail":"Qualitative designs seek understanding rather than statistical inference."}}},"mix":{"name":"Mixed methods","sh":"Mixed methods","fam":"Descriptive: mixed or hybrid methods","tone":"good","cat":"c1","data":"Both quantitative and qualitative data","cause":"No: describes variables as they occur","nota":[],"what":"Combines quantitative and qualitative aspects intact, so each strand can be collected and analyzed on its own terms.","threats":"Strands that are poorly planned or not reported on their own terms.","stat":"Each strand is analyzed with its own methods (descriptive statistics for numbers, qualitative techniques for language and imagery), then the findings are brought together","sg":["Brings the strengths of both approaches","Each strand can be analyzed on its own terms"],"wk":["Needs expertise in both approaches","Takes more time and planning"],"swLevel":"design","man":"","ran":"","ctl":"","ex":"Increasingly popular in contemporary research.","ap":"Quantitative and qualitative","up":[["hyb","If the strands cannot be separated, you are integrating them fluidly: hybrid methods."]],"an":{"desc":{"name":"Strand-specific analysis","detail":"Descriptive statistics for the numbers, qualitative techniques for language and imagery, then bring the findings together."},"inf":{"name":"Inferential tests for the quantitative strand","detail":"Apply only if a reasonable hypothesis exists."}}},"hyb":{"name":"Hybrid methods","sh":"Hybrid methods","fam":"Descriptive: mixed or hybrid methods","tone":"good","cat":"c1","data":"Both quantitative and qualitative data, integrated","cause":"No: describes variables as they occur","nota":[],"what":"Integrates quantitative and qualitative aspects fluidly, so that steps in one reshape the other.","threats":"Strands that merge so fully that neither approach’s standards can be applied.","stat":"Analysis moves between the quantitative and qualitative aspects as the study proceeds","sg":["Integrates quantitative and qualitative aspects fluidly","Each step can reshape the next"],"wk":["Needs expertise in both approaches","Harder to separate and evaluate each strand"],"swLevel":"design","man":"","ran":"","ctl":"","ex":"Increasingly popular in contemporary research.","ap":"Quantitative and qualitative","up":[["mix","If the strands can be kept intact, mixed methods keeps them separate."]],"an":{"desc":{"name":"Strand-specific analysis","detail":"Descriptive statistics for the numbers, qualitative techniques for language and imagery, then bring the findings together."},"inf":{"name":"Inferential tests for the quantitative strand","detail":"Apply only if a reasonable hypothesis exists."}}},"exp_b":{"name":"Between-subjects experiment","sh":"Between-subjects","fam":"Experimental strategy","tone":"good","cat":"c3","data":"","cause":"Yes: supported by manipulation, random assignment and control","nota":["R  G1:  X1  O","R  G2:  X2  O"],"what":"Different participants are randomly assigned to each treatment condition, so the groups can be treated as equivalent and a cause-and-effect conclusion is supported.","threats":"Individual differences add variance within treatments (randomization balances them on average but does not remove them). Differential attrition and communication between groups (diffusion, compensatory equalization, compensatory rivalry, resentful demoralization) remain.","stat":"Independent-measures t test (two groups) or single-factor ANOVA; chi-square for nominal data.","sg":["Demonstrates a cause-and-effect relationship","Control and random assignment limit confounds","High internal validity"],"wk":["Intrusive: conditions may be artificial","Often not possible or ethical for the variable of interest"],"swLevel":"strategy","man":"Yes","ran":"Yes","ctl":"Control group or comparison condition","ex":"","ap":"","up":[["exp_m","Match participants on a variable that predicts the DV to reduce variance."],["exp_w","Test every participant in every condition if order effects can be managed."]],"an":{"desc":{"name":"Means and standard deviations","detail":""},"inf":{"name":"Independent-measures t test (two groups) or independent-measures ANOVA","detail":"Evaluates the mean difference(s)."},"alt":"Ordinal data: describe with the median or the proportion in each category and consult an advanced statistics text. Nominal data with few categories: chi-square test for independence (independent groups). Examples for ranks: Mann-Whitney U (two groups), Kruskal-Wallis (three or more)."}},"exp_w":{"name":"Within-subjects experiment (complete counterbalancing)","sh":"Within-subjects","fam":"Experimental strategy","tone":"good","cat":"c3","data":"","cause":"Yes: supported by manipulation, counterbalancing and control","nota":["R  G1:  X1 O  X2 O","R  G2:  X2 O  X1 O"],"what":"Each participant receives every treatment in a counterbalanced order, so individual differences are held constant and the design needs the fewest participants.","threats":"Time-related threats (history, maturation, instrumentation) and order effects (practice, fatigue, carryover). Counterbalancing spreads order effects evenly but cannot remove asymmetrical order effects. Participants must complete every condition, so attrition matters.","stat":"Repeated-measures (paired) t test or repeated-measures ANOVA.","sg":["Demonstrates a cause-and-effect relationship","Control and random assignment limit confounds","High internal validity"],"wk":["Intrusive: conditions may be artificial","Often not possible or ethical for the variable of interest"],"swLevel":"strategy","man":"Yes","ran":"Order randomized or counterbalanced","ctl":"Each participant is his or her own control","ex":"","ap":"","up":[["exp_l","With three or more conditions, use a Latin square instead of every possible order."],["exp_m","If order effects are severe, move to a matched-subjects design."]],"an":{"desc":{"name":"Means and standard deviations","detail":""},"inf":{"name":"Repeated-measures t test (two conditions) or repeated-measures ANOVA","detail":"Evaluates the mean difference(s)."},"alt":"Ordinal data: describe with the median or the proportion in each category and consult an advanced statistics text (for example Wilcoxon signed-rank for two conditions, Friedman for three or more). Nominal data: sign or McNemar test (two conditions), Cochran Q (three or more)."}},"exp_l":{"name":"Within-subjects experiment (Latin square counterbalancing)","sh":"Within, Latin square","fam":"Experimental strategy","tone":"good","cat":"c3","data":"","cause":"Yes: supported by manipulation, counterbalancing and control","nota":["R  G1:  X1 O  X2 O  X3 O","R  G2:  X2 O  X3 O  X1 O","R  G3:  X3 O  X1 O  X2 O"],"what":"A Latin square uses a selected set of sequences in which each treatment appears once in each position, giving partial counterbalancing with a manageable number of orders.","threats":"The same time-related threats and order effects as any within-subjects design. A Latin square balances symmetrical order effects only; asymmetrical order effects (where the order of treatments does not balance the order effect) remain a problem.","stat":"Repeated-measures ANOVA (with a factor for sequence if the design allows).","sg":["Demonstrates a cause-and-effect relationship","Control and random assignment limit confounds","High internal validity"],"wk":["Intrusive: conditions may be artificial","Often not possible or ethical for the variable of interest"],"swLevel":"strategy","man":"Yes","ran":"Sequences randomized or counterbalanced","ctl":"Each participant is his or her own control","ex":"","ap":"","up":[["exp_m","If order effects are asymmetrical, use separate participants (between-subjects or matched)."]],"an":{"desc":{"name":"Means and standard deviations","detail":""},"inf":{"name":"Repeated-measures ANOVA","detail":"Evaluates the mean differences; add a factor for sequence if the design allows."},"alt":"Ordinal data: describe with the median or the proportion in each category and consult an advanced statistics text (for example Wilcoxon signed-rank for two conditions, Friedman for three or more). Nominal data: sign or McNemar test (two conditions), Cochran Q (three or more)."}},"exp_m":{"name":"Matched-subjects experiment","sh":"Matched-subjects","fam":"Experimental strategy","tone":"good","cat":"c3","data":"","cause":"Yes: supported by manipulation, matching and random assignment","nota":["Match on X  →  sets of similar participants","R  G1:  X1  O","R  G2:  X2  O"],"what":"Each participant in one group is matched one-to-one with a participant in every other group on a variable strongly related to the DV, and the members of each set are randomly assigned to conditions.","threats":"Matching only helps if the variable really predicts the DV, and it requires extra measurement. It needs as many participants as a between-subjects design and may increase attrition if more time is required.","stat":"Repeated-measures (paired) t test or repeated-measures ANOVA on the matched sets.","sg":["Demonstrates a cause-and-effect relationship","Control and random assignment limit confounds","High internal validity"],"wk":["Intrusive: conditions may be artificial","Often not possible or ethical for the variable of interest"],"swLevel":"strategy","man":"Yes","ran":"Yes, within matched sets","ctl":"Matching on a relevant variable plus random assignment","ex":"","ap":"","up":[["exp_w","If participants are scarce and order effects are manageable, test everyone in every condition."]],"an":{"desc":{"name":"Means and standard deviations","detail":""},"inf":{"name":"Repeated-measures (paired) t test or repeated-measures ANOVA","detail":"Analyze the matched sets."},"alt":"Ordinal data: describe with the median or the proportion in each category and consult an advanced statistics text (for example Wilcoxon signed-rank for two conditions, Friedman for three or more). Nominal data: sign or McNemar test (two conditions), Cochran Q (three or more)."}},"post":{"name":"Posttest-only nonequivalent control group design","sh":"Posttest-only NECG","fam":"Nonexperimental strategy","tone":"bad","cat":"c3","data":"","cause":"No: the groups are nonequivalent","nota":["NR  G1:  X  O","NR  G2:     O"],"what":"One group receives the treatment and a similar but nonequivalent group serves as the control. Differences at the posttest cannot be attributed to the treatment alone.","threats":"Individual differences between groups, different histories, different maturation and differential attrition. With no pretest there is no way to see how the groups started.","stat":"Independent-measures t test or ANOVA; chi-square for categories.","sg":["Compares existing groups without interfering","Describes group differences"],"wk":["Does not determine cause and effect","Individual differences: groups differ in many ways","Low internal validity"],"swLevel":"strategy","man":"Sometimes","ran":"No","ctl":"A similar but nonequivalent comparison group","ex":"","ap":"","up":[["necg","Add a pretest so you can see how the groups started."]],"an":{"desc":{"name":"Means and standard deviations","detail":""},"inf":{"name":"Independent-measures t test or ANOVA","detail":"Chi-square for categories."}}},"necg":{"name":"Pretest-posttest nonequivalent control group design","sh":"Pretest-posttest NECG","fam":"Quasi-experimental strategy","tone":"warn","cat":"c3","data":"","cause":"Tentative","nota":["NR  G1:  O  X  O","NR  G2:  O     O"],"what":"The pretest shows how the groups started, and the comparison group absorbs common history, maturation, testing and instrumentation. It attempts to limit threats, so it is classified as quasi-experimental.","threats":"Selection-by-maturation (groups changing at different rates), local history and regression toward the mean remain open.","stat":"Two-factor mixed-design ANOVA (group × time); the interaction is the effect of interest.","sg":["Limits some threats to internal validity","Usable when randomization is impossible"],"wk":["No random assignment: groups may not be equivalent","Cause-and-effect conclusions remain tentative"],"swLevel":"strategy","man":"Sometimes","ran":"No","ctl":"Nonequivalent comparison group with a pretest","ex":"","ap":"","up":[["exp_b","If any form of random assignment is possible, randomize and gain a true experiment."]],"an":{"desc":{"name":"Means and standard deviations","detail":""},"inf":{"name":"Two-factor mixed-design ANOVA (group × time)","detail":"The interaction is the effect of interest."}}},"pp":{"name":"Pretest-posttest design (one group)","sh":"Pre-post, one group","fam":"Nonexperimental strategy","tone":"bad","cat":"c3","data":"","cause":"No: shows change, not its cause","nota":["O  X  O"],"what":"One group is measured before and after a treatment or event. It shows that change occurred, not what caused it.","threats":"History, maturation, testing, instrumentation and regression toward the mean are all uncontrolled.","stat":"Repeated-measures (paired) t test; Wilcoxon or sign test for ordinal or nominal data.","sg":[],"wk":[],"swLevel":"","man":"Sometimes","ran":"No","ctl":"None","ex":"","ap":"","up":[["ts","Add several observations before and after the treatment (a time series)."],["necg","Add a comparison group that is also measured twice."]],"an":{"desc":{"name":"Means and standard deviations","detail":""},"inf":{"name":"Repeated-measures (paired) t test","detail":"Wilcoxon or sign test for ordinal or nominal data."}}},"ts":{"name":"Time-series design","sh":"Time series","fam":"Quasi-experimental strategy","tone":"warn","cat":"c3","data":"","cause":"Tentative","nota":["O  O  O  X  O  O  O"],"what":"Multiple observations before and after the treatment show preexisting trends, practice, fatigue, maturation, instrumentation and regression as change before the treatment.","threats":"A history event or a change in measurement at the same moment as the treatment is still indistinguishable from a treatment effect.","stat":"Segmented (interrupted time-series) regression or repeated-measures analysis.","sg":["Limits some threats to internal validity","Usable when randomization is impossible"],"wk":["No random assignment: groups may not be equivalent","Cause-and-effect conclusions remain tentative"],"swLevel":"strategy","man":"Sometimes","ran":"No","ctl":"The pre-treatment series is the baseline","ex":"","ap":"","up":[["necg","Add a comparison series from a group that did not receive the treatment."]],"an":{"desc":{"name":"Plot the series; means and standard deviations by period","detail":""},"inf":{"name":"Segmented (interrupted time-series) regression or repeated-measures analysis","detail":""}}},"none":{"name":"One observation per person cannot show change","sh":"One-shot (no design)","fam":"Nonexperimental strategy","tone":"bad","cat":"c3","data":"","cause":"No","nota":["X  O"],"what":"A single group measured once after a treatment has no comparison, so nothing can be concluded about the treatment.","threats":"Every threat to internal validity is uncontrolled and there is nothing to compare with.","stat":"None that supports a conclusion about change.","sg":[],"wk":[],"swLevel":"","man":"Sometimes","ran":"No","ctl":"None","ex":"","ap":"","up":[["pp","Measure before and after."],["post","Add a comparison group."]],"an":{"desc":{"name":"None that supports a conclusion about change","detail":""},"inf":{"name":"None","detail":""}}},"cs":{"name":"Cross-sectional developmental design","sh":"Cross-sectional","fam":"Nonexperimental strategy","tone":"bad","cat":"c3","data":"","cause":"No","nota":["NR  Age 20:  O","NR  Age 40:  O","NR  Age 60:  O   (all measured now)"],"what":"A between-subjects nonexperimental design that compares different age groups measured at the same time. Data are collected quickly, with no waiting for people to age.","threats":"Factors other than age differentiate the groups; cohort (generation) effects are confounded with age. It does not show individual change.","stat":"Independent-measures t test or ANOVA on the age groups.","sg":["Compares existing groups without interfering","Describes group differences"],"wk":["Does not determine cause and effect","Individual differences: groups differ in many ways","Low internal validity"],"swLevel":"strategy","man":"No","ran":"No","ctl":"None","ex":"","ap":"","up":[["seq","Add cohorts followed over time to separate age from cohort."]],"an":{"desc":{"name":"Means and standard deviations","detail":""},"inf":{"name":"Independent-measures t test or ANOVA on the age groups","detail":""}}},"lg":{"name":"Longitudinal design","sh":"Longitudinal","fam":"Nonexperimental strategy","tone":"bad","cat":"c3","data":"","cause":"No","nota":["One cohort:  O(age 20)  O(30)  O(40)  O(50) ..."],"what":"The same individuals are measured repeatedly over time, so the design assesses individual behavioral change.","threats":"Time-consuming; attrition may bias the sample; practice effects from repeated testing; results describe one cohort, which may not generalize to other generations.","stat":"Repeated-measures t test or ANOVA across ages.","sg":[],"wk":[],"swLevel":"","man":"No","ran":"No","ctl":"None","ex":"","ap":"","up":[["seq","Follow several cohorts over a shorter span each."]],"an":{"desc":{"name":"Means and standard deviations","detail":""},"inf":{"name":"Repeated-measures t test or ANOVA across ages","detail":""}}},"seq":{"name":"Cross-sectional longitudinal (cohort-sequential) design","sh":"Cohort-sequential","fam":"Nonexperimental strategy","tone":"bad","cat":"c3","data":"","cause":"No","nota":["Cohort A:  O(20)  O(30)  O(40)","Cohort B:  O(40)  O(50)  O(60)","Cohort C:  O(60)  O(70)  O(80)"],"what":"Separate samples (cohorts) are obtained at different times and followed for a shorter span. Comparing cohorts at the same ages separates age from cohort.","threats":"Attrition and practice remain, though over a shorter span, and the design is more complex and costly to run.","stat":"Mixed ANOVA or regression with age and cohort.","sg":[],"wk":[],"swLevel":"","man":"No","ran":"No","ctl":"Cohort comparison at the same ages","ex":"","ap":"","up":[],"an":{"desc":{"name":"Means and standard deviations","detail":""},"inf":{"name":"Mixed ANOVA or regression with age and cohort","detail":""}}},"abab":{"name":"ABAB reversal design","sh":"ABAB reversal","fam":"N-of-1 (single-case) experimental strategy","tone":"good","cat":"c3","data":"","cause":"Within-case demonstration of an effect through replication","nota":["A (baseline)  →  B (treatment)  →  A (withdrawal)  →  B (reinstatement)"],"what":"Behavior changes when the treatment is introduced, returns toward baseline when it is withdrawn, and changes again when it is reinstated: three demonstrations of an effect within one participant.","threats":"The behavior may not reverse (skills and learning are retained), withdrawal may be unsafe or unethical, and carryover between phases blurs the logic.","stat":"Visual analysis of level, trend and variability across phases, supported by overlap or effect-size indices and a randomization test.","sg":[],"wk":[],"swLevel":"","man":"Yes","ran":"No (phases are sequenced)","ctl":"The participant’s own baseline","ex":"","ap":"","up":[["mbd","Stagger the intervention across three or more baselines if behavior will not reverse."]],"an":{"desc":{"name":"Visual analysis of level, trend and variability across phases","detail":""},"inf":{"name":"Overlap or effect-size indices and a randomization test","detail":""}}},"mbd":{"name":"Multiple baseline design","sh":"Multiple baseline","fam":"N-of-1 (single-case) experimental strategy","tone":"good","cat":"c3","data":"","cause":"Within-case demonstration of an effect through replication","nota":["Tier 1:  A A A | B B B B B B","Tier 2:  A A A A A | B B B B","Tier 3:  A A A A A A A | B B"],"what":"The intervention starts at different times across three or more comparable baselines (participants, behaviors or settings). Change that appears only when each tier’s own intervention begins rules out an outside event.","threats":"The tiers must be independent (no spillover), an outside event that moves every tier at once defeats the staggered logic, and too few tiers weakens the logic.","stat":"Visual analysis within and across tiers (vertical analysis); a randomization test needs four or more tiers to be able to reach p ≤ .05.","sg":[],"wk":[],"swLevel":"","man":"Yes","ran":"No (start points are staggered)","ctl":"Baselines that have not yet received the treatment","ex":"","ap":"","up":[["abab","Add a reversal in each tier for the strongest control, at the cost of a longer study."]],"an":{"desc":{"name":"Visual analysis within and across tiers","detail":""},"inf":{"name":"Randomization test","detail":"Needs four or more tiers to be able to reach p ≤ .05."}}},"atd":{"name":"Alternating treatments design","sh":"Alternating treatments","fam":"N-of-1 (single-case) experimental strategy","tone":"good","cat":"c3","data":"","cause":"Within-case demonstration of an effect through replication","nota":["Rapid alternation:  B1  B2  B2  B1  B2  B1  B1  B2 ..."],"what":"Two or more interventions are rapidly alternated within one participant and compared directly.","threats":"Multiple-treatment interference (carryover between conditions); it assumes little carryover, which is doubtful for retained skills.","stat":"Visual analysis of separation between the condition series; a randomization test.","sg":[],"wk":[],"swLevel":"","man":"Yes","ran":"Order of conditions randomized or counterbalanced","ctl":"Each condition is compared with the others in the same participant","ex":"","ap":"","up":[["abab","Use a reversal if you have one intervention to compare with baseline."]],"an":{"desc":{"name":"Visual analysis of separation between the condition series","detail":""},"inf":{"name":"Randomization test","detail":""}}},"cc":{"name":"Changing criterion design","sh":"Changing criterion","fam":"N-of-1 (single-case) experimental strategy","tone":"good","cat":"c3","data":"","cause":"Within-case demonstration of an effect through replication","nota":["Criterion:  3  →  5  →  7  →  9   (behavior shaped step by step)"],"what":"The criterion for performance is raised or lowered in steps, and control is shown when the behavior tracks each new criterion. No withdrawal is needed.","threats":"Only suitable for behavior shaped gradually; coincidental tracking of criteria is possible when steps are few or the behavior is already trending.","stat":"Visual analysis of how closely behavior follows each criterion.","sg":[],"wk":[],"swLevel":"","man":"Yes","ran":"No","ctl":"Behavior is expected to track each new criterion","ex":"","ap":"","up":[["mbd","Combine with a multiple baseline to strengthen the demonstration."]],"an":{"desc":{"name":"Visual analysis of how closely behavior follows each criterion","detail":""},"inf":{"name":"Visual analysis carries the inference","detail":""}}},"diff":{"name":"Differential (ex post facto) design","sh":"Differential design","fam":"Nonexperimental strategy","tone":"bad","cat":"c3","data":"Two or more groups of scores","cause":"No","nota":["NR  G1:  O","NR  G2:  O"],"what":"The goal is to establish differences between preexisting groups. No cause can be named.","threats":"Individual differences: the groups differ in many ways besides the grouping variable (third-variable problem), and the direction of any relationship is unclear (directionality problem).","stat":"Independent-measures t test (two groups) or single-factor ANOVA; chi-square for categories.","sg":["Compares existing groups without interfering","Describes group differences"],"wk":["Does not determine cause and effect","Individual differences: groups differ in many ways","Low internal validity"],"swLevel":"strategy","man":"No","ran":"No","ctl":"None","ex":"","ap":"","up":[["post","If a treatment or event distinguishes the groups, treat it as a posttest-only comparison (still nonequivalent)."],["exp_b","If the grouping variable can be manipulated, create the groups yourself by random assignment."]],"an":{"desc":{"name":"Means and standard deviations","detail":""},"inf":{"name":"Independent-measures t test (two groups) or ANOVA (three or more)","detail":"Chi-square test for independence for nominal data."}}},"fact_b":{"name":"Factorial design: between-subjects (both factors)","sh":"Factorial, between","fam":"Factorial design","tone":"good","cat":"c3","data":"","cause":"Yes for manipulated factors that are randomly assigned; not for participant variables","nota":["Factor A: a levels (between)","Factor B: b levels (between)","a × b = number of conditions (cells)"],"what":"Two factors are combined so that every level of one appears with every level of the other. The design tests the main effect of each factor and the interaction between them. Each participant is in only one cell.","threats":"Individual differences and differential attrition across the between-subjects factors. A participant variable is not randomly assigned, so differences on that factor cannot be attributed to it as a cause. Every added factor multiplies the conditions, the participants needed and the complexity of the interactions.","stat":"Two-factor ANOVA. Interpret a significant interaction before the main effects; check the pattern of cell means.","sg":[],"wk":[],"swLevel":"","man":"Depends on factors","ran":"Yes for manipulated factors; not for participant variables","ctl":"Cell comparisons across factors","ex":"","ap":"","up":[["exp_b","Where possible, manipulate the factor and randomly assign participants to its levels."]],"an":{"desc":{"name":"Means and standard deviations","detail":""},"inf":{"name":"Two-factor (factorial) ANOVA","detail":"Tests each main effect and the interaction."}}},"fact_w":{"name":"Factorial design: within-subjects (both factors)","sh":"Factorial, within","fam":"Factorial design","tone":"good","cat":"c3","data":"","cause":"Yes for manipulated, counterbalanced factors","nota":["Factor A: a levels (within)","Factor B: b levels (within)","a × b = number of conditions (cells)"],"what":"Two factors are combined so that every level of one appears with every level of the other. The design tests the main effect of each factor and the interaction between them. Each participant is tested in every cell.","threats":"Order effects and time-related threats for the within-subjects factors (counterbalance manipulated within factors). Participants must complete every cell, so attrition matters, and many cells mean a long session.","stat":"Two-factor repeated-measures ANOVA. Interpret a significant interaction before the main effects; check the pattern of cell means.","sg":[],"wk":[],"swLevel":"","man":"Yes (both factors manipulated, or time)","ran":"Order randomized or counterbalanced","ctl":"Each participant is tested in every cell","ex":"","ap":"","up":[["exp_b","Where possible, manipulate the factor and randomly assign participants to its levels."]],"an":{"desc":{"name":"Means and standard deviations","detail":""},"inf":{"name":"Two-factor repeated-measures ANOVA","detail":"Tests each main effect and the interaction."}}},"fact_m":{"name":"Factorial design: mixed (one between, one within)","sh":"Factorial, mixed","fam":"Factorial design","tone":"good","cat":"c3","data":"","cause":"Only for the manipulated, randomly assigned factor; the other factor remains correlational","nota":["Factor A: a levels (between)","Factor B: b levels (within)","a × b = number of conditions (cells)"],"what":"Two factors are combined so that every level of one appears with every level of the other. The design tests the main effect of each factor and the interaction between them. One factor varies between participants and the other within participants. A participant variable (age, gender, diagnosis) is always the between factor, and time (for example before and after) is a within factor.","threats":"Individual differences and attrition on the between factor; order effects and time-related threats on the within factor (a comparison group controls history, maturation, testing and instrumentation when time is a factor); a participant variable cannot be attributed as a cause.","stat":"Two-factor mixed-design ANOVA. Interpret a significant interaction before the main effects; check the pattern of cell means.","sg":[],"wk":[],"swLevel":"","man":"Depends on factors","ran":"Yes for manipulated between factors; not for participant variables","ctl":"Cell comparisons across factors","ex":"","ap":"","up":[["exp_b","Where possible, manipulate the factor and randomly assign participants to its levels."]],"an":{"desc":{"name":"Means and standard deviations","detail":""},"inf":{"name":"Two-factor mixed-design ANOVA","detail":"Tests each main effect and the interaction."}}}};
+
+  var CATNAME = { c1: "Descriptive strategies", c2: "Correlational strategies", c3: "Experimental and related strategies", "": "" };
+
+  /* ================= Tree builders ================= */
+  function Q(label, hint, q, children, extra) { return Object.assign({ label: label, hint: hint || "", q: q, children: children }, extra || {}); }
+  function D(key, label, hint, extra) { return Object.assign({ label: label, hint: hint || "", key: key }, extra || {}); }
+  function S(label, hint, desc, inf, extra) { return Object.assign({ label: label, hint: hint || "", desc: desc, inf: inf }, extra || {}); }
+
+  var H1 = "Inferential statistics apply only if a reasonable hypothesis exists.";
+  var CH = "Chi-square test for goodness of fit";
+  var CH_D = "Use the sample frequencies to test a hypothesis about the proportions in the population.";
+  var ADV = { name: "Consult an advanced statistics text", detail: "" };
+  var MSD = { name: "Means and standard deviations", detail: "" };
+
+  function caseQ(label, hint) {
+    return Q(label, hint, "Does the researcher deliver a treatment or intervention?", [
+      D("hist", "No: the case is only described", "Case history"),
+      D("case", "Yes: an intervention is administered", "Case study")
+    ]);
+  }
+  function mixQ(label, hint) {
+    return Q(label, hint, "How are the quantitative and qualitative aspects combined?", [
+      D("mix", "Combined intact, each strand analyzed on its own terms", "Mixed methods"),
+      D("hyb", "Integrated fluidly, so the strands cannot be separated", "Hybrid methods")
+    ]);
+  }
+
+  var TREE = Q("Start", "", "What would you like help with?", [
+
+    /* ---------- A. Choose a strategy and design ---------- */
+    Q("Choose a research strategy and design", "Planning a study: find the design and its analysis", "What is the main purpose of your study?", [
+
+      /* ===== Category 1: Descriptive ===== */
+      Q("Describe variables as they occur naturally", "Descriptive strategies: no manipulation, no relationships",
+        "Which approach fits your question and data?", [
+          Q("Quantitative: turn behavior, ratings or records into numbers", "Data are numerical from the start",
+            "Where will the quantitative data come from?", [
+              Q("The researcher watches and records behavior", "An observational design", "What does the observer do?", [
+                D("nat", "Observes without intervening", "Naturalistic observation"),
+                D("par", "Interacts with participants and becomes one of them", "Participant observation"),
+                D("con", "Sets up a situation likely to produce the behavior", "Contrived observation")
+              ]),
+              Q("Existing media or historical records", "Content analysis or archival research", "What material will be measured?", [
+                D("cont", "Literature, movies, television programs or similar media", "Content analysis"),
+                D("arch", "Historical records of past behaviors or events", "Archival research")
+              ]),
+              Q("Participants answer questions about themselves", "A survey gives a snapshot of a group at one time", "Which administration method suits your priorities?", [
+                D("net", "Reach many people cheaply and flexibly", "Internet survey: efficient for large numbers; the sample may not be representative"),
+                D("mail", "Convenient, anonymous and nonthreatening", "Mail survey: expect a low response rate"),
+                D("tel", "Personal contact without travel", "Telephone survey: time-consuming; interviewer bias possible"),
+                D("per", "A very high response rate from people who can gather", "In-person survey or interview: efficient with groups")
+              ]),
+              caseQ("One individual or a very small group, in depth", "A case study with numerical scores"),
+              D("dstat", "I already have scores and need to summarize them", "Descriptive statistics organize, summarize and simplify the results", { note: "Use this when you already have scores. If you still need to collect them, choose an observation, content, survey or case design first." })
+            ]),
+          Q("Qualitative: understand meaning from language, imagery or experience", "Seeks understanding from naturally expressed language and imagery",
+            "What is the main aim of the qualitative study?", [
+              D("gt", "Discover an underlying theory from the data", "Grounded theory"),
+              D("he", "Interpret the meaning of a text or phenomenon in its context", "Hermeneutics"),
+              D("ph", "Describe the essence of a lived experience", "Phenomenology"),
+              D("et", "Understand the social relations, customs and lived experiences of a people or situation", "Ethnography"),
+              D("pv", "Have community members record and reflect on their strengths and concerns", "Photovoice"),
+              D("lb", "Challenge assumptions in existing knowledge systems and support advocacy", "Liberating methods"),
+              caseQ("Understand one individual or a very small group in depth", "A case study, here with narrative data"),
+              mixQ("Combine qualitative and quantitative approaches", "Mixed or hybrid methods")
+            ]),
+          mixQ("Both: combine quantitative and qualitative aspects", "Mixed methods keep the strands intact; hybrid methods integrate them fluidly"),
+          caseQ("One individual or a very small group, in depth", "A case study can use numerical data, narrative data or both")
+        ], { cat: "c1", tag: "Descriptive strategies" }),
+
+      /* ===== Category 2: Correlational ===== */
+      Q("Describe or test a relationship between variables", "Correlational strategies: variables are measured, not manipulated",
+        "What data will you collect?", [
+          D("diff", "Separate groups of individuals whose scores are compared", "The focus is the difference between existing groups, not a pattern within individuals"),
+          Q("Two scores (X and Y) from each individual", "The focus is the relationship between two variables", "What kinds of scores are X and Y?", [
+            Q("Both numerical (interval or ratio)", "For example test scores, ratings or counts", "What is the main purpose of the study?", [
+              Q("Describe the relationship between X and Y", "Direction, form and strength", "What does the scatter plot of X and Y look like?", [
+                D("pearson", "A straight-line trend", "The points cluster around a line"),
+                D("spearman", "One direction only, but curved", "Always rising or always falling (monotonic)"),
+                D("curv", "It rises then falls (or falls then rises)", "A curvilinear pattern"),
+                D("pearson", "I have not plotted the data yet", "Pearson is the default for numerical scores", { note: "Plot the scores before choosing: the scatter plot shows the direction, the form and any unusual points. A curved or non-monotonic pattern calls for a different approach." })
+              ]),
+              D("reg", "Predict one variable from the other", "The predictor X is used to predict the criterion Y"),
+              D("relval", "Evaluate the reliability or validity of a measure", "Two testings of the same people, or a test and its criterion"),
+              D("theory", "Test a theory that predicts a relationship", "For example, IQ scores of identical twins")
+            ]),
+            D("spearman", "Both are ranks (ordinal)", "Each individual is ranked on X and on Y"),
+            D("pb", "One numerical, the other with two categories", "For example GPA and residence (commuter or resident)"),
+            D("diff", "One numerical, the other with three or more categories", "The categories organize the scores into separate groups"),
+            D("chi", "Both non-numerical (categories)", "For example college graduate or not, and succeed or fail")
+          ]),
+          D("mreg", "Three or more variables from each individual", "A multivariate relationship")
+        ], { cat: "c2", tag: "Correlational strategies" }),
+
+      /* ===== Category 3: Experimental and related ===== */
+      Q("Compare conditions, groups or times, or test cause and effect", "Experimental, quasi-experimental and nonexperimental group and single-case designs",
+        "What is the unit of study?", [
+          Q("One or more groups of participants", "Compare conditions, groups or ages with scores from many participants",
+            "How many independent variables (factors) will the study include?", [
+              Q("One independent variable", "A single-factor design", "Will you manipulate the independent variable?", [
+                Q("Yes: I will create the treatment conditions", "Manipulation sets the direction of the relationship and starts to control third variables",
+                  "Can you assign participants to conditions at random (or randomize the order of conditions)?", [
+                    Q("Yes", "Random assignment or counterbalanced order gives a true experiment", "How are participants assigned across conditions?", [
+                      D("exp_b", "Each participant is in only one condition", "Between-subjects"),
+                      D("exp_w", "Every participant is in every condition, with all orders counterbalanced", "Within-subjects: practical with two or three conditions"),
+                      D("exp_l", "Every participant is in every condition, with three or more conditions", "Within-subjects with a Latin square"),
+                      D("exp_m", "Participants are matched on a variable that predicts the outcome, then randomly assigned", "Matched-subjects")
+                    ]),
+                    Q("No: intact groups, or assignment is not up to me", "Without randomization the groups are nonequivalent: quasi-experimental at best",
+                      "You manipulate the IV but cannot randomize. What is your comparison?", [
+                        D("post", "Different groups, measured once after the treatment", "One group gets the treatment, a similar group does not"),
+                        D("necg", "Different groups, measured before and after", "A nonequivalent comparison group with a pretest"),
+                        D("pp", "One group, measured once before and once after", "No comparison group"),
+                        D("ts", "One group, measured many times before and after", "A series of observations on either side of the treatment"),
+                        D("none", "One group, measured once after the treatment", "Nothing to compare with")
+                      ])
+                  ]),
+                Q("No: participants already differ, or the event is outside my control", "The IV is a preexisting characteristic, an event you did not assign, or time and age",
+                  "You do not manipulate the IV. What do you want to compare?", [
+                    D("diff", "Groups that differ on an existing characteristic (no treatment)", "For example musicians and nonmusicians, or two diagnostic groups"),
+                    D("post", "Groups with and without a treatment or event, measured once after", "The treatment or event was not assigned by you"),
+                    D("necg", "Groups with and without a treatment or event, measured before and after", "A comparison group that was also measured before the event"),
+                    D("pp", "The same people, measured once before and once after an event", "One group, no comparison group"),
+                    D("ts", "The same people, measured many times before and after an event", "A series of observations on either side of the event"),
+                    Q("Age groups, or change across development", "Developmental designs", "How will you study age or development?", [
+                      D("cs", "Compare different age groups measured now", "Cross-sectional: quick, but cohort effects are confounded with age"),
+                      D("lg", "Follow the same individuals over time", "Longitudinal: shows individual change but takes years"),
+                      D("seq", "Follow several cohorts over a shorter span each", "Cross-sectional longitudinal (cohort-sequential): separates age from cohort")
+                    ])
+                  ])
+              ]),
+              Q("Two or more independent variables", "A factorial design: every level of one factor combined with every level of the other",
+                "How are participants assigned across the factors?", [
+                  D("fact_b", "Each participant is in only one cell (every factor between-subjects)", "A participant variable such as age or gender is always between-subjects"),
+                  D("fact_w", "Each participant is in every cell (every factor within-subjects)", "Counterbalance manipulated within factors"),
+                  D("fact_m", "One factor between-subjects and one within-subjects", "For example group × time, or age group × task difficulty")
+                ])
+            ]),
+          Q("One participant, or a few cases, studied intensively", "Behavior is observed repeatedly across phases (N-of-1 or single-case research)",
+            "Are you comparing two or more interventions against each other?", [
+              D("atd", "Yes: two or more interventions", "Alternating treatments"),
+              Q("No: one intervention versus baseline", "", "Will the behavior be shaped in steps toward a criterion?", [
+                D("cc", "Yes: raise or lower a performance criterion in steps", "Changing criterion"),
+                Q("No", "", "Is the behavior likely to return toward baseline when the intervention is withdrawn, and is withdrawal safe and ethical?", [
+                  D("abab", "Yes", "ABAB reversal"),
+                  Q("No or not sure: skills or learning will be retained, or withdrawal is not acceptable", "", "Do you have 3 or more comparable baselines (participants, behaviors or settings) that can be staggered?", [
+                    D("mbd", "Yes", "Multiple baseline"),
+                    D("mbd", "No: one participant, one behavior, one setting", "A multiple baseline needs comparable units", { note: "You need 3 or more comparable baselines to stagger. Consider adding comparable units, confirming reversibility (which would allow an ABAB design), or combining designs. A non-concurrent multiple baseline across separate cases is an option but weaker." })
+                  ])
+                ])
+              ])
+            ])
+        ], { cat: "c3", tag: "Experimental and related strategies" })
+    ]),
+
+    /* ---------- B. Choose a statistic ---------- */
+    Q("Choose a statistic for data I already have", "Find the descriptive and inferential statistics", "What does your data look like?", [
+
+      Q("One group, one score per participant", "Goal: describe the variable as it exists naturally", "What scale was the variable measured on?", [
+        Q("Interval or ratio scale", "Numerical scores", "What do you want to know about the scores?", [
+          S("Summarize the scores numerically", "Center and spread of the numerical scores",
+            { name: "Mean and standard deviation", detail: "" }, { name: "Single-sample t test", detail: "Use the sample mean to test a hypothesis about the population mean." }, { note: H1 }),
+          S("Describe the distribution across categories", "Group the scores into categories and compare proportions",
+            { name: "Proportions or percentages", detail: "Describe the distribution across categories." }, { name: CH, detail: CH_D }, { note: H1 })
+        ]),
+        S("Ordinal scale", "Ranks or ordered categories",
+          { name: "Median; proportions or percentages", detail: "Proportions or percentages describe the distribution across categories." }, { name: CH, detail: CH_D }, { note: H1 }),
+        S("Nominal scale", "Named categories",
+          { name: "Mode; proportions or percentages", detail: "Proportions or percentages describe the distribution across categories." }, { name: CH, detail: CH_D }, { note: H1 })
+      ], { cat: "c1", tag: "Descriptive strategies" }),
+
+      Q("One group, two variables per participant", "Goal: describe and evaluate the relationship between variables", "How are the two variables measured?", [
+        Q("Both interval or ratio", "Numerical scores on both variables", "What is your goal?", [
+          S("Degree and direction of a linear relationship", "Correlation",
+            { name: "Pearson correlation", detail: "Describes the degree and direction of the linear relationship." }, { name: "t test", detail: "A t test determines the significance of the Pearson correlation." }),
+          S("Best-fitting line (predict Y from X)", "Regression",
+            { name: "Regression equation", detail: "Identifies the slope and Y-intercept for the best-fitting line." }, { name: "Analysis of regression", detail: "Determines the significance of the regression equation." })
+        ]),
+        S("Both ordinal", "Rank X scores and Y scores separately",
+          { name: "Spearman correlation", detail: "Describes the degree and direction of a monotonic relationship." }, ADV),
+        S("One numerical, one dichotomous", "Numerical scores for one variable; two values (coded 0 and 1) for the other",
+          { name: "Point-biserial correlation", detail: "Describes the strength of the relationship." }, { name: "Independent-measures t test", detail: "The data can be listed as two groups suitable for the independent-measures t test." }),
+        S("Both dichotomous", "Two values for each variable, each coded 0 and 1",
+          { name: "Phi-coefficient", detail: "Describes the strength of the relationship." }, { name: "2 × 2 chi-square test for independence", detail: "The data can be evaluated with a 2 × 2 chi-square test for independence." }),
+        S("Any scales with few categories per variable", "A small number of categories for each variable",
+          { name: "Frequency distribution matrix", detail: "Regroup the data as a frequency distribution matrix; the frequencies or proportions describe the data." }, { name: "Chi-square test for independence", detail: "Evaluates the relationship between the variables." })
+      ], { cat: "c2", tag: "Correlational strategies" }),
+
+      Q("Two or more groups, one score per participant", "Goal: evaluate differences between groups of scores", "What kind of design and data do you have?", [
+        Q("Single factor, interval or ratio data", "Numerical scores", "How many groups are being compared?", [
+          Q("Two groups", "", "Independent-measures or repeated-measures?", [
+            S("Independent-measures", "Different participants in each group", MSD, { name: "Independent-measures t test", detail: "Evaluates the mean difference." }),
+            S("Repeated-measures", "The same participants measured in each condition", MSD, { name: "Repeated-measures t test", detail: "Evaluates the mean difference." })
+          ]),
+          Q("Two or more groups", "In practice, three or more groups", "Independent-measures or repeated-measures?", [
+            S("Independent-measures", "Different participants in each group", MSD, { name: "Independent-measures ANOVA", detail: "Evaluates the mean differences." }),
+            S("Repeated-measures", "The same participants measured in each condition", MSD, { name: "Repeated-measures ANOVA", detail: "Evaluates the mean differences." })
+          ])
+        ]),
+        S("Single factor, ordinal data", "Ranks or ordered categories; two or more groups",
+          { name: "Median or the proportion in each category", detail: "" }, ADV, { note: "Applies to independent- or repeated-measures designs." }),
+        S("Single factor, ordinal or nominal data with few categories", "Two or more independent groups",
+          { name: "Proportion in each category", detail: "" }, { name: "Chi-square test for independence", detail: "Evaluates the group differences." }, { note: "Applies to independent-measures designs." }),
+        S("Factorial design, interval or ratio data", "Two or more factors", MSD, { name: "Factorial analysis of variance", detail: "" }, { note: "Applies to independent- or repeated-measures designs." })
+      ], { cat: "c3", tag: "Experimental and related strategies" })
+    ])
+  ]);
+
+  /* ================= Index the tree ================= */
+  var index = {}, byKeyAll = {};
+  (function walk(n, parent, i) {
+    n.parent = parent || null;
+    n.id = parent ? parent.id + "-" + i : "root";
+    n.depth = parent ? parent.depth + 1 : 0;
+    n.cat = n.cat || (parent ? parent.cat : "");
+    n.isLeaf = !n.children;
+    index[n.id] = n;
+    if (n.key) { (byKeyAll[n.key] = byKeyAll[n.key] || []).push(n); }
+    (n.children || []).forEach(function (c, j) { walk(c, n, j); });
+  })(TREE, null, 0);
+  function nodeForKey(k) {
+    var list = byKeyAll[k] || [];
+    for (var i = 0; i < list.length; i++) if (list[i].cat === DES[k].cat) return list[i];
+    return list[0];
+  }
+
+  /* ================= State ================= */
+  var current = TREE, mode = "guided", expandAll = false, catFilter = "all", catQuery = "";
+  var $ = function (id) { return document.getElementById(id); };
+  var panel = $("panel"), resultWrap = $("resultWrap");
+
+  function pathOf(n) { var p = []; while (n) { p.unshift(n); n = n.parent; } return p; }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  function toast(msg) { var t = $("toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toast.h); toast.h = setTimeout(function () { t.classList.remove("show"); }, 1800); }
+  function setHash() { try { history.replaceState(null, "", current === TREE ? location.pathname + location.search : "#" + current.id); } catch (e) {} }
+
+  /* ================= Result rendering ================= */
+  function flowHTML(d, f) {
+    return '<div class="flow">' +
+      '<div class="box desc"><div class="lab">Descriptive statistics</div><div class="name">' + esc(d.name) + '</div>' + (d.detail ? '<div class="det">' + esc(d.detail) + '</div>' : '') + '</div>' +
+      '<div class="arrow" aria-hidden="true">→</div>' +
+      '<div class="box inf"><div class="lab">Inferential statistics</div><div class="name">' + esc(f.name) + '</div>' + (f.detail ? '<div class="det">' + esc(f.detail) + '</div>' : '') + '</div>' +
+      '</div>';
+  }
+  function pathLine(n) {
+    return '<div class="src">Path: ' + pathOf(n).slice(1).map(function (p) { return esc(p.label); }).join(' → ') + '</div>';
+  }
+  function actionsHTML() {
+    return '<div class="res-actions">' +
+      '<button class="btn" data-act="back">← Back</button>' +
+      '<button class="btn" data-act="reset">Start over</button>' +
+      '<button class="btn" data-act="link">Copy link to this result</button>' +
+      '<button class="btn" data-act="print">Print</button>' +
+      '</div>';
+  }
+  function list(items) { return '<ul class="sw">' + items.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>'; }
+
+  function statResultHTML(n) {
+    return '<div class="result" data-cat="' + n.cat + '">' +
+      '<div class="result-head">✓ Recommended statistics</div>' +
+      '<div class="pills"><span class="pill cat">' + esc(CATNAME[n.cat]) + '</span></div>' +
+      flowHTML(n.desc, n.inf) +
+      (n.note ? '<div class="note">' + esc(n.note) + '</div>' : '') +
+      pathLine(n) + actionsHTML() + '</div>';
+  }
+
+  function designResultHTML(n) {
+    var d = DES[n.key], h = '';
+    h += '<div class="result" data-cat="' + n.cat + '">';
+    h += '<div class="result-head">✓ Recommended design</div>';
+    h += '<h3 class="rname" tabindex="-1" id="focusTarget2">' + esc(d.name) + '</h3>';
+    h += '<div class="pills"><span class="pill cat">' + esc(CATNAME[n.cat]) + '</span><span class="pill ' + d.tone + '">' + esc(d.fam) + '</span></div>';
+    if (n.note) h += '<div class="callout">' + esc(n.note) + '</div>';
+    if (d.what) h += '<div class="sec"><h4>What it is</h4><p>' + esc(d.what) + '</p></div>';
+
+    var facts = [];
+    if (d.data) facts.push(['Data required', d.data]);
+    if (d.ap) facts.push(['Approach', d.ap]);
+    facts.push(['Cause and effect?', d.cause]);
+    if (d.man) facts.push(['Manipulated variable', d.man]);
+    if (d.ran) facts.push(['Random assignment', d.ran]);
+    if (d.ctl) facts.push(['Control', d.ctl]);
+    h += '<div class="sec"><div class="facts">' + facts.map(function (f) { return '<div class="fact"><b>' + esc(f[0]) + '</b>' + esc(f[1]) + '</div>'; }).join('') + '</div></div>';
+
+    if (d.nota && d.nota.length) h += '<div class="sec"><h4>Notation</h4><pre class="nota">' + esc(d.nota.join('\n')) + '</pre></div>';
+    if (d.threats) h += '<div class="sec"><h4>Main threats and limits</h4><p>' + esc(d.threats) + '</p></div>';
+
+    if (d.sg.length || d.wk.length) {
+      h += '<div class="sec"><h4>Strengths and weaknesses' + (d.swLevel === 'strategy' ? ' of this kind of strategy' : '') + '</h4><div class="grid2">' +
+        '<div class="swbox g"><h5>Strengths</h5>' + list(d.sg) + '</div>' +
+        '<div class="swbox b"><h5>Weaknesses</h5>' + list(d.wk) + '</div></div></div>';
+    }
+
+    h += '<div class="sec"><h4>Analysis</h4>' + flowHTML(d.an.desc, d.an.inf);
+    if (d.an.alt) h += '<div class="note">' + esc(d.an.alt) + '</div>';
+    if (d.stat) h += '<div class="note"><b>In more detail:</b> ' + esc(d.stat) + '</div>';
+    h += '</div>';
+    if (d.ex) h += '<div class="sec"><p class="src">' + esc(d.ex) + '</p></div>';
+
+    if (d.up && d.up.length) {
+      h += '<div class="sec"><h4>Consider instead, or in addition</h4><div class="related">' + d.up.map(function (u) {
+        return '<button class="rel" data-key="' + esc(u[0]) + '"><b>' + esc(DES[u[0]].name) + '</b><span>' + esc(u[1]) + '</span></button>';
+      }).join('') + '</div></div>';
+    }
+    h += pathLine(n);
+    h += actionsHTML();
+    h += '</div>';
+    return h;
+  }
+  function resultHTML(n) { return n.key ? designResultHTML(n) : statResultHTML(n); }
+
+  /* ================= Views ================= */
+  function renderGuided(focus) {
+    var path = pathOf(current);
+    var html = '<div class="crumbs" aria-label="Your answers so far">';
+    path.forEach(function (n, i) {
+      var here = n === current;
+      html += (i ? '<span class="sep" aria-hidden="true">›</span>' : '') +
+        '<button class="crumb' + (here ? ' here' : '') + '" data-cat="' + n.cat + '" data-go="' + n.id + '"' + (here ? ' aria-current="step"' : '') + '>' + esc(i === 0 ? "Start" : n.label) + '</button>';
+    });
+    html += '</div>';
+    if (current.isLeaf) {
+      html += resultHTML(current);
+    } else {
+      html += '<p class="stepno">Step ' + (current.depth + 1) + '</p>' +
+        '<h2 class="q" tabindex="-1" id="focusTarget">' + esc(current.q) + '</h2>' +
+        '<div class="opts' + (current.depth >= 2 ? ' vertical' : '') + '">' +
+        current.children.map(function (c) {
+          return '<button class="opt" data-cat="' + c.cat + '" data-go="' + c.id + '">' +
+            (c.tag ? '<span class="tag">' + esc(c.tag) + '</span>' : '') +
+            '<span class="t">' + esc(c.label) + '</span>' +
+            (c.hint ? '<span class="h">' + esc(c.hint) + '</span>' : '') + '</button>';
+        }).join('') + '</div>' +
+        (current.parent ? '<div class="res-actions"><button class="btn" data-act="back">← Back</button></div>' : '');
+    }
+    panel.innerHTML = html;
+    resultWrap.hidden = true; resultWrap.innerHTML = "";
+    if (focus) { var t = $("focusTarget") || $("focusTarget2"); if (t) t.focus(); }
+  }
+
+  function leafName(n) { return n.key ? DES[n.key].name : n.inf.name; }
+  function treeHTML(n, onPath) {
+    var inPath = !!onPath[n.id], kids = n.children || [];
+    var open = kids.length && (expandAll || inPath);
+    var cls = "node" + (inPath ? " on" : "") + (n === current ? " cur" : "") + (n.isLeaf ? " leaf" : "");
+    var h = '<div class="branch"><button class="' + cls + '" data-cat="' + n.cat + '" data-go="' + n.id + '"' +
+      ' aria-label="' + esc(n.label) + (n.isLeaf ? ', result: ' + esc(leafName(n)) : '') + '"' + (n === current ? ' aria-current="true"' : '') + '>' +
+      (kids.length ? '<span class="plus" aria-hidden="true">' + (open ? '−' : '+') + '</span>' : '') +
+      '<span class="lt">' + esc(n.label) + '</span>' +
+      (n.isLeaf ? '<span class="lr">→ ' + esc(leafName(n)) + '</span>' : '') + '</button>';
+    if (open) {
+      h += '<div class="stem"></div><div class="kids">' + kids.map(function (k) { return '<div class="kid">' + treeHTML(k, onPath) + '</div>'; }).join('') + '</div>';
+    }
+    return h + '</div>';
+  }
+  function renderTree() {
+    var onPath = {};
+    pathOf(current).forEach(function (n) { onPath[n.id] = true; });
+    panel.innerHTML = '<div class="tree-scroll"><div class="tree">' + treeHTML(TREE, onPath) + '</div></div>' +
+      '<p class="hint">Click any box to open its branch. Dashed boxes are end points: click one to see the full recommendation below the tree.</p>';
+    if (current.isLeaf) { resultWrap.hidden = false; resultWrap.innerHTML = '<div class="card">' + resultHTML(current) + '</div>'; }
+    else { resultWrap.hidden = true; resultWrap.innerHTML = ""; }
+  }
+
+  function renderCatalog() {
+    var keys = Object.keys(DES).filter(function (k) {
+      var d = DES[k];
+      if (catFilter !== "all" && d.cat !== catFilter) return false;
+      if (catQuery) { var hay = (d.name + " " + d.fam + " " + d.what + " " + d.data + " " + d.an.inf.name + " " + d.an.desc.name).toLowerCase(); if (hay.indexOf(catQuery.toLowerCase()) < 0) return false; }
+      return true;
+    });
+    var chips = [["all", "All"], ["c1", "Descriptive"], ["c2", "Correlational"], ["c3", "Experimental and related"]].map(function (c) {
+      return '<button class="chip" data-cat="' + (c[0] === "all" ? "" : c[0]) + '" data-filter="' + c[0] + '" aria-pressed="' + (catFilter === c[0]) + '">' + c[1] + '</button>';
+    }).join('');
+    var html = '<h2 class="q">Design catalog</h2><p class="hint" style="margin:-8px 0 14px">Every strategy and design the tree can recommend. Select one to see its full result.</p>' +
+      '<div class="cat-tools"><input id="catSearch" type="search" placeholder="Search designs, statistics or terms" aria-label="Search designs" value="' + esc(catQuery) + '">' + chips + '</div>' +
+      '<p class="hint" style="margin:0 0 10px">' + keys.length + ' design' + (keys.length === 1 ? '' : 's') + '</p>' +
+      '<div class="cat-grid">' + keys.map(function (k) {
+        var d = DES[k], w = d.what.length > 130 ? d.what.slice(0, 127).replace(/\s+\S*$/, '') + '…' : d.what;
+        return '<button class="dcard" data-cat="' + d.cat + '" data-key="' + k + '"><span class="f">' + esc(d.fam) + '</span><span class="t">' + esc(d.name) + '</span><span class="w">' + esc(w) + '</span></button>';
+      }).join('') + '</div>';
+    panel.innerHTML = html;
+    resultWrap.hidden = true; resultWrap.innerHTML = "";
+    var s = $("catSearch");
+    s.addEventListener("input", function () { catQuery = s.value; var pos = s.selectionStart; renderCatalog(); var s2 = $("catSearch"); s2.focus(); try { s2.setSelectionRange(pos, pos); } catch (e) {} });
+  }
+
+  function scrollCur() {
+    if (mode !== "tree") return;
+    var el = panel.querySelector(".node.cur") || panel.querySelector(".node");
+    try { if (el) el.scrollIntoView({ block: "center", inline: "nearest" }); } catch (e) {}
+  }
+  function render(focus) {
+    $("modeGuided").setAttribute("aria-pressed", mode === "guided");
+    $("modeTree").setAttribute("aria-pressed", mode === "tree");
+    $("modeCat").setAttribute("aria-pressed", mode === "catalog");
+    $("expandBtn").hidden = mode !== "tree";
+    $("expandBtn").textContent = expandAll ? "Collapse to path" : "Expand all";
+    $("backBtn").disabled = mode === "catalog" || current === TREE;
+    $("resetBtn").disabled = mode !== "catalog" && current === TREE && !expandAll;
+    if (mode === "guided") renderGuided(focus); else if (mode === "tree") renderTree(); else renderCatalog();
+    setHash();
+  }
+
+  /* ================= Events ================= */
+  function go(id) { if (index[id]) { current = index[id]; if (mode === "catalog") mode = "guided"; render(true); scrollCur(); } }
+  function goKey(k) { var n = nodeForKey(k); if (n) { current = n; mode = mode === "tree" ? "tree" : "guided"; render(true); window.scrollTo(0, 0); } }
+  function back() { if (current.parent) { current = current.parent; render(true); } }
+  function reset() { current = TREE; expandAll = false; if (mode === "catalog") mode = "guided"; render(true); }
+  function copyLink() {
+    var url = location.href;
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(url).then(function () { toast("Link copied"); }, function () { toast("Copy the address from your browser"); });
+    else toast("Copy the address from your browser");
+  }
+
+  document.addEventListener("click", function (e) {
+    var t = e.target.closest("[data-go],[data-act],[data-key],[data-filter]");
+    if (!t) return;
+    if (t.dataset.go) go(t.dataset.go);
+    else if (t.dataset.key) { if (mode === "catalog") mode = "guided"; goKey(t.dataset.key); }
+    else if (t.dataset.filter) { catFilter = t.dataset.filter; renderCatalog(); }
+    else if (t.dataset.act === "back") back();
+    else if (t.dataset.act === "reset") reset();
+    else if (t.dataset.act === "link") copyLink();
+    else if (t.dataset.act === "print") window.print();
+  });
+  $("backBtn").addEventListener("click", back);
+  $("resetBtn").addEventListener("click", reset);
+  $("modeGuided").addEventListener("click", function () { mode = "guided"; render(false); });
+  $("modeTree").addEventListener("click", function () { mode = "tree"; render(false); });
+  $("modeCat").addEventListener("click", function () { mode = "catalog"; render(false); });
+  $("expandBtn").addEventListener("click", function () { expandAll = !expandAll; render(false); scrollCur(); });
+  document.addEventListener("keydown", function (e) {
+    if (e.target.closest("input,textarea")) return;
+    if (e.key === "Backspace" || (e.key === "ArrowLeft" && e.altKey)) { if (mode !== "catalog" && current.parent) { e.preventDefault(); back(); } }
+  });
+
+  /* restore a shared result from the URL hash */
+  (function () {
+    var h = (location.hash || "").replace(/^#/, "");
+    if (h && index[h]) current = index[h];
+  })();
+  render(false);
+})();
+</script>
+</body>
+</html>
