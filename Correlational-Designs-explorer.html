@@ -1,0 +1,1492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Correlational Designs Explorer</title>
+<meta name="description" content="Explore the correlational research strategy across both numeric and non-numeric data sources. Included are how it is that a correlation coefficient describes the direction, form, and strength of a relationship, when a correlation or chi-square test is statistically significant, how correlations support prediction, and why correlational strategies cannot establish cause and effect.">
+<style>
+
+:root{
+  --bg:#f5f6f4; --card:#ffffff; --fg:#1c1f24; --muted:#5b6572; --line:#d9dde3; --grid:#eceff2;
+  --plot:#ffffff; --axis:#8b94a1; --colA:#34588a; --colB:#c0531a; --tintB:rgba(192,83,26,.07); --colC:#14806f; --colD:#7c3fb0; --colE:#8a6d00;
+  --accent:#2b62c4; --accentFg:#ffffff; --good:#1f7a43; --warn:#9a6700; --bad:#b3261e;
+  --goodBg:#e5f4ea; --warnBg:#fbf0d4; --badBg:#fbe4e2;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme=light]){
+    --bg:#13161b; --card:#1b1f26; --fg:#e8eaed; --muted:#9aa3af; --line:#2d333c; --grid:#262b33;
+    --plot:#1b1f26; --axis:#6f7886; --colA:#8fb4e8; --colB:#f59a5f; --tintB:rgba(245,154,95,.10); --colC:#4fcfb8; --colD:#c39bea; --colE:#e3c64f;
+    --accent:#7aa7ff; --accentFg:#0d1117; --good:#6fd596; --warn:#e8c05a; --bad:#ff8c84;
+    --goodBg:#16301f; --warnBg:#3a3016; --badBg:#3d1d1b;
+  }
+}
+:root[data-theme=dark]{
+  --bg:#13161b; --card:#1b1f26; --fg:#e8eaed; --muted:#9aa3af; --line:#2d333c; --grid:#262b33;
+  --plot:#1b1f26; --axis:#6f7886; --colA:#8fb4e8; --colB:#f59a5f; --tintB:rgba(245,154,95,.10); --colC:#4fcfb8; --colD:#c39bea; --colE:#e3c64f;
+  --accent:#7aa7ff; --accentFg:#0d1117; --good:#6fd596; --warn:#e8c05a; --bad:#ff8c84;
+  --goodBg:#16301f; --warnBg:#3a3016; --badBg:#3d1d1b;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+header.top{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:14px 20px 6px;max-width:1360px;margin:0 auto}
+header.top h1{font-size:1.25rem;margin:0;letter-spacing:-.01em}
+header.top p{margin:2px 0 0;color:var(--muted);font-size:.9rem;max-width:62ch}
+.hbtns{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+button,.btn{font:inherit;font-size:.85rem;border:1px solid var(--line);background:var(--card);color:var(--fg);padding:6px 11px;border-radius:7px;cursor:pointer}
+button:hover{border-color:var(--accent)}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button.primary{background:var(--accent);color:var(--accentFg);border-color:var(--accent);font-weight:600}
+button.small{padding:3px 8px;font-size:.78rem}
+nav.tabs{display:flex;gap:2px;max-width:1360px;margin:6px auto 0;padding:0 20px;border-bottom:1px solid var(--line);overflow-x:auto}
+nav.tabs button{border:none;border-bottom:3px solid transparent;border-radius:0;background:none;padding:9px 14px;font-size:.92rem;color:var(--muted);white-space:nowrap}
+nav.tabs button[aria-selected=true]{color:var(--fg);border-bottom-color:var(--colB);font-weight:600}
+main{max-width:1360px;margin:0 auto;padding:16px 20px 40px}
+.tabpanel[hidden]{display:none}
+.layout{display:grid;grid-template-columns:330px minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:980px){.layout{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:14px}
+.card h2{font-size:1rem;margin:0 0 8px}
+.card h3{font-size:.92rem;margin:14px 0 6px}
+.card p{margin:6px 0}
+.muted{color:var(--muted)}
+.small{font-size:.82rem}
+aside.controls{position:sticky;top:8px;max-height:calc(100vh - 16px);overflow:auto;padding:12px 14px}
+@media (max-width:980px){aside.controls{position:static;max-height:none}}
+details.grp{border-top:1px solid var(--line);padding:6px 0}
+details.grp:first-of-type{border-top:none}
+details.grp>summary{cursor:pointer;font-weight:600;font-size:.88rem;padding:4px 0;list-style:none}
+details.grp>summary::before{content:"▸ ";color:var(--muted)}
+details.grp[open]>summary::before{content:"▾ "}
+.ctl{margin:6px 0 10px}
+.ctl label{display:flex;justify-content:space-between;gap:8px;font-size:.82rem;color:var(--muted);margin-bottom:2px}
+.ctl output{color:var(--fg);font-variant-numeric:tabular-nums;font-weight:600}
+.ctl input[type=range]{width:100%;accent-color:var(--accent)}
+.ctl input[type=text],.ctl input[type=number],.ctl select,textarea{width:100%;font:inherit;font-size:.85rem;padding:5px 7px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--fg)}
+.ctl.check label{display:flex;justify-content:flex-start;gap:8px;align-items:center;color:var(--fg)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.toolbar{display:flex;gap:6px 14px;flex-wrap:wrap;align-items:center;margin-bottom:8px;font-size:.82rem}
+.toolbar label{display:inline-flex;gap:5px;align-items:center;cursor:pointer}
+.toolbar .sp{flex:1}
+.chart svg{width:100%;height:auto;display:block}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted);margin-top:6px}
+.legend i{display:inline-block;vertical-align:middle;margin-right:4px}
+.dotA{width:10px;height:10px;border-radius:50%;background:var(--colA)}
+.dotB{width:10px;height:10px;background:var(--colB)}
+.tbl-wrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.84rem;font-variant-numeric:tabular-nums}
+th,td{padding:5px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{font-weight:600;color:var(--muted);font-size:.78rem}
+th[title]{cursor:help;text-decoration:underline dotted;text-underline-offset:3px}
+td.l,th.l{text-align:left;white-space:normal}
+.pill{display:inline-block;padding:1px 8px;border-radius:99px;font-size:.76rem;font-weight:600}
+.pill.good{background:var(--goodBg);color:var(--good)}
+.pill.warn{background:var(--warnBg);color:var(--warn)}
+.pill.bad{background:var(--badBg);color:var(--bad)}
+.callout{border-left:4px solid var(--colA);background:var(--grid);padding:8px 12px;border-radius:0 8px 8px 0;font-size:.88rem;margin:8px 0}
+.callout.warn{border-left-color:var(--warn)}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+.stat{display:flex;gap:18px;flex-wrap:wrap;margin:6px 0 8px}
+.stat div{min-width:110px}
+.stat b{display:block;font-size:1.3rem;font-variant-numeric:tabular-nums}
+.stat span{font-size:.76rem;color:var(--muted)}
+ul.clean{padding-left:18px;margin:6px 0}
+ul.clean li{margin:3px 0}
+.q{margin:12px 0}
+.q legend{font-weight:600;font-size:.92rem;padding:0}
+.q fieldset{border:none;margin:0;padding:0}
+.q label{display:block;margin:3px 0;font-size:.9rem;cursor:pointer}
+.fit{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-top:1px solid var(--line)}
+.fit:first-child{border-top:none}
+.fit .nm{font-weight:600}
+footer{max-width:1360px;margin:0 auto;padding:0 20px 30px;color:var(--muted);font-size:.8rem}
+.sr{position:absolute;left:-9999px}
+dl.gl dt{font-weight:600;margin-top:8px}
+dl.gl dd{margin:2px 0 0 0;color:var(--muted)}
+ol.refs li{margin:5px 0;font-size:.85rem}
+#toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:8px 14px;border-radius:8px;font-size:.85rem;opacity:0;pointer-events:none;transition:opacity .2s}
+#toast.show{opacity:.95}
+
+[hidden]{display:none!important}
+.chart svg text{user-select:none}
+</style>
+</head>
+<body>
+<header class="top">
+  <div>
+    <h1>Correlational Designs Explorer</h1>
+    <p>Explore the correlational research strategy across both numeric and non-numeric data sources. Included are how it is that a correlation coefficient describes the direction, form, and strength of a relationship, when a correlation or chi-square test is statistically significant, how correlations support prediction, and why correlational strategies cannot establish cause and effect.</p>
+  </div>
+  <div class="hbtns">
+    <button id="btn-link" title="Put the current settings in the page URL so you can share or bookmark them">Copy share link</button>
+    <button id="btn-theme" title="Toggle light / dark">Theme</button>
+  </div>
+</header>
+
+<nav class="tabs" role="tablist" aria-label="Sections">
+  <button role="tab" id="t-cl" aria-controls="p-cl" aria-selected="true">Strategies and classifier</button>
+  <button role="tab" id="t-sc" aria-controls="p-sc" aria-selected="false">Scatter plots and coefficients</button>
+  <button role="tab" id="t-sg" aria-controls="p-sg" aria-selected="false">Strength and significance</button>
+  <button role="tab" id="t-nm" aria-controls="p-nm" aria-selected="false">Non-numerical data</button>
+  <button role="tab" id="t-pr" aria-controls="p-pr" aria-selected="false">Prediction and applications</button>
+  <button role="tab" id="t-wk" aria-controls="p-wk" aria-selected="false">Third variable and direction</button>
+  <button role="tab" id="t-cm" aria-controls="p-cm" aria-selected="false">Strengths and weaknesses</button>
+  <button role="tab" id="t-prac" aria-controls="p-prac" aria-selected="false">Practice</button>
+  <button role="tab" id="t-ref" aria-controls="p-ref" aria-selected="false">Reference</button>
+</nav>
+
+<main>
+<noscript><div class="card">This explorer needs JavaScript enabled.</div></noscript>
+
+<!-- ================= CLASSIFIER ================= -->
+<section class="tabpanel" id="p-cl" role="tabpanel" aria-labelledby="t-cl">
+  <div class="card">
+    <h2>Correlational, differential and experimental research</h2>
+    <p>The <b>goal of the correlational strategy</b> is to establish that a relationship exists between variables and to describe the nature of that relationship. There is no attempt to manipulate, control or interfere with the variables, so relationships can be described but not explained. Correlational research looks for patterns within the scores of individuals; differential research examines the scores of groups; and only experimental research demonstrates a cause-and-effect relationship.</p>
+    <div class="chart" id="cl-spectrum"></div>
+  </div>
+  <div class="grid2">
+    <div class="card">
+      <div class="row" style="justify-content:space-between"><h2 style="margin:0">Describe a study</h2><button class="small" data-act="clq-reset" title="Return every answer to its default">Reset</button></div>
+      <div class="q"><fieldset><legend>1. Does the researcher manipulate a variable (create the treatment conditions)?</legend>
+        <label><input type="radio" name="q-man" value="yes"> Yes, the researcher creates the conditions</label>
+        <label><input type="radio" name="q-man" value="no" checked> No: variables are measured as they naturally occur</label></fieldset></div>
+      <div class="q" data-q="ran"><fieldset><legend>2. Are participants randomly assigned to conditions?</legend>
+        <label><input type="radio" name="q-ran" value="yes"> Yes</label>
+        <label><input type="radio" name="q-ran" value="no" checked> No</label></fieldset></div>
+      <div class="q" data-q="data"><fieldset><legend>3. What data were collected?</legend>
+        <label><input type="radio" name="q-data" value="pairs" checked> Two scores (X and Y) from each individual</label>
+        <label><input type="radio" name="q-data" value="multi"> Three or more variables from each individual</label>
+        <label><input type="radio" name="q-data" value="groups"> Separate groups of individuals whose scores are compared</label></fieldset></div>
+      <div class="q" data-q="scale"><fieldset><legend>4. What kinds of scores are X and Y?</legend>
+        <label><input type="radio" name="q-scale" value="num" checked> Both numerical (interval or ratio scales)</label>
+        <label><input type="radio" name="q-scale" value="rank"> Both are ranks (ordinal)</label>
+        <label><input type="radio" name="q-scale" value="mixed2"> One numerical, the other with two categories</label>
+        <label><input type="radio" name="q-scale" value="mixedk"> One numerical, the other with three or more categories</label>
+        <label><input type="radio" name="q-scale" value="nom"> Both non-numerical (categories)</label></fieldset></div>
+      <div class="q" data-q="form"><fieldset><legend>5. What form do you expect the relationship to take?</legend>
+        <label><input type="radio" name="q-form" value="lin" checked> Linear: the points cluster around a straight line</label>
+        <label><input type="radio" name="q-form" value="mono"> Monotonic: one-directional trend that is not a straight line</label></fieldset></div>
+      <div class="q" data-q="goal"><fieldset><legend>6. What is the main purpose of the study?</legend>
+        <label><input type="radio" name="q-goal" value="describe" checked> Describe the relationship</label>
+        <label><input type="radio" name="q-goal" value="predict"> Predict one variable from the other</label>
+        <label><input type="radio" name="q-goal" value="theory"> Evaluate reliability, validity or a theory</label></fieldset></div>
+      <p class="small muted">Questions that do not apply to your design are hidden.</p>
+    </div>
+    <div>
+      <div class="card"><h2>Classification</h2><div id="cl-out"></div></div>
+      <div class="card"><h2>The data of a correlational study (Figure 12.1)</h2>
+        <div class="grid2"><div><div id="cl-fig-tbl"></div></div><div class="chart" id="cl-fig"></div></div>
+        <p class="small muted" id="cl-fig-txt"></p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SCATTER / COEFFICIENT ================= -->
+<section class="tabpanel" id="p-sc" role="tabpanel" aria-labelledby="t-sc" hidden>
+  <div class="layout">
+    <aside class="card controls" id="sc-controls" aria-label="Scatter plot controls"></aside>
+    <div>
+      <div class="card">
+        <div class="row" style="justify-content:space-between">
+          <h2 id="sc-title" style="margin:0">Scatter plot</h2>
+          <div class="row"><button class="small" data-dl="csv" data-t="sc">CSV</button><button class="small" data-dl="svg" data-t="sc-chart">SVG</button><button class="small" data-dl="png" data-t="sc-chart">PNG</button></div>
+        </div>
+        <p class="muted small" id="sc-sub"></p>
+        <div class="toolbar" id="sc-ov"></div>
+        <div class="chart" id="sc-chart"></div>
+        <div class="legend" id="sc-legend"></div>
+      </div>
+      <div class="card">
+        <details>
+          <summary><b>Use your own data</b> <span class="muted small">(paste pairs of scores)</span></summary>
+          <p class="small muted">One pair per line (<code>X Y</code>, optionally with a label first), or two lines such as <code>X: 1 6 4 7 9</code> and <code>Y: 3 8 4 12 10</code>. The example loads the five-person data from Figure 12.1.</p>
+          <textarea id="sc-paste" rows="5" spellcheck="false" placeholder="A 1 3&#10;B 6 8&#10;C 4 4&#10;D 7 12&#10;E 9 10"></textarea>
+          <div class="row" style="margin-top:6px">
+            <button class="primary small" data-act="sc-use">Analyze my data</button>
+            <button class="small" data-act="sc-fig">Load Figure 12.1 data</button>
+            <button class="small" data-act="sc-fill">Copy simulated data into box</button>
+            <button class="small" data-act="sc-sim">Back to simulation</button>
+          </div>
+          <div id="sc-paste-msg" class="small" role="status" style="margin-top:6px"></div>
+        </details>
+      </div>
+      <div class="card"><h2>What the correlation coefficient reports</h2><div id="sc-stats"></div></div>
+      <div class="card"><h2>Calculating a correlation coefficient</h2><div id="sc-calc"></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= STRENGTH / SIGNIFICANCE ================= -->
+<section class="tabpanel" id="p-sg" role="tabpanel" aria-labelledby="t-sg" hidden>
+  <div class="layout">
+    <aside class="card controls" id="sg-controls" aria-label="Significance controls"></aside>
+    <div>
+      <div class="card">
+        <h2 style="margin-top:0">Interpreting strength and significance</h2>
+        <p class="muted small">Two questions are different: <b>how strong</b> is the relationship (r and the coefficient of determination r²), and <b>could it be chance</b> (statistical significance)? Benchmarks: small r = .10 (r² = 1%), medium r = .30 (r² = 9%), large r = .50 (r² = 25%).</p>
+        <div id="sg-stats"></div>
+        <div class="chart" id="sg-chart"></div>
+        <div id="sg-msg"></div>
+      </div>
+      <div class="card"><h2>How large must r be to be significant?</h2><div class="chart" id="sg-crit"></div><div id="sg-tbl" style="margin-top:8px"></div></div>
+      <div class="card"><h2>Significance calculator</h2>
+        <div class="row"><label class="small" for="sg-cr">r</label><input type="number" id="sg-cr" min="-1" max="1" step="0.01" value="0.88" style="width:90px;font:inherit;font-size:.85rem;padding:4px 6px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--fg)">
+          <label class="small" for="sg-cn">n</label><input type="number" id="sg-cn" min="3" step="1" value="5" style="width:90px;font:inherit;font-size:.85rem;padding:4px 6px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--fg)"></div>
+        <div id="sg-cout" style="margin-top:6px"></div>
+        <p class="small muted">The defaults (r = .88, n = 5) are close to the five-person data in Figure 12.1: a correlation that strong sits right at the border of significance with only five individuals.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= NON-NUMERICAL ================= -->
+<section class="tabpanel" id="p-nm" role="tabpanel" aria-labelledby="t-nm" hidden>
+  <div class="layout">
+    <aside class="card controls" id="nm-controls" aria-label="Non-numerical data controls"></aside>
+    <div>
+      <div class="card">
+        <div class="row" style="justify-content:space-between"><h2 style="margin:0">One numerical score, one two-category variable: the point-biserial correlation</h2>
+          <div class="row"><button class="small" data-dl="csv" data-t="nm">CSV</button><button class="small" data-dl="svg" data-t="nm-chart">SVG</button><button class="small" data-dl="png" data-t="nm-chart">PNG</button></div></div>
+        <p class="muted small">Use the non-numerical variable to organize the scores into separate groups, or code its two categories as 0 and 1 and compute the Pearson correlation.</p>
+        <div class="chart" id="nm-chart"></div>
+        <div id="nm-pb"></div>
+      </div>
+      <div class="card">
+        <h2 style="margin-top:0">Two non-numerical variables: chi-square</h2>
+        <p class="muted small">Organize the data in a matrix: the categories of one variable form the rows and the categories of the second form the columns. In the source slide the row labels and the caption do not match (the caption mentions gender); the counts are used here and the labels can be renamed in the controls.</p>
+        <div class="chart" id="nm-chi-chart"></div>
+        <div id="nm-chi"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= PREDICTION ================= -->
+<section class="tabpanel" id="p-pr" role="tabpanel" aria-labelledby="t-pr" hidden>
+  <div class="layout">
+    <aside class="card controls" id="pr-controls" aria-label="Prediction controls"></aside>
+    <div>
+      <div class="card">
+        <div class="row" style="justify-content:space-between"><h2 id="pr2-title" style="margin:0">Prediction</h2>
+          <div class="row"><button class="small" data-dl="csv" data-t="pr">CSV</button><button class="small" data-dl="svg" data-t="pr2-chart">SVG</button><button class="small" data-dl="png" data-t="pr2-chart">PNG</button></div></div>
+        <div class="toolbar" id="pr2-ov"></div>
+        <div class="chart" id="pr2-chart"></div>
+      </div>
+      <div class="card"><h2>The regression equation and a prediction</h2><div id="pr2-stats"></div><div class="chart" id="pr2-var"></div></div>
+      <div class="card"><h2>About this application</h2><div id="pr2-app"></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= THIRD VARIABLE / DIRECTION ================= -->
+<section class="tabpanel" id="p-wk" role="tabpanel" aria-labelledby="t-wk" hidden>
+  <div class="layout">
+    <aside class="card controls" id="wk-controls" aria-label="Third-variable controls"></aside>
+    <div>
+      <div class="card">
+        <div class="row" style="justify-content:space-between"><h2 style="margin:0">The third-variable problem</h2>
+          <div class="row"><button class="small" data-dl="csv" data-t="wk">CSV</button><button class="small" data-dl="svg" data-t="wk-chart">SVG</button><button class="small" data-dl="png" data-t="wk-chart">PNG</button></div></div>
+        <p class="muted small">Because two variables are related does not mean there must be a direct relationship between them. A third variable may be responsible. Set the hidden causal structure on the left and see what a researcher who measured only X and Y (and perhaps Z) would find.</p>
+        <div class="chart" id="wk-causal"></div>
+        <div class="toolbar" id="wk-ov"></div>
+        <div class="chart" id="wk-chart"></div>
+        <div class="legend" id="wk-legend"></div>
+      </div>
+      <div class="card"><h2>Holding the third variable constant</h2><div id="wk-stats"></div><div id="wk-msg"></div></div>
+      <div class="card"><h2>The directionality problem</h2><div class="chart" id="wk-dir"></div></div>
+      <div class="card"><h2>Simple versus partial correlation: 300 repeats</h2><div class="chart" id="wk-rep"></div><div id="wk-rep-txt"></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= COMPARISON ================= -->
+<section class="tabpanel" id="p-cm" role="tabpanel" aria-labelledby="t-cm" hidden>
+  <div class="card">
+    <h2>Strengths and weaknesses of the correlational strategy</h2>
+    <p class="muted small">Select a row to see why. Colors describe how well each strategy handles the issue: <span class="pill good">strong</span> <span class="pill warn">partial or depends</span> <span class="pill bad">weak</span> and a dash where the issue does not usually apply. This is a teaching heuristic; real studies vary.</p>
+    <div id="cm-matrix"></div>
+  </div>
+  <div class="card"><h2 id="cm-title">Details</h2><div id="cm-detail"></div></div>
+  <div class="card">
+    <h2>In plain language</h2>
+    <dl class="gl">
+      <dt>Strengths</dt><dd>Correlational studies describe relationships between variables, are nonintrusive (they observe natural behavior) and tend to have high external validity.</dd>
+      <dt>Cannot assess causality</dt><dd>Low internal validity: the strategy establishes that variables are related, not why.</dd>
+      <dt>Third-variable problem</dt><dd>A third, unidentified variable may be producing the observed relationship (temperature produces both ice cream sales and crime).</dd>
+      <dt>Directionality problem</dt><dd>A correlation does not reveal whether X influences Y or Y influences X (television content and adolescent behavior).</dd>
+      <dt>More than two variables</dt><dd>Multiple regression studies multivariate relationships and can control other potentially confounding variables statistically, but predictor variables only predict; relationships are described, not explained.</dd>
+    </dl>
+  </div>
+</section>
+
+<!-- ================= PRACTICE ================= -->
+<section class="tabpanel" id="p-prac" role="tabpanel" aria-labelledby="t-prac" hidden>
+  <div class="card">
+    <h2>Scenario practice: is the conclusion justified?</h2>
+    <p class="muted">A hidden scenario is generated at random. Sometimes the data support the researcher's conclusion; more often a limitation of correlational research gets in the way. Read the study, look at the scatter plot or table, decide whether the conclusion is justified, then see why.</p>
+    <div class="row">
+      <button class="primary" data-act="pq-new">New scenario</button>
+      <button data-act="prac-reset" title="Clear the current scenario, the quiz and both scores">Reset</button>
+      <span id="pq-score" class="muted small"></span>
+    </div>
+  </div>
+  <div class="card" id="pq-card" hidden>
+    <div id="pq-desc"></div>
+    <div class="chart" id="pq-chart"></div>
+    <div id="pq-facts"></div>
+    <div class="row" id="pq-answer" style="margin-top:10px">
+      <b>Is the researcher's conclusion justified?</b>
+      <button data-act="pq-yes">Yes: justified</button>
+      <button data-act="pq-no">No: not justified</button>
+    </div>
+    <div id="pq-feedback" role="status"></div>
+  </div>
+  <div class="card">
+    <h2>Concept check</h2>
+    <div class="row"><button data-act="qz-new" class="primary small">Next question</button><span id="qz-score" class="muted small"></span></div>
+    <div id="qz-out" style="margin-top:8px"></div>
+  </div>
+</section>
+
+<!-- ================= REFERENCE ================= -->
+<section class="tabpanel" id="p-ref" role="tabpanel" aria-labelledby="t-ref" hidden>
+  <div class="grid2">
+    <div class="card">
+      <h2>The correlational strategy</h2>
+      <p>The goal is to establish that a relationship exists between variables and to describe its nature. Variables are not manipulated, controlled or interfered with, so relationships can be described but not explained.</p>
+      <ul class="clean"><li><b>Correlational:</b> shows that a relationship exists between two variables; looks for patterns within the scores of individuals. Does not determine cause and effect.</li><li><b>Differential:</b> two groups of scores, focusing on the difference between groups. Does not determine cause and effect.</li><li><b>Experimental:</b> demonstrates a cause-and-effect relationship between two variables.</li></ul>
+    </div>
+    <div class="card">
+      <h2>The data</h2>
+      <p>Each individual contributes a pair of scores, X and Y. The data can be listed (two scores per individual) or shown in a scatter plot in which each individual is a dot with a horizontal coordinate (X) and a vertical coordinate (Y).</p>
+      <p>A <b>correlation coefficient</b> measures and describes a relationship in three ways:</p>
+      <ul class="clean"><li><b>Direction:</b> positive (variables change in the same direction) or negative (opposite directions); shown by the sign.</li><li><b>Form:</b> linear (points cluster around a straight line; Pearson correlation, for interval or ratio scores) or monotonic (a one-directional trend; Spearman correlation, for ranks).</li><li><b>Consistency or strength:</b> the numerical value, from 0.0 to 1.0 in absolute value.</li></ul>
+    </div>
+    <div class="card">
+      <h2>Choosing a statistic</h2>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th class="l">Scores</th><th class="l">Statistic</th></tr></thead>
+        <tbody>
+          <tr><td class="l">Two numerical variables, linear form</td><td class="l">Pearson correlation</td></tr>
+          <tr><td class="l">Ranks, or a monotonic trend that is not linear</td><td class="l">Spearman correlation</td></tr>
+          <tr><td class="l">One numerical variable, one two-category variable</td><td class="l">Point-biserial correlation (Pearson with categories coded 0 and 1)</td></tr>
+          <tr><td class="l">One numerical variable, categories used to form groups</td><td class="l">Compare the groups (t test or ANOVA)</td></tr>
+          <tr><td class="l">Two non-numerical variables</td><td class="l">Chi-square test on a matrix of counts</td></tr>
+          <tr><td class="l">Predicting one variable from another</td><td class="l">Regression</td></tr>
+          <tr><td class="l">More than two variables</td><td class="l">Multiple regression</td></tr>
+        </tbody></table></div>
+    </div>
+    <div class="card">
+      <h2>Interpreting strength</h2>
+      <p>The <b>coefficient of determination</b> (r²) is the squared correlation: the percentage of variability in one variable that is determined, or predicted, by its relationship with the other.</p>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th class="l">Degree of relationship</th><th>r</th><th>r²</th></tr></thead>
+        <tbody><tr><td class="l">Small</td><td>.10</td><td>.01 (1%)</td></tr><tr><td class="l">Medium</td><td>.30</td><td>.09 (9%)</td></tr><tr><td class="l">Large</td><td>.50</td><td>.25 (25%)</td></tr></tbody></table></div>
+      <p>A correlation is <b>statistically significant</b> when it is unlikely to have been produced by random variation. With a small sample it is possible to obtain a very strong-looking correlation when there is no relationship; increasing the sample size makes it more likely that a correlation represents a real relationship.</p>
+    </div>
+    <div class="card">
+      <h2>Applications</h2>
+      <ul class="clean"><li><b>Prediction:</b> a relationship lets researchers use one variable (the <i>predictor</i>) to predict or explain the other (the <i>criterion</i>). Regression finds the equation that gives the most accurate predictions of Y for each value of X. The predictor is usually simple and well defined; the criterion is relatively complex and unknown.</li><li><b>Reliability and validity:</b> both are commonly defined by relationships established with the correlational design.</li><li><b>Theory:</b> correlational designs can address theoretical questions, for example correlating the IQs of identical twins.</li></ul>
+    </div>
+    <div class="card">
+      <h2>Weaknesses</h2>
+      <ul class="clean"><li><b>Cannot assess causality</b>, so internal validity is low.</li><li><b>Third-variable problem:</b> a third variable may produce the relationship between the two measured variables.</li><li><b>Directionality problem:</b> a correlation does not show which variable influences the other.</li><li><b>More than two variables:</b> multiple regression can statistically control other variables, but predictors only predict.</li></ul>
+      <p><b>Strengths:</b> describes relationships, is nonintrusive (natural behavior) and has high external validity.</p>
+    </div>
+    <div class="card">
+      <h2>Notation and terms</h2>
+      <dl class="gl"><dt>X, Y</dt><dd>The two scores obtained from each individual.</dd><dt>r, ρ</dt><dd>Sample correlation; population correlation.</dd><dt>SP, SS</dt><dd>Sum of products of deviations; sum of squared deviations.</dd><dt>Ŷ</dt><dd>The value of Y predicted from X by the regression equation.</dd><dt>Monotonic</dt><dd>A relationship that goes in one direction only (always increasing or always decreasing), not necessarily along a straight line.</dd></dl>
+    </div>
+    <div class="card">
+      <h2>Metrics and extensions used here</h2>
+      <dl class="gl">
+        <dt>95% CI for ρ</dt><dd>Fisher z interval around the sample correlation.</dd>
+        <dt>Partial correlation</dt><dd>The correlation between X and Y once the linear influence of Z has been removed from both.</dd>
+        <dt>Standard error of estimate</dt><dd>Typical size of prediction errors around the regression line; the prediction band is ±1.96 times this value (an approximation).</dd>
+        <dt>Extensions beyond the chapter</dt><dd>The influential-point flag, the range-restriction slider, the curvilinear and monotonic simulations, the significance calculator and the 300-sample repeats are teaching aids added to illustrate the chapter's points.</dd>
+      </dl>
+    </div>
+    <div class="card" style="grid-column:1/-1">
+      <h2>Source and use</h2>
+      <p class="small muted">The structure and terminology follow the course slides on correlational research strategies. All data shown are simulated or taken from the slides' small examples, and are illustrative.</p>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>
+  Simulated data are illustrative. The statistics are descriptive aids; design logic and measurement quality still carry the inference.
+</footer>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+'use strict';
+/* ================= basic helpers ================= */
+const $=(s,el=document)=>el.querySelector(s);
+const $$=(s,el=document)=>Array.from(el.querySelectorAll(s));
+const sum=a=>a.reduce((s,v)=>s+v,0);
+const mean=a=>a.length?sum(a)/a.length:NaN;
+const median=a=>{if(!a.length)return NaN;const s=a.slice().sort((x,y)=>x-y),m=s.length>>1;return s.length%2?s[m]:(s[m-1]+s[m])/2};
+const vr=a=>{if(a.length<2)return 0;const m=mean(a);return sum(a.map(v=>(v-m)*(v-m)))/(a.length-1)};
+const sd=a=>Math.sqrt(vr(a));
+const minOf=a=>{let m=Infinity;for(const v of a)if(v<m)m=v;return m};
+const maxOf=a=>{let m=-Infinity;for(const v of a)if(v>m)m=v;return m};
+const f=(v,d=2)=>Number.isFinite(v)?(+v).toFixed(d):'—';
+const sgn=(v,d=1)=>Number.isFinite(v)?((v>0?'+':'')+(+v).toFixed(d)):'—';
+const pct=v=>Number.isFinite(v)?Math.round(v*100)+'%':'—';
+const pf=p=>!Number.isFinite(p)?'—':p<0.001?'< .001':p.toFixed(3).replace(/^0/,'');
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const ROM=['I','II','III','IV','V','VI'];
+
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function makeRng(seed){
+  const r=mulberry32((seed>>>0)||1);
+  const n=()=>{let u=0;while(u===0)u=r();const v=r();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)};
+  const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(r()*(i+1));const t=a[i];a[i]=a[j];a[j]=t}return a};
+  return{r,n,shuffle};
+}
+
+/* ================= distributions ================= */
+function lgam(x){const c=[76.18009172947146,-86.50532032941677,24.01409824083091,-1.231739572450155,0.1208650973866179e-2,-0.5395239384953e-5];let y=x,t=x+5.5;t-=(x+.5)*Math.log(t);let s=1.000000000190015;for(let j=0;j<6;j++)s+=c[j]/++y;return -t+Math.log(2.5066282746310005*s/x)}
+function betacf(a,b,x){
+  const FP=1e-300,qab=a+b,qap=a+1,qam=a-1;let c=1,d=1-qab*x/qap;if(Math.abs(d)<FP)d=FP;d=1/d;let h=d;
+  for(let m=1;m<=300;m++){const m2=2*m;let aa=m*(b-m)*x/((qam+m2)*(a+m2));d=1+aa*d;if(Math.abs(d)<FP)d=FP;c=1+aa/c;if(Math.abs(c)<FP)c=FP;d=1/d;h*=d*c;
+    aa=-(a+m)*(qab+m)*x/((a+m2)*(qap+m2));d=1+aa*d;if(Math.abs(d)<FP)d=FP;c=1+aa/c;if(Math.abs(c)<FP)c=FP;d=1/d;const del=d*c;h*=del;if(Math.abs(del-1)<3e-12)break}
+  return h;
+}
+function ibeta(x,a,b){if(x<=0)return 0;if(x>=1)return 1;const bt=Math.exp(lgam(a+b)-lgam(a)-lgam(b)+a*Math.log(x)+b*Math.log(1-x));return x<(a+1)/(a+b+2)?bt*betacf(a,b,x)/a:1-bt*betacf(b,a,1-x)/b}
+function gammp(a,x){
+  if(x<=0)return 0;
+  if(x<a+1){let ap=a,s=1/a,del=s;for(let n=0;n<400;n++){ap++;del*=x/ap;s+=del;if(Math.abs(del)<Math.abs(s)*3e-12)break}return s*Math.exp(-x+a*Math.log(x)-lgam(a))}
+  let b=x+1-a,c=1e300,d=1/b,h=d;
+  for(let i=1;i<400;i++){const an=-i*(i-a);b+=2;d=an*d+b;if(Math.abs(d)<1e-300)d=1e-300;c=b+an/c;if(Math.abs(c)<1e-300)c=1e-300;d=1/d;const del=d*c;h*=del;if(Math.abs(del-1)<3e-12)break}
+  return 1-Math.exp(-x+a*Math.log(x)-lgam(a))*h;
+}
+const tp2=(t,df)=>ibeta(df/(df+t*t),df/2,0.5);
+const fsf=(F,d1,d2)=>F>=0?ibeta(d2/(d2+d1*F),d2/2,d1/2):NaN;
+const chisf=(x,df)=>1-gammp(df/2,x/2);
+function erf(x){const s=x<0?-1:1;x=Math.abs(x);const t=1/(1+0.3275911*x),y=1-(((((1.061405429*t-1.453152027)*t)+1.421413741)*t-0.284496736)*t+0.254829592)*t*Math.exp(-x*x);return s*y}
+const ncdf=x=>0.5*(1+erf(x/Math.SQRT2));
+function tcrit(df,alpha){let lo=0,hi=1000;for(let i=0;i<80;i++){const m=(lo+hi)/2;if(tp2(m,df)>alpha)lo=m;else hi=m}return(lo+hi)/2}
+function binomP2(n,m){ // two-sided exact sign-test p for min count m out of n
+  let s=0;for(let i=0;i<=m;i++){s+=Math.exp(lgam(n+1)-lgam(i+1)-lgam(n-i+1)-n*Math.LN2)}return Math.min(1,2*s)}
+
+/* ================= tests ================= */
+function indT(a,b){
+  const na=a.length,nb=b.length,ma=mean(a),mb=mean(b),df=na+nb-2;
+  const sp2=((na-1)*vr(a)+(nb-1)*vr(b))/df,se=Math.sqrt(sp2*(1/na+1/nb)),diff=mb-ma;
+  const t=se>0?diff/se:(diff===0?0:Infinity),p=se>0?tp2(t,df):(diff===0?1:0),tc=tcrit(df,.05),sp=Math.sqrt(sp2);
+  return{t,df,p,diff,se,ci:[diff-tc*se,diff+tc*se],d:sp>0?diff/sp:NaN,ma,mb,sp};
+}
+function anova(gs){
+  const all=[].concat(...gs),N=all.length,k=gs.length,gm=mean(all);let ssb=0,ssw=0;
+  gs.forEach(g=>{const m=mean(g);ssb+=g.length*(m-gm)*(m-gm);g.forEach(v=>{ssw+=(v-m)*(v-m)})});
+  const dfb=k-1,dfw=N-k,msb=ssb/dfb,msw=ssw/dfw,F=msw>0?msb/msw:(msb>0?Infinity:0);
+  return{ssb,ssw,sst:ssb+ssw,dfb,dfw,msb,msw,F,p:msw>0?fsf(F,dfb,dfw):(ssb>0?0:1),eta2:(ssb+ssw)>0?ssb/(ssb+ssw):0,N,k,gm};
+}
+function pairedT(x,y){
+  const d=x.map((v,i)=>y[i]-v),n=d.length,md=mean(d),s=sd(d),se=s/Math.sqrt(n),df=n-1;
+  const t=se>0?md/se:(md===0?0:Infinity),p=se>0?tp2(t,df):(md===0?1:0),tc=tcrit(df,.05);
+  return{t,df,p,md,sd:s,se,ci:[md-tc*se,md+tc*se],dz:s>0?md/s:NaN,n,d};
+}
+function rmAnova(M){
+  const n=M.length,k=M[0].length,all=[].concat(...M),gm=mean(all);
+  let ssS=0,ssT=0;
+  M.forEach(r=>{const m=mean(r);ssS+=k*(m-gm)*(m-gm)});
+  for(let j=0;j<k;j++){const m=mean(M.map(r=>r[j]));ssT+=n*(m-gm)*(m-gm)}
+  const sst=sum(all.map(v=>(v-gm)*(v-gm))),ssE=Math.max(0,sst-ssS-ssT),dfT=k-1,dfE=(n-1)*(k-1);
+  const msT=ssT/dfT,msE=ssE/dfE,F=msE>0?msT/msE:(msT>0?Infinity:0);
+  return{ssS,ssT,ssE,sst,dfT,dfE,dfS:n-1,msT,msE,F,p:msE>0?fsf(F,dfT,dfE):(ssT>0?0:1),pEta2:(ssT+ssE)>0?ssT/(ssT+ssE):0,n,k};
+}
+function wilcoxon(x,y){
+  const d=x.map((v,i)=>y[i]-v).filter(v=>v!==0),n=d.length;if(n<1)return{n:0,p:1,W:0,z:0};
+  const idx=d.map((v,i)=>i).sort((a,b)=>Math.abs(d[a])-Math.abs(d[b])),rk=new Array(n);let i=0,tie=0;
+  while(i<n){let j=i;while(j+1<n&&Math.abs(d[idx[j+1]])===Math.abs(d[idx[i]]))j++;const r=(i+j)/2+1;for(let q=i;q<=j;q++)rk[idx[q]]=r;const t=j-i+1;tie+=t*t*t-t;i=j+1}
+  let wp=0,wm=0;d.forEach((v,q)=>{if(v>0)wp+=rk[q];else wm+=rk[q]});
+  const mu=n*(n+1)/4,s=Math.sqrt(Math.max(1e-12,n*(n+1)*(2*n+1)/24-tie/48)),W=Math.min(wp,wm),z=(Math.abs(wp-mu)-0.5)/s;
+  return{n,W,Wp:wp,Wm:wm,z,p:Math.min(1,2*(1-ncdf(Math.max(0,z))))};
+}
+function signTest(x,y){let pos=0,neg=0;x.forEach((v,i)=>{const d=y[i]-v;if(d>0)pos++;else if(d<0)neg++});const n=pos+neg;return{pos,neg,n,p:n?binomP2(n,Math.min(pos,neg)):1}}
+function chiSq(tab){
+  const R=tab.length,C=tab[0].length,rs=tab.map(sum),cs=tab[0].map((_,j)=>sum(tab.map(r=>r[j]))),N=sum(rs);
+  let x2=0,lowExp=0;
+  for(let i=0;i<R;i++)for(let j=0;j<C;j++){const e=rs[i]*cs[j]/N;if(e<5)lowExp++;if(e>0)x2+=(tab[i][j]-e)*(tab[i][j]-e)/e}
+  const df=(R-1)*(C-1);
+  return{x2,df,p:df>0?chisf(x2,df):1,V:Math.sqrt(x2/(N*Math.min(R-1,C-1))),N,rs,cs,lowExp};
+}
+function corr(a,b){const ma=mean(a),mb=mean(b);let sxy=0,sxx=0,syy=0;for(let i=0;i<a.length;i++){sxy+=(a[i]-ma)*(b[i]-mb);sxx+=(a[i]-ma)**2;syy+=(b[i]-mb)**2}return sxx>0&&syy>0?sxy/Math.sqrt(sxx*syy):NaN}
+
+/* approximate power of a two-sided t test (noncentral t, normal approximation) */
+function powerT(delta,df,alpha){
+  if(df<1)return NaN;
+  const tc=tcrit(df,alpha),a=tc*(1-1/(4*df)),s=Math.sqrt(1+tc*tc/(2*df));
+  return clamp(1-ncdf((a-delta)/s)+ncdf((-a-delta)/s),0,1);
+}
+
+/* ================= chart helpers (SVG strings) ================= */
+const COLS=['var(--colA)','var(--colB)','var(--colC)','var(--colD)','var(--colE)'];
+function ticks(min,max,cnt){
+  const span=max-min||1,raw=span/(cnt||5),mag=Math.pow(10,Math.floor(Math.log10(raw))),nm=raw/mag,step=(nm<1.5?1:nm<3?2:nm<7?5:10)*mag,t=[];
+  for(let v=Math.ceil(min/step-1e-9)*step;v<=max+step*1e-9;v+=step)t.push(+v.toPrecision(12));
+  return{t,step};
+}
+const fmtT=(v,step)=>{const d=step>=1?0:Math.min(4,Math.ceil(-Math.log10(step)-1e-9));return(+v).toFixed(d)};
+function svgWrap(W,H,inner,label){return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(label)}" xmlns="http://www.w3.org/2000/svg" font-family="system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif" font-size="11">${inner}</svg>`}
+function frame(W,H,m,xd,yd,o){
+  o=o||{};const iw=W-m.l-m.r,ih=H-m.t-m.b;
+  const sx=v=>m.l+(v-xd[0])/(xd[1]-xd[0])*iw,sy=v=>m.t+ih-(v-yd[0])/(yd[1]-yd[0])*ih;
+  let s=`<rect x="${m.l}" y="${m.t}" width="${iw}" height="${ih}" fill="var(--plot)"/>`;
+  const yt=ticks(yd[0],yd[1],o.yn||5);
+  yt.t.forEach(v=>{const y=sy(v);s+=`<line x1="${m.l}" x2="${W-m.r}" y1="${y}" y2="${y}" stroke="var(--grid)"/><text x="${m.l-6}" y="${y+4}" text-anchor="end" fill="var(--muted)">${fmtT(v,yt.step)}</text>`});
+  if(!o.xcat){const xt=ticks(xd[0],xd[1],o.xn||6);xt.t.forEach(v=>{const x=sx(v);s+=`<line x1="${x}" x2="${x}" y1="${m.t}" y2="${H-m.b}" stroke="var(--grid)"/><text x="${x}" y="${H-m.b+15}" text-anchor="middle" fill="var(--muted)">${fmtT(v,xt.step)}</text>`})}
+  s+=`<line x1="${m.l}" x2="${m.l}" y1="${m.t}" y2="${H-m.b}" stroke="var(--axis)"/><line x1="${m.l}" x2="${W-m.r}" y1="${H-m.b}" y2="${H-m.b}" stroke="var(--axis)"/>`;
+  if(o.xlab)s+=`<text x="${m.l+iw/2}" y="${H-6}" text-anchor="middle" fill="var(--muted)">${esc(o.xlab)}</text>`;
+  if(o.ylab)s+=`<text transform="translate(14 ${m.t+ih/2}) rotate(-90)" text-anchor="middle" fill="var(--muted)">${esc(o.ylab)}</text>`;
+  return{sx,sy,s,W,H,m,iw,ih};
+}
+function mk(shape,x,y,r,col,op,hollow){
+  const fill=hollow?'var(--plot)':col,st=`fill="${fill}" fill-opacity="${hollow?1:(op||.85)}" stroke="${col}" stroke-width="${hollow?1.6:.8}"`;
+  x=+x.toFixed(1);y=+y.toFixed(1);
+  switch(shape%5){
+    case 0:return `<circle cx="${x}" cy="${y}" r="${r}" ${st}/>`;
+    case 1:return `<rect x="${x-r}" y="${y-r}" width="${2*r}" height="${2*r}" ${st}/>`;
+    case 2:return `<polygon points="${x},${y-r*1.3} ${x+r*1.3},${y} ${x},${y+r*1.3} ${x-r*1.3},${y}" ${st}/>`;
+    case 3:return `<polygon points="${x},${y-r*1.25} ${x+r*1.2},${y+r} ${x-r*1.2},${y+r}" ${st}/>`;
+    default:return `<path d="M${x-r} ${y}H${x+r}M${x} ${y-r}V${y+r}" stroke="${col}" stroke-width="2.4" fill="none"/>`;
+  }
+}
+function swarm(vals,sy,r){
+  const placed=[],off=new Array(vals.length),idx=vals.map((v,i)=>i).sort((a,b)=>vals[a]-vals[b]);
+  idx.forEach(i=>{
+    const y=sy(vals[i]);let k=0,o=0;
+    for(;k<400;k++){o=k===0?0:(k%2?1:-1)*Math.ceil(k/2)*r*1.1;if(!placed.some(q=>(q.o-o)*(q.o-o)+(q.y-y)*(q.y-y)<4*r*r*0.85))break}
+    placed.push({o,y});off[i]=o;
+  });
+  return off;
+}
+
+function dotChart(groups,o){
+  o=o||{};const ov=o.ov||{},k=groups.length,W=760,H=o.H||380,m={l:58,r:16,t:14,b:o.sub?66:50};
+  const all=[].concat(...groups.map(g=>g.y));let lo=minOf(all),hi=maxOf(all);const pad=(hi-lo||1)*.08;
+  const fr=frame(W,H,m,[0,k],[lo-pad,hi+pad],{xcat:true,ylab:o.ylab||'Score'});
+  const maxn=maxOf(groups.map(g=>g.y.length)),r=maxn<=15?5.5:maxn<=40?4.2:maxn<=100?3:2.2;
+  let s=fr.s;
+  if(ov.grand){const gm=mean(all);s+=`<line x1="${m.l}" x2="${W-m.r}" y1="${fr.sy(gm)}" y2="${fr.sy(gm)}" stroke="var(--muted)" stroke-dasharray="5 4"/><text x="${W-m.r-4}" y="${fr.sy(gm)-4}" text-anchor="end" fill="var(--muted)">grand mean ${f(gm,1)}</text>`}
+  groups.forEach((g,gi)=>{
+    const cx=fr.sx(gi+.5),col=COLS[gi%5],mu=mean(g.y),sg=sd(g.y),n=g.y.length,off=swarm(g.y,fr.sy,r),hw=fr.sx(gi+.5+.34)-cx;
+    if(ov.sd)s+=`<rect x="${cx-hw}" y="${fr.sy(mu+sg)}" width="${2*hw}" height="${Math.max(1,fr.sy(mu-sg)-fr.sy(mu+sg))}" fill="${col}" fill-opacity=".13"/>`;
+    if(ov.dev)g.y.forEach((v,i)=>{s+=`<line x1="${(cx+off[i]).toFixed(1)}" x2="${(cx+off[i]).toFixed(1)}" y1="${fr.sy(v).toFixed(1)}" y2="${fr.sy(mu).toFixed(1)}" stroke="${col}" stroke-opacity=".45"/>`});
+    g.y.forEach((v,i)=>{s+=mk(gi,cx+off[i],fr.sy(v),r,col,.8)});
+    if(ov.median){const md=median(g.y);s+=`<line x1="${cx-hw}" x2="${cx+hw}" y1="${fr.sy(md)}" y2="${fr.sy(md)}" stroke="var(--fg)" stroke-width="1.5" stroke-dasharray="4 3"/>`}
+    if(ov.mean)s+=`<line x1="${cx-hw}" x2="${cx+hw}" y1="${fr.sy(mu)}" y2="${fr.sy(mu)}" stroke="var(--fg)" stroke-width="2.6"/>`;
+    if(ov.ci&&n>1){const se=sg/Math.sqrt(n),tc=tcrit(n-1,.05),x=cx+hw+9;s+=`<line x1="${x}" x2="${x}" y1="${fr.sy(mu-tc*se)}" y2="${fr.sy(mu+tc*se)}" stroke="var(--fg)" stroke-width="1.6"/><line x1="${x-4}" x2="${x+4}" y1="${fr.sy(mu-tc*se)}" y2="${fr.sy(mu-tc*se)}" stroke="var(--fg)" stroke-width="1.6"/><line x1="${x-4}" x2="${x+4}" y1="${fr.sy(mu+tc*se)}" y2="${fr.sy(mu+tc*se)}" stroke="var(--fg)" stroke-width="1.6"/><circle cx="${x}" cy="${fr.sy(mu)}" r="2.6" fill="var(--fg)"/>`}
+    s+=`<text x="${cx}" y="${H-m.b+16}" text-anchor="middle" fill="var(--fg)" font-weight="600">${esc(g.label)}</text><text x="${cx}" y="${H-m.b+30}" text-anchor="middle" fill="var(--muted)">n = ${n}, M = ${f(mu,1)}, SD = ${f(sg,1)}</text>`;
+    if(o.sub)s+=`<text x="${cx}" y="${H-m.b+44}" text-anchor="middle" fill="var(--muted)">${esc(o.sub[gi]||'')}</text>`;
+  });
+  return svgWrap(W,H,s,o.label||'Dot plot of scores by group');
+}
+
+function scatterChart(pts,o){
+  const W=o.W||760,H=o.H||360,m={l:58,r:o.W?16:78,t:14,b:44},xs=pts.map(p=>p.x),ys=pts.map(p=>p.y);
+  const xp=(maxOf(xs)-minOf(xs)||1)*.06,yp=(maxOf(ys)-minOf(ys)||1)*.08;
+  const fr=frame(W,H,m,[o.x0!==undefined?o.x0:minOf(xs)-xp,o.x1!==undefined?o.x1:maxOf(xs)+xp],[minOf(ys)-yp,maxOf(ys)+yp],{xlab:o.xlab,ylab:o.ylab});
+  let s=fr.s;
+  if(o.band)s+=`<rect x="${fr.sx(o.band[0])}" y="${m.t}" width="${fr.sx(o.band[1])-fr.sx(o.band[0])}" height="${fr.ih}" fill="var(--colB)" fill-opacity=".10"/>`;
+  pts.forEach(p=>{s+=mk(p.g||0,fr.sx(p.x),fr.sy(p.y),o.r||3.6,COLS[(p.g||0)%5],p.faded?.28:.8)});
+  (o.hlines||[]).forEach(h=>{s+=`<line x1="${m.l}" x2="${W-m.r}" y1="${fr.sy(h.y)}" y2="${fr.sy(h.y)}" stroke="${h.col}" stroke-width="2" stroke-dasharray="6 4"/><text x="${W-m.r+4}" y="${fr.sy(h.y)+4}" fill="${h.col}" font-weight="600">${esc(h.t)}</text>`});
+  if(o.fit){const a=o.fit;s+=`<line x1="${fr.sx(a.x0)}" y1="${fr.sy(a.y0)}" x2="${fr.sx(a.x1)}" y2="${fr.sy(a.y1)}" stroke="var(--fg)" stroke-width="1.6"/>`}
+  return svgWrap(W,H,s,o.label||'Scatter plot');
+}
+
+function histRows(rows,truth,o){
+  o=o||{};const W=760,rowH=o.rowH||74,top=10,bot=44,H=top+rows.length*rowH+bot,m={l:210,r:20};
+  const all=[].concat(...rows.map(r=>r.vals));let lo=Math.min(minOf(all),truth),hi=Math.max(maxOf(all),truth);const pad=(hi-lo||1)*.06;lo-=pad;hi+=pad;
+  const sx=v=>m.l+(v-lo)/(hi-lo)*(W-m.l-m.r),bins=28,bw=(hi-lo)/bins;let s='';
+  const xt=ticks(lo,hi,7);
+  xt.t.forEach(v=>{s+=`<line x1="${sx(v)}" x2="${sx(v)}" y1="${top}" y2="${H-bot}" stroke="var(--grid)"/><text x="${sx(v)}" y="${H-bot+15}" text-anchor="middle" fill="var(--muted)">${fmtT(v,xt.step)}</text>`});
+  s+=`<text x="${m.l+(W-m.l-m.r)/2}" y="${H-6}" text-anchor="middle" fill="var(--muted)">${esc(o.xlab||'Estimated effect')}</text>`;
+  rows.forEach((r,ri)=>{
+    const y0=top+ri*rowH,base=y0+rowH-10,cnt=new Array(bins).fill(0);
+    r.vals.forEach(v=>{cnt[Math.min(bins-1,Math.max(0,Math.floor((v-lo)/bw)))]++});
+    const mx=maxOf(cnt)||1,col=r.col||'var(--colA)';
+    cnt.forEach((c,i)=>{if(!c)return;const h=c/mx*(rowH-26);s+=`<rect x="${sx(lo+i*bw)+.5}" y="${base-h}" width="${Math.max(1,sx(lo+(i+1)*bw)-sx(lo+i*bw)-1)}" height="${h}" fill="${col}" fill-opacity=".75"/>`});
+    s+=`<line x1="${m.l}" x2="${W-m.r}" y1="${base}" y2="${base}" stroke="var(--axis)"/>`;
+    const mu=mean(r.vals);
+    s+=`<polygon points="${sx(mu)},${base+1} ${sx(mu)-5},${base+8} ${sx(mu)+5},${base+8}" fill="var(--fg)"/>`;
+    s+=`<text x="${m.l-8}" y="${base-24}" text-anchor="end" fill="var(--fg)" font-weight="600">${esc(r.label)}</text><text x="${m.l-8}" y="${base-10}" text-anchor="end" fill="var(--muted)">mean ${f(mu,1)}, SD ${f(sd(r.vals),1)}</text>`;
+  });
+  s+=`<line x1="${sx(truth)}" x2="${sx(truth)}" y1="${top}" y2="${H-bot}" stroke="var(--bad)" stroke-width="1.8" stroke-dasharray="6 4"/><text x="${sx(truth)+4}" y="${top+10}" fill="var(--bad)" font-weight="600">${o.tl||'true effect'} ${f(truth,2)}</text>`;
+  return svgWrap(W,H,s,o.label||'Distribution of estimated effects');
+}
+
+function pairedChart(M,labels,o){
+  o=o||{};const ov=o.ov||{},k=M[0].length,W=760,H=380,m={l:58,r:16,t:14,b:46},n=M.length;
+  const view=o.mode==='pos'?'pos':'treat',D=view==='pos'?o.P:M;
+  const all=[].concat(...D);if(o.M0&&ov.truth&&view==='treat')all.push(...[].concat(...o.M0));
+  const lo=minOf(all),hi=maxOf(all),pad=(hi-lo||1)*.08;
+  const fr=frame(W,H,m,[0,k],[lo-pad,hi+pad],{xcat:true,ylab:o.ylab||'Score'}),cx=j=>fr.sx(j+.5);let s=fr.s;
+  const dotR=n<=20?4.4:n<=50?3.3:2.4;
+  if(ov.lines)D.forEach(r=>{s+=`<polyline fill="none" stroke="var(--axis)" stroke-opacity="${n<=20?.5:.25}" points="${r.map((v,j)=>cx(j).toFixed(1)+','+fr.sy(v).toFixed(1)).join(' ')}"/>`});
+  if(view==='treat'){
+    D.forEach(r=>r.forEach((v,j)=>{s+=mk(j,cx(j)+(((j*37)%7)-3)*1.2,fr.sy(v),dotR,COLS[j%5],.7)}));
+  }else{
+    D.forEach((r,i)=>r.forEach((v,j)=>{const t=o.seqOf[o.rows[i]][j];s+=mk(t,cx(j)+(((i*13+j)%7)-3)*1.2,fr.sy(v),dotR,COLS[t%5],.7)}));
+  }
+  const mu=Array.from({length:k},(_,j)=>mean(D.map(r=>r[j])));
+  if(o.M0&&ov.truth&&view==='treat'){const t0=Array.from({length:k},(_,j)=>mean(o.M0.map(r=>r[j])));
+    s+=`<polyline fill="none" stroke="var(--bad)" stroke-width="1.8" stroke-dasharray="5 4" points="${t0.map((v,j)=>cx(j)+','+fr.sy(v)).join(' ')}"/>`;
+    t0.forEach((v,j)=>{s+=mk(2,cx(j),fr.sy(v),5,'var(--bad)',1,true)});
+    s+=`<text x="${W-m.r-4}" y="${m.t+12}" text-anchor="end" fill="var(--bad)">dashed: true means (no order or carryover effects)</text>`;
+  }
+  if(ov.mean){s+=`<polyline fill="none" stroke="var(--fg)" stroke-width="2.6" points="${mu.map((v,j)=>cx(j)+','+fr.sy(v)).join(' ')}"/>`;mu.forEach((v,j)=>{s+=`<circle cx="${cx(j)}" cy="${fr.sy(v)}" r="5.5" fill="var(--fg)"/><text x="${cx(j)+9}" y="${fr.sy(v)-8}" fill="var(--fg)" font-weight="600">${f(v,1)}</text>`})}
+  const xl=view==='pos'?Array.from({length:k},(_,j)=>'Position '+(j+1)):labels;
+  xl.forEach((l,j)=>{s+=`<text x="${cx(j)}" y="${H-m.b+18}" text-anchor="middle" fill="var(--fg)" font-weight="600">${esc(l)}</text>`});
+  s+=`<text x="${m.l+fr.iw/2}" y="${H-6}" text-anchor="middle" fill="var(--muted)">${view==='pos'?'Order in which the treatment was received (marker shows which treatment)':'Treatment condition (each line is one participant)'}</text>`;
+  return svgWrap(W,H,s,o.label||'Scores of each participant across conditions');
+}
+
+function lineChart(series,o){
+  const W=760,H=o.H||340,m={l:58,r:20,t:14,b:46},fr=frame(W,H,m,o.xd,[0,1],{xlab:o.xlab,ylab:o.ylab,yn:5});let s=fr.s;
+  if(o.target!==undefined)s+=`<line x1="${m.l}" x2="${W-m.r}" y1="${fr.sy(o.target)}" y2="${fr.sy(o.target)}" stroke="var(--muted)" stroke-dasharray="5 4"/><text x="${W-m.r-4}" y="${fr.sy(o.target)-5}" text-anchor="end" fill="var(--muted)">target power ${o.target}</text>`;
+  series.forEach(se=>{
+    s+=`<polyline fill="none" stroke="${se.col}" stroke-width="2.4" ${se.dash?'stroke-dasharray="6 4"':''} points="${se.xs.map((x,i)=>fr.sx(x).toFixed(1)+','+fr.sy(se.ys[i]).toFixed(1)).join(' ')}"/>`;
+    if(se.mark!==undefined){const x=se.mark.x,y=se.mark.y;s+=mk(se.shape||0,fr.sx(x),fr.sy(y),5.5,se.col,1)}
+  });
+  if(o.vline!==undefined)s+=`<line x1="${fr.sx(o.vline)}" x2="${fr.sx(o.vline)}" y1="${m.t}" y2="${H-m.b}" stroke="var(--axis)" stroke-dasharray="2 3"/>`;
+  return svgWrap(W,H,s,o.label||'Line chart');
+}
+
+function barMeans(groups,o){
+  o=o||{};const W=760,H=o.H||320,m={l:58,r:16,t:14,b:56},k=groups.length;
+  const lo=Math.min(...groups.map(g=>mean(g.y)-2.6*sd(g.y)/Math.sqrt(g.y.length))),hi=Math.max(...groups.map(g=>mean(g.y)+2.6*sd(g.y)/Math.sqrt(g.y.length)));
+  const pad=(hi-lo||1)*.25,fr=frame(W,H,m,[0,k],[lo-pad,hi+pad],{xcat:true,ylab:o.ylab||'Score'});let s=fr.s;
+  groups.forEach((g,gi)=>{
+    const cx=fr.sx(gi+.5),mu=mean(g.y),se=sd(g.y)/Math.sqrt(g.y.length),tc=tcrit(g.y.length-1,.05),hw=fr.sx(gi+.5+.28)-cx,col=COLS[gi%5];
+    s+=`<rect x="${cx-hw}" y="${Math.min(fr.sy(mu),H-m.b)}" width="${2*hw}" height="${Math.max(0,H-m.b-fr.sy(mu))}" fill="${col}" fill-opacity=".3" stroke="${col}"/>`;
+    s+=`<line x1="${cx}" x2="${cx}" y1="${fr.sy(mu-tc*se)}" y2="${fr.sy(mu+tc*se)}" stroke="var(--fg)" stroke-width="1.8"/><line x1="${cx-6}" x2="${cx+6}" y1="${fr.sy(mu-tc*se)}" y2="${fr.sy(mu-tc*se)}" stroke="var(--fg)" stroke-width="1.8"/><line x1="${cx-6}" x2="${cx+6}" y1="${fr.sy(mu+tc*se)}" y2="${fr.sy(mu+tc*se)}" stroke="var(--fg)" stroke-width="1.8"/>`;
+    s+=`<text x="${cx}" y="${fr.sy(mu+tc*se)-8}" text-anchor="middle" fill="var(--fg)" font-weight="600">${f(mu,1)}</text>`;
+    s+=`<text x="${cx}" y="${H-m.b+17}" text-anchor="middle" fill="var(--fg)" font-weight="600">${esc(g.label)}</text><text x="${cx}" y="${H-m.b+31}" text-anchor="middle" fill="var(--muted)">n = ${g.y.length}</text>`;
+  });
+  return svgWrap(W,H,s,o.label||'Group means with 95% confidence intervals');
+}
+
+const esc2=esc;
+function ctrlHTML(prefix,defs,state,presets){
+  let h=`<div class="ctl"><label for="${prefix}-preset">Scenario preset</label><select id="${prefix}-preset"><option value="">Choose a preset…</option>${presets.map((p,i)=>`<option value="${i}">${esc(p[0])}</option>`).join('')}</select></div>`;
+  const groups=[];defs.forEach(d=>{if(!groups.includes(d.g))groups.push(d.g)});
+  groups.forEach((g,gi)=>{
+    h+=`<details class="grp" ${gi<(prefix==='ba'?1:3)?'open':''}><summary>${esc(g)}</summary>`;
+    defs.filter(d=>d.g===g).forEach(d=>{
+      const id=`${prefix}-${d.k}`,v=state[d.k],ttl=d.help?` title="${esc(d.help)}"`:'';
+      if(d.type==='select')h+=`<div class="ctl"><label for="${id}"${ttl}>${esc(d.l)}</label><select id="${id}" data-k="${d.k}" ${d.num?'data-num="1"':''}>${d.opts.map(o=>`<option value="${o[0]}" ${String(o[0])===String(v)?'selected':''}>${esc(o[1])}</option>`).join('')}</select></div>`;
+      else if(d.type==='check')h+=`<div class="ctl check"><label><input type="checkbox" id="${id}" data-k="${d.k}" ${v?'checked':''}> ${esc(d.l)}</label></div>`;
+      else if(d.type==='text')h+=`<div class="ctl"><label for="${id}">${esc(d.l)}</label><input type="text" id="${id}" data-k="${d.k}" value="${esc(v)}"></div>`;
+      else if(d.type==='seed')h+=`<div class="ctl"><label for="${id}">${esc(d.l)}</label><div class="row"><input type="number" id="${id}" data-k="${d.k}" value="${v}" min="1" step="1" style="flex:1"><button class="small" data-act="${prefix}-rand">Randomize</button></div></div>`;
+      else h+=`<div class="ctl"><label for="${id}"${ttl}>${esc(d.l)}<output id="${id}-o">${d.fmt?d.fmt(v):v}${d.unit||''}</output></label><input type="range" id="${id}" data-k="${d.k}" min="${d.min}" max="${d.max}" step="${d.step}" value="${v}"></div>`;
+    });
+    h+='</details>';
+  });
+  return h+`<div class="row"><button class="small" data-act="${prefix}-reset">Reset all</button></div>`;
+}
+function ovHTML(prefix,items,ov){return items.map(([k,l])=>`<label><input type="checkbox" data-ov="${k}" data-pre="${prefix}" ${ov[k]?'checked':''}> ${l}</label>`).join('')}
+function applyVis(prefix,defs,state){defs.forEach(d=>{if(!d.show)return;const el=$('#'+prefix+'-'+d.k);const c=el&&el.closest('.ctl');if(c)c.hidden=!d.show(state)})}
+function syncControls(prefix,defs,state){
+  defs.forEach(d=>{const el=$('#'+prefix+'-'+d.k);if(!el)return;
+    if(d.type==='check')el.checked=!!state[d.k];else el.value=state[d.k];
+    const o=$('#'+prefix+'-'+d.k+'-o');if(o)o.textContent=(d.fmt?d.fmt(state[d.k]):state[d.k])+(d.unit||'');});
+  applyVis(prefix,defs,state);
+}
+function bindControls(prefix,state,defs,onChange,presets,def){
+  const root=$('#'+prefix+'-controls');
+  root.addEventListener('input',e=>{
+    const el=e.target;if(el.id===prefix+'-preset')return;
+    const k=el.dataset.k;if(!k)return;
+    let v;
+    if(el.type==='checkbox')v=el.checked;else if(el.type==='range'||el.type==='number'||el.dataset.num)v=+el.value;else v=el.value;
+    if(el.type==='number'&&!(v>=1))return;
+    state[k]=v;
+    const o=$('#'+prefix+'-'+k+'-o'),d=defs.find(x=>x.k===k);if(o&&d)o.textContent=(d.fmt?d.fmt(v):v)+(d.unit||'');
+    applyVis(prefix,defs,state);onChange();
+  });
+  root.addEventListener('change',e=>{
+    if(e.target.id===prefix+'-preset'){const i=e.target.value;if(i==='')return;
+      Object.assign(state,def,presets[+i][1],{seed:state.seed});syncControls(prefix,defs,state);onChange();}
+  });
+}
+
+/* ================= tables / narrative ================= */
+function tbl(head,rows){
+  const isTxt=c=>{const t=String(c).replace(/<[^>]*>/g,'').trim();return t.length>14&&!/^[+\-−0-9.]/.test(t)};
+  const L=head.map((h,i)=>i===0||rows.some(r=>isTxt(r[i])));
+  const cls=i=>L[i]?' class="l"':'';
+  return `<div class="tbl-wrap"><table><thead><tr>${head.map((h,i)=>Array.isArray(h)?`<th${cls(i)} title="${esc(h[1])}">${h[0]}</th>`:`<th${cls(i)}>${h}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${r.map((c,i)=>`<td${cls(i)}>${c}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+}
+const pill=(txt,cls)=>`<span class="pill ${cls}">${txt}</span>`;
+const sigPill=p=>p<0.05?pill('p '+(p<0.001?'< .001':'= '+pf(p))+': significant','good'):pill('p = '+pf(p)+': not significant','warn');
+function legendHTML(labels){return labels.map((l,i)=>`<span><i style="display:inline-block;vertical-align:middle;margin-right:4px;width:11px;height:11px;border-radius:${i%5===0?'50%':'2px'};background:${COLS[i%5]}"></i>${esc(l)}</span>`).join('')}
+
+
+
+/* ================= correlation statistics ================= */
+const npdf=x=>Math.exp(-x*x/2)/Math.sqrt(2*Math.PI);
+function solveLin(A,b){
+  const n=b.length;A=A.map((r,i)=>r.concat([b[i]]));
+  for(let i=0;i<n;i++){
+    let p=i;for(let r=i+1;r<n;r++)if(Math.abs(A[r][i])>Math.abs(A[p][i]))p=r;
+    [A[i],A[p]]=[A[p],A[i]];const d=A[i][i];if(Math.abs(d)<1e-12)return null;
+    for(let c=i;c<=n;c++)A[i][c]/=d;
+    for(let r=0;r<n;r++)if(r!==i){const m=A[r][i];if(m)for(let c=i;c<=n;c++)A[r][c]-=m*A[i][c]}
+  }
+  return A.map(r=>r[n]);
+}
+function ols(X,y){
+  const n=X.length,p=X[0].length;
+  const XtX=Array.from({length:p},(_,i)=>Array.from({length:p},(_,j)=>sum(X.map(r=>r[i]*r[j]))));
+  const Xty=Array.from({length:p},(_,i)=>sum(X.map((r,k)=>r[i]*y[k])));
+  const b=solveLin(XtX,Xty);if(!b)return null;
+  const inv=[];for(let j=0;j<p;j++){const e=new Array(p).fill(0);e[j]=1;inv.push(solveLin(XtX,e))}
+  const res=y.map((v,k)=>v-sum(X[k].map((x,i)=>x*b[i]))),df=n-p,s2=df>0?sum(res.map(r=>r*r))/df:NaN;
+  const se=b.map((_,i)=>Math.sqrt(s2*inv[i][i])),t=b.map((v,i)=>v/se[i]);
+  return{b,se,t,p:t.map(v=>df>0?tp2(v,df):NaN),df,s2,res,sse:sum(res.map(r=>r*r))};
+}
+function rankOf(a){
+  const idx=a.map((v,i)=>i).sort((i,j)=>a[i]-a[j]),r=new Array(a.length);let i=0;
+  while(i<idx.length){let j=i;while(j+1<idx.length&&a[idx[j+1]]===a[idx[i]])j++;const rk=(i+j)/2+1;for(let q=i;q<=j;q++)r[idx[q]]=rk;i=j+1}
+  return r;
+}
+const rP=(r,n)=>{if(!(n>2)||!Number.isFinite(r))return NaN;if(Math.abs(r)>=1)return 0;const t=r*Math.sqrt((n-2)/(1-r*r));return tp2(t,n-2)};
+const rCrit=(n,alpha)=>{const df=n-2;if(df<1)return 1;const tc=tcrit(df,alpha||.05);return tc/Math.sqrt(df+tc*tc)};
+function rCI(r,n){if(!(n>3)||!Number.isFinite(r)||Math.abs(r)>=1)return[NaN,NaN];const z=Math.atanh(r),se=1/Math.sqrt(n-3);return[Math.tanh(z-1.96*se),Math.tanh(z+1.96*se)]}
+const strengthWord=r=>{const a=Math.abs(r);return !Number.isFinite(r)?'—':a<.10?'below the small benchmark (.10)':a<.30?'between small (.10) and medium (.30)':a<.50?'between medium (.30) and large (.50)':'at or above the large benchmark (.50)'};
+const dirWord=r=>!Number.isFinite(r)?'—':Math.abs(r)<.005?'none':r>0?'positive':'negative';
+function xyStats(x,y){
+  const n=x.length,r=corr(x,y),mx=mean(x),my=mean(y);
+  let sp=0,ssx=0,ssy=0;for(let i=0;i<n;i++){sp+=(x[i]-mx)*(y[i]-my);ssx+=(x[i]-mx)**2;ssy+=(y[i]-my)**2}
+  const b=ssx>0?sp/ssx:NaN,a=my-b*mx,rs=corr(rankOf(x),rankOf(y));
+  let r2q=NaN;
+  if(n>=5&&ssx>0&&ssy>0){const o=ols(x.map(v=>{const u=v-mx;return[1,u,u*u]}),y);if(o)r2q=1-o.sse/ssy}
+  let maxD=0,worst=-1,rLoo=NaN;
+  if(n>=6&&Number.isFinite(r))for(let i=0;i<n;i++){const rr=corr(x.filter((_,k)=>k!==i),y.filter((_,k)=>k!==i));const d=Math.abs(rr-r);if(d>maxD){maxD=d;worst=i;rLoo=rr}}
+  const see=n>2&&ssy>0?Math.sqrt(Math.max(0,ssy*(1-r*r))/(n-2)):NaN;
+  return{n,r,r2:r*r,p:rP(r,n),ci:rCI(r,n),rs,ps:rP(rs,n),mx,my,sx:Math.sqrt(ssx/(n-1)),sy:Math.sqrt(ssy/(n-1)),sp,ssx,ssy,b,a,r2q,maxD,worst,rLoo,see};
+}
+function slopeOf(xs,ys){const mx=mean(xs),my=mean(ys);let sxy=0,sxx=0;for(let i=0;i<xs.length;i++){sxy+=(xs[i]-mx)*(ys[i]-my);sxx+=(xs[i]-mx)*(xs[i]-mx)}return sxx>0?sxy/sxx:NaN}
+const partialR=(rxy,rxz,ryz)=>{const d=Math.sqrt((1-rxz*rxz)*(1-ryz*ryz));return d>0?(rxy-rxz*ryz)/d:NaN};
+
+/* ================= simulation: one pair of variables ================= */
+function simXY(p,seed){
+  const R=makeRng(seed===undefined?p.seed:seed),n=p.n,rr=clamp(p.r,-1,1),s=Math.sqrt(Math.max(0,1-rr*rr));
+  const nOut=Math.min(p.out|0,Math.max(0,n-4)),nBase=n-nOut,lim=p.restrict<3?p.restrict:Infinity;
+  const X=[],Y=[];
+  while(X.length<nBase){
+    const z=R.n(),e=R.n();
+    if(Math.abs(z)>lim)continue;
+    let y;
+    if(p.form==='mono'){const lat=rr*z+s*e;y=(Math.exp(.9*lat)-1.4993)/1.675}
+    else if(p.form==='curve'){const q=-(z*z-1)/Math.SQRT2;y=(rr<0?-q:q)*Math.abs(rr)+s*e}
+    else y=rr*z+s*e;
+    X.push(z);Y.push(y);
+  }
+  for(let k=0;k<nOut;k++){X.push(2.8+.3*k);Y.push((rr>=0?-1:1)*(2.6+.2*k))}
+  const rd=v=>Math.round(v*10)/10;
+  return{x:X.map(z=>rd(p.xm+p.xsd*z)),y:Y.map(z=>rd(p.ym+p.ysd*z))};
+}
+function repR(rho,n,reps,seed){
+  const R=makeRng(seed),out=[],s=Math.sqrt(Math.max(0,1-rho*rho));
+  for(let k=0;k<reps;k++){const x=[],y=[];for(let i=0;i<n;i++){const z=R.n(),e=R.n();x.push(z);y.push(rho*z+s*e)}out.push(corr(x,y))}
+  return out;
+}
+/* ================= simulation: third variable ================= */
+function simWK(p,seed){
+  const R=makeRng(seed===undefined?p.seed:seed),n=p.n,Z=[],X=[],Y=[];
+  for(let i=0;i<n;i++){const z=R.n(),x=p.a*z+R.n(),y=p.b*z+p.c*x+R.n();Z.push(z);X.push(x);Y.push(y)}
+  const sc=(a,m,s)=>{const mu=mean(a),sg=sd(a)||1;return a.map(v=>Math.round((m+s*(v-mu)/sg)*10)/10)};
+  return{z:sc(Z,50,10),x:sc(X,50,10),y:sc(Y,50,10)};
+}
+function wkStats(D){
+  const n=D.x.length,rxy=corr(D.x,D.y),rxz=corr(D.x,D.z),ryz=corr(D.y,D.z),pr=partialR(rxy,rxz,ryz);
+  const o1=ols(D.x.map(v=>[1,v]),D.y),o2=ols(D.x.map((v,i)=>[1,v,D.z[i]]),D.y),my=mean(D.y),sst=sum(D.y.map(v=>(v-my)**2));
+  const sx=sd(D.x),sy=sd(D.y),sz=sd(D.z);
+  return{n,rxy,rxz,ryz,pr,o1,o2,r2s:o1?1-o1.sse/sst:NaN,r2m:o2?1-o2.sse/sst:NaN,
+    betaX:o2?o2.b[1]*sx/sy:NaN,betaZ:o2?o2.b[2]*sz/sy:NaN};
+}
+function wkTruth(p){
+  const vx=p.a*p.a+1,k=p.b+p.c*p.a,vy=k*k+p.c*p.c+1,cov=p.a*k+p.c;
+  return{raw:cov/Math.sqrt(vx*vy),partial:p.c/Math.sqrt(p.c*p.c+1)};
+}
+function repWK(p,reps){
+  const raw=[],par=[];
+  for(let k=0;k<reps;k++){const S=wkStats(simWK(p,p.seed*7919+k*31+7));raw.push(S.rxy);par.push(S.pr)}
+  return{raw,par};
+}
+/* ================= point-biserial ================= */
+function simPB(p){
+  const R=makeRng(p.seed),g0=[],g1=[],rd=v=>Math.round(v*10)/10;
+  for(let i=0;i<p.n;i++){g0.push(rd(50+p.sdv*R.n()));g1.push(rd(50+p.d*p.sdv+p.sdv*R.n()))}
+  return{g0,g1};
+}
+
+/* ================= extra charts ================= */
+function scChart(x,y,o){
+  const ov=o.ov||{},W=760,H=o.H||380,m={l:58,r:20,t:16,b:46};
+  let xs=x,ys=y,xl=o.xlab,yl=o.ylab;
+  if(ov.ranks){xs=rankOf(x);ys=rankOf(y);xl='Rank of '+xl;yl='Rank of '+yl}
+  if(o.swap){const t=xs;xs=ys;ys=t;const u=xl;xl=yl;yl=u}
+  const n=xs.length,lx=minOf(xs),hx=maxOf(xs),ly=minOf(ys),hy=maxOf(ys),xp=(hx-lx||1)*.07,yp=(hy-ly||1)*.09;
+  const fr=frame(W,H,m,[lx-xp,hx+xp],[ly-yp,hy+yp],{xlab:xl,ylab:yl});
+  const cid='clip-'+(o.id||'sc'),mx=mean(xs),my=mean(ys),st=xyStats(xs,ys);
+  let s=fr.s+`<clipPath id="${cid}"><rect x="${m.l}" y="${m.t}" width="${fr.iw}" height="${fr.ih}"/></clipPath><g clip-path="url(#${cid})">`;
+  const X0=fr.sx(mx),Y0=fr.sy(my);
+  if(ov.quad){
+    s+=`<rect x="${X0}" y="${m.t}" width="${W-m.r-X0}" height="${Y0-m.t}" fill="var(--colA)" fill-opacity=".09"/><rect x="${m.l}" y="${Y0}" width="${X0-m.l}" height="${H-m.b-Y0}" fill="var(--colA)" fill-opacity=".09"/>`
+     +`<rect x="${m.l}" y="${m.t}" width="${X0-m.l}" height="${Y0-m.t}" fill="var(--colB)" fill-opacity=".09"/><rect x="${X0}" y="${Y0}" width="${W-m.r-X0}" height="${H-m.b-Y0}" fill="var(--colB)" fill-opacity=".09"/>`;
+  }
+  if(ov.means||ov.quad)s+=`<line x1="${m.l}" x2="${W-m.r}" y1="${Y0}" y2="${Y0}" stroke="var(--muted)" stroke-dasharray="5 4"/><line x1="${X0}" x2="${X0}" y1="${m.t}" y2="${H-m.b}" stroke="var(--muted)" stroke-dasharray="5 4"/>`;
+  if(o.band&&Number.isFinite(st.b)){
+    const xa=lx-xp,xb=hx+xp,ya=st.a+st.b*xa,yb=st.a+st.b*xb;
+    s+=`<polygon points="${fr.sx(xa)},${fr.sy(ya+o.band)} ${fr.sx(xb)},${fr.sy(yb+o.band)} ${fr.sx(xb)},${fr.sy(yb-o.band)} ${fr.sx(xa)},${fr.sy(ya-o.band)}" fill="var(--colC)" fill-opacity=".12"/>`;
+  }
+  const fit=Number.isFinite(st.b);
+  if(ov.dev&&fit)for(let i=0;i<n;i++){s+=`<line x1="${fr.sx(xs[i]).toFixed(1)}" x2="${fr.sx(xs[i]).toFixed(1)}" y1="${fr.sy(ys[i]).toFixed(1)}" y2="${fr.sy(st.a+st.b*xs[i]).toFixed(1)}" stroke="var(--colB)" stroke-opacity=".6"/>`}
+  const r=n<=15?5.5:n<=40?4.2:n<=100?3.2:2.4;
+  for(let i=0;i<n;i++){
+    let g=0,col='var(--colA)';
+    if(o.g){g=o.g[i];col=COLS[g%5]}
+    else if(ov.quad){const pos=(xs[i]-mx)*(ys[i]-my)>=0;col=pos?'var(--colA)':'var(--colB)';g=pos?0:1}
+    s+=mk(g,fr.sx(xs[i]),fr.sy(ys[i]),r,col,.78);
+  }
+  if(o.within&&o.g){
+    for(let gi=0;gi<3;gi++){
+      const ix=[];for(let i=0;i<n;i++)if(o.g[i]===gi)ix.push(i);
+      if(ix.length<4)continue;const a=ix.map(i=>xs[i]),b=ix.map(i=>ys[i]),sl=slopeOf(a,b),ic=mean(b)-sl*mean(a);
+      if(!Number.isFinite(sl))continue;const x0=minOf(a),x1=maxOf(a);
+      s+=`<line x1="${fr.sx(x0)}" y1="${fr.sy(ic+sl*x0)}" x2="${fr.sx(x1)}" y2="${fr.sy(ic+sl*x1)}" stroke="${COLS[gi%5]}" stroke-width="3"/>`;
+    }
+  }
+  if(ov.line&&fit){const xa=lx-xp,xb=hx+xp;s+=`<line x1="${fr.sx(xa)}" y1="${fr.sy(st.a+st.b*xa)}" x2="${fr.sx(xb)}" y2="${fr.sy(st.a+st.b*xb)}" stroke="var(--fg)" stroke-width="2"/>`}
+  if(ov.mark&&st.worst>=0&&st.maxD>.08)s+=`<circle cx="${fr.sx(xs[st.worst])}" cy="${fr.sy(ys[st.worst])}" r="${r+5}" fill="none" stroke="var(--bad)" stroke-width="2"/>`;
+  if(o.pred!==undefined&&fit){
+    const px=o.pred,py=st.a+st.b*px,X1=fr.sx(px),Y1=fr.sy(py);
+    s+=`<line x1="${X1}" x2="${X1}" y1="${H-m.b}" y2="${Y1}" stroke="var(--colC)" stroke-width="1.6" stroke-dasharray="5 3"/><line x1="${m.l}" x2="${X1}" y1="${Y1}" y2="${Y1}" stroke="var(--colC)" stroke-width="1.6" stroke-dasharray="5 3"/>`+mk(2,X1,Y1,6,'var(--colC)',1);
+  }
+  s+='</g>';
+  s+=`<text x="${m.l+8}" y="${m.t+16}" fill="var(--fg)" font-weight="700" font-size="13">${o.noR?'':'r = '+f(st.r,2)+'  '}<tspan fill="var(--muted)" font-weight="400" font-size="11">n = ${n}</tspan></text>`;
+  return svgWrap(W,H,s,o.label||'Scatter plot of paired scores');
+}
+function rHist(vals,rho,rc){
+  const W=760,H=300,m={l:46,r:16,t:16,b:44},bins=40,iw=W-m.l-m.r,ih=H-m.t-m.b,cnt=new Array(bins).fill(0);
+  vals.forEach(v=>{cnt[clamp(Math.floor((v+1)/2*bins),0,bins-1)]++});
+  const mx=maxOf(cnt)||1,sx=v=>m.l+(v+1)/2*iw;let s=`<rect x="${m.l}" y="${m.t}" width="${iw}" height="${ih}" fill="var(--plot)"/>`;
+  [-1,-.5,0,.5,1].forEach(v=>{s+=`<line x1="${sx(v)}" x2="${sx(v)}" y1="${m.t}" y2="${H-m.b}" stroke="var(--grid)"/><text x="${sx(v)}" y="${H-m.b+15}" text-anchor="middle" fill="var(--muted)">${v}</text>`});
+  cnt.forEach((c,i)=>{if(!c)return;const lo=-1+i*2/bins,hi=lo+2/bins,sig=Math.abs((lo+hi)/2)>rc,h=c/mx*(ih-8);
+    s+=`<rect x="${sx(lo)+.5}" y="${H-m.b-h}" width="${Math.max(1,sx(hi)-sx(lo)-1)}" height="${h}" fill="${sig?'var(--bad)':'var(--colA)'}" fill-opacity=".78"/>`});
+  s+=`<line x1="${m.l}" x2="${W-m.r}" y1="${H-m.b}" y2="${H-m.b}" stroke="var(--axis)"/>`;
+  [-rc,rc].forEach(v=>{s+=`<line x1="${sx(v)}" x2="${sx(v)}" y1="${m.t}" y2="${H-m.b}" stroke="var(--fg)" stroke-dasharray="4 3"/>`});
+  s+=`<text x="${sx(rc)+4}" y="${m.t+11}" fill="var(--fg)">critical r = ±${f(rc,3)}</text>`;
+  s+=`<line x1="${sx(rho)}" x2="${sx(rho)}" y1="${m.t}" y2="${H-m.b}" stroke="var(--good)" stroke-width="2"/><text x="${sx(rho)+(rho>.5?-4:4)}" y="${m.t+26}" text-anchor="${rho>.5?'end':'start'}" fill="var(--good)" font-weight="600">true ρ = ${f(rho,2)}</text>`;
+  s+=`<text x="${m.l+iw/2}" y="${H-6}" text-anchor="middle" fill="var(--muted)">sample correlation r (red bars: significant at .05)</text><text transform="translate(12 ${m.t+ih/2}) rotate(-90)" text-anchor="middle" fill="var(--muted)">number of samples</text>`;
+  return svgWrap(W,H,s,'Histogram of sample correlations from repeated samples');
+}
+function pbChart(g0,g1,l0,l1){
+  const W=760,H=360,m={l:58,r:20,t:16,b:56},all=g0.concat(g1),lo=minOf(all),hi=maxOf(all),pad=(hi-lo||1)*.08;
+  const fr=frame(W,H,m,[-.6,1.6],[lo-pad,hi+pad],{xcat:true,ylab:'Score (Y)'});let s=fr.s;
+  const mu0=mean(g0),mu1=mean(g1);
+  [[g0,0],[g1,1]].forEach(([g,c])=>{g.forEach((v,i)=>{const j=(((i*37+c*11)%13)-6)/6*.13;s+=mk(c,fr.sx(c+j),fr.sy(v),g.length<=25?4.6:3.2,COLS[c],.75)})});
+  s+=`<line x1="${fr.sx(0)}" y1="${fr.sy(mu0)}" x2="${fr.sx(1)}" y2="${fr.sy(mu1)}" stroke="var(--fg)" stroke-width="2.2"/>`;
+  [[0,mu0,l0],[1,mu1,l1]].forEach(([c,mu,l])=>{s+=`<circle cx="${fr.sx(c)}" cy="${fr.sy(mu)}" r="5.5" fill="var(--fg)"/><text x="${fr.sx(c)}" y="${H-m.b+17}" text-anchor="middle" fill="var(--fg)" font-weight="600">X = ${c}</text><text x="${fr.sx(c)}" y="${H-m.b+31}" text-anchor="middle" fill="var(--muted)">${esc(l)} (M = ${f(mu,1)})</text>`});
+  s+=`<text x="${m.l+fr.iw/2}" y="${H-6}" text-anchor="middle" fill="var(--muted)">Category coded numerically (X); line = regression through the two group means</text>`;
+  return svgWrap(W,H,s,'Scores plotted against a 0/1 coded category');
+}
+function chiChart(tab,rl,cl){
+  const W=760,R=tab.length,rowH=54,H=40+R*rowH+30,m={l:170,r:30};let s='';const iw=W-m.l-m.r;
+  s+=`<text x="${m.l}" y="16" fill="var(--muted)">Share of each row falling in each column</text>`;
+  tab.forEach((r,i)=>{
+    const tot=sum(r),y=30+i*rowH;let x=m.l;
+    s+=`<text x="${m.l-8}" y="${y+22}" text-anchor="end" fill="var(--fg)" font-weight="600">${esc(rl[i])}</text><text x="${m.l-8}" y="${y+36}" text-anchor="end" fill="var(--muted)">n = ${tot}</text>`;
+    r.forEach((c,j)=>{const w=tot?c/tot*iw:0;s+=`<rect x="${x}" y="${y+4}" width="${w}" height="34" fill="${COLS[j%5]}" fill-opacity=".72" stroke="var(--plot)"/>`;if(w>46)s+=`<text x="${x+w/2}" y="${y+25}" text-anchor="middle" fill="#fff" font-weight="700">${c} (${Math.round(tot?c/tot*100:0)}%)</text>`;x+=w});
+  });
+  cl.forEach((c,j)=>{s+=`<rect x="${m.l+j*150}" y="${H-20}" width="11" height="11" fill="${COLS[j%5]}" fill-opacity=".72"/><text x="${m.l+j*150+16}" y="${H-10}" fill="var(--muted)">${esc(c)}</text>`});
+  return svgWrap(W,H,s,'Stacked bars of category proportions');
+}
+function varBar(r2){
+  const W=760,H=84,m=20,iw=W-2*m,w=clamp(r2,0,1)*iw;
+  let s=`<rect x="${m}" y="26" width="${iw}" height="30" fill="var(--grid)" stroke="var(--line)"/><rect x="${m}" y="26" width="${w}" height="30" fill="var(--colA)" fill-opacity=".8"/>`;
+  s+=`<text x="${m}" y="18" fill="var(--fg)" font-weight="600">Variability in Y: ${pct(r2)} predicted by X (r² = ${f(r2,2)})</text><text x="${W-m}" y="${H-10}" text-anchor="end" fill="var(--muted)">${pct(1-r2)} unexplained (determined by other factors)</text>`;
+  return svgWrap(W,H,s,'Share of variability in Y associated with X');
+}
+function arrowSvg(x1,y1,x2,y2,w,col,dash){
+  const dx=x2-x1,dy=y2-y1,L=Math.hypot(dx,dy)||1,ux=dx/L,uy=dy/L,h=7+w;
+  const ex=x2,ey=y2,bx=ex-ux*h,by=ey-uy*h;
+  return `<line x1="${x1}" y1="${y1}" x2="${bx}" y2="${by}" stroke="${col}" stroke-width="${w}" ${dash?'stroke-dasharray="5 4"':''}/><polygon points="${ex},${ey} ${bx-uy*h*.5},${by+ux*h*.5} ${bx+uy*h*.5},${by-ux*h*.5}" fill="${col}"/>`;
+}
+function nodeSvg(x,y,txt,dash,col){
+  const w=Math.max(70,txt.length*6.6+22);
+  return `<rect x="${x-w/2}" y="${y-16}" width="${w}" height="32" rx="8" fill="var(--card)" stroke="${col||'var(--fg)'}" stroke-width="1.8" ${dash?'stroke-dasharray="5 3"':''}/><text x="${x}" y="${y+4}" text-anchor="middle" fill="var(--fg)" font-weight="600">${esc(txt)}</text>`;
+}
+const cut=(t,n)=>t.length>n?t.slice(0,n-1)+'…':t;
+function causalFig(p){
+  const W=760,H=210;let s='';
+  const zx=380,zy=36,xx=190,xy=168,yx=570,yy=168,wd=v=>1+Math.abs(v)*5,col=v=>v<0?'var(--colB)':'var(--colA)';
+  if(Math.abs(p.a)>.02)s+=arrowSvg(zx-30,zy+16,xx+30,xy-16,wd(p.a),col(p.a));
+  if(Math.abs(p.b)>.02)s+=arrowSvg(zx+30,zy+16,yx-30,yy-16,wd(p.b),col(p.b));
+  if(Math.abs(p.c)>.02)s+=arrowSvg(xx+Math.max(70,cut(p.xlab,18).length*6.6+22)/2,xy,yx-Math.max(70,cut(p.ylab,18).length*6.6+22)/2,yy,wd(p.c),col(p.c));
+  s+=nodeSvg(zx,zy,cut(p.zlab,22),true,'var(--colD)')+nodeSvg(xx,xy,cut(p.xlab,18))+nodeSvg(yx,yy,cut(p.ylab,18));
+  s+=`<text x="${(zx+xx)/2-22}" y="${(zy+xy)/2}" text-anchor="end" fill="var(--muted)">Z → X: ${sgn(p.a,2)}</text><text x="${(zx+yx)/2+22}" y="${(zy+yy)/2}" fill="var(--muted)">Z → Y: ${sgn(p.b,2)}</text><text x="${(xx+yx)/2}" y="${xy-8}" text-anchor="middle" fill="var(--muted)">X → Y (direct): ${sgn(p.c,2)}</text>`;
+  s+=`<text x="${zx}" y="14" text-anchor="middle" fill="var(--colD)">third variable (not measured in a correlational study)</text>`;
+  return svgWrap(W,H,s,'Causal diagram of the simulated variables');
+}
+function dirFig(xl,yl){
+  const W=760,H=200,pw=176,x0=[10,202,394,586];let s='';
+  xl=cut(xl,13);yl=cut(yl,13);
+  const titles=['X causes Y','Y causes X','Both cause each other','A third variable causes both'];
+  titles.forEach((t,i)=>{
+    const x=x0[i];s+=`<rect x="${x}" y="8" width="${pw}" height="184" rx="8" fill="var(--card)" stroke="var(--line)"/><text x="${x+pw/2}" y="28" text-anchor="middle" fill="var(--fg)" font-weight="600">${t}</text>`;
+    const ax=x+46,bx=x+pw-46;
+    if(i<3){
+      s+=nodeSvg(ax,100,xl)+nodeSvg(bx,100,yl);
+      if(i===0)s+=arrowSvg(ax+36,100,bx-36,100,2.4,'var(--colA)');
+      if(i===1)s+=arrowSvg(bx-36,100,ax+36,100,2.4,'var(--colB)');
+      if(i===2){s+=arrowSvg(ax+36,92,bx-36,92,2.2,'var(--colA)')+arrowSvg(bx-36,110,ax+36,110,2.2,'var(--colB)')}
+    }else{
+      s+=nodeSvg(x+pw/2,56,'Z',true,'var(--colD)')+nodeSvg(ax,140,xl)+nodeSvg(bx,140,yl)+arrowSvg(x+pw/2-14,72,ax+10,124,2.2,'var(--colD)')+arrowSvg(x+pw/2+14,72,bx-10,124,2.2,'var(--colD)');
+    }
+    s+=`<text x="${x+pw/2}" y="182" text-anchor="middle" fill="var(--muted)">same scatter plot, same r</text>`;
+  });
+  return svgWrap(W,H,s,'Four causal stories that produce the same correlation');
+}
+
+/* ================= definitions ================= */
+const fmt2=v=>f(v,2);
+const DEF_SC={seed:11,n:40,r:.6,form:'lin',out:0,restrict:3,xm:50,xsd:10,ym:50,ysd:10,xlab:'Variable X',ylab:'Variable Y'};
+const SC_DEFS=[
+ {g:'Relationship',k:'r',l:'Strength in the population (ρ)',min:-1,max:1,step:.01,fmt:fmt2,help:'The correlation built into the simulated population. The sample r will differ from it.'},
+ {g:'Relationship',k:'form',l:'Form of the relationship',type:'select',opts:[['lin','Linear'],['mono','Monotonic, not linear'],['curve','Curvilinear (inverted U / U)']],help:'Pearson r measures only the linear part of a relationship.'},
+ {g:'Relationship',k:'n',l:'Number of individuals (n)',min:5,max:300,step:1},
+ {g:'Complications (extensions)',k:'out',l:'Extreme points added',min:0,max:3,step:1,help:'Adds individuals with extreme X and an opposing extreme Y.'},
+ {g:'Complications (extensions)',k:'restrict',l:'Range of X kept',min:.5,max:3,step:.1,fmt:v=>v>=3?'all':'± '+f(v,1)+' SD',help:'Keeping only part of the X range (range restriction) weakens the sample r.'},
+ {g:'Variables and scale',k:'xlab',l:'Label for X',type:'text'},
+ {g:'Variables and scale',k:'ylab',l:'Label for Y',type:'text'},
+ {g:'Variables and scale',k:'xm',l:'Mean of X',min:0,max:200,step:1},
+ {g:'Variables and scale',k:'xsd',l:'SD of X',min:1,max:40,step:1},
+ {g:'Variables and scale',k:'ym',l:'Mean of Y',min:0,max:200,step:1},
+ {g:'Variables and scale',k:'ysd',l:'SD of Y',min:1,max:40,step:1},
+ {g:'Randomness',k:'seed',l:'Random seed',type:'seed'}
+];
+const SC_PRESETS=[
+ ['Strong positive (r ≈ .90)',{r:.9}],
+ ['Weak negative (r ≈ −.40)',{r:-.4}],
+ ['Perfect negative (r = −1.00)',{r:-1,n:12}],
+ ['No linear trend (r ≈ 0)',{r:0}],
+ ['Monotonic but not linear',{r:.85,form:'mono'}],
+ ['Curvilinear: strong, but r ≈ 0',{r:.85,form:'curve',n:80}],
+ ['Small sample, no real relationship',{r:0,n:6}],
+ ['One extreme point (extension)',{r:0,n:25,out:1}],
+ ['Restricted range of X (extension)',{r:.7,n:80,restrict:.5}]
+];
+const DEF_SG={seed:5,n:10,rho:0};
+const SG_DEFS=[
+ {g:'Population and sample',k:'rho',l:'True population correlation (ρ)',min:-.95,max:.95,step:.05,fmt:fmt2},
+ {g:'Population and sample',k:'n',l:'Sample size (n)',min:5,max:1000,step:1},
+ {g:'Randomness',k:'seed',l:'Random seed',type:'seed'}
+];
+const SG_PRESETS=[
+ ['No relationship, tiny samples (n = 5)',{rho:0,n:5}],
+ ['No relationship, n = 30',{rho:0,n:30}],
+ ['Modest relationship (ρ = .30), n = 20',{rho:.3,n:20}],
+ ['Modest relationship (ρ = .30), n = 100',{rho:.3,n:100}],
+ ['Strong relationship (ρ = .70), n = 10',{rho:.7,n:10}],
+ ['Trivial relationship (ρ = .10), n = 1000',{rho:.1,n:1000}]
+];
+const G_PB='One numerical score and a two-category variable',G_CH='Two non-numerical variables: observed counts';
+const DEF_NM={seed:7,n:15,d:.8,sdv:10,l0:'Category 0',l1:'Category 1',c11:17,c12:3,c21:12,c22:8,r1:'College graduate',r2:'No college',k1:'Succeed',k2:'Fail'};
+const NM_DEFS=[
+ {g:G_PB,k:'n',l:'Individuals per category',min:3,max:100,step:1},
+ {g:G_PB,k:'d',l:'Category 1 minus category 0 (SD units)',min:-2,max:2,step:.05,fmt:fmt2},
+ {g:G_PB,k:'sdv',l:'SD of the numerical score',min:5,max:20,step:1},
+ {g:G_PB,k:'l0',l:'Name of category coded 0',type:'text'},
+ {g:G_PB,k:'l1',l:'Name of category coded 1',type:'text'},
+ {g:G_CH,k:'c11',l:'Row 1, column 1',min:0,max:200,step:1},
+ {g:G_CH,k:'c12',l:'Row 1, column 2',min:0,max:200,step:1},
+ {g:G_CH,k:'c21',l:'Row 2, column 1',min:0,max:200,step:1},
+ {g:G_CH,k:'c22',l:'Row 2, column 2',min:0,max:200,step:1},
+ {g:G_CH,k:'r1',l:'Row 1 name',type:'text'},
+ {g:G_CH,k:'r2',l:'Row 2 name',type:'text'},
+ {g:G_CH,k:'k1',l:'Column 1 name',type:'text'},
+ {g:G_CH,k:'k2',l:'Column 2 name',type:'text'},
+ {g:'Randomness',k:'seed',l:'Random seed',type:'seed'}
+];
+const NM_PRESETS=[
+ ['Textbook Figure 12.4 counts (17, 3, 12, 8)',{}],
+ ['No association in the table',{c11:10,c12:10,c21:10,c22:10}],
+ ['Strong association, small table',{c11:9,c12:1,c21:2,c22:8}],
+ ['Same proportions, ten times the counts',{c11:170,c12:30,c21:120,c22:80}],
+ ['Large group difference (d = 1.2)',{d:1.2}],
+ ['No group difference',{d:0}]
+];
+const DEF_PR={seed:21,n:50,r:.6,xm:50,xsd:10,ym:50,ysd:10,xval:65,app:'predict',xlab:'Predictor: admission test score',ylab:'Criterion: first-year performance'};
+const APPS={
+ predict:['Prediction','The first variable is the <b>predictor</b> and the second is the <b>criterion</b> (the variable being predicted or explained). Regression finds the equation that gives the most accurate predictions of Y for each value of X. The predictor is usually relatively simple and well defined, while the criterion is relatively complex and unknown.'],
+ reliab:['Reliability','Reliability is commonly defined by a correlation. For test-retest reliability, the same individuals are measured twice and the two sets of scores are correlated: the higher the correlation, the more consistent the measurement.'],
+ valid:['Validity','Validity is commonly established by correlation. Scores from a measurement are correlated with a criterion that the measurement is supposed to reflect: the stronger the relationship, the better the evidence that the measurement captures what it should.'],
+ twin:['Explaining theories','Correlational designs can address theoretical questions. A classic example is correlating the IQ scores of pairs of identical twins: a theory about the contribution of heredity predicts a relationship between the scores within pairs. (The values here are invented for illustration.)']
+};
+const PR_DEFS=[
+ {g:'Application',k:'app',l:'Use of the correlation',type:'select',opts:Object.keys(APPS).map(k=>[k,APPS[k][0]])},
+ {g:'Application',k:'r',l:'Correlation in the population (ρ)',min:-1,max:1,step:.01,fmt:fmt2},
+ {g:'Application',k:'n',l:'Number of individuals (n)',min:5,max:300,step:1},
+ {g:'Application',k:'xval',l:'Predict Y for X =',min:0,max:200,step:.5},
+ {g:'Variables and scale',k:'xlab',l:'Label for X (predictor)',type:'text'},
+ {g:'Variables and scale',k:'ylab',l:'Label for Y (criterion)',type:'text'},
+ {g:'Variables and scale',k:'xm',l:'Mean of X',min:0,max:200,step:1},
+ {g:'Variables and scale',k:'xsd',l:'SD of X',min:1,max:40,step:1},
+ {g:'Variables and scale',k:'ym',l:'Mean of Y',min:0,max:200,step:1},
+ {g:'Variables and scale',k:'ysd',l:'SD of Y',min:1,max:40,step:1},
+ {g:'Randomness',k:'seed',l:'Random seed',type:'seed'}
+];
+const PR_PRESETS=[
+ ['Prediction: admission test and later performance',{app:'predict',r:.5}],
+ ['Reliability: test-retest',{app:'reliab',r:.9,xlab:'Score, first testing',ylab:'Score, second testing'}],
+ ['Validity: test and criterion',{app:'valid',r:.6,xlab:'Score on the new test',ylab:'Score on the criterion measure'}],
+ ['Theory: pairs of identical twins',{app:'twin',r:.8,xm:100,xsd:15,ym:100,ysd:15,xval:115,xlab:'IQ of twin 1',ylab:'IQ of twin 2'}]
+];
+const DEF_WK={seed:3,n:100,a:.9,b:.9,c:0,xlab:'Ice cream consumption',ylab:'Crime rate',zlab:'Temperature'};
+const G_CS='Causal structure (hidden from the researcher)';
+const WK_DEFS=[
+ {g:G_CS,k:'a',l:'Z influences X',min:-1,max:1,step:.05,fmt:fmt2,help:'Strength of the effect of the third variable on X.'},
+ {g:G_CS,k:'b',l:'Z influences Y',min:-1,max:1,step:.05,fmt:fmt2,help:'Strength of the effect of the third variable on Y.'},
+ {g:G_CS,k:'c',l:'X directly influences Y',min:-1,max:1,step:.05,fmt:fmt2,help:'Set to 0 for a purely spurious correlation.'},
+ {g:'Sample',k:'n',l:'Number of individuals (n)',min:10,max:400,step:1},
+ {g:'Variables',k:'xlab',l:'Label for X',type:'text'},
+ {g:'Variables',k:'ylab',l:'Label for Y',type:'text'},
+ {g:'Variables',k:'zlab',l:'Label for the third variable Z',type:'text'},
+ {g:'Randomness',k:'seed',l:'Random seed',type:'seed'}
+];
+const WK_PRESETS=[
+ ['Ice cream, crime and temperature (spurious)',{a:.9,b:.9,c:0}],
+ ['A real effect and a confounder',{a:.6,b:.5,c:.4,xlab:'Hours of exercise',ylab:'Well-being score',zlab:'Free time'}],
+ ['A real effect, no third variable',{a:0,b:0,c:.6,xlab:'Hours studied',ylab:'Exam score',zlab:'Unrelated factor'}],
+ ['Third variable masks an effect',{a:.7,b:-.5,c:.5,xlab:'Training hours',ylab:'Skill score',zlab:'Age'}]
+];
+const DEFAULTS={sc:DEF_SC,sg:DEF_SG,nm:DEF_NM,pr:DEF_PR,wk:DEF_WK},DEFS={sc:SC_DEFS,sg:SG_DEFS,nm:NM_DEFS,pr:PR_DEFS,wk:WK_DEFS},PRESETS={sc:SC_PRESETS,sg:SG_PRESETS,nm:NM_PRESETS,pr:PR_PRESETS,wk:WK_PRESETS};
+const st={tab:'cl',sc:Object.assign({},DEF_SC),sg:Object.assign({},DEF_SG),nm:Object.assign({},DEF_NM),pr:Object.assign({},DEF_PR),wk:Object.assign({},DEF_WK),
+  scOv:{line:true,quad:false,dev:false,mark:true,ranks:false},prOv:{band:true,res:false},wkOv:{line:true,color:true,within:false,swap:false},
+  scCustom:null,cm:0,cl:{man:'no',ran:'no',data:'pairs',scale:'num',form:'lin',goal:'describe'}};
+const memoC={};
+function cached(key,fn){if(memoC[key]!==undefined)return memoC[key];const ks=Object.keys(memoC);if(ks.length>40)delete memoC[ks[0]];return memoC[key]=fn()}
+function statRow(items){return `<div class="stat">${items.map(([v,l])=>`<div><b>${v}</b><span>${l}</span></div>`).join('')}</div>`}
+const fp=p=>p<0.001?'< .001':'= '+pf(p);
+/* ================= RENDER: classifier ================= */
+const STRAT={corr:['Correlational strategy','warn'],diff:['Differential research (nonexperimental)','warn'],exp:['Experimental strategy','good'],quasi:['Quasi-experimental (outside this chapter)','warn']};
+function classify(c){
+  if(c.man==='yes'){
+    if(c.ran==='yes')return{s:'exp',stat:'Depends on the design (t test, ANOVA)',why:'The researcher manipulates the variable and assigns participants at random, so differences can be attributed to the treatment.',can:['A cause-and-effect relationship between the manipulated variable and the outcome'],cannot:['Anything about relationships among variables the researcher did not manipulate'],go:[]};
+    return{s:'quasi',stat:'Depends on the design',why:'The researcher creates or exploits conditions but cannot randomly assign participants, so alternative explanations remain. This falls between correlational and experimental work.',can:['Tentative conclusions that depend on how well threats are limited'],cannot:['A clean cause-and-effect conclusion'],go:[]};
+  }
+  const common={can:['That a relationship exists, and a description of its direction, form and strength'],cannot:['That one variable causes the other: the third-variable and directionality problems remain']};
+  if(c.data==='groups')return{s:'diff',stat:'Independent-measures t test (two groups) or single-factor ANOVA (three or more); chi-square for non-numerical scores',why:'Two or more groups of scores are compared and the focus is the difference between groups, not a pattern within the scores of individuals.',can:['That the groups differ'],cannot:['What caused the difference: preexisting groups differ in many ways'],go:[]};
+  if(c.data==='multi')return{s:'corr',stat:'Multiple regression',why:'More than two variables were measured on each individual. Multiple regression examines multivariate relationships and can statistically control other, potentially confounding variables.',can:['The relationship between two variables while statistically controlling others','Prediction of a criterion from several predictors'],cannot:['Explanation: predictor variables only predict; relationships are described, not explained'],go:['wk']};
+  let stat,why,go=['sc'];
+  if(c.scale==='num'&&c.form==='lin'){stat='Pearson correlation';why='Both variables are numerical scores (interval or ratio) and the data are expected to cluster around a straight line, the linear relationship that Pearson r measures.'}
+  else if(c.scale==='num'){stat='Spearman correlation';why='The relationship is expected to be one-directional but not a straight line (monotonic). Spearman correlates the ranks, so it measures the consistency of the direction rather than linearity.'}
+  else if(c.scale==='rank'){stat='Spearman correlation';why='Scores are ranks (ordinal). The Spearman correlation is the Pearson correlation computed on the ranks and evaluates monotonic relationships.'}
+  else if(c.scale==='mixed2'){stat='Point-biserial correlation';why='One variable is numerical and the other has two categories. Code the categories as 0 and 1 and compute the Pearson correlation: the point-biserial correlation.';go=['nm']}
+  else if(c.scale==='mixedk')return{s:'diff',stat:'Organize the scores into groups, then compare the groups (t test or ANOVA)',why:'One variable is numerical and the other has three or more categories. Use the categories to organize the numerical scores into separate groups; the question becomes one of differences between groups.',can:['That the groups differ'],cannot:['What caused the difference'],go:[]};
+  else{stat='Chi-square test for independence';why='Both variables are non-numerical. Organize the data in a matrix, with the categories of one variable as rows and the other as columns, and apply the chi-square test.';go=['nm']}
+  const r={s:'corr',stat,why,cannot:common.cannot};
+  if(c.goal==='predict'){r.can=common.can.concat(['Prediction of the criterion Y from the predictor X using regression']);go=go.concat(['pr'])}
+  else if(c.goal==='theory'){r.can=common.can.concat(['Evidence about a theory, or about reliability or validity, when the theory predicts a relationship']);go=go.concat(['pr'])}
+  else r.can=common.can;
+  r.go=go;return r;
+}
+function renderSpectrum(key){
+  const W=760,H=232,xs=[10,260,510],pw=240;let s='';
+  const T=[['Correlational','Relationship between two variables','pairs of scores from each individual','No cause and effect','var(--colA)'],['Differential','Difference between groups','groups of scores are compared','No cause and effect','var(--colC)'],['Experimental','Effect of a manipulated variable','random assignment and control','Cause and effect','var(--colB)']];
+  T.forEach((t,i)=>{
+    const x=xs[i],on=(key==='corr'&&i===0)||(key==='diff'&&i===1)||(key==='exp'&&i===2);
+    s+=`<rect x="${x}" y="6" width="${pw}" height="220" rx="9" fill="var(--card)" stroke="${on?t[4]:'var(--line)'}" stroke-width="${on?3:1}"/><text x="${x+pw/2}" y="28" text-anchor="middle" fill="var(--fg)" font-weight="700" font-size="13">${t[0]}</text><text x="${x+pw/2}" y="44" text-anchor="middle" fill="var(--muted)">${t[1]}</text>`;
+    const px=x+30,py=58,pw2=pw-60,ph=84;
+    s+=`<rect x="${px}" y="${py}" width="${pw2}" height="${ph}" fill="var(--plot)" stroke="var(--line)"/>`;
+    if(i===0){[[.1,.15],[.18,.3],[.28,.22],[.35,.45],[.45,.4],[.55,.62],[.65,.55],[.75,.8],[.85,.7],[.92,.9]].forEach(p=>{s+=`<circle cx="${px+p[0]*pw2}" cy="${py+ph-p[1]*ph}" r="3.4" fill="${t[4]}" fill-opacity=".85"/>`});s+=`<line x1="${px+6}" y1="${py+ph-10}" x2="${px+pw2-6}" y2="${py+12}" stroke="var(--fg)" stroke-dasharray="4 3"/>`}
+    else{[[.3,[.3,.4,.5,.35,.45,.55,.42]],[.7,[.55,.65,.75,.6,.7,.8,.68]]].forEach((g,gi)=>{g[1].forEach((v,k)=>{s+=`<circle cx="${px+g[0]*pw2+((k%3)-1)*9}" cy="${py+ph-v*ph}" r="3.4" fill="${gi?'var(--colB)':t[4]}" fill-opacity=".85"/>`});const m=mean(g[1]);s+=`<line x1="${px+g[0]*pw2-22}" x2="${px+g[0]*pw2+22}" y1="${py+ph-m*ph}" y2="${py+ph-m*ph}" stroke="var(--fg)" stroke-width="2"/>`});
+      if(i===2)s+=`<text x="${px+pw2/2}" y="${py+ph+14}" text-anchor="middle" fill="var(--colB)" font-weight="600">manipulated variable</text>`}
+    s+=`<text x="${x+pw/2}" y="${i===2?172:164}" text-anchor="middle" fill="var(--muted)">${t[2]}</text><text x="${x+pw/2}" y="206" text-anchor="middle" fill="${i===2?'var(--good)':'var(--bad)'}" font-weight="700">${t[3]}</text>`;
+    if(on)s+=`<text x="${x+pw/2}" y="190" text-anchor="middle" fill="var(--fg)" font-weight="700">▲ your study ▲</text>`;
+  });
+  return svgWrap(W,H,s,'Comparison of correlational, differential and experimental strategies');
+}
+function renderCL(){
+  const c=st.cl,K=classify(c),sl=STRAT[K.s],GO={sc:'Explore correlation coefficients',nm:'Explore non-numerical data',pr:'Explore prediction',wk:'Explore third variables'};
+  $('#cl-spectrum').innerHTML=renderSpectrum(K.s);
+  $('#cl-out').innerHTML=`<p>${pill(sl[0],sl[1])}</p><p><b>Suggested statistic:</b> ${esc(K.stat)}</p><p>${esc(K.why)}</p>`
+   +`<div class="grid2"><div class="callout"><b>You can conclude</b><ul class="clean">${K.can.map(t=>`<li>${esc(t)}</li>`).join('')}</ul></div><div class="callout warn"><b>You cannot conclude</b><ul class="clean">${K.cannot.map(t=>`<li>${esc(t)}</li>`).join('')}</ul></div></div>`
+   +(K.go&&K.go.length?`<p class="row">${K.go.map(g=>`<button class="small" data-goto="${g}">${GO[g]}</button>`).join('')}</p>`:'');
+  const pairs=c.man==='no'&&c.data==='pairs',vis={ran:c.man==='yes',data:c.man==='no',scale:pairs,form:pairs&&c.scale==='num',goal:pairs};
+  $$('.q[data-q]').forEach(q=>{q.hidden=!vis[q.dataset.q]});
+  const X=[1,6,4,7,9],Y=[3,8,4,12,10],S=xyStats(X,Y);
+  $('#cl-fig-tbl').innerHTML=tbl(['Person','X','Y'],X.map((v,i)=>['ABCDE'[i],v,Y[i]]));
+  $('#cl-fig').innerHTML=scChart(X,Y,{xlab:'X',ylab:'Y',H:300,id:'fig',ov:{line:true},label:'Scatter plot of the five-person data'});
+  $('#cl-fig-txt').innerHTML=`For these five people r = <b>${f(S.r,2)}</b> (r² = ${f(S.r2,2)}). Each person contributes one dot with a horizontal coordinate (X) and a vertical coordinate (Y).`;
+}
+
+/* ================= RENDER: scatter and coefficient ================= */
+function scData(){return st.scCustom?{x:st.scCustom.x,y:st.scCustom.y,xlab:'X',ylab:'Y',custom:true}:Object.assign(simXY(st.sc),{xlab:st.sc.xlab,ylab:st.sc.ylab})}
+function renderSC(){
+  const D=scData(),S=xyStats(D.x,D.y),p=st.sc;
+  $('#sc-ov').innerHTML=ovHTML('scOv',[['line','Regression line'],['quad','Quadrants about the means'],['dev','Residuals'],['mark','Flag influential point'],['ranks','Show ranks']],st.scOv);
+  $('#sc-title').textContent=D.custom?'Your data':D.ylab+' versus '+D.xlab;
+  $('#sc-sub').textContent=D.custom?`${S.n} pairs of scores you supplied.`:`A simulated sample of ${p.n} individuals from a population with ρ = ${f(p.r,2)} (${{lin:'linear',mono:'monotonic',curve:'curvilinear'}[p.form]} form). The sample r differs from ρ because of random sampling.`;
+  $('#sc-chart').innerHTML=scChart(D.x,D.y,{ov:st.scOv,xlab:D.xlab,ylab:D.ylab,id:'sc'});
+  $('#sc-legend').innerHTML=st.scOv.quad?`<span><i class="dotA" style="background:var(--colA)"></i>X and Y deviate from their means in the same direction (positive product)</span><span><i class="dotA" style="background:var(--colB)"></i>opposite directions (negative product)</span>`:'';
+  const curv=S.n>=8&&S.r2q-S.r2>.15,mono=!curv&&S.n>=8&&S.rs*S.rs-S.r2>.06;
+  const formTxt=curv?`Curvilinear: a curved (quadratic) fit explains ${pct(S.r2q)} of the variability but a straight line only ${pct(S.r2)}. Pearson r understates this relationship.`:mono?`Monotonic but not linear: Spearman ρ (${f(S.rs,2)}) exceeds Pearson r (${f(S.r,2)}). The trend is one-directional but not a straight line.`:'Approximately linear: the points cluster around a straight line, so Pearson r is an appropriate description.';
+  $('#sc-stats').innerHTML=statRow([[f(S.r,2),'Pearson r'],[f(S.r2,2),'r² (coefficient of determination)'],[f(S.rs,2),'Spearman ρ (ranks)'],[S.n,'n'],[Number.isFinite(S.p)?fp(S.p):'—','p value']])
+   +tbl(['Characteristic','What the coefficient reports','This sample'],[
+     ['Direction','The sign (+ or −): do the variables change in the same or in opposite directions?',`${dirWord(S.r)}: ${S.r>0?'as X increases, Y tends to increase':S.r<0?'as X increases, Y tends to decrease':'no consistent direction'}`],
+     ['Form','The type of correlation (Pearson for linear, Spearman for monotonic)',formTxt],
+     ['Consistency (strength)','The numerical value, from 0 to 1 in absolute value',`|r| = ${f(Math.abs(S.r),2)}: ${strengthWord(S.r)}; ${pct(S.r2)} of the variability in Y is predicted by X`]
+   ])
+   +`<p>${Number.isFinite(S.p)?sigPill(S.p):''} <span class="muted small">95% CI for ρ: ${Number.isFinite(S.ci[0])?'['+f(S.ci[0],2)+', '+f(S.ci[1],2)+']':'not available'}</span></p>`
+   +(S.maxD>.1?`<div class="callout warn"><b>One point matters a lot.</b> Removing the most influential point (circled when "Flag influential point" is on) changes r from ${f(S.r,2)} to ${f(S.rLoo,2)}. A correlation based on few individuals can be dominated by a single extreme score.</div>`:'')
+   +(curv&&Math.abs(S.r)<.4?`<div class="callout warn"><b>Do not read r ≈ 0 as "no relationship".</b> Pearson r detects only linear trends; this scatter plot shows a clear, curved pattern.</div>`:'');
+  let calc=`<p>The correlation compares how X and Y vary together with how each varies alone:</p><p style="text-align:center"><b>r = SP / √(SS<sub>X</sub> · SS<sub>Y</sub>)</b> &nbsp;=&nbsp; ${f(S.sp,2)} / √(${f(S.ssx,2)} · ${f(S.ssy,2)}) &nbsp;=&nbsp; <b>${f(S.r,3)}</b></p>`;
+  if(S.n<=12){
+    const rows=D.x.map((v,i)=>{const a=v-S.mx,b=D.y[i]-S.my;return [i+1,f(v,1),f(D.y[i],1),f(a,2),f(b,2),f(a*b,2),f(a*a,2),f(b*b,2)]});
+    rows.push(['Sum','','','','',f(S.sp,2),f(S.ssx,2),f(S.ssy,2)]);
+    calc+=tbl(['i','X','Y','X − M<sub>X</sub>','Y − M<sub>Y</sub>','Product (SP)','(X − M<sub>X</sub>)²','(Y − M<sub>Y</sub>)²'],rows);
+  }else calc+='<p class="small muted">Lower the sample size to 12 or fewer (or paste a small data set) to see the full table of deviations.</p>';
+  calc+=`<p class="small muted">SP is the sum of products of deviations. Positive products (same-direction deviations) push r up; negative products push it down. Slope of the regression line: b = SP / SS<sub>X</sub> = ${f(S.b,3)}.</p>`;
+  $('#sc-calc').innerHTML=calc;
+}
+function parseXY(t){
+  const lines=t.split(/\n/).map(l=>l.trim()).filter(Boolean),body=l=>l.includes(':')?l.slice(l.indexOf(':')+1):l,nums=l=>(body(l).match(/-?\d+(?:\.\d+)?(?:e[-+]?\d+)?/gi)||[]).map(Number);
+  let x=[],y=[];
+  if(lines.length===2&&lines.every(l=>l.includes(':'))){x=nums(lines[0]);y=nums(lines[1]);if(x.length!==y.length)return{error:'X and Y need the same number of scores.'}}
+  else{for(const l of lines){const v=nums(l);if(!v.length)continue;if(v.length<2)return{error:'Each line needs two scores (X and Y). Problem line: '+l.slice(0,40)};x.push(v[v.length-2]);y.push(v[v.length-1])}}
+  if(x.length<3)return{error:'Provide at least 3 pairs of scores.'};
+  if(x.length>500)return{error:'Please use 500 pairs or fewer.'};
+  if(!(vr(x)>0)||!(vr(y)>0))return{error:'Both X and Y must vary.'};
+  return{x,y};
+}
+
+/* ================= RENDER: significance ================= */
+function renderSG(){
+  const p=st.sg,rc=rCrit(p.n),vals=cached(`sg${p.rho}|${p.n}|${p.seed}`,()=>repR(p.rho,p.n,300,p.seed*977+13));
+  const sig=vals.filter(v=>Math.abs(v)>rc).length,mx=maxOf(vals.map(Math.abs)),big=vals.filter(v=>Math.abs(v)>=.5).length;
+  $('#sg-chart').innerHTML=rHist(vals,p.rho,rc);
+  const ns=[];for(let k=4;k<=300;k+=2)ns.push(k);
+  $('#sg-crit').innerHTML=lineChart([{xs:ns,ys:ns.map(k=>rCrit(k)),col:'var(--colA)',mark:p.n<=300?{x:p.n,y:rc}:undefined}],{xd:[0,300],xlab:'sample size n',ylab:'smallest significant |r| (α = .05)',H:300,vline:p.n<=300?p.n:undefined,label:'Critical value of r as a function of sample size'});
+  $('#sg-stats').innerHTML=statRow([[f(rc,3),'critical |r| at this n'],[f(rc*rc,3),'r² at that critical value'],[pct(sig/300),p.rho===0?'of samples significant (false positives)':'of samples significant (power)'],[f(mx,2),'largest |r| in 300 samples'],[big,'samples with |r| ≥ .50']]);
+  $('#sg-msg').innerHTML=p.rho===0?`<div class="callout warn"><b>No relationship exists in this population</b>, yet ${big?`${big} of 300 samples produced a correlation of .50 or more in absolute value`:'the largest sample correlation was '+f(mx,2)}. With a small sample it is possible to obtain what appears to be a very strong correlation when there is no relationship at all. About 5% of samples are significant by chance, whatever the sample size.</div>`
+   :`<div class="callout"><b>${pct(sig/300)} of samples detected the relationship.</b> Increasing the sample size makes it more likely that a correlation represents a real relationship: compare n = 10 with n = 100 for the same ρ.</div>`;
+  $('#sg-tbl').innerHTML=tbl(['n','Smallest significant |r|','r² at that point','Meaning'],[5,10,20,30,50,100,200,500,1000].map(n=>{const c=rCrit(n);return[n,f(c,3),pct(c*c),n<=10?'needs a very strong correlation':n<=50?'needs a medium-sized correlation':n<=200?'a small-to-medium correlation can be significant':'even a tiny correlation can be significant']}));
+  renderSGcalc();
+}
+function renderSGcalc(){
+  const r=+$('#sg-cr').value,n=+$('#sg-cn').value,o=$('#sg-cout');
+  if(!(Math.abs(r)<=1)||!(n>=3)){o.innerHTML='<span class="muted">Enter r between −1 and 1 and n of at least 3.</span>';return}
+  const pv=rP(r,n);
+  o.innerHTML=`<p>${sigPill(pv)} &nbsp; r² = ${f(r*r,3)} (${pct(r*r)} of the variability). Strength: ${strengthWord(r)}.</p>`+(pv<.05&&r*r<.05?'<div class="callout warn">Statistically significant, but the relationship accounts for very little variability. Significance says the correlation is unlikely to be chance, not that it is large.</div>':pv>=.05&&Math.abs(r)>=.5?'<div class="callout warn">The correlation looks large, but with so few individuals it could easily arise by chance.</div>':'');
+}
+/* ================= RENDER: non-numerical data ================= */
+function renderNM(){
+  const p=st.nm,D=simPB(p),x=D.g0.map(()=>0).concat(D.g1.map(()=>1)),y=D.g0.concat(D.g1),r=corr(x,y),pv=rP(r,y.length),T=indT(D.g0,D.g1);
+  $('#nm-chart').innerHTML=pbChart(D.g0,D.g1,p.l0,p.l1);
+  $('#nm-pb').innerHTML=statRow([[f(r,3),'point-biserial r'],[f(r*r,3),'r²'],[f(T.t,2),`t(${T.df}) from the t test`],[fp(pv),'p value'],[f(T.d,2),"Cohen's d"]])
+   +`<p>${sigPill(pv)}</p><div class="callout">Coding the two categories as 0 and 1 and computing the Pearson correlation gives the <b>point-biserial correlation</b>. It tests the same hypothesis as the independent-measures t test: the p value from the correlation (${fp(pv)}) matches the p value from the t test (${fp(T.p)}), and the sign of r follows the direction of the mean difference (${esc(p.l1)} minus ${esc(p.l0)} = ${sgn(T.diff,1)}).</div>`;
+  const tab=[[p.c11,p.c12],[p.c21,p.c22]],N=sum(tab.flat()),rs=tab.map(sum),cs=[p.c11+p.c21,p.c12+p.c22];
+  if(N===0||rs.some(v=>v===0)||cs.some(v=>v===0)){$('#nm-chi').innerHTML='<p class="muted">Every row and every column needs at least one individual.</p>';$('#nm-chi-chart').innerHTML='';return}
+  const C=chiSq(tab),phi=(p.c11*p.c22-p.c12*p.c21)/Math.sqrt(rs[0]*rs[1]*cs[0]*cs[1]);
+  const exp=[[0,1].map(j=>rs[0]*cs[j]/N),[0,1].map(j=>rs[1]*cs[j]/N)];
+  $('#nm-chi-chart').innerHTML=chiChart(tab,[p.r1,p.r2],[p.k1,p.k2]);
+  $('#nm-chi').innerHTML=`<div class="grid2"><div><b>Observed counts</b>${tbl(['',p.k1,p.k2,'Total'],[[p.r1,p.c11,p.c12,rs[0]],[p.r2,p.c21,p.c22,rs[1]],['Total',cs[0],cs[1],N]])}</div><div><b>Expected if the variables were unrelated</b>${tbl(['',p.k1,p.k2],[[p.r1,f(exp[0][0],1),f(exp[0][1],1)],[p.r2,f(exp[1][0],1),f(exp[1][1],1)]])}</div></div>`
+   +statRow([[f(C.x2,2),'χ² (df = 1)'],[fp(C.p),'p value'],[f(Math.abs(phi),2),'φ (strength of association)'],[N,'N']])
+   +`<p>${sigPill(C.p)}</p>`+(C.lowExp?'<div class="callout warn">At least one expected count is below 5, so the chi-square approximation is unreliable. Use more individuals.</div>':'')
+   +`<div class="callout">Chi-square asks whether the distribution of one variable depends on the other. For a 2 × 2 table, φ is the Pearson correlation between the two variables when each is coded 0 and 1. Here the proportion in column 1 is ${pct(p.c11/rs[0])} in row 1 and ${pct(p.c21/rs[1])} in row 2, ${C.p<.05?'a difference large enough to be called significant':'a difference that could be chance with this many individuals'}.</div>`;
+}
+
+/* ================= RENDER: prediction ================= */
+function prSim(){const p=st.pr;return simXY({seed:p.seed,n:p.n,r:p.r,form:'lin',out:0,restrict:3,xm:p.xm,xsd:p.xsd,ym:p.ym,ysd:p.ysd})}
+function renderPR2(){
+  const p=st.pr,D=prSim(),S=xyStats(D.x,D.y),ov=st.prOv;
+  $('#pr2-ov').innerHTML=ovHTML('prOv',[['band','95% prediction band'],['res','Residuals']],ov);
+  const yh=S.a+S.b*p.xval,zx=(p.xval-S.mx)/S.sx,out=p.xval<minOf(D.x)||p.xval>maxOf(D.x);
+  $('#pr2-title').textContent=APPS[p.app][0]+': '+cut(p.ylab,40)+' and '+cut(p.xlab,40);
+  $('#pr2-chart').innerHTML=scChart(D.x,D.y,{ov:{line:true,dev:ov.res},xlab:p.xlab,ylab:p.ylab,id:'pr',pred:p.xval,band:ov.band?1.96*S.see:0});
+  $('#pr2-stats').innerHTML=statRow([[f(S.r,2),'sample r'],[f(S.r2,2),'r²'],[f(S.b,3),'slope b'],[f(S.a,2),'intercept a'],[f(S.see,2),'standard error of estimate']])
+   +`<p style="text-align:center;font-size:1.05rem">Regression equation: <b>Ŷ = ${f(S.a,2)} ${S.b<0?'−':'+'} ${f(Math.abs(S.b),3)} X</b></p>`
+   +`<div class="callout">For X = <b>${f(p.xval,1)}</b> (${f(Math.abs(zx),2)} SD ${zx>=0?'above':'below'} the mean of X) the predicted Y is <b>${f(yh,1)}</b>. About 95% of individuals with this X score fall within roughly ±${f(1.96*S.see,1)} of that value${ov.band?' (the shaded band)':''}. ${out?'<b>This X value lies outside the range of observed scores, so the prediction is an extrapolation.</b>':''}</div>`
+   +`<div class="callout warn">A score ${f(Math.abs(zx),2)} SD from the mean of X predicts a Y score only about ${f(Math.abs(S.r*zx),2)} SD from the mean of Y (r × z<sub>X</sub>). The weaker the correlation, the closer predictions stay to the mean.</div>`;
+  $('#pr2-var').innerHTML=varBar(S.r2);
+  $('#pr2-app').innerHTML=`<p><b>${APPS[p.app][0]}.</b> ${APPS[p.app][1]}</p>`;
+}
+
+/* ================= RENDER: third variable and directionality ================= */
+function renderWK(){
+  const p=st.wk,D=simWK(p),S=wkStats(D),ov=st.wkOv,n=D.x.length;
+  $('#wk-ov').innerHTML=ovHTML('wkOv',[['line','Overall regression line'],['color','Color by third variable'],['within','Line within each color'],['swap','Swap axes']],ov);
+  const rk=rankOf(D.z),g=rk.map(v=>Math.min(2,Math.floor((v-1)/(n/3))));
+  $('#wk-chart').innerHTML=scChart(D.x,D.y,{ov:{line:ov.line},xlab:p.xlab,ylab:p.ylab,id:'wk',g:ov.color?g:null,within:ov.color&&ov.within,swap:ov.swap,label:'Scatter plot of X and Y, optionally colored by the third variable'});
+  $('#wk-legend').innerHTML=ov.color?legendHTML(['low '+p.zlab,'middle '+p.zlab,'high '+p.zlab]):'';
+  $('#wk-causal').innerHTML=causalFig(p);
+  const T=wkTruth(p),tests=(o,i)=>o?`${f(o.b[i],3)} (SE ${f(o.se[i],3)}), p ${fp(o.p[i])}`:'—';
+  $('#wk-stats').innerHTML=statRow([[f(S.rxy,2),'simple r (X, Y)'],[f(S.pr,2),'partial r (X, Y) holding Z constant'],[f(S.rxz,2),'r (X, Z)'],[f(S.ryz,2),'r (Y, Z)']])
+   +tbl(['Analysis','Result'],[
+    ['Simple regression: slope of Y on X',tests(S.o1,1)],
+    ['Multiple regression: slope of Y on X, Z held constant',tests(S.o2,1)],
+    ['Multiple regression: slope of Y on Z',tests(S.o2,2)],
+    ['R²: X alone → X and Z together',`${f(S.r2s,3)} → ${f(S.r2m,3)}`]]);
+  let msg;
+  if(Math.abs(S.rxy)>.25&&Math.abs(S.pr)<.15)msg=`<div class="callout warn"><b>A spurious relationship.</b> X and Y correlate at ${f(S.rxy,2)}, but once ${esc(p.zlab)} is held constant the relationship nearly vanishes (partial r = ${f(S.pr,2)}). Both variables are influenced by ${esc(p.zlab)}, so there is no direct connection between them. Inside each color group the points show little trend.</div>`;
+  else if(Math.abs(S.rxy-S.pr)>.2)msg=`<div class="callout warn"><b>The third variable distorts the relationship.</b> The simple r (${f(S.rxy,2)}) and the relationship with ${esc(p.zlab)} held constant (${f(S.pr,2)}) differ noticeably. A correlation between two variables does not tell you how much of it belongs to them directly.</div>`;
+  else msg=`<div class="callout"><b>The third variable changes little here.</b> The simple r (${f(S.rxy,2)}) and partial r (${f(S.pr,2)}) are similar, so X and Y are related whether or not ${esc(p.zlab)} is controlled. Even so, a correlational study cannot rule out unmeasured variables.</div>`;
+  $('#wk-msg').innerHTML=msg+`<p class="small muted">Multiple regression can examine the relationship between two variables while statistically controlling other, potentially confounding variables. But predictor variables only predict: relationships can be described, not explained.</p>`;
+  $('#wk-dir').innerHTML=dirFig(p.xlab,p.ylab)+`<p class="small muted">Figure 12.6 in the text: a study can show that the sexual content of the television programs adolescents watch is related to their sexual behavior, but cannot tell whether the content influences behavior or behavior influences the choice of programs. Try "Swap axes" above: the pattern and r do not change, because correlation is symmetric.</p>`;
+  const reps=cached(`wk${p.a}|${p.b}|${p.c}|${p.n}|${p.seed}`,()=>repWK(p,300));
+  $('#wk-rep').innerHTML=histRows([{vals:reps.raw,label:'Simple r(X, Y)',col:'var(--colB)'},{vals:reps.par,label:'Partial r, Z held constant',col:'var(--colA)'}],T.partial,{xlab:'Sample correlation between X and Y',tl:'direct relation',rowH:90,label:'Distribution of simple and partial correlations over 300 repeated samples'});
+  $('#wk-rep-txt').innerHTML=`<p class="small">Across 300 samples the simple correlation averages <b>${f(mean(reps.raw),2)}</b>; the partial correlation averages <b>${f(mean(reps.par),2)}</b>, close to the direct relation built into the simulation (${f(T.partial,2)}). The correlation you see without controlling Z answers a different question than the one a causal claim needs.</p>`;
+}
+
+/* ================= RENDER: comparison matrix ================= */
+const CM_COLS=['Correlational','Differential','Experimental'];
+const CM_ROWS=[
+ {n:'Cause-and-effect conclusion',tab:'wk',c:['x','Cannot assess causality: it only shows that variables are related.'],d:['x','Does not determine a cause-and-effect relationship.'],e:['c','Demonstrates a cause-and-effect relationship between the variables.']},
+ {n:'Third-variable problem',tab:'wk',c:['x','Two variables can be related without a direct connection: a third, unidentified variable may produce the relationship (ice cream sales, crime and temperature).'],d:['x','Preexisting groups differ in many ways other than the grouping variable.'],e:['c','Manipulation, control and random assignment limit confounding variables.']},
+ {n:'Directionality problem',tab:'wk',c:['x','Does not establish which variable influences the other (television content and adolescent behavior).'],d:['p','Groups are formed after the fact, so the design itself does not establish the order of events.'],e:['c','The researcher manipulates the independent variable, so the direction of influence is known.']},
+ {n:'Internal validity',tab:'wk',c:['x','Low internal validity.'],d:['x','Low: the groups are not equivalent.'],e:['c','High, when the design is well controlled.']},
+ {n:'External validity',c:['c','High external validity: behavior is observed as it naturally occurs.'],d:['p','Depends on how the groups were obtained.'],e:['p','Can be lower when conditions are artificial or tightly controlled.']},
+ {n:'Nonintrusive observation of natural behavior',c:['c','No attempt to manipulate, control or interfere with the variables.'],d:['c','Existing groups are compared as they are.'],e:['x','The researcher intervenes to create and control conditions.']},
+ {n:'Describing relationships between variables',tab:'sc',c:['c','Establishes that a relationship exists and describes its direction, form and strength.'],d:['p','Describes the difference between groups rather than a pattern within individuals.'],e:['p','Describes the effect of the manipulation on the outcome.']},
+ {n:'Prediction of one variable from another',tab:'pr',c:['c','Regression uses the predictor to predict the criterion.'],d:['p','Group membership can be used for rough prediction.'],e:['p','Treatment effects can inform expectations, though prediction is not the primary goal.']},
+ {n:'Evidence of reliability and validity',tab:'pr',c:['c','Reliability and validity are commonly defined by correlations.'],d:['n','Not a typical use.'],e:['n','Not a typical use.']},
+ {n:'Studying more than two variables',tab:'wk',c:['p','Multiple regression studies multivariate relationships and statistically controls other variables, but variables only predict.'],d:['p','Possible with more groups, with the same causal limits.'],e:['c','Factorial and other designs allow controlled study of several variables.']}
+];
+function renderCM(){
+  const cls={c:'good',p:'warn',x:'bad'},sym={c:'strong',p:'partial',x:'weak'};
+  const head='<tr><th class="l">Issue</th>'+CM_COLS.map(c=>`<th>${c}</th>`).join('')+'</tr>';
+  const cell=v=>v[0]==='n'?'<span class="muted">–</span>':pill(sym[v[0]],cls[v[0]]);
+  const body=CM_ROWS.map((r,i)=>`<tr data-cm="${i}" tabindex="0" style="cursor:pointer;${i===st.cm?'background:var(--grid)':''}"><td class="l"><b>${esc(r.n)}</b></td>`+[r.c,r.d,r.e].map(v=>`<td style="text-align:center">${cell(v)}</td>`).join('')+'</tr>').join('');
+  $('#cm-matrix').innerHTML=`<div class="tbl-wrap"><table><thead>${head}</thead><tbody>${body}</tbody></table></div>`;
+  const r=CM_ROWS[st.cm];$('#cm-title').textContent=r.n;
+  $('#cm-detail').innerHTML='<ul class="clean">'+[['Correlational',r.c],['Differential',r.d],['Experimental',r.e]].map(([n,v])=>`<li><b>${n}:</b> ${cell(v)} ${esc(v[1])}</li>`).join('')+'</ul>'+(r.tab?`<p><button class="small" data-goto="${r.tab}">Explore this in a simulation</button></p>`:'');
+}
+/* ================= practice scenarios ================= */
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const pt=(lo,hi)=>lo+Math.random()*(hi-lo);
+const VARS=[['hours of sleep','memory score'],['minutes of daily exercise','mood rating'],['hours of screen time','reading score'],['number of close friends','life-satisfaction score'],['hours of study','exam score'],['cups of coffee per day','alertness rating'],['neighborhood tree cover','residents’ stress score'],['time spent on social media','self-esteem score']];
+const cap=s=>s[0].toUpperCase()+s.slice(1);
+const SCEN={
+ cause:()=>({p:{n:pick([80,120,200]),r:pick([1,-1])*pt(.45,.7)},claim:(x,y)=>`Because ${x} and ${y} are so clearly related, changing ${x} will change ${y}.`,
+   facts:['Both variables were measured as they naturally occur','Nothing was manipulated and no one was assigned to conditions'],
+   judge:S=>[false,`A correlation of ${f(S.r,2)} shows that the variables are related, not that one causes the other. A third variable could be producing the relationship, and the study cannot tell which variable influences which.`]}),
+ direction:()=>({p:{n:150,r:pt(.35,.6)},claim:(x,y)=>`The data show that ${x} influences ${y}, and not the other way around.`,
+   facts:['Both variables were measured at the same time','The researcher did not control either variable'],
+   judge:S=>[false,`The correlation (r = ${f(S.r,2)}) is the same whichever variable is placed on the horizontal axis. A correlational study cannot determine the direction of influence: it may run either way, in both, or be produced by a third variable.`]}),
+ chance:()=>({p:{n:pick([5,6,7,8,9,12]),r:pt(.1,.7)},claim:(x,y)=>`${cap(x)} and ${y} are genuinely related in the population.`,
+   facts:['Small sample of individuals measured on both variables','Significance level .05'],
+   judge:S=>S.p<.05?[true,`With n = ${S.n}, r = ${f(S.r,2)} exceeds the critical value (|r| must be at least ${f(rCrit(S.n),2)}), so p ${fp(S.p)}. The relationship is statistically significant, although this still says nothing about cause and effect.`]
+     :[false,`With only ${S.n} individuals, |r| must reach ${f(rCrit(S.n),2)} to be significant. Here r = ${f(S.r,2)} and p ${fp(S.p)}: a correlation this size could easily arise by chance when there is no relationship.`]}),
+ curve:()=>({p:{n:80,r:pick([.85,-.85]),form:'curve'},claim:(x,y,S)=>`The correlation is close to zero (r = ${f(S.r,2)}), so ${x} and ${y} are not related.`,need:S=>Math.abs(S.r)<.3,
+   facts:['Both variables are numerical scores','The scatter plot was not examined before the conclusion was drawn'],
+   judge:S=>[false,`Pearson r measures only linear relationships. The scatter plot shows a clear curved pattern (a curved fit explains ${pct(S.r2q)} of the variability, a straight line only ${pct(S.r2)}). An r near zero is not the same as no relationship.`]}),
+ outlier:()=>({p:{n:25,r:0,out:1},claim:(x,y,S)=>`The correlation (r = ${f(S.r,2)}) shows that ${x} and ${y} are related for people in general.`,need:S=>Math.abs(S.r)>.3&&S.maxD>.15,ov:{mark:true},
+   facts:['Small sample','The correlation was reported without a scatter plot'],
+   judge:S=>[false,`One extreme individual (circled) drives the result: without that person r falls from ${f(S.r,2)} to ${f(S.rLoo,2)}. A correlation from a small sample can be dominated by a single extreme score. (Extension topic.)`]}),
+ variance:()=>{const hi=Math.random()<.5;return{p:{n:100,r:hi?pt(.66,.74):pt(.27,.33)},claim:(x,y)=>hi?`About half of the variability in ${y} is predicted by ${x}.`:`${cap(x)} accounts for most of the differences in ${y}.`,
+   facts:['Numerical scores for 100 individuals','The reported correlation is statistically significant'],
+   judge:S=>hi?(S.r2>.35&&S.r2<.65?[true,`The coefficient of determination is r² = ${f(S.r2,2)}, so about ${pct(S.r2)} of the variability in Y is predicted by X: roughly half.`]:[false,`r² = ${f(S.r2,2)}, which is not close to one half.`])
+     :[false,`Significance does not mean the relationship is large. r = ${f(S.r,2)} gives r² = ${f(S.r2,2)}: only about ${pct(S.r2)} of the variability in Y is predicted by X; most is determined by other factors.`]}},
+ valid:()=>({p:{n:120,r:pt(.28,.45)},claim:(x,y)=>`${cap(x)} and ${y} are positively related: people high on one tend to be somewhat higher on the other.`,need:S=>S.r>0,
+   facts:['Both variables measured on 120 individuals as they naturally occur','The claim is purely descriptive'],
+   judge:S=>S.p<.05?[true,`r = ${f(S.r,2)} is positive and significant (p ${fp(S.p)}), a medium-sized relationship. The claim describes the relationship without asserting a cause, which is what a correlational study can support.`]:[false,`r = ${f(S.r,2)} is not significant here (p ${fp(S.p)}).`]}),
+ predict:()=>({p:{n:100,r:pt(.55,.75)},claim:(x,y)=>`Scores on ${x} can be used to predict ${y}, and the predictions will be better than simply guessing the average of ${y}.`,
+   facts:['A criterion (Y) and a predictor (X) measured on 100 individuals','The regression equation was fitted to these scores'],
+   judge:S=>[true,`With r = ${f(S.r,2)}, X predicts ${pct(S.r2)} of the variability in Y; the typical prediction error (${f(S.see,1)}) is smaller than the SD of Y (${f(S.sy,1)}). Regression is the appropriate tool for this application, as long as the claim stays about prediction rather than explanation.`]}),
+ restrict:()=>({p:{n:100,r:.7,restrict:.5},claim:(x,y,S)=>`The correlation is only ${f(S.r,2)}, so ${x} is useless for predicting ${y}.`,
+   facts:['Only individuals with X scores near the average were included','In the full population the variables are strongly related'],
+   judge:S=>[false,`Because only a narrow range of X was sampled, the correlation is weaker than it would be in the full population. A weak r from a restricted range does not show that X is useless as a predictor. (Extension topic.)`]})
+};
+function genScenario(){
+  if(Math.random()<.14){
+    const N=pick([30,40,50,60]),ra=Math.random()<.5,a=Math.round(N/2*(ra?pt(.6,.85):pt(.4,.6))),c=Math.round(N/2*(ra?pt(.3,.5):pt(.4,.6)));
+    const tab=[[a,N/2-a],[c,N/2-c]],C=chiSq(tab),[xl,yl]=pick([['sex','choice of study strategy'],['school type','program preference'],['commute mode','arrival-time category']]),ok=C.p<.05;
+    return{desc:`<p><b>Study.</b> A researcher classified ${N} individuals by two categorical variables (${xl} and ${yl}) and arranged the counts in a table.</p><p><b>Researcher's conclusion:</b> “${cap(xl)} and ${yl} are related.”</p>`,
+      chart:chiChart(tab,['Group 1','Group 2'],['Outcome A','Outcome B']),test:`<p>χ²(1) = ${f(C.x2,2)}, p ${fp(C.p)}, φ = ${f(Math.sqrt(C.x2/N),2)}.</p>`,
+      facts:['Both variables are non-numerical','Evaluated with the chi-square test for independence'],ok,why:ok?`Chi-square is significant (p ${fp(C.p)}), so the distributions differ more than chance would predict. The conclusion is about association, not cause.`:`Chi-square is not significant (p ${fp(C.p)}); with ${N} individuals the difference in proportions could be chance.`};
+  }
+  const kind=pick(['cause','cause','direction','chance','chance','curve','outlier','variance','valid','predict','restrict']),spec=SCEN[kind](),[xl,yl]=pick(VARS);
+  let S,D,tries=0,p;
+  do{p=Object.assign({seed:1+Math.floor(Math.random()*99999),n:40,r:.5,form:'lin',out:0,restrict:3,xm:50,xsd:10,ym:50,ysd:10},spec.p);D=simXY(p);S=xyStats(D.x,D.y);tries++}while(spec.need&&!spec.need(S)&&tries<60);
+  const [ok,why]=spec.judge(S);
+  return{desc:`<p><b>Study.</b> A researcher measured ${xl} (X) and ${yl} (Y) for ${S.n} individuals.</p><p><b>Researcher's conclusion:</b> “${spec.claim(xl,yl,S)}”</p>`,
+    chart:scChart(D.x,D.y,{ov:Object.assign({line:true},spec.ov||{}),xlab:xl,ylab:yl,id:'pq'}),
+    test:`<p>r = ${f(S.r,2)}, r² = ${f(S.r2,2)}, n = ${S.n}, p ${fp(S.p)}.</p>`,facts:spec.facts,ok,why};
+}
+const pq={n:0,score:0,cur:null,answered:false};
+function renderPQ(){
+  $('#pq-score').textContent=pq.n?`Score: ${pq.score} of ${pq.n}`:'';
+  const c=pq.cur;$('#pq-card').hidden=!c;if(!c)return;
+  $('#pq-desc').innerHTML=c.desc;$('#pq-chart').innerHTML=c.chart;
+  $('#pq-facts').innerHTML=`${c.test}<b>Design facts</b><ul class="clean">${c.facts.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`;
+  $('#pq-answer').hidden=pq.answered;
+}
+function answerPQ(yes){
+  const c=pq.cur;if(!c||pq.answered)return;pq.answered=true;pq.n++;const ok=yes===c.ok;if(ok)pq.score++;
+  $('#pq-feedback').innerHTML=`<div class="callout ${ok?'':'warn'}"><b>${ok?'Correct.':'Not quite.'}</b> The conclusion is ${c.ok?'<b>justified</b>':'<b>not justified</b>'}. ${c.why}</div>`;
+  renderPQ();$('#pq-answer').hidden=true;
+}
+/* ================= concept quiz ================= */
+const QZ=[
+ {q:'What is the goal of the correlational research strategy?',o:['To show that one variable causes another','To establish that a relationship exists between variables and describe its nature','To compare the mean scores of two groups','To manipulate a variable under controlled conditions'],a:1,w:'Correlational research establishes that a relationship exists and describes it. Relationships can be described, not explained.'},
+ {q:'Which strategy is the only one that demonstrates a cause-and-effect relationship?',o:['Correlational','Differential','Experimental','All three do'],a:2,w:'Experimental research demonstrates cause and effect. Correlational and differential research do not.'},
+ {q:'How does correlational research differ from differential research?',o:['Correlational looks for patterns within the scores of individuals; differential examines scores of groups','Correlational compares groups; differential examines individuals','Correlational manipulates variables; differential does not','There is no difference'],a:0,w:'Correlational research looks for patterns in the paired scores of individuals; differential research focuses on the difference between groups of scores.'},
+ {q:'Which statement describes a negative relationship?',o:['Both variables increase together','Increases in one variable go with decreases in the other','The variables are unrelated','Both variables are constant'],a:1,w:'In a negative relationship the variables change in opposite directions.'},
+ {q:'The Pearson correlation measures…',o:['Any relationship between two variables','Linear relationships between two numerical (interval or ratio) variables','Differences between group means','Relationships between two nominal variables'],a:1,w:'Pearson r describes and measures linear relationships when both variables are numerical scores from interval or ratio scales.'},
+ {q:'When is the Spearman correlation appropriate?',o:['For monotonic relationships or when the scores are ranks','Only when both variables are nominal','Only for perfectly linear data','When the sample is very large'],a:0,w:'Spearman correlates ranks and measures the consistency of a one-directional (monotonic) trend.'},
+ {q:'In a correlation coefficient, what does the sign indicate?',o:['The strength of the relationship','The direction of the relationship','The form of the relationship','Statistical significance'],a:1,w:'The sign shows the direction; the numerical value shows strength or consistency; the type of correlation shows the form.'},
+ {q:'Which correlation indicates the strongest relationship?',o:['+.30','−.40','+.10','0'],a:1,w:'Strength depends on the absolute value, not the sign: .40 is larger than .30, .10 and 0.'},
+ {q:'A correlation of r = .50 gives a coefficient of determination of…',o:['5%','25%','50%','75%'],a:1,w:'r² = .50 × .50 = .25, so 25% of the variability in one variable is predicted by the other.'},
+ {q:'One variable is numerical and the other has two categories. How can the relationship be evaluated?',o:['Code the categories 0 and 1 and compute a Pearson (point-biserial) correlation','It cannot be evaluated','Use a chi-square test only','Use a Spearman correlation only'],a:0,w:'Numerically coding two categories as 0 and 1 and computing the Pearson correlation gives the point-biserial correlation.'},
+ {q:'Both variables are non-numerical. What is the usual analysis?',o:['Pearson correlation','Chi-square test applied to a matrix of counts','Regression','t test'],a:1,w:'Organize the categories of one variable as rows and the other as columns and apply chi-square.'},
+ {q:'Why can a very strong correlation from a small sample be unconvincing?',o:['Small samples never produce correlations','It may appear strong by chance when there is no relationship; larger samples make a real relationship more likely','Small samples always underestimate correlations','Significance does not depend on sample size'],a:1,w:'With a small sample, a strong-looking correlation can arise from random variation alone.'},
+ {q:'In a prediction study, what is the criterion variable?',o:['The variable used to make predictions','The variable being predicted or explained','A third variable','The grouping variable'],a:1,w:'The predictor is used to predict the criterion; regression finds the equation giving the most accurate predictions of Y.'},
+ {q:'Ice cream sales and crime rate rise and fall together because both depend on temperature. This illustrates…',o:['The directionality problem','The third-variable problem','Low external validity','Range restriction'],a:1,w:'A third, unidentified variable (temperature) is responsible for the observed relationship.'},
+ {q:'Adolescents who watch more sexual content on television engage in more sexual behavior. Why can it not be concluded that the content causes the behavior?',o:['The sample was too small','The behavior might influence what is watched (directionality problem)','Correlations must be negative','Television is not measurable'],a:1,w:'A correlational study cannot determine whether content influences behavior or behavior influences the choice of programs.'},
+ {q:'Which is a strength of the correlational strategy?',o:['High internal validity','It demonstrates cause and effect','It is nonintrusive and has high external validity','It controls all confounding variables'],a:2,w:'Correlational studies observe natural behavior without intrusion, giving high external validity, but they have low internal validity.'},
+ {q:'What can multiple regression add to a correlational study?',o:['Proof of causation','Statistical control of other, potentially confounding variables','Random assignment','Higher external validity'],a:1,w:'Multiple regression can examine the relationship between two variables while controlling other variables, but predictors only predict.'}
+];
+const qz={n:0,score:0,i:-1,done:false};
+function newQ(){let i;do{i=Math.floor(Math.random()*QZ.length)}while(QZ.length>1&&i===qz.i);qz.i=i;qz.done=false;renderQZ()}
+function renderQZ(){
+  $('#qz-score').textContent=qz.n?`Score: ${qz.score} of ${qz.n}`:'';
+  if(qz.i<0){$('#qz-out').innerHTML='<p class="muted">Press "Next question".</p>';return}
+  const q=QZ[qz.i];
+  $('#qz-out').innerHTML=`<p><b>${esc(q.q)}</b></p>`+q.o.map((t,j)=>`<div><button class="small" data-qz="${j}" style="margin:2px 0;text-align:left" ${qz.done?'disabled':''}>${'ABCD'[j]}. ${esc(t)}</button></div>`).join('');
+}
+function answerQ(j){
+  if(qz.done)return;qz.done=true;qz.n++;const q=QZ[qz.i],ok=j===q.a;if(ok)qz.score++;renderQZ();
+  $('#qz-out').insertAdjacentHTML('beforeend',`<div class="callout ${ok?'':'warn'}"><b>${ok?'Correct.':'Not quite.'}</b> The answer is ${'ABCD'[q.a]}. ${esc(q.w)}</div>`);
+  $('#qz-score').textContent=`Score: ${qz.score} of ${qz.n}`;
+}
+
+/* ================= exports ================= */
+function doDL(kind,t){
+  if(kind==='csv'){
+    let rows;
+    if(t==='sc'){const D=scData();rows=['x,y'].concat(D.x.map((v,i)=>v+','+D.y[i]))}
+    else if(t==='pr'){const D=prSim();rows=['x,y'].concat(D.x.map((v,i)=>v+','+D.y[i]))}
+    else if(t==='wk'){const D=simWK(st.wk);rows=['x,y,z'].concat(D.x.map((v,i)=>v+','+D.y[i]+','+D.z[i]))}
+    else if(t==='nm'){const D=simPB(st.nm);rows=['code,score'].concat(D.g0.map(v=>'0,'+v),D.g1.map(v=>'1,'+v))}
+    else return;
+    download('correlational-'+t+'.csv',new Blob([rows.join('\n')],{type:'text/csv'}));
+  }else if(kind==='svg')exportSVG(t,t+'.svg');
+  else exportPNG(t,t+'.png');
+}
+
+function download(name,blob){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
+function svgText(el){let x=new XMLSerializer().serializeToString(el);const cs=getComputedStyle(document.documentElement);return x.replace(/var\((--[\w-]+)\)/g,(m,n)=>cs.getPropertyValue(n).trim()||'#000')}
+function exportSVG(id,name){const el=$('#'+id+' svg');if(el)download(name,new Blob([svgText(el)],{type:'image/svg+xml'}))}
+function exportPNG(id,name){
+  const el=$('#'+id+' svg');if(!el)return;const vb=el.viewBox.baseVal,sc=2,img=new Image(),bg=getComputedStyle(document.documentElement).getPropertyValue('--card').trim()||'#fff';
+  img.onload=()=>{const c=document.createElement('canvas');c.width=vb.width*sc;c.height=vb.height*sc;const g=c.getContext('2d');g.fillStyle=bg;g.fillRect(0,0,c.width,c.height);g.drawImage(img,0,0,c.width,c.height);c.toBlob(b=>download(name,b),'image/png')};
+  img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svgText(el));
+}
+
+function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(toast.h);toast.h=setTimeout(()=>t.classList.remove('show'),2200)}
+
+
+/* ================= wiring ================= */
+const TABS=['cl','sc','sg','nm','pr','wk','cm','prac','ref'];
+const RENDER={sc:()=>renderSC(),sg:()=>renderSG(),nm:()=>renderNM(),pr:()=>renderPR2(),wk:()=>renderWK()};
+const RENDER_OV={scOv:()=>renderSC(),prOv:()=>renderPR2(),wkOv:()=>renderWK()};
+function showTab(id){
+  st.tab=id;
+  $$('nav.tabs button').forEach(b=>b.setAttribute('aria-selected',b.id==='t-'+id?'true':'false'));
+  $$('.tabpanel').forEach(p=>{p.hidden=p.id!=='p-'+id});
+  if(id==='cl')renderCL();else if(id==='prac'){renderPQ();renderQZ()}else if(id==='cm')renderCM();else if(RENDER[id])RENDER[id]();
+}
+const CL_DEF={man:'no',ran:'no',data:'pairs',scale:'num',form:'lin',goal:'describe'};
+function syncCL(){Object.keys(st.cl).forEach(k=>{const el=$(`input[name="q-${k}"][value="${st.cl[k]}"]`);if(el)el.checked=true})}
+function clearCustom(pre){if(pre==='sc'){st.scCustom=null;$('#sc-paste-msg').textContent=''}}
+const SHARE_KEYS=['sc','sg','nm','pr','wk','scOv','prOv','wkOv','cl'];
+
+function init(){
+  ['sc','sg','nm','pr','wk'].forEach(pre=>{$('#'+pre+'-controls').innerHTML=ctrlHTML(pre,DEFS[pre],st[pre],PRESETS[pre])});
+  restoreHash();
+  ['sc','sg','nm','pr','wk'].forEach(pre=>{
+    syncControls(pre,DEFS[pre],st[pre]);
+    bindControls(pre,st[pre],DEFS[pre],()=>{clearCustom(pre);RENDER[pre]()},PRESETS[pre],DEFAULTS[pre]);
+  });
+  syncCL();
+  $$('nav.tabs button').forEach(b=>{
+    b.addEventListener('click',()=>showTab(b.id.slice(2)));
+    b.addEventListener('keydown',e=>{
+      if(e.key!=='ArrowRight'&&e.key!=='ArrowLeft')return;
+      const i=TABS.indexOf(b.id.slice(2)),j=(i+(e.key==='ArrowRight'?1:TABS.length-1))%TABS.length;
+      showTab(TABS[j]);$('#t-'+TABS[j]).focus();e.preventDefault();
+    });
+  });
+  document.addEventListener('keydown',e=>{
+    const r=e.target.closest&&e.target.closest('tr[data-cm]');
+    if(r&&(e.key==='Enter'||e.key===' ')){st.cm=+r.dataset.cm;renderCM();e.preventDefault()}
+  });
+  document.addEventListener('input',e=>{if(e.target.id==='sg-cr'||e.target.id==='sg-cn')renderSGcalc()});
+  document.addEventListener('click',e=>{
+    const b=e.target.closest('[data-act],[data-dl],[data-qz],[data-goto],tr[data-cm]');if(!b)return;
+    if(b.dataset.cm!==undefined){st.cm=+b.dataset.cm;renderCM();return}
+    if(b.dataset.goto){showTab(b.dataset.goto);window.scrollTo(0,0);return}
+    if(b.dataset.qz!==undefined){answerQ(+b.dataset.qz);return}
+    if(b.dataset.dl){doDL(b.dataset.dl,b.dataset.t);return}
+    const a=b.dataset.act,pre=a.split('-')[0],op=a.split('-')[1];
+    if(a==='prac-reset'){pq.n=0;pq.score=0;pq.cur=null;pq.answered=false;qz.n=0;qz.score=0;qz.i=-1;qz.done=false;$('#pq-feedback').innerHTML='';renderPQ();renderQZ();return}
+    if(a==='clq-reset'){Object.assign(st.cl,CL_DEF);syncCL();renderCL();return}
+    if(op==='rand'&&st[pre]){st[pre].seed=1+Math.floor(Math.random()*99999);syncControls(pre,DEFS[pre],st[pre]);clearCustom(pre);RENDER[pre]()}
+    else if(op==='reset'&&DEFAULTS[pre]){Object.assign(st[pre],DEFAULTS[pre]);clearCustom(pre);syncControls(pre,DEFS[pre],st[pre]);RENDER[pre]()}
+    else if(a==='sc-use'){const r=parseXY($('#sc-paste').value);if(r.error){$('#sc-paste-msg').innerHTML=`<span style="color:var(--bad)">${esc(r.error)}</span>`}else{st.scCustom=r;$('#sc-paste-msg').textContent=`Analyzing ${r.x.length} pairs from your data.`;renderSC()}}
+    else if(a==='sc-fig'){$('#sc-paste').value='A 1 3\nB 6 8\nC 4 4\nD 7 12\nE 9 10';st.scCustom=parseXY($('#sc-paste').value);$('#sc-paste-msg').textContent='Loaded the five-person data from Figure 12.1.';renderSC()}
+    else if(a==='sc-fill'){const D=scData();$('#sc-paste').value=D.x.map((v,i)=>v+' '+D.y[i]).join('\n')}
+    else if(a==='sc-sim'){clearCustom('sc');renderSC()}
+    else if(a==='pq-new'){pq.cur=genScenario();pq.answered=false;$('#pq-feedback').innerHTML='';renderPQ()}
+    else if(a==='pq-yes')answerPQ(true);
+    else if(a==='pq-no')answerPQ(false);
+    else if(a==='qz-new')newQ();
+  });
+  document.addEventListener('change',e=>{
+    const el=e.target;
+    if(el.dataset&&el.dataset.ov){st[el.dataset.pre][el.dataset.ov]=el.checked;if(RENDER_OV[el.dataset.pre])RENDER_OV[el.dataset.pre]();return}
+    if(el.name&&el.name.indexOf('q-')===0){st.cl[el.name.slice(2)]=el.value;renderCL()}
+  });
+  $('#btn-theme').addEventListener('click',()=>{
+    const cur=document.documentElement.dataset.theme||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
+    document.documentElement.dataset.theme=cur==='dark'?'light':'dark';showTab(st.tab);
+  });
+  $('#btn-link').addEventListener('click',()=>{
+    try{
+      const o={tab:st.tab,cm:st.cm};SHARE_KEYS.forEach(k=>{o[k]=st[k]});
+      location.hash='s='+btoa(unescape(encodeURIComponent(JSON.stringify(o))));
+      if(navigator.clipboard)navigator.clipboard.writeText(location.href).then(()=>toast('Link copied'),()=>toast('Link is in the address bar'));
+      else toast('Link is in the address bar');
+    }catch(err){toast('Could not build link')}
+  });
+  showTab(st.tab);
+}
+function restoreHash(){
+  try{
+    const m=/s=([^&]+)/.exec(location.hash);if(!m)return;
+    const o=JSON.parse(decodeURIComponent(escape(atob(m[1]))));
+    SHARE_KEYS.forEach(k=>{if(o[k])Object.assign(st[k],o[k])});
+    if(Number.isInteger(o.cm)&&o.cm>=0&&o.cm<CM_ROWS.length)st.cm=o.cm;
+    if(o.tab&&TABS.includes(o.tab))st.tab=o.tab;
+  }catch(e){}
+}
+const root=typeof window!=='undefined'?window:globalThis;
+root.CorrExplorer={showTab,st,PRESETS,DEFAULTS,pq,qz,genScenario2:genScenario,answerPQ,newQ,answerQ,renderCM,xyStats,rCrit,rP,rCI,classify,simXY,simWK,wkStats,wkTruth,repR,parseXY,chiSq,indT,genScenario,CM_ROWS,QZ,partialR,rankOf,corr,simPB};
+if(typeof document!=='undefined'&&document.getElementById('t-cl'))init();
+})();
+</script>
+</body>
+</html>

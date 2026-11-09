@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Correlational Designs Decision Tree</title>
+<meta name="description" content="Interactive decision tree for choosing a correlational research strategy and statistic across numeric and non-numeric data sources: Pearson, Spearman, point-biserial, chi-square, regression and multiple regression, with strengths and weaknesses, threats, analysis and general considerations.">
+<style>
+
+:root{
+  --bg:#f5f6f4; --card:#ffffff; --fg:#1c1f24; --muted:#5b6572; --line:#d9dde3; --grid:#eceff2;
+  --plot:#ffffff; --axis:#8b94a1; --colA:#34588a; --colB:#c0531a; --tintB:rgba(192,83,26,.07); --colC:#14806f; --colD:#7c3fb0; --colE:#8a6d00;
+  --accent:#2b62c4; --accentFg:#ffffff; --good:#1f7a43; --warn:#9a6700; --bad:#b3261e;
+  --goodBg:#e5f4ea; --warnBg:#fbf0d4; --badBg:#fbe4e2;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme=light]){
+    --bg:#13161b; --card:#1b1f26; --fg:#e8eaed; --muted:#9aa3af; --line:#2d333c; --grid:#262b33;
+    --plot:#1b1f26; --axis:#6f7886; --colA:#8fb4e8; --colB:#f59a5f; --tintB:rgba(245,154,95,.10); --colC:#4fcfb8; --colD:#c39bea; --colE:#e3c64f;
+    --accent:#7aa7ff; --accentFg:#0d1117; --good:#6fd596; --warn:#e8c05a; --bad:#ff8c84;
+    --goodBg:#16301f; --warnBg:#3a3016; --badBg:#3d1d1b;
+  }
+}
+:root[data-theme=dark]{
+  --bg:#13161b; --card:#1b1f26; --fg:#e8eaed; --muted:#9aa3af; --line:#2d333c; --grid:#262b33;
+  --plot:#1b1f26; --axis:#6f7886; --colA:#8fb4e8; --colB:#f59a5f; --tintB:rgba(245,154,95,.10); --colC:#4fcfb8; --colD:#c39bea; --colE:#e3c64f;
+  --accent:#7aa7ff; --accentFg:#0d1117; --good:#6fd596; --warn:#e8c05a; --bad:#ff8c84;
+  --goodBg:#16301f; --warnBg:#3a3016; --badBg:#3d1d1b;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+header.top{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:14px 20px 6px;max-width:1360px;margin:0 auto}
+header.top h1{font-size:1.25rem;margin:0;letter-spacing:-.01em}
+header.top p{margin:2px 0 0;color:var(--muted);font-size:.9rem;max-width:62ch}
+.hbtns{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+button,.btn{font:inherit;font-size:.85rem;border:1px solid var(--line);background:var(--card);color:var(--fg);padding:6px 11px;border-radius:7px;cursor:pointer}
+button:hover{border-color:var(--accent)}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button.primary{background:var(--accent);color:var(--accentFg);border-color:var(--accent);font-weight:600}
+button.small{padding:3px 8px;font-size:.78rem}
+nav.tabs{display:flex;gap:2px;max-width:1360px;margin:6px auto 0;padding:0 20px;border-bottom:1px solid var(--line);overflow-x:auto}
+nav.tabs button{border:none;border-bottom:3px solid transparent;border-radius:0;background:none;padding:9px 14px;font-size:.92rem;color:var(--muted);white-space:nowrap}
+nav.tabs button[aria-selected=true]{color:var(--fg);border-bottom-color:var(--colB);font-weight:600}
+main{max-width:1360px;margin:0 auto;padding:16px 20px 40px}
+.tabpanel[hidden]{display:none}
+.layout{display:grid;grid-template-columns:330px minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:980px){.layout{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:14px}
+.card h2{font-size:1rem;margin:0 0 8px}
+.card h3{font-size:.92rem;margin:14px 0 6px}
+.card p{margin:6px 0}
+.muted{color:var(--muted)}
+.small{font-size:.82rem}
+aside.controls{position:sticky;top:8px;max-height:calc(100vh - 16px);overflow:auto;padding:12px 14px}
+@media (max-width:980px){aside.controls{position:static;max-height:none}}
+details.grp{border-top:1px solid var(--line);padding:6px 0}
+details.grp:first-of-type{border-top:none}
+details.grp>summary{cursor:pointer;font-weight:600;font-size:.88rem;padding:4px 0;list-style:none}
+details.grp>summary::before{content:"▸ ";color:var(--muted)}
+details.grp[open]>summary::before{content:"▾ "}
+.ctl{margin:6px 0 10px}
+.ctl label{display:flex;justify-content:space-between;gap:8px;font-size:.82rem;color:var(--muted);margin-bottom:2px}
+.ctl output{color:var(--fg);font-variant-numeric:tabular-nums;font-weight:600}
+.ctl input[type=range]{width:100%;accent-color:var(--accent)}
+.ctl input[type=text],.ctl input[type=number],.ctl select,textarea{width:100%;font:inherit;font-size:.85rem;padding:5px 7px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--fg)}
+.ctl.check label{display:flex;justify-content:flex-start;gap:8px;align-items:center;color:var(--fg)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.toolbar{display:flex;gap:6px 14px;flex-wrap:wrap;align-items:center;margin-bottom:8px;font-size:.82rem}
+.toolbar label{display:inline-flex;gap:5px;align-items:center;cursor:pointer}
+.toolbar .sp{flex:1}
+.chart svg{width:100%;height:auto;display:block}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted);margin-top:6px}
+.legend i{display:inline-block;vertical-align:middle;margin-right:4px}
+.dotA{width:10px;height:10px;border-radius:50%;background:var(--colA)}
+.dotB{width:10px;height:10px;background:var(--colB)}
+.tbl-wrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.84rem;font-variant-numeric:tabular-nums}
+th,td{padding:5px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{font-weight:600;color:var(--muted);font-size:.78rem}
+th[title]{cursor:help;text-decoration:underline dotted;text-underline-offset:3px}
+td.l,th.l{text-align:left;white-space:normal}
+.pill{display:inline-block;padding:1px 8px;border-radius:99px;font-size:.76rem;font-weight:600}
+.pill.good{background:var(--goodBg);color:var(--good)}
+.pill.warn{background:var(--warnBg);color:var(--warn)}
+.pill.bad{background:var(--badBg);color:var(--bad)}
+.callout{border-left:4px solid var(--colA);background:var(--grid);padding:8px 12px;border-radius:0 8px 8px 0;font-size:.88rem;margin:8px 0}
+.callout.warn{border-left-color:var(--warn)}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+.stat{display:flex;gap:18px;flex-wrap:wrap;margin:6px 0 8px}
+.stat div{min-width:110px}
+.stat b{display:block;font-size:1.3rem;font-variant-numeric:tabular-nums}
+.stat span{font-size:.76rem;color:var(--muted)}
+ul.clean{padding-left:18px;margin:6px 0}
+ul.clean li{margin:3px 0}
+.q{margin:12px 0}
+.q legend{font-weight:600;font-size:.92rem;padding:0}
+.q fieldset{border:none;margin:0;padding:0}
+.q label{display:block;margin:3px 0;font-size:.9rem;cursor:pointer}
+.fit{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-top:1px solid var(--line)}
+.fit:first-child{border-top:none}
+.fit .nm{font-weight:600}
+footer{max-width:1360px;margin:0 auto;padding:0 20px 30px;color:var(--muted);font-size:.8rem}
+.sr{position:absolute;left:-9999px}
+dl.gl dt{font-weight:600;margin-top:8px}
+dl.gl dd{margin:2px 0 0 0;color:var(--muted)}
+ol.refs li{margin:5px 0;font-size:.85rem}
+#toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:8px 14px;border-radius:8px;font-size:.85rem;opacity:0;pointer-events:none;transition:opacity .2s}
+#toast.show{opacity:.95}
+button.opt{display:block;width:100%;text-align:left;margin:6px 0;padding:9px 12px;border-radius:8px}
+button.opt b{display:block;font-size:.92rem}
+button.opt span{display:block;font-size:.8rem;color:var(--muted);margin-top:2px}
+button.opt:hover{background:var(--grid)}
+ol.crumbs{list-style:none;margin:6px 0 10px;padding:0;font-size:.8rem}
+ol.crumbs li{margin:2px 0}
+button.crumb{border:none;background:none;padding:2px 0;color:var(--muted);text-align:left;font-size:.8rem;cursor:pointer}
+button.crumb b{color:var(--fg)}
+button.crumb:hover{color:var(--accent)}
+pre.nota{background:var(--grid);border-radius:8px;padding:8px 12px;font:600 .85rem/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;margin:6px 0;overflow-x:auto;white-space:pre}
+.treewrap{overflow-x:auto}
+.treewrap svg{min-width:900px}
+.treewrap [data-tn]{cursor:pointer}
+.ck{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-top:1px solid var(--line)}
+.ck:first-child{border-top:none}
+.ck input{margin-top:4px}
+.ck .t{font-weight:600}
+.ck.done .t{text-decoration:line-through;color:var(--muted)}
+.opts4{display:grid;gap:6px}
+.progress{height:8px;background:var(--grid);border-radius:99px;overflow:hidden;margin:6px 0}
+.progress i{display:block;height:100%;background:var(--good)}
+
+[hidden]{display:none!important}
+.chart svg text{user-select:none}
+</style>
+</head>
+<body>
+<header class="top">
+  <div>
+    <h1>Correlational Designs Decision Tree</h1>
+    <p>Answer a short series of questions to find the research strategy and statistic that fit your study across both numeric and non-numeric data sources. The tree separates manipulated from nonmanipulated variables, group comparisons from relationships within individuals, and numerical, rank and categorical scores, then moves to a focused selector for the form of a relationship. Each result shows the data required, the main threats, the strengths and weaknesses, the usual analysis and the general considerations that go with it.</p>
+  </div>
+  <div class="hbtns">
+    <button id="btn-link" title="Put your answers in the page URL so you can share or bookmark them">Copy share link</button>
+    <button id="btn-theme" title="Toggle light / dark">Theme</button>
+  </div>
+</header>
+
+<nav class="tabs" role="tablist" aria-label="Sections">
+  <button role="tab" id="t-tree" aria-controls="p-tree" aria-selected="true">Decision tree</button>
+  <button role="tab" id="t-cat" aria-controls="p-cat" aria-selected="false">Design catalog</button>
+  <button role="tab" id="t-wk" aria-controls="p-wk" aria-selected="false">Strengths and weaknesses</button>
+  <button role="tab" id="t-con" aria-controls="p-con" aria-selected="false">General considerations</button>
+  <button role="tab" id="t-prac" aria-controls="p-prac" aria-selected="false">Practice</button>
+  <button role="tab" id="t-ref" aria-controls="p-ref" aria-selected="false">Reference</button>
+</nav>
+
+<main>
+<noscript><div class="card">This decision tree needs JavaScript enabled.</div></noscript>
+
+<section class="tabpanel" id="p-tree" role="tabpanel" aria-labelledby="t-tree">
+  <div class="card">
+    <div class="toolbar"><b>The tree and your path</b><span class="sp"></span><button class="small" data-dl="svg">Download SVG</button><button class="small" data-dl="png">Download PNG</button></div>
+    <div class="treewrap chart" id="tree-chart"></div>
+    <p class="small muted">Click an answered question in the tree, or in the list of answers, to go back to it.</p>
+  </div>
+  <div class="layout">
+    <aside class="card controls" id="q-card" aria-live="polite"></aside>
+    <div id="res"></div>
+  </div>
+</section>
+
+<section class="tabpanel" id="p-cat" role="tabpanel" aria-labelledby="t-cat" hidden>
+  <div class="card">
+    <div class="row" style="justify-content:space-between;align-items:flex-end">
+      <div><h2 style="margin:0">Every strategy and statistic the tree can recommend</h2><p class="small muted">Correlational methods describe relationships; only experimental research demonstrates cause and effect.</p></div>
+      <div class="ctl" style="margin:0;min-width:210px"><label for="cat-f">Show</label><select id="cat-f"><option value="all">All</option><option value="corr">Correlational</option><option value="diff">Differential</option><option value="quasi">Quasi-experimental</option><option value="exp">Experimental</option><option value="ext">Extension beyond the chapter</option></select></div>
+    </div>
+    <div id="cat-out"></div>
+  </div>
+  <div class="card">
+    <h2>Three strategies, one question</h2>
+    <p>Every choice in the tree answers a form of the same question: <b>can this study say anything about cause and effect?</b> Correlational research establishes that a relationship exists and describes it. Differential research compares existing groups. Experimental research manipulates a variable, controls others and randomly assigns participants, so it alone can demonstrate cause and effect.</p>
+    <div class="chart" id="cat-spec"></div>
+  </div>
+</section>
+
+<section class="tabpanel" id="p-wk" role="tabpanel" aria-labelledby="t-wk" hidden>
+  <div class="card">
+    <h2>Strengths and weaknesses of the strategies</h2>
+    <p class="small muted">Click a row to read how each strategy fares on that issue.</p>
+    <div id="cm-matrix"></div>
+  </div>
+  <div class="card"><h2 id="cm-title"></h2><div id="cm-detail"></div></div>
+</section>
+
+<section class="tabpanel" id="p-con" role="tabpanel" aria-labelledby="t-con" hidden>
+  <div class="layout">
+    <aside class="card controls">
+      <div class="row" style="justify-content:space-between"><h2 style="margin:0">Choose a design</h2><button class="small" data-act="con-reset" title="Clear every tick and follow the tree result again">Reset</button></div>
+      <div class="ctl"><label for="cs-key">Design</label><select id="cs-key"></select></div>
+      <div id="cs-note"></div>
+      <div id="cs-prog"></div>
+      <p class="small muted">Tick each consideration once your study plan addresses it.</p>
+    </aside>
+    <div>
+      <div class="card"><h2>Considerations for: <span id="cs-name"></span></h2><div id="cs-on"></div></div>
+      <div class="card" id="cs-off-wrap"><details><summary style="cursor:pointer;font-weight:600">Other considerations (<span id="cs-off-n"></span>) that apply less directly</summary><div id="cs-off"></div></details></div>
+      <div class="card">
+        <h2>Is my correlation significant?</h2>
+        <div class="row"><div class="ctl" style="max-width:150px"><label for="sg-r">Correlation r</label><input id="sg-r" type="number" step="0.01" min="-0.99" max="0.99" value="0.45"></div><div class="ctl" style="max-width:150px"><label for="sg-n">Individuals n</label><input id="sg-n" type="number" step="1" min="3" max="100000" value="20"></div></div>
+        <div id="sg-out"></div>
+        <h3>Critical values of r</h3>
+        <div class="ctl" style="max-width:220px"><label for="cr-n">Row to highlight (n)</label><select id="cr-n"><option>5</option><option>8</option><option>10</option><option selected>20</option><option>30</option><option>50</option><option>100</option></select></div>
+        <div id="cr-out"></div>
+        <p class="small muted">A correlation is significant when it is unlikely to occur by chance in a population with no relationship. The larger the sample, the smaller the correlation needed. Significance is not strength: use r² to judge how much variability is predicted.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="tabpanel" id="p-prac" role="tabpanel" aria-labelledby="t-prac" hidden>
+  <div class="card">
+    <div class="row" style="justify-content:space-between"><h2 style="margin:0">Choose the best strategy or statistic</h2><div class="row"><span id="pr-score" class="small muted"></span><button class="small primary" data-act="pr-new">New scenario</button><button class="small" data-act="prac-reset" title="Clear the scores and the current questions">Reset</button></div></div>
+    <p class="small muted">Read the scenario, pick the best fit, then open the same path in the decision tree to see how the answers lead there.</p>
+    <div id="pr-card" hidden>
+      <div class="callout" id="pr-text" style="font-size:.95rem"></div>
+      <div class="opts4" id="pr-choices"></div>
+      <div id="pr-fb"></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="row" style="justify-content:space-between"><h2 style="margin:0">Concept check</h2><div class="row"><span id="qz-score" class="small muted"></span><button class="small primary" data-act="qz-new">Next question</button></div></div>
+    <div id="qz-out"></div>
+  </div>
+</section>
+
+<section class="tabpanel" id="p-ref" role="tabpanel" aria-labelledby="t-ref" hidden>
+  <div class="grid2">
+    <div class="card">
+      <h2>How the tree decides</h2>
+      <ol class="clean">
+        <li><b>Manipulation.</b> Manipulating a variable sets the direction of the relationship; random assignment then gives a true experiment. Without it the study is quasi-experimental at best.</li>
+        <li><b>Data collected.</b> Groups of scores point to differential research; two scores per individual to a correlation; three or more variables to multiple regression.</li>
+        <li><b>Kinds of scores.</b> Numerical scores use Pearson (linear) or Spearman (monotonic); ranks use Spearman; a numerical score with two categories uses the point-biserial correlation; with three or more categories it becomes a group comparison; two categorical variables use chi-square.</li>
+        <li><b>Purpose.</b> Describing, predicting, evaluating reliability or validity, and testing theories lead to different uses of the correlation.</li>
+        <li><b>Selector.</b> For numerical pairs described by a correlation, three questions score Pearson and Spearman and add cautions.</li>
+      </ol>
+      <p class="small muted">The scores are a heuristic aid. They do not replace design judgment, ethics review or the standards of your field.</p>
+    </div>
+    <div class="card">
+      <h2>Glossary</h2>
+      <dl class="gl">
+        <dt>Correlation coefficient</dt><dd>A number from −1 to +1: its sign is the direction, its absolute value the strength or consistency.</dd>
+        <dt>Coefficient of determination (r²)</dt><dd>The proportion of the variability in one variable that is predicted by the other.</dd>
+        <dt>Third-variable problem</dt><dd>An unidentified variable may be responsible for an observed relationship.</dd>
+        <dt>Directionality problem</dt><dd>A relationship does not show which variable influences the other.</dd>
+        <dt>Predictor and criterion</dt><dd>The predictor (X) is used to predict the criterion (Y).</dd>
+        <dt>Monotonic relationship</dt><dd>A relationship in which Y moves in one direction only as X increases, not necessarily along a line.</dd>
+        <dt>Point-biserial correlation</dt><dd>A Pearson correlation in which one variable has two categories coded 0 and 1.</dd>
+        <dt>Chi-square test</dt><dd>A test of whether two non-numerical variables are related, based on counts in a matrix.</dd>
+      </dl>
+    </div>
+    <div class="card">
+      <h2>Notation</h2>
+      <dl class="gl">
+        <dt>O</dt><dd>An observation or measurement.</dd>
+        <dt>X</dt><dd>A treatment (in the group designs) or the predictor variable (in correlation and regression).</dd>
+        <dt>Y</dt><dd>The second score, or the criterion variable.</dd>
+        <dt>R, NR</dt><dd>Random assignment, or groups formed without it.</dd>
+      </dl>
+    </div>
+    <div class="card">
+      <h2>Related explorers</h2>
+      <p class="small">The Correlational Designs Explorer shows each statistic with simulated data. The Experimental Designs Decision Tree and the Non-Experimental and Quasi-Experimental Designs Explorer cover the strategies this tree hands off to when you can manipulate variables.</p>
+    </div>
+    <div class="card" style="grid-column:1/-1">
+      <h2>Source and use</h2>
+      <p class="small">The questions, scenarios, strengths and weaknesses and general considerations follow the course slides on correlational strategies. Items labeled as extensions (such as the curvilinear case) go beyond the chapter. Example values in the result notations are illustrative.</p>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>
+  The recommendations are heuristics. Design logic, measurement quality and ethics review still carry the inference.
+</footer>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){'use strict';
+const $=(s,el=document)=>el.querySelector(s);
+const $$=(s,el=document)=>Array.from(el.querySelectorAll(s));
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+function lgam(x){const c=[76.18009172947146,-86.50532032941677,24.01409824083091,-1.231739572450155,0.1208650973866179e-2,-0.5395239384953e-5];let y=x,t=x+5.5;t-=(x+.5)*Math.log(t);let s=1.000000000190015;for(let j=0;j<6;j++)s+=c[j]/++y;return -t+Math.log(2.5066282746310005*s/x)}
+function betacf(a,b,x){
+  const FP=1e-300,qab=a+b,qap=a+1,qam=a-1;let c=1,d=1-qab*x/qap;if(Math.abs(d)<FP)d=FP;d=1/d;let h=d;
+  for(let m=1;m<=300;m++){const m2=2*m;let aa=m*(b-m)*x/((qam+m2)*(a+m2));d=1+aa*d;if(Math.abs(d)<FP)d=FP;c=1+aa/c;if(Math.abs(c)<FP)c=FP;d=1/d;h*=d*c;
+    aa=-(a+m)*(qab+m)*x/((a+m2)*(qap+m2));d=1+aa*d;if(Math.abs(d)<FP)d=FP;c=1+aa/c;if(Math.abs(c)<FP)c=FP;d=1/d;const del=d*c;h*=del;if(Math.abs(del-1)<3e-12)break}
+  return h;
+}
+function ibeta(x,a,b){if(x<=0)return 0;if(x>=1)return 1;const bt=Math.exp(lgam(a+b)-lgam(a)-lgam(b)+a*Math.log(x)+b*Math.log(1-x));return x<(a+1)/(a+b+2)?bt*betacf(a,b,x)/a:1-bt*betacf(b,a,1-x)/b}
+function gammp(a,x){
+  if(x<=0)return 0;
+  if(x<a+1){let ap=a,s=1/a,del=s;for(let n=0;n<400;n++){ap++;del*=x/ap;s+=del;if(Math.abs(del)<Math.abs(s)*3e-12)break}return s*Math.exp(-x+a*Math.log(x)-lgam(a))}
+  let b=x+1-a,c=1e300,d=1/b,h=d;
+  for(let i=1;i<400;i++){const an=-i*(i-a);b+=2;d=an*d+b;if(Math.abs(d)<1e-300)d=1e-300;c=b+an/c;if(Math.abs(c)<1e-300)c=1e-300;d=1/d;const del=d*c;h*=del;if(Math.abs(del-1)<3e-12)break}
+  return 1-Math.exp(-x+a*Math.log(x)-lgam(a))*h;
+}
+const tp2=(t,df)=>ibeta(df/(df+t*t),df/2,0.5);
+const fsf=(F,d1,d2)=>F>=0?ibeta(d2/(d2+d1*F),d2/2,d1/2):NaN;
+const chisf=(x,df)=>1-gammp(df/2,x/2);
+function erf(x){const s=x<0?-1:1;x=Math.abs(x);const t=1/(1+0.3275911*x),y=1-(((((1.061405429*t-1.453152027)*t)+1.421413741)*t-0.284496736)*t+0.254829592)*t*Math.exp(-x*x);return s*y}
+const ncdf=x=>0.5*(1+erf(x/Math.SQRT2));
+function tcrit(df,alpha){let lo=0,hi=1000;for(let i=0;i<80;i++){const m=(lo+hi)/2;if(tp2(m,df)>alpha)lo=m;else hi=m}return(lo+hi)/2}
+const pill=(t,c)=>`<span class="pill ${c}">${t}</span>`;
+function svgWrap(W,H,inner,label){return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(label)}" xmlns="http://www.w3.org/2000/svg" font-family="system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif" font-size="11">${inner}</svg>`}
+function tbl(head,rows){
+  return `<div class="tbl-wrap"><table><thead><tr>${head.map(h=>`<th class="l">${h}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${r.map(c=>`<td class="l">${c}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+}
+const rP=(r,n)=>{if(!(n>2)||!Number.isFinite(r))return NaN;if(Math.abs(r)>=1)return 0;const t=r*Math.sqrt((n-2)/(1-r*r));return tp2(t,n-2)};
+const rCrit=n=>{const df=n-2;if(df<1)return 1;const tc=tcrit(df,.05);return tc/Math.sqrt(df+tc*tc)};
+
+/* ================= design catalog ================= */
+const EX='See the Correlational Designs Explorer.';
+const STRAT={corr:['Correlational','good'],diff:['Differential (nonexperimental)','warn'],exp:['Experimental','good'],quasi:['Quasi-experimental','warn'],ext:['Extension beyond the chapter','warn']};
+const CU=[['exp','If you need a causal conclusion, manipulate the variable and randomly assign participants.']];
+const DES={
+  pearson:{name:'Pearson correlation',sh:'Pearson r',s:'corr',data:'Two numerical (interval or ratio) scores from each individual',cause:'No',
+    nota:['r = +.62    direction: positive, form: linear','r² = .38    38% of the variability in Y is predicted by X','n = 40, p < .001   (illustrative values)'],
+    what:'Describes and measures a linear relationship. The data points in the scatter plot tend to cluster around a straight line, so each time X increases by one point, Y changes by a consistently predictable amount. The sign of r gives the direction and its absolute value (0.0 to 1.0) gives the strength or consistency.',
+    threats:'It cannot assess causality: a third variable may produce the relationship and the direction of influence is unclear, so internal validity is low. It captures only linear trends, and a small sample can produce a strong-looking correlation by chance.',
+    stat:'Pearson correlation with a test of significance; interpret strength with r² (the coefficient of determination).',
+    up:[['spearman','If the trend is one-directional but curved, or the scores are ranks, use Spearman.'],['reg','If the goal is to predict Y from X, add a regression equation.'],['mreg','If a third variable may be responsible, measure it and use multiple regression.']].concat(CU),ex:EX+' (Scatter plots and coefficients tab).'},
+  spearman:{name:'Spearman correlation',sh:'Spearman ρ',s:'corr',data:'Ranks, or numerical scores with a one-directional (monotonic) trend',cause:'No',
+    nota:['ρ = +.85    direction: positive, form: monotonic','ρ² = .72','n = 25, p < .001   (illustrative values)'],
+    what:'Evaluates a monotonic relationship: as X increases Y tends to move in one direction only, though not necessarily along a straight line. It is the Pearson correlation computed on the ranks of the scores, so it also handles ordinal data.',
+    threats:'The same limits as any correlation: no cause and effect, the third-variable and directionality problems, and strong-looking values from small samples by chance. It describes the consistency of direction, not the amount of change in Y per unit of X.',
+    stat:'Spearman correlation on the ranks, with a test of significance.',
+    up:[['pearson','If the scores are numerical and the trend is a straight line, Pearson describes it more fully.'],['reg','If the goal is prediction and the relationship is linear, add regression.']].concat(CU),ex:EX+' (Scatter plots and coefficients tab; try "Monotonic but not linear").'},
+  pb:{name:'Point-biserial correlation',sh:'Point-biserial r',s:'corr',data:'One numerical score and one variable with two categories',cause:'No',
+    nota:['Code the categories 0 and 1','r(pb) = .33    positive: category 1 scores higher','p = .04   (same test as the t test)'],
+    what:'When one variable is non-numerical with two categories, the categories are coded numerically as 0 and 1 and the Pearson correlation is calculated. The non-numerical variable also organizes the scores into two groups, which can be compared directly.',
+    threats:'Group membership is not assigned, so the groups differ in many ways besides the category (third-variable problem) and the direction of influence is unclear. The correlation tests the same hypothesis as the independent-measures t test.',
+    stat:'Pearson correlation on the 0/1 coding (point-biserial), equivalent to an independent-measures t test.',
+    up:[['diff','If the focus is the difference between the groups, report it as a group comparison.'],['exp','If the two categories can be created by the researcher, randomly assign participants.']],ex:EX+' (Non-numerical data tab).'},
+  chi:{name:'Chi-square test for independence',sh:'Chi-square',s:'corr',data:'Two non-numerical (categorical) variables',cause:'No',
+    nota:['Rows: categories of one variable','Columns: categories of the other','χ²(1) = 3.13, p = .077   (Figure 12.4 counts)'],
+    what:'When both variables are non-numerical, the data are organized in a matrix with the categories of one variable forming the rows and the categories of the second forming the columns. The chi-square test evaluates whether the two variables are related.',
+    threats:'It shows association only, with the same third-variable and directionality problems. It needs enough individuals in each cell (expected counts of at least 5), and significance does not say how strong the association is.',
+    stat:'Chi-square test for independence; φ (or Cramér’s V) for the strength of association.',
+    up:[['pb','If one variable can be measured numerically, a correlation is more informative.'],['exp','If a variable can be manipulated, randomly assign participants to its categories.']],ex:EX+' (Non-numerical data tab).'},
+  reg:{name:'Regression (prediction)',sh:'Regression',s:'corr',data:'A predictor (X) and a criterion (Y), both numerical',cause:'No',
+    nota:['Ŷ = a + bX','r = .60, r² = .36','Prediction at a chosen X, ± about 1.96 standard errors of estimate'],
+    what:'Once a correlational study shows a relationship, knowledge about the predictor variable helps predict or explain the criterion. Regression is the statistical process for finding the equation that produces the most accurate predictions of Y for each value of X. The predictor is usually simple and well defined, while the criterion is more complex and unknown.',
+    threats:'Predictions are only as good as the correlation: weak relationships give predictions close to the average. Predicting is not explaining, and extrapolating beyond the observed range is risky.',
+    stat:'Simple linear regression: slope, intercept, r² and the standard error of estimate.',
+    up:[['mreg','Use several predictors together, or control other variables.'],['pearson','If you only need to describe the relationship, report the correlation.']],ex:EX+' (Prediction and applications tab).'},
+  mreg:{name:'Multiple regression',sh:'Multiple regression',s:'corr',data:'Three or more variables measured on each individual',cause:'No',
+    nota:['Ŷ = a + b1·X1 + b2·X2 + …','Each b: effect of one predictor with the others held constant'],
+    what:'Examines multivariate relationships. It can be used to study the relationship between two specific variables while statistically controlling the influence of other, potentially confounding variables.',
+    threats:'Predictor variables only predict. Relationships can be described, not explained, and variables that were not measured can still be responsible for the relationship.',
+    stat:'Multiple regression: coefficients with tests, R² and partial correlations.',
+    up:CU.concat([['reg','If only one predictor matters, simple regression is easier to interpret.']]),ex:EX+' (Third variable and direction tab).'},
+  relval:{name:'Reliability or validity of a measure',sh:'Reliability / validity',s:'corr',data:'Two sets of scores for the same individuals (two testings, or a test and a criterion)',cause:'No',
+    nota:['Test-retest reliability: r between two testings','Validity: r between the measure and its criterion'],
+    what:'Both reliability and validity are commonly defined by relationships established with the correlational design. Reliability asks whether scores are consistent (for example across two testings); validity asks whether scores relate to the criterion they are supposed to reflect.',
+    threats:'A correlation measures consistency or association, not that a test measures what it claims. A restricted range of scores and small samples weaken or distort the coefficient.',
+    stat:'Pearson correlation between the two sets of scores (Spearman for ranks).',
+    up:[['pearson','Report the correlation with its significance and r².'],['spearman','Use Spearman if the scores are ranks.']],ex:EX+' (Prediction and applications tab; "Reliability" and "Validity").'},
+  theory:{name:'Correlational test of a theory',sh:'Theory test',s:'corr',data:'Pairs of scores that a theory predicts will be related',cause:'No',
+    nota:['Theory predicts: r(twin 1, twin 2) is high','Observed: r = .80 (illustrative)'],
+    what:'The correlational design can address many theoretical questions. For example, a theory about the contribution of heredity to intelligence predicts a relationship between the IQ scores of identical twins, which can be evaluated with a correlation.',
+    threats:'A correlation consistent with the theory does not exclude other explanations: a shared environment, for instance, could produce the same relationship. The study cannot show cause and effect.',
+    stat:'Pearson correlation (or Spearman), compared with the theory’s predictions.',
+    up:[['mreg','Measure and control competing explanations statistically.']].concat(CU),ex:EX+' (Prediction and applications tab; "Explaining theories").'},
+  curv:{name:'Curvilinear relationship: neither Pearson nor Spearman fits',sh:'Curvilinear',s:'ext',data:'Two numerical scores whose pattern rises then falls (or the reverse)',cause:'No',
+    nota:['Plot the scores first','Pearson r ≈ 0 can hide a strong curved pattern'],
+    what:'A curvilinear pattern is not a straight line and not one-directional, so neither Pearson nor Spearman describes it. A correlation near zero would wrongly suggest no relationship.',
+    threats:'Reporting r alone would misrepresent the data. This topic goes beyond the chapter’s linear and monotonic forms.',
+    stat:'Describe the pattern with the scatter plot; use a method for curved relationships (outside this chapter), or analyze separate ranges of X.',
+    up:[['pearson','If a straight line fits part of the range, describe that part.']],ex:EX+' (Scatter plots tab, "Curvilinear" preset).'},
+  diff:{name:'Differential research (group comparison)',sh:'Differential design',s:'diff',data:'Two or more groups of scores',cause:'No',
+    nota:['NR  G1:  O','NR  G2:  O','Compare the group means'],
+    what:'Involves two (or more) groups of scores and focuses on the difference between groups rather than on patterns within the scores of individuals. When one variable is numerical and the other has three or more categories, the categories organize the scores into groups.',
+    threats:'The groups already exist, so they differ in many ways besides the grouping variable (individual differences, the third-variable problem), and the design does not determine cause and effect.',
+    stat:'Independent-measures t test (two groups) or single-factor ANOVA (three or more); chi-square for non-numerical scores.',
+    up:[['pb','With two groups, a point-biserial correlation describes the same relationship.'],['exp','If you can create the groups yourself by random assignment, run an experiment.']],ex:'See the Non-Experimental and Quasi-Experimental Designs Explorer.'},
+  exp:{name:'Experimental research',sh:'Experiment',s:'exp',data:'Scores from conditions the researcher creates',cause:'Yes',
+    nota:['R  G1:  X1  O','R  G2:  X2  O'],
+    what:'The researcher manipulates the independent variable, measures the dependent variable, compares the scores and controls other variables. With random assignment the groups can be treated as equivalent, so a cause-and-effect conclusion is supported.',
+    threats:'Control may make the conditions artificial, which can limit external validity, and it is not always possible or ethical to manipulate the variable of interest.',
+    stat:'Independent-measures t test, ANOVA or repeated-measures analyses, depending on the design.',
+    up:[],ex:'See the Experimental Designs Decision Tree.'},
+  quasi:{name:'Quasi-experimental research',sh:'Quasi-experiment',s:'quasi',data:'Scores from conditions the researcher creates or exploits, without random assignment',cause:'Tentative',
+    nota:['NR  G1:  O  X  O','NR  G2:  O     O'],
+    what:'The researcher creates or uses treatment conditions but cannot randomly assign participants. It makes some attempt to limit threats to internal validity, so it is almost, but not quite, a true experiment.',
+    threats:'The groups may differ at the start, and history, maturation and selection effects can remain, so cause-and-effect conclusions stay tentative.',
+    stat:'Depends on the design: t test or ANOVA, or a mixed ANOVA with a pretest.',
+    up:[['exp','Randomize assignment if at all possible.']],ex:'See the Non-Experimental and Quasi-Experimental Designs Explorer.'}
+};
+const SW={
+  corr:{good:['Describes relationships between variables','Nonintrusive: observes natural behavior','High external validity'],bad:['Cannot assess causality','Third-variable problem: another variable may produce the relationship','Directionality problem: it is unclear which variable influences the other','Low internal validity']},
+  diff:{good:['Compares existing groups without interfering','Describes group differences'],bad:['Does not determine cause and effect','Individual differences: groups differ in many ways','Low internal validity']},
+  exp:{good:['Demonstrates a cause-and-effect relationship','Control and random assignment limit confounds','High internal validity'],bad:['Intrusive: conditions may be artificial','Often not possible or ethical for the variable of interest']},
+  quasi:{good:['Limits some threats to internal validity','Usable when randomization is impossible'],bad:['No random assignment: groups may not be equivalent','Cause-and-effect conclusions remain tentative']},
+  ext:{good:['A scatter plot reveals patterns that a single coefficient hides'],bad:['Pearson and Spearman do not describe it; this is beyond the chapter']}
+};
+/* ================= selector for numerical pairs ================= */
+const FORMS={
+  num:{sh:'Form selector',title:'Form of the relationship',intro:'Three questions about the scatter plot and the study. They choose between Pearson and Spearman and add cautions.',qs:[
+    {k:'shape',t:'1. What does the scatter plot of X and Y look like?',o:[['line','A straight-line trend: the points cluster around a line'],['mono','One direction only, but curved (always rising or always falling)'],['curv','It rises then falls (or falls then rises)'],['unk','I have not plotted the data yet']]},
+    {k:'n',t:'2. How many individuals will you measure?',o:[['small','Fewer than 10'],['moderate','10 to 50'],['large','More than 50']]},
+    {k:'third',t:'3. Is there a plausible third variable that could influence both X and Y?',o:[['yes','Yes'],['unsure','Possibly'],['no','No obvious one']]}]}
+};
+const FDEF={num:{shape:'line',n:'moderate',third:'unsure'}};
+function numScores(a){
+  const S={pearson:50,spearman:50},why={pearson:[],spearman:[]};
+  const add=(k,v,t)=>{S[k]+=v;why[k].push((v>0?'+':'')+v+': '+t)};
+  if(a.shape==='line'){add('pearson',40,'a straight-line trend is exactly what Pearson measures');add('spearman',10,'Spearman also works but ignores the amount of change');}
+  else if(a.shape==='mono'){add('spearman',40,'a one-directional curve is a monotonic relationship');add('pearson',-15,'Pearson understates a relationship that is not a straight line');}
+  else if(a.shape==='curv'){add('pearson',-30,'a curved, non-monotonic pattern is not linear');add('spearman',-30,'a pattern that changes direction is not monotonic');}
+  else{add('pearson',15,'Pearson is the default for numerical scores, but plot the data first');}
+  Object.keys(S).forEach(k=>{S[k]=Math.max(0,Math.min(100,S[k]))});
+  return{S,why};
+}
+function numResult(a){
+  const {S,why}=numScores(a),notes=[];
+  let key=S.pearson>=S.spearman?'pearson':'spearman';
+  if(a.shape==='curv')key='curv';
+  if(a.shape==='unk')notes.push(['warn','Plot the scores before choosing: the scatter plot shows the direction, the form and any unusual points.']);
+  if(a.shape==='mono')notes.push(['','Spearman correlates ranks, so it measures the consistency of the direction rather than the straight-line fit.']);
+  if(a.n==='small')notes.push(['warn','With fewer than about 10 individuals a correlation must be very strong to be significant (for n = 5, |r| must be at least '+rCrit(5).toFixed(2)+'), and a strong-looking correlation can occur by chance.']);
+  if(a.n==='large')notes.push(['','With many individuals even a small correlation can be significant. Judge strength with r², not significance alone.']);
+  if(a.third==='yes')notes.push(['warn','A third variable could be responsible for the relationship. Measure it, and consider multiple regression to control it statistically.']);
+  else if(a.third==='unsure')notes.push(['warn','If a third variable is possible, measure it as well. Otherwise describe the result as a relationship, not a cause.']);
+  else notes.push(['','Even with no obvious third variable, unmeasured variables and the directionality problem cannot be ruled out.']);
+  const ranked=['pearson','spearman'].sort((x,y)=>S[y]-S[x]);
+  return{key,notes,S,why,ranked};
+}
+/* ================= the tree ================= */
+const T={
+  root:{sh:'Manipulated?',q:'Does the researcher manipulate a variable (create the treatment conditions)?',opts:[
+    {l:'Yes: I create the treatment conditions',d:'Manipulation lets you determine the direction of the relationship and begin to control other variables.',s:'manipulate',to:'rand'},
+    {l:'No: variables are measured as they naturally occur',d:'No attempt is made to manipulate, control or interfere with the variables.',s:'measure only',to:'data'}]},
+  rand:{sh:'Random assignment?',q:'Are participants randomly assigned to the conditions?',opts:[
+    {l:'Yes',d:'Random assignment gives a true experiment.',s:'random',to:'leaf:exp'},
+    {l:'No',d:'Without random assignment the groups may not be equivalent: quasi-experimental at best.',s:'not random',to:'leaf:quasi'}]},
+  data:{sh:'Data collected',q:'What data will you collect?',opts:[
+    {l:'Separate groups of individuals whose scores are compared',d:'The focus is the difference between groups, not a pattern within individuals.',s:'groups',to:'leaf:diff'},
+    {l:'Two scores (X and Y) from each individual',d:'The focus is the relationship between the two variables.',s:'two scores',to:'scale'},
+    {l:'Three or more variables from each individual',d:'A multivariate relationship.',s:'3+ variables',to:'leaf:mreg'}]},
+  scale:{sh:'Kinds of scores',q:'What kinds of scores are X and Y?',opts:[
+    {l:'Both numerical (interval or ratio scales)',d:'For example, test scores, ratings or counts.',s:'both numerical',to:'goal'},
+    {l:'Both are ranks (ordinal)',d:'Each individual is ranked on X and on Y.',s:'ranks',to:'leaf:spearman'},
+    {l:'One numerical, the other with two categories',d:'For example, GPA and residence (commuter or resident).',s:'num + 2 cat.',to:'leaf:pb'},
+    {l:'One numerical, the other with three or more categories',d:'The categories organize the scores into separate groups.',s:'num + 3+ cat.',to:'leaf:diff'},
+    {l:'Both non-numerical (categories)',d:'For example, college graduate or not, and succeed or fail.',s:'both categories',to:'leaf:chi'}]},
+  goal:{sh:'Purpose',q:'What is the main purpose of the study?',opts:[
+    {l:'Describe the relationship between X and Y',d:'Report its direction, form and strength.',s:'describe',to:'form:num'},
+    {l:'Predict one variable from the other',d:'The predictor X is used to predict the criterion Y.',s:'predict',to:'leaf:reg'},
+    {l:'Evaluate the reliability or validity of a measure',d:'Two testings of the same people, or a test and its criterion.',s:'reliab. / valid.',to:'leaf:relval'},
+    {l:'Test a theory that predicts a relationship',d:'For example, IQ scores of identical twins.',s:'theory',to:'leaf:theory'}]}
+};
+function isTerm(to){return to.startsWith('form:')||to.startsWith('leaf:')}
+function walk(path){
+  let id='root';const steps=[];
+  for(const i of path){
+    const n=T[id],o=n&&n.opts[i];if(!o)break;
+    steps.push({id,i});
+    if(isTerm(o.to))return{steps,cur:null,term:{type:o.to.slice(0,4),key:o.to.slice(5)}};
+    id=o.to;
+  }
+  return{steps,cur:id,term:null};
+}
+function resolve(term,forms){
+  if(!term)return null;
+  if(term.type==='leaf')return{key:term.key,notes:[]};
+  return Object.assign({form:'num'},numResult(forms.num));
+}
+/* ================= considerations ================= */
+const G=(...k)=>new Set(k);
+const CORR=G('pearson','spearman','pb','chi','reg','mreg','relval','theory','curv');
+const CORRD=G('pearson','spearman','pb','chi','reg','mreg','relval','theory','curv','diff');
+const NOCAUSE=G('pearson','spearman','pb','chi','reg','mreg','relval','theory','curv','diff','quasi');
+const PAIRS=G('pearson','spearman','curv','reg','relval','theory');
+const CONS=[
+ {id:'nocause',t:'Do not claim cause and effect',a:NOCAUSE,b:'The strategy cannot assess causality. Describe a relationship (“is related to”, “predicts”), not an effect.'},
+ {id:'third',t:'Consider the third-variable problem',a:NOCAUSE,b:'Two variables can be related without a direct connection because a third, unidentified variable produces the relationship (ice cream sales and crime both rise with temperature). Measure plausible third variables.'},
+ {id:'dir',t:'Consider the directionality problem',a:CORRD,b:'A relationship does not show which variable influences the other: do television content and adolescent behavior relate because content shapes behavior, or because behavior shapes what is watched?'},
+ {id:'plot',t:'Plot the scores before choosing a statistic',a:PAIRS,b:'A scatter plot shows the direction, the form (linear, monotonic, curved) and any unusual points. It decides between Pearson, Spearman and a different approach.'},
+ {id:'dfs',t:'Report direction, form and strength',a:G('pearson','spearman','pb','relval','theory'),b:'The sign of the coefficient gives the direction, the type of correlation reflects the form, and the absolute value (0.0 to 1.0) gives the strength or consistency.'},
+ {id:'r2',t:'Interpret strength with r²',a:G('pearson','spearman','pb','reg','mreg','relval','theory'),b:'Benchmarks: r = .10, .30 and .50 correspond to about 1%, 9% and 25% of the variability predicted. A correlation of r = .50 therefore leaves 75% unexplained.'},
+ {id:'sig',t:'Check significance against the sample size',a:CORR,b:'A correlation is significant when it is unlikely to arise by chance in a population with no relationship. Small samples need very large correlations (n = 5 needs |r| ≥ .88); very large samples make small correlations significant.'},
+ {id:'sigstrong',t:'Do not equate “significant” with “strong”',a:CORR,b:'Significance depends on both the size of the correlation and the sample size, so a significant correlation can be weak. Report the coefficient and r² as well as the p value.'},
+ {id:'curv',t:'Do not report r alone for a curved pattern',a:G('curv'),b:'A correlation near zero can hide a strong curved relationship. Describe the pattern with the scatter plot or analyze separate ranges of X.'},
+ {id:'code01',t:'Code the two categories as 0 and 1',a:G('pb'),b:'Numerical coding lets the Pearson correlation be computed (point-biserial). Which category is 1 sets the sign, so state it.'},
+ {id:'grp',t:'Also describe the two groups',a:G('pb','diff'),b:'The categories organize the scores into groups that can be compared. The correlation tests the same hypothesis as the independent-measures t test (ANOVA for three or more groups).'},
+ {id:'matrix',t:'Organize the data in a matrix of counts',a:G('chi'),b:'The categories of one variable form the rows and those of the second form the columns. Report the counts in each cell.'},
+ {id:'expcount',t:'Check the expected counts in each cell',a:G('chi'),b:'Chi-square needs enough individuals in each cell (expected counts of at least 5). Significance does not say how strong the association is, so add φ or Cramér’s V.'},
+ {id:'predcrit',t:'Identify the predictor and the criterion',a:G('reg','mreg'),b:'The predictor (X) is usually simple and well defined; the criterion (Y) is the more complex variable being predicted or explained. Regression gives the equation for the most accurate predictions.'},
+ {id:'extrap',t:'Do not extrapolate beyond the observed range',a:G('reg'),b:'A weak relationship gives predictions close to the average, and a line fitted to a limited range may not hold outside it.'},
+ {id:'mregpred',t:'Remember that predictors only predict',a:G('mreg'),b:'Multiple regression can statistically control other variables, but variables that were not measured can still be responsible. Describe relationships; do not explain them.'},
+ {id:'relval',t:'Report reliability and validity as correlations',a:G('relval'),b:'Reliability is the consistency of scores (for example between two testings); validity is the relationship with the criterion the measure is meant to reflect. High consistency does not prove validity.'},
+ {id:'altexp',t:'Consider alternative explanations of the theory test',a:G('theory'),b:'A correlation consistent with the theory (IQ of identical twins) may also be produced by other explanations, such as a shared environment.'},
+ {id:'strength',t:'Use the strengths of the strategy',a:CORRD,b:'The strategy is nonintrusive: it observes natural behavior without interfering with it, which gives high external validity.'},
+ {id:'needcause',t:'If you need cause and effect, move to an experiment',a:NOCAUSE,b:'Only experimental research demonstrates a cause-and-effect relationship: manipulate the independent variable, control other variables and, if possible, randomly assign participants.'},
+ {id:'rand',t:'Randomly assign participants and control other variables',a:G('exp'),b:'Random assignment makes the groups equivalent, so a difference in scores can be attributed to the manipulation. Control extraneous variables by holding them constant.'},
+ {id:'nonequiv',t:'Check how equivalent the groups are',a:G('quasi'),b:'Without random assignment the groups may differ at the start. Use pretests, matching or other comparisons to limit threats to internal validity, and keep conclusions tentative.'},
+ {id:'manip',t:'Manipulate the independent variable and measure the outcome',a:G('exp','quasi'),b:'Manipulation sets the direction of the relationship, so the order of events is known. Compare the scores across conditions and hold other variables constant where possible.'},
+ {id:'artif',t:'Weigh control against external validity',a:G('exp','quasi'),b:'Tight control can make conditions artificial and lower external validity, which correlational studies of natural behavior usually keep high.'},
+ {id:'ethics',t:'Review ethics and participant protection',a:null,b:'Obtain informed consent, protect privacy (correlational data can be sensitive) and report the results honestly, including relationships that were not significant.'}
+];
+function consFor(key){return CONS.map(c=>({c,on:c.a===null||c.a.has(key)}))}
+
+/* ================= practice scenarios ================= */
+const NF=(o)=>Object.assign({},FDEF.num,o);
+const SC=[
+ {key:'exp',text:'A researcher randomly assigns 60 students to study in either a quiet room or a noisy room and compares their scores on a recall test.',why:'The researcher manipulates the setting and assigns participants at random: an experiment, which can show cause and effect.',path:[0,0]},
+ {key:'quasi',text:'A district introduces a new reading program in two schools chosen by the administration and compares the gains with those of two similar schools that keep the old program.',why:'The researcher uses treatment conditions but cannot randomly assign: a quasi-experiment.',path:[0,1]},
+ {key:'diff',text:'A researcher compares the mean exam scores of commuter students, dormitory residents and students living in fraternity or sorority houses.',why:'The focus is the difference between existing groups of scores, not a pattern within individuals: differential research.',path:[1,0]},
+ {key:'diff',text:'For each of 90 students, a researcher records the GPA and whether the student lives off campus, in a dormitory or in a Greek house, and evaluates the relationship.',why:'One variable is numerical and the other has three categories, which organize the scores into groups: differential research (ANOVA).',path:[1,1,3]},
+ {key:'pearson',text:'A researcher measures hours of sleep and memory-test scores for 40 students. The scatter plot shows the points clustering around a straight line.',why:'Two numerical scores with a straight-line trend: Pearson correlation.',path:[1,1,0,0],forms:{num:NF({shape:'line'})}},
+ {key:'spearman',text:'A researcher plots years of practice against reaction time for 30 athletes. Reaction time always falls with practice, but the trend is curved.',why:'A one-directional but curved trend is monotonic: Spearman correlation.',path:[1,1,0,0],forms:{num:NF({shape:'mono'})}},
+ {key:'spearman',text:'Twenty employees are ranked by their supervisors on productivity and by their peers on teamwork. The researcher asks whether the two rankings are related.',why:'Both variables are ranks (ordinal scores): Spearman correlation.',path:[1,1,1]},
+ {key:'curv',text:'A researcher plots arousal against test performance for 35 students. Performance rises with moderate arousal and falls again with high arousal.',why:'The pattern rises then falls, so it is neither linear nor monotonic. A correlation near zero would hide it.',path:[1,1,0,0],forms:{num:NF({shape:'curv'})}},
+ {key:'pb',text:'A researcher records the GPA of each student and whether the student is a commuter or lives in a residence hall, and evaluates the relationship.',why:'One numerical score and one variable with two categories: code the categories 0 and 1 and compute a point-biserial correlation.',path:[1,1,2]},
+ {key:'chi',text:'A survey records, for 200 adults, whether each is a college graduate (yes or no) and whether each voted in the last election (yes or no).',why:'Both variables are non-numerical: organize the counts in a matrix and use chi-square.',path:[1,1,4]},
+ {key:'reg',text:'An admissions office wants to use SAT scores to predict the first-year GPA of new students.',why:'The goal is prediction of a criterion (GPA) from a predictor (SAT): regression.',path:[1,1,0,1]},
+ {key:'relval',text:'A researcher gives the same anxiety questionnaire twice, two weeks apart, to 50 people and asks whether each person’s scores are consistent.',why:'Consistency between two testings is test-retest reliability, which is evaluated with a correlation.',path:[1,1,0,2]},
+ {key:'relval',text:'The developers of a new depression scale compare each person’s scale score with a clinician’s rating of the same person.',why:'The relationship with a criterion evaluates the validity of the measure.',path:[1,1,0,2]},
+ {key:'theory',text:'A theory states that heredity contributes to intelligence and therefore predicts a relationship between the IQ scores of identical twins. A researcher tests this prediction.',why:'A theory predicts a relationship that can be evaluated with a correlation.',path:[1,1,0,3]},
+ {key:'mreg',text:'A researcher measures income, education, age and health status for 300 adults and wants to study the relationship between education and health while controlling the other variables.',why:'Three or more variables measured on each individual, with statistical control of the others: multiple regression.',path:[1,2]}
+];
+const FAM={corr:['pearson','spearman','pb','chi','reg','mreg','relval','theory','curv'],other:['diff','exp','quasi']};
+function famOf(k){return FAM.corr.includes(k)?'corr':'other'}
+function choicesFor(sc,rnd){
+  const k=sc.key,fam=famOf(k),own=FAM[fam].filter(x=>x!==k),oth=FAM[fam==='corr'?'other':'corr'].filter(x=>x!==k);
+  const sh=a=>a.slice().sort(()=>rnd()-.5);
+  const pool=sh(own).slice(0,fam==='corr'?2:1).concat(sh(oth).slice(0,fam==='corr'?1:2));
+  return sh([k].concat(pool.slice(0,3)));
+}
+const LONG={};
+const nm=k=>LONG[k]||DES[k].name;
+const CM_COLS=['Correlational','Differential','Experimental'];
+const CM_ROWS=[
+ {n:'Cause-and-effect conclusion',tab:'wk',c:['x','Cannot assess causality: it only shows that variables are related.'],d:['x','Does not determine a cause-and-effect relationship.'],e:['c','Demonstrates a cause-and-effect relationship between the variables.']},
+ {n:'Third-variable problem',tab:'wk',c:['x','Two variables can be related without a direct connection: a third, unidentified variable may produce the relationship (ice cream sales, crime and temperature).'],d:['x','Preexisting groups differ in many ways other than the grouping variable.'],e:['c','Manipulation, control and random assignment limit confounding variables.']},
+ {n:'Directionality problem',tab:'wk',c:['x','Does not establish which variable influences the other (television content and adolescent behavior).'],d:['p','Groups are formed after the fact, so the design itself does not establish the order of events.'],e:['c','The researcher manipulates the independent variable, so the direction of influence is known.']},
+ {n:'Internal validity',tab:'wk',c:['x','Low internal validity.'],d:['x','Low: the groups are not equivalent.'],e:['c','High, when the design is well controlled.']},
+ {n:'External validity',c:['c','High external validity: behavior is observed as it naturally occurs.'],d:['p','Depends on how the groups were obtained.'],e:['p','Can be lower when conditions are artificial or tightly controlled.']},
+ {n:'Nonintrusive observation of natural behavior',c:['c','No attempt to manipulate, control or interfere with the variables.'],d:['c','Existing groups are compared as they are.'],e:['x','The researcher intervenes to create and control conditions.']},
+ {n:'Describing relationships between variables',tab:'sc',c:['c','Establishes that a relationship exists and describes its direction, form and strength.'],d:['p','Describes the difference between groups rather than a pattern within individuals.'],e:['p','Describes the effect of the manipulation on the outcome.']},
+ {n:'Prediction of one variable from another',tab:'pr',c:['c','Regression uses the predictor to predict the criterion.'],d:['p','Group membership can be used for rough prediction.'],e:['p','Treatment effects can inform expectations, though prediction is not the primary goal.']},
+ {n:'Evidence of reliability and validity',tab:'pr',c:['c','Reliability and validity are commonly defined by correlations.'],d:['n','Not a typical use.'],e:['n','Not a typical use.']},
+ {n:'Studying more than two variables',tab:'wk',c:['p','Multiple regression studies multivariate relationships and statistically controls other variables, but variables only predict.'],d:['p','Possible with more groups, with the same causal limits.'],e:['c','Factorial and other designs allow controlled study of several variables.']}
+];
+const QZ=[
+ {q:'What is the goal of the correlational research strategy?',o:['To show that one variable causes another','To establish that a relationship exists between variables and describe its nature','To compare the mean scores of two groups','To manipulate a variable under controlled conditions'],a:1,w:'Correlational research establishes that a relationship exists and describes it. Relationships can be described, not explained.'},
+ {q:'Which strategy is the only one that demonstrates a cause-and-effect relationship?',o:['Correlational','Differential','Experimental','All three do'],a:2,w:'Experimental research demonstrates cause and effect. Correlational and differential research do not.'},
+ {q:'How does correlational research differ from differential research?',o:['Correlational looks for patterns within the scores of individuals; differential examines scores of groups','Correlational compares groups; differential examines individuals','Correlational manipulates variables; differential does not','There is no difference'],a:0,w:'Correlational research looks for patterns in the paired scores of individuals; differential research focuses on the difference between groups of scores.'},
+ {q:'Which statement describes a negative relationship?',o:['Both variables increase together','Increases in one variable go with decreases in the other','The variables are unrelated','Both variables are constant'],a:1,w:'In a negative relationship the variables change in opposite directions.'},
+ {q:'The Pearson correlation measures…',o:['Any relationship between two variables','Linear relationships between two numerical (interval or ratio) variables','Differences between group means','Relationships between two nominal variables'],a:1,w:'Pearson r describes and measures linear relationships when both variables are numerical scores from interval or ratio scales.'},
+ {q:'When is the Spearman correlation appropriate?',o:['For monotonic relationships or when the scores are ranks','Only when both variables are nominal','Only for perfectly linear data','When the sample is very large'],a:0,w:'Spearman correlates ranks and measures the consistency of a one-directional (monotonic) trend.'},
+ {q:'In a correlation coefficient, what does the sign indicate?',o:['The strength of the relationship','The direction of the relationship','The form of the relationship','Statistical significance'],a:1,w:'The sign shows the direction; the numerical value shows strength or consistency; the type of correlation shows the form.'},
+ {q:'Which correlation indicates the strongest relationship?',o:['+.30','−.40','+.10','0'],a:1,w:'Strength depends on the absolute value, not the sign: .40 is larger than .30, .10 and 0.'},
+ {q:'A correlation of r = .50 gives a coefficient of determination of…',o:['5%','25%','50%','75%'],a:1,w:'r² = .50 × .50 = .25, so 25% of the variability in one variable is predicted by the other.'},
+ {q:'One variable is numerical and the other has two categories. How can the relationship be evaluated?',o:['Code the categories 0 and 1 and compute a Pearson (point-biserial) correlation','It cannot be evaluated','Use a chi-square test only','Use a Spearman correlation only'],a:0,w:'Numerically coding two categories as 0 and 1 and computing the Pearson correlation gives the point-biserial correlation.'},
+ {q:'Both variables are non-numerical. What is the usual analysis?',o:['Pearson correlation','Chi-square test applied to a matrix of counts','Regression','t test'],a:1,w:'Organize the categories of one variable as rows and the other as columns and apply chi-square.'},
+ {q:'Why can a very strong correlation from a small sample be unconvincing?',o:['Small samples never produce correlations','It may appear strong by chance when there is no relationship; larger samples make a real relationship more likely','Small samples always underestimate correlations','Significance does not depend on sample size'],a:1,w:'With a small sample, a strong-looking correlation can arise from random variation alone.'},
+ {q:'In a prediction study, what is the criterion variable?',o:['The variable used to make predictions','The variable being predicted or explained','A third variable','The grouping variable'],a:1,w:'The predictor is used to predict the criterion; regression finds the equation giving the most accurate predictions of Y.'},
+ {q:'Ice cream sales and crime rate rise and fall together because both depend on temperature. This illustrates…',o:['The directionality problem','The third-variable problem','Low external validity','Range restriction'],a:1,w:'A third, unidentified variable (temperature) is responsible for the observed relationship.'},
+ {q:'Adolescents who watch more sexual content on television engage in more sexual behavior. Why can it not be concluded that the content causes the behavior?',o:['The sample was too small','The behavior might influence what is watched (directionality problem)','Correlations must be negative','Television is not measurable'],a:1,w:'A correlational study cannot determine whether content influences behavior or behavior influences the choice of programs.'},
+ {q:'Which is a strength of the correlational strategy?',o:['High internal validity','It demonstrates cause and effect','It is nonintrusive and has high external validity','It controls all confounding variables'],a:2,w:'Correlational studies observe natural behavior without intrusion, giving high external validity, but they have low internal validity.'},
+ {q:'What can multiple regression add to a correlational study?',o:['Proof of causation','Statistical control of other, potentially confounding variables','Random assignment','Higher external validity'],a:1,w:'Multiple regression can examine the relationship between two variables while controlling other variables, but predictors only predict.'}
+];
+const clone=o=>JSON.parse(JSON.stringify(o));
+const st={tab:'tree',path:[],forms:clone(FDEF),cons:null,ck:{},cat:'all',cm:0};
+const pr={n:0,ok:0,idx:-1,choices:[],answered:false,last:null};
+const qz={n:0,score:0,i:-1,done:false};
+const TABS=['tree','cat','wk','con','prac','ref'];
+let LAY=null;
+const TONE={corr:'var(--colC)',diff:'var(--warn)',quasi:'var(--warn)',exp:'var(--good)',ext:'var(--muted)'};
+function desOf(res){return DES[res.key]}
+function buildLayout(){
+  let row=0;const nodes=[];
+  function mk(tid,depth,id){
+    const n=T[tid],node={id,kind:'q',tid,label:n.sh,depth,kids:[]};
+    n.opts.forEach((o,i)=>{
+      const cid=id+'.'+i;let kid;
+      if(o.to.startsWith('form:')){const fk=o.to.slice(5);kid={id:cid,kind:'form',fk,label:FORMS[fk].sh,depth:depth+1,kids:[]}}
+      else if(o.to.startsWith('leaf:')){const k=o.to.slice(5);kid={id:cid,kind:'leaf',key:k,label:DES[k].sh,depth:depth+1,kids:[]}}
+      else kid=mk(o.to,depth+1,cid);
+      kid.el=o.s;node.kids.push(kid);
+    });
+    return node;
+  }
+  const rootN=mk('root',0,'r');
+  (function place(nd){
+    if(!nd.kids.length)nd.row=row++;else{nd.kids.forEach(place);nd.row=(nd.kids[0].row+nd.kids[nd.kids.length-1].row)/2}
+    nodes.push(nd);
+  })(rootN);
+  return{root:rootN,nodes,rows:row};
+}
+const CW=140,GAP=70,RH=31,PX=8,PY=12,NH=24;
+function treeSVG(w,res){
+  if(!LAY)LAY=buildLayout();
+  const ids=['r'];w.steps.forEach((s,k)=>ids.push(['r'].concat(st.path.slice(0,k+1)).join('.')));
+  const onPath=new Set(ids),maxD=Math.max(...LAY.nodes.map(n=>n.depth));
+  const W=PX*2+(maxD+1)*CW+maxD*GAP,H=LAY.rows*RH+PY*2+22;
+  const X=n=>PX+n.depth*(CW+GAP),Y=n=>PY+n.row*RH+RH/2;
+  const curId=w.cur?ids[ids.length-1]:null;
+  let edges='',nodes='';
+  LAY.nodes.forEach(p=>p.kids.forEach(k=>{
+    const on=onPath.has(k.id);
+    edges+=`<line x1="${X(p)+CW}" y1="${Y(p)}" x2="${X(k)}" y2="${Y(k)}" stroke="${on?'var(--accent)':'var(--line)'}" stroke-width="${on?2.6:1.3}"/>`;
+  }));
+  LAY.nodes.forEach(p=>p.kids.forEach(k=>{
+    const on=onPath.has(k.id);
+    edges+=`<text x="${X(k)-5}" y="${Y(k)-4}" text-anchor="end" font-size="10.5" fill="${on?'var(--accent)':'var(--muted)'}" font-weight="${on?700:400}" stroke="var(--card)" stroke-width="3.5" paint-order="stroke">${esc(k.el)}</text>`;
+  }));
+  LAY.nodes.forEach(n=>{
+    const x=X(n),y=Y(n)-NH/2,on=onPath.has(n.id),reached=on&&n.id===ids[ids.length-1]&&w.term;
+    let fill='var(--card)',stroke='var(--line)',sw=1.2,dash='',label=n.label;
+    if(n.kind==='leaf'||n.kind==='form'){
+      stroke=n.kind==='form'?'var(--colA)':TONE[DES[n.key].s];sw=on?2.6:1.4;if(n.kind==='form')dash='4 3';
+      if(reached){fill=n.kind==='leaf'?'var(--goodBg)':'var(--grid)';if(n.kind==='form'&&res)label=desOf(res).sh}
+    }else if(on){fill='var(--grid)';stroke='var(--accent)';sw=2.4}
+    if(n.id===curId){stroke='var(--accent)';sw=3;dash='5 3'}
+    const click=on&&n.kind==='q'&&n.id!==curId?` data-tn="${n.id}" tabindex="0" role="button" aria-label="Go back to: ${esc(T[n.tid].q)}"`:'';
+    nodes+=`<g${click}><rect x="${x}" y="${y}" width="${CW}" height="${NH}" rx="6" fill="${fill}" stroke="${stroke}" stroke-width="${sw}" ${dash?`stroke-dasharray="${dash}"`:''}/><text x="${x+CW/2}" y="${y+NH/2+3.6}" text-anchor="middle" font-size="11.5" fill="var(--fg)" font-weight="${on?700:400}">${esc(label)}</text></g>`;
+  });
+  const leg=`<text x="${PX}" y="${H-6}" font-size="11" fill="var(--muted)">Blue path: your answers. Dashed outline: next question. Outline colors: correlational (purple), differential or quasi-experimental (amber), experimental (green). Dashed blue: a selector decides.</text>`;
+  return svgWrap(W,H,edges+nodes+leg,'Decision tree for choosing a correlational or related research design, with your path highlighted');
+}
+function spectrum(s){
+  const W=760,H=130,xs=[20,260,500],ws=240;let o='';
+  const labs=[['Correlational','no manipulation: relationships are described','var(--grid)','var(--colC)'],['Differential, quasi-experimental','groups compared; limited control','var(--warnBg)','var(--warn)'],['Experimental','manipulation, control, random assignment','var(--goodBg)','var(--good)']];
+  labs.forEach((l,i)=>{o+=`<rect x="${xs[i]}" y="26" width="${ws}" height="56" rx="6" fill="${l[2]}" stroke="${l[3]}"/><text x="${xs[i]+ws/2}" y="50" text-anchor="middle" fill="var(--fg)" font-weight="700" font-size="13">${l[0]}</text><text x="${xs[i]+ws/2}" y="68" text-anchor="middle" fill="var(--muted)" font-size="10">${l[1]}</text>`});
+  o+=`<text x="20" y="16" fill="var(--muted)">cannot assess cause and effect</text><text x="740" y="16" text-anchor="end" fill="var(--muted)">can demonstrate cause and effect</text><line x1="20" y1="94" x2="740" y2="94" stroke="var(--axis)"/><polygon points="740,94 732,90 732,98" fill="var(--axis)"/>`;
+  const i={corr:0,ext:0,diff:1,quasi:1,exp:2}[s];
+  if(i!==undefined)o+=`<polygon points="${xs[i]+ws/2},88 ${xs[i]+ws/2-8},104 ${xs[i]+ws/2+8},104" fill="var(--fg)"/><text x="${xs[i]+ws/2}" y="120" text-anchor="middle" fill="var(--fg)" font-weight="600">your design</text>`;
+  return svgWrap(W,H,o,'Spectrum of research strategies by ability to assess cause and effect');
+}
+function formHTML(fk){
+  const F=FORMS[fk],a=st.forms[fk];
+  let h=`<p class="small muted">${esc(F.intro)}</p>`;
+  F.qs.forEach(q=>{
+    h+=`<div class="q"><fieldset><legend>${esc(q.t)}</legend>${q.o.map(o=>`<label><input type="radio" name="f-${fk}-${q.k}" value="${o[0]}" ${String(a[q.k])===String(o[0])?'checked':''}> ${esc(o[1])}</label>`).join('')}</fieldset></div>`;
+  });
+  return h;
+}
+function renderQ(w){
+  const steps=w.steps;
+  let h=`<div class="row" style="justify-content:space-between"><h2 style="margin:0">${w.cur?'Question '+(steps.length+1):w.term.type==='form'?esc(FORMS[w.term.key].title):'Design reached'}</h2><div class="row"><button class="small" data-act="back" ${steps.length?'':'disabled'}>Back</button><button class="small" data-act="reset" title="Clear every answer and start again">Reset</button></div></div>`;
+  if(steps.length)h+=`<ol class="crumbs" aria-label="Your answers">${steps.map((s,k)=>`<li><button class="crumb" data-jump="${k}" title="Return to this question">${esc(T[s.id].sh)} → <b>${esc(T[s.id].opts[s.i].s)}</b></button></li>`).join('')}</ol>`;
+  if(w.cur){
+    const n=T[w.cur];
+    h+=`<p style="font-weight:600;margin:8px 0">${esc(n.q)}</p>`+n.opts.map((o,i)=>`<button class="opt" data-pick="${i}"><b>${esc(o.l)}</b><span>${esc(o.d)}</span></button>`).join('');
+  }else if(w.term.type==='form'){
+    h+=formHTML(w.term.key)+`<div class="row"><button class="small" data-act="form-reset" title="Return this selector to its default answers">Reset answers</button></div>`;
+  }else h+=`<p class="small muted">This path leads straight to one design. Use Back to revisit an answer.</p>`;
+  $('#q-card').innerHTML=h;
+}
+function notesHTML(res){return (res.notes||[]).map(n=>`<div class="callout ${n[0]}">${esc(n[1])}</div>`).join('')}
+function fitsHTML(res){
+  if(res.form!=='num')return '';
+  return '<h3>Fit of Pearson and Spearman (0–100)</h3>'+res.ranked.map(k=>{const sc=res.S[k];return `<div class="fit"><div style="min-width:60px">${pill(sc,sc>=70?'good':sc>=50?'warn':'bad')}</div><div style="flex:1"><div class="nm">${esc(DES[k].name)}</div><div class="progress"><i style="width:${sc}%"></i></div><details><summary class="small muted" style="cursor:pointer">Why this score</summary><ul class="clean small muted">${res.why[k].map(t=>`<li>${esc(t)}</li>`).join('')||'<li>No answers moved this score.</li>'}</ul></details></div></div>`}).join('');
+}
+function pathSummary(w){
+  const items=w.steps.map(s=>`<li>${esc(T[s.id].q)} <b>${esc(T[s.id].opts[s.i].l)}</b></li>`);
+  return items.length?`<h3>How you got here</h3><ol class="clean small">${items.join('')}</ol>`:'';
+}
+function swHTML(s){
+  const sw=SW[s];
+  return `<div class="grid2"><div><h3>Strengths</h3><ul class="clean small">${sw.good.map(t=>`<li>${esc(t)}</li>`).join('')}</ul></div><div><h3>Weaknesses</h3><ul class="clean small">${sw.bad.map(t=>`<li>${esc(t)}</li>`).join('')}</ul></div></div>`;
+}
+function renderRes(w,res){
+  if(!res){
+    $('#res').innerHTML=`<div class="card"><h2>Recommended design</h2><p class="muted">Answer the questions and the recommended strategy or statistic, its main threats, its strengths and weaknesses and the usual analysis appear here.</p><div class="chart">${spectrum(null)}</div></div>`;
+    return;
+  }
+  const d=desOf(res),sp=STRAT[d.s];
+  const ups=(d.up||[]).map(u=>`<li><b>${esc(nm(u[0]))}:</b> ${esc(u[1])}</li>`).join('');
+  $('#res').innerHTML=`<div class="card">
+    <div class="row" style="justify-content:space-between"><h2 style="margin:0">Recommended: ${esc(d.name)}</h2><div>${pill(sp[0],sp[1])}</div></div>
+    <p>${esc(d.what)}</p>${notesHTML(res)}
+    <div class="grid2" style="margin-top:6px">
+      <div><h3>Data and notation</h3><p class="small">${esc(d.data)}. Cause and effect: <b>${esc(d.cause)}</b>.</p>${d.nota&&d.nota.length?`<pre class="nota">${esc(d.nota.join('\n'))}</pre>`:''}</div>
+      <div><h3>Position on the control spectrum</h3><div class="chart">${spectrum(d.s)}</div></div>
+    </div>
+    ${swHTML(d.s)}
+    <div class="grid2">
+      <div><h3>Main threats</h3><p>${esc(d.threats)}</p></div>
+      <div><h3>Usual analysis</h3><p>${esc(d.stat)}</p></div>
+    </div>
+    ${fitsHTML(res)}
+    ${ups?`<h3>Ways to strengthen the study</h3><ul class="clean small">${ups}</ul>`:''}
+    ${pathSummary(w)}
+    <div class="row" style="margin-top:10px"><button class="primary" data-goto="con">General considerations for this design</button><button data-goto="cat">Compare with other designs</button></div>
+    ${d.ex?`<p class="small muted">${esc(d.ex)}</p>`:''}
+  </div>`;
+}
+function current(){const w=walk(st.path);return{w,res:resolve(w.term,st.forms)}}
+function renderTree(){
+  const {w,res}=current();
+  renderQ(w);
+  $('#tree-chart').innerHTML=treeSVG(w,res);
+  renderRes(w,res);
+}
+const FIRST={};SC.forEach((s,i)=>{if(!(s.key in FIRST))FIRST[s.key]=i});
+function renderCat(){
+  const f=st.cat;
+  const keys=Object.keys(DES).filter(k=>f==='all'||DES[k].s===f);
+  const rows=keys.map(k=>{const d=DES[k],sp=STRAT[d.s];return [`<b>${esc(d.name)}</b>`,pill(sp[0],sp[1]),esc(d.data),esc(d.cause),esc(d.stat),esc(d.threats),FIRST[k]!==undefined?`<button class="small" data-open="${FIRST[k]}">Show in tree</button>`:'']});
+  $('#cat-spec').innerHTML=spectrum(null);
+  $('#cat-out').innerHTML=tbl(['Design','Strategy','Data','Cause and effect?','Usual analysis','Main threats',''],rows)+(keys.length?'':'<p class="muted">No designs match this filter.</p>');
+}
+function renderCM(){
+  const cls={c:'good',p:'warn',x:'bad'},sym={c:'strong',p:'partial',x:'weak'};
+  const head='<tr><th class="l">Issue</th>'+CM_COLS.map(c=>`<th>${c}</th>`).join('')+'</tr>';
+  const cell=v=>v[0]==='n'?'<span class="muted">–</span>':pill(sym[v[0]],cls[v[0]]);
+  const body=CM_ROWS.map((r,i)=>`<tr data-cm="${i}" tabindex="0" style="cursor:pointer;${i===st.cm?'background:var(--grid)':''}"><td class="l"><b>${esc(r.n)}</b></td>`+[r.c,r.d,r.e].map(v=>`<td style="text-align:center">${cell(v)}</td>`).join('')+'</tr>').join('');
+  $('#cm-matrix').innerHTML=`<div class="tbl-wrap"><table><thead>${head}</thead><tbody>${body}</tbody></table></div>`;
+  const r=CM_ROWS[st.cm];$('#cm-title').textContent=r.n;
+  $('#cm-detail').innerHTML='<ul class="clean">'+[['Correlational',r.c],['Differential',r.d],['Experimental',r.e]].map(([n,v])=>`<li><b>${n}:</b> ${cell(v)} ${esc(v[1])}</li>`).join('')+'</ul>';
+}
+function consKey(){const {res}=current();return st.cons||(res?res.key:'pearson')}
+function sigOut(){
+  const r=parseFloat($('#sg-r').value),n=parseInt($('#sg-n').value,10),o=$('#sg-out');
+  if(!Number.isFinite(r)||!Number.isFinite(n)||Math.abs(r)>=1||n<3){o.innerHTML='<p class="muted small">Enter r between −1 and 1 (not including them) and n of at least 3.</p>';return}
+  const p=rP(r,n),rc=rCrit(n),sig=p<.05;
+  o.innerHTML=`<p><b>p = ${p<.001?'< .001':p.toFixed(3)}</b> (two-tailed). The critical |r| at α = .05 for n = ${n} is <b>${rc.toFixed(3)}</b>, so r = ${r.toFixed(2)} is ${sig?'<b>statistically significant</b>':'<b>not significant</b>'}. The coefficient of determination is r² = ${(r*r).toFixed(3)}, so ${(100*r*r).toFixed(1)}% of the variability is predicted.</p>${sig&&r*r<.09?'<div class="callout warn">Significant but weak: r² is under 9%. Significance is not strength.</div>':''}`;
+}
+function renderCon(){
+  const {res}=current(),key=consKey();
+  const sel=$('#cs-key');
+  if(!sel.options.length)sel.innerHTML='<option value="">Same as my tree result</option>'+Object.keys(DES).map(k=>`<option value="${k}">${esc(nm(k))}</option>`).join('');
+  sel.value=st.cons||'';
+  const list=consFor(key),on=list.filter(x=>x.on),off=list.filter(x=>!x.on);
+  const done=on.filter(x=>st.ck[x.c.id]).length;
+  const item=x=>`<label class="ck ${st.ck[x.c.id]?'done':''}"><input type="checkbox" data-ck="${x.c.id}" ${st.ck[x.c.id]?'checked':''}><span><span class="t">${esc(x.c.t)}</span><br><span class="small muted">${esc(x.c.b)}</span></span></label>`;
+  $('#cs-note').innerHTML=!st.cons&&!res?'<div class="callout warn">You have not reached a design in the tree yet, so the checklist shows the Pearson correlation. Choose a design above or finish the tree.</div>':'';
+  $('#cs-name').textContent=nm(key);
+  $('#cs-prog').innerHTML=`<div class="small muted">${done} of ${on.length} relevant considerations addressed</div><div class="progress"><i style="width:${on.length?100*done/on.length:0}%"></i></div>`;
+  $('#cs-on').innerHTML=on.map(item).join('');
+  $('#cs-off').innerHTML=off.map(item).join('');
+  $('#cs-off-wrap').hidden=!off.length;
+  $('#cs-off-n').textContent=off.length;
+  const ns=[5,8,10,15,20,30,50,100,200],hi=+$('#cr-n').value;
+  const rows=ns.map(n=>{const rc=rCrit(n);return `<tr${n===hi?' style="font-weight:700"':''}><td>${n}</td><td>${n-2}</td><td>${rc.toFixed(3)}</td><td>${(100*rc*rc).toFixed(1)}%</td></tr>`}).join('');
+  $('#cr-out').innerHTML=`<div class="tbl-wrap"><table><thead><tr><th>n</th><th>df = n − 2</th><th>Critical |r| (α = .05, two-tailed)</th><th>r² at that value</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+  sigOut();
+}
+function newSC(){
+  let i;do{i=Math.floor(Math.random()*SC.length)}while(SC.length>1&&i===pr.idx);
+  pr.idx=i;pr.choices=choicesFor(SC[i],Math.random);pr.answered=false;pr.last=null;renderPR();
+}
+function renderPR(){
+  $('#pr-score').textContent=pr.n?`Score: ${pr.ok} of ${pr.n} correct`:'';
+  const card=$('#pr-card');card.hidden=pr.idx<0;if(pr.idx<0)return;
+  const s=SC[pr.idx];
+  $('#pr-text').textContent=s.text;
+  $('#pr-choices').innerHTML=pr.choices.map((k,j)=>`<button class="opt" data-ch="${j}" ${pr.answered?'disabled':''}><b>${esc(nm(k))}</b></button>`).join('');
+  $('#pr-fb').innerHTML=pr.answered?`<div class="callout ${pr.last?'':'warn'}"><b>${pr.last?'Correct.':'Not quite.'}</b> The best answer is <b>${esc(nm(s.key))}</b>. ${esc(s.why)}</div><div class="row"><button class="small" data-open="${pr.idx}">Open this path in the decision tree</button><button class="small primary" data-act="pr-new">Next scenario</button></div>`:'';
+}
+function answerPR(j){
+  if(pr.answered)return;const s=SC[pr.idx];
+  pr.last=pr.choices[j]===s.key;pr.n++;if(pr.last)pr.ok++;pr.answered=true;renderPR();
+}
+function newQ(){let i;do{i=Math.floor(Math.random()*QZ.length)}while(QZ.length>1&&i===qz.i);qz.i=i;qz.done=false;qz.pick=-1;renderQZ()}
+function renderQZ(){
+  $('#qz-score').textContent=qz.n?`Score: ${qz.score} of ${qz.n}`:'';
+  if(qz.i<0){$('#qz-out').innerHTML='<p class="muted">Press "Next question".</p>';return}
+  const q=QZ[qz.i];
+  $('#qz-out').innerHTML=`<p><b>${esc(q.q)}</b></p>`+q.o.map((t,j)=>`<div><button class="small" data-qz="${j}" style="margin:2px 0;text-align:left" ${qz.done?'disabled':''}>${'ABCD'[j]}. ${esc(t)}</button></div>`).join('')+(qz.done?`<div class="callout ${qz.pick===q.a?'':'warn'}"><b>${qz.pick===q.a?'Correct.':'Not quite.'}</b> ${esc(q.w)}</div><div class="row"><button class="small primary" data-act="qz-new">Next question</button></div>`:'');
+}
+function answerQ(j){
+  if(qz.done)return;qz.done=true;qz.pick=j;qz.n++;if(j===QZ[qz.i].a)qz.score++;renderQZ();
+}
+function download(name,blob){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
+function svgText(el){let x=new XMLSerializer().serializeToString(el);const cs=getComputedStyle(document.documentElement);return x.replace(/var\((--[\w-]+)\)/g,(m,n)=>cs.getPropertyValue(n).trim()||'#000')}
+function exportSVG(id,name){const el=$('#'+id+' svg');if(el)download(name,new Blob([svgText(el)],{type:'image/svg+xml'}))}
+function exportPNG(id,name){
+  const el=$('#'+id+' svg');if(!el)return;const vb=el.viewBox.baseVal,sc=2,img=new Image(),bg=getComputedStyle(document.documentElement).getPropertyValue('--card').trim()||'#fff';
+  img.onload=()=>{const c=document.createElement('canvas');c.width=vb.width*sc;c.height=vb.height*sc;const g=c.getContext('2d');g.fillStyle=bg;g.fillRect(0,0,c.width,c.height);g.drawImage(img,0,0,c.width,c.height);c.toBlob(b=>download(name,b),'image/png')};
+  img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svgText(el));
+}
+function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(toast.h);toast.h=setTimeout(()=>t.classList.remove('show'),2200)}
+function showTab(id){
+  st.tab=id;
+  $$('nav.tabs button').forEach(b=>b.setAttribute('aria-selected',b.id==='t-'+id?'true':'false'));
+  $$('.tabpanel').forEach(p=>{p.hidden=p.id!=='p-'+id});
+  if(id==='tree')renderTree();else if(id==='cat')renderCat();else if(id==='wk')renderCM();else if(id==='con')renderCon();else if(id==='prac'){renderPR();renderQZ()}
+}
+function openScenario(i){
+  const s=SC[i];st.path=s.path.slice();st.forms=Object.assign(clone(FDEF),clone(s.forms||{}));st.cons=null;showTab('tree');if(typeof window.scrollTo==='function')window.scrollTo(0,0);
+}
+function formChange(el){
+  const m=/^f-(\w+)-(\w+)$/.exec(el.name);if(!m)return false;
+  st.forms[m[1]][m[2]]=el.value;renderTree();return true;
+}
+function init(){
+  document.addEventListener('click',e=>{
+    const g=e.target.closest('[data-tn]');
+    if(g){const id=g.dataset.tn,k=id.split('.').length-1;st.path=st.path.slice(0,k);renderTree();return}
+    const cm=e.target.closest('[data-cm]');
+    if(cm){st.cm=+cm.dataset.cm;renderCM();return}
+    const b=e.target.closest('[data-act],[data-pick],[data-jump],[data-goto],[data-open],[data-ch],[data-dl],[data-qz]');if(!b)return;
+    if(b.dataset.pick!==undefined){st.path.push(+b.dataset.pick);renderTree();return}
+    if(b.dataset.jump!==undefined){st.path=st.path.slice(0,+b.dataset.jump);renderTree();return}
+    if(b.dataset.goto){showTab(b.dataset.goto);window.scrollTo(0,0);return}
+    if(b.dataset.open!==undefined){openScenario(+b.dataset.open);return}
+    if(b.dataset.ch!==undefined){answerPR(+b.dataset.ch);return}
+    if(b.dataset.qz!==undefined){answerQ(+b.dataset.qz);return}
+    if(b.dataset.dl){if(b.dataset.dl==='svg')exportSVG('tree-chart','correlational-decision-tree.svg');else exportPNG('tree-chart','correlational-decision-tree.png');return}
+    const a=b.dataset.act;
+    if(a==='back'){st.path.pop();renderTree()}
+    else if(a==='reset'){st.path=[];st.forms=clone(FDEF);renderTree()}
+    else if(a==='form-reset'){const w=walk(st.path);if(w.term&&w.term.type==='form'){st.forms[w.term.key]=clone(FDEF[w.term.key]);renderTree()}}
+    else if(a==='pr-new')newSC();
+    else if(a==='qz-new')newQ();
+    else if(a==='prac-reset'){pr.n=0;pr.ok=0;pr.idx=-1;pr.answered=false;pr.last=null;qz.n=0;qz.score=0;qz.i=-1;qz.done=false;renderPR();renderQZ()}
+    else if(a==='con-reset'){st.ck={};st.cons=null;renderCon()}
+  });
+  document.addEventListener('keydown',e=>{
+    const t=e.target;if(e.key!=='Enter'&&e.key!==' ')return;
+    if(t.dataset&&t.dataset.tn){st.path=st.path.slice(0,t.dataset.tn.split('.').length-1);renderTree();e.preventDefault()}
+    else if(t.dataset&&t.dataset.cm!==undefined){st.cm=+t.dataset.cm;renderCM();e.preventDefault()}
+  });
+  document.addEventListener('change',e=>{
+    const el=e.target;
+    if(el.name&&el.name.indexOf('f-')===0){formChange(el);return}
+    if(el.id==='cs-key'){st.cons=el.value||null;renderCon();return}
+    if(el.id==='cat-f'){st.cat=el.value;renderCat();return}
+    if(el.id==='cr-n'){renderCon();return}
+    if(el.dataset&&el.dataset.ck){st.ck[el.dataset.ck]=el.checked;renderCon()}
+  });
+  document.addEventListener('input',e=>{if(e.target.id==='sg-r'||e.target.id==='sg-n')sigOut()});
+  $$('nav.tabs button').forEach(b=>{
+    b.addEventListener('click',()=>showTab(b.id.slice(2)));
+    b.addEventListener('keydown',e=>{
+      if(e.key!=='ArrowRight'&&e.key!=='ArrowLeft')return;
+      const i=TABS.indexOf(b.id.slice(2)),j=(i+(e.key==='ArrowRight'?1:TABS.length-1))%TABS.length;
+      showTab(TABS[j]);$('#t-'+TABS[j]).focus();e.preventDefault();
+    });
+  });
+  $('#btn-theme').addEventListener('click',()=>{
+    const cur=document.documentElement.dataset.theme||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
+    document.documentElement.dataset.theme=cur==='dark'?'light':'dark';showTab(st.tab);
+  });
+  $('#btn-link').addEventListener('click',()=>{
+    try{
+      const payload=btoa(unescape(encodeURIComponent(JSON.stringify({tab:st.tab,path:st.path,forms:st.forms,cons:st.cons,ck:st.ck}))));
+      location.hash='s='+payload;
+      if(navigator.clipboard)navigator.clipboard.writeText(location.href).then(()=>toast('Link copied'),()=>toast('Link is in the address bar'));
+      else toast('Link is in the address bar');
+    }catch(err){toast('Could not build link')}
+  });
+  restoreHash();
+  $('#cat-f').value=st.cat;
+  showTab(st.tab);
+}
+function restoreHash(){
+  try{
+    const m=/s=([^&]+)/.exec(location.hash);if(!m)return;
+    const o=JSON.parse(decodeURIComponent(escape(atob(m[1]))));
+    if(Array.isArray(o.path))st.path=o.path.filter(x=>Number.isInteger(x));
+    if(o.forms)Object.keys(FDEF).forEach(k=>{if(o.forms[k])Object.assign(st.forms[k],o.forms[k])});
+    if(o.cons&&DES[o.cons])st.cons=o.cons;
+    if(o.ck&&typeof o.ck==='object')st.ck=o.ck;
+    if(o.tab&&TABS.includes(o.tab))st.tab=o.tab;
+    st.path=st.path.slice(0,walk(st.path).steps.length);
+  }catch(e){}
+}
+const root=typeof window!=='undefined'?window:globalThis;
+root.CorrTree={st,pr,qz,walk,resolve,treeSVG,SC,DES,T,FORMS,FDEF,CONS,consFor,choicesFor,QZ,CM_ROWS,rCrit,rP,showTab,openScenario,numResult};
+if(typeof document!=='undefined'&&document.getElementById('t-tree'))init();
+})();
+</script>
+</body>
+</html>
