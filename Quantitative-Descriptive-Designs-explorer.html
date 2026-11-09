@@ -1,0 +1,1195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quantitative Descriptive Designs Explorer</title>
+<meta name="description" content="Explore quantitative descriptive research designs: observation, content analysis and archival research, surveys, case studies and descriptive statistics.">
+<style>
+
+:root{
+  --bg:#f5f6f4; --card:#ffffff; --fg:#1c1f24; --muted:#5b6572; --line:#d9dde3; --grid:#eceff2;
+  --plot:#ffffff; --axis:#8b94a1; --colA:#34588a; --colB:#c0531a; --tintB:rgba(192,83,26,.07); --colC:#14806f; --colD:#7c3fb0; --colE:#8a6d00;
+  --accent:#2b62c4; --accentFg:#ffffff; --good:#1f7a43; --warn:#9a6700; --bad:#b3261e;
+  --goodBg:#e5f4ea; --warnBg:#fbf0d4; --badBg:#fbe4e2;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme=light]){
+    --bg:#13161b; --card:#1b1f26; --fg:#e8eaed; --muted:#9aa3af; --line:#2d333c; --grid:#262b33;
+    --plot:#1b1f26; --axis:#6f7886; --colA:#8fb4e8; --colB:#f59a5f; --tintB:rgba(245,154,95,.10); --colC:#4fcfb8; --colD:#c39bea; --colE:#e3c64f;
+    --accent:#7aa7ff; --accentFg:#0d1117; --good:#6fd596; --warn:#e8c05a; --bad:#ff8c84;
+    --goodBg:#16301f; --warnBg:#3a3016; --badBg:#3d1d1b;
+  }
+}
+:root[data-theme=dark]{
+  --bg:#13161b; --card:#1b1f26; --fg:#e8eaed; --muted:#9aa3af; --line:#2d333c; --grid:#262b33;
+  --plot:#1b1f26; --axis:#6f7886; --colA:#8fb4e8; --colB:#f59a5f; --tintB:rgba(245,154,95,.10); --colC:#4fcfb8; --colD:#c39bea; --colE:#e3c64f;
+  --accent:#7aa7ff; --accentFg:#0d1117; --good:#6fd596; --warn:#e8c05a; --bad:#ff8c84;
+  --goodBg:#16301f; --warnBg:#3a3016; --badBg:#3d1d1b;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+header.top{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:14px 20px 6px;max-width:1360px;margin:0 auto}
+header.top h1{font-size:1.25rem;margin:0;letter-spacing:-.01em}
+header.top p{margin:2px 0 0;color:var(--muted);font-size:.9rem;max-width:62ch}
+.hbtns{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+button,.btn{font:inherit;font-size:.85rem;border:1px solid var(--line);background:var(--card);color:var(--fg);padding:6px 11px;border-radius:7px;cursor:pointer}
+button:hover{border-color:var(--accent)}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,summary:focus-visible,tr[tabindex]:focus-visible,[role=button]:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button.primary{background:var(--accent);color:var(--accentFg);border-color:var(--accent);font-weight:600}
+button.small{padding:3px 8px;font-size:.78rem}
+button.on{background:var(--accent);color:var(--accentFg);border-color:var(--accent)}
+nav.tabs{display:flex;gap:2px;max-width:1360px;margin:6px auto 0;padding:0 20px;border-bottom:1px solid var(--line);overflow-x:auto}
+nav.tabs button{border:none;border-bottom:3px solid transparent;border-radius:0;background:none;padding:9px 14px;font-size:.92rem;color:var(--muted);white-space:nowrap}
+nav.tabs button[aria-selected=true]{color:var(--fg);border-bottom-color:var(--colB);font-weight:600}
+main{max-width:1360px;margin:0 auto;padding:16px 20px 40px}
+.tabpanel[hidden]{display:none}
+.layout{display:grid;grid-template-columns:330px minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:980px){.layout{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:14px}
+.card h2{font-size:1rem;margin:0 0 8px}
+.card h3{font-size:.92rem;margin:14px 0 6px}
+.card p{margin:6px 0}
+.muted{color:var(--muted)}
+.small{font-size:.82rem}
+aside.controls{position:sticky;top:8px;max-height:calc(100vh - 16px);overflow:auto;padding:12px 14px}
+@media (max-width:980px){aside.controls{position:static;max-height:none}}
+details.grp{border-top:1px solid var(--line);padding:6px 0}
+details.grp:first-of-type{border-top:none}
+details.grp>summary{cursor:pointer;font-weight:600;font-size:.88rem;padding:4px 0;list-style:none}
+details.grp>summary::before{content:"▸ ";color:var(--muted)}
+details.grp[open]>summary::before{content:"▾ "}
+.ctl{margin:6px 0 10px}
+.ctl label{display:flex;justify-content:space-between;gap:8px;font-size:.82rem;color:var(--muted);margin-bottom:2px}
+.ctl output{color:var(--fg);font-variant-numeric:tabular-nums;font-weight:600}
+.ctl input[type=range]{width:100%;accent-color:var(--accent)}
+.ctl input[type=text],.ctl input[type=number],.ctl select,textarea,input.fld,select.fld{width:100%;font:inherit;font-size:.85rem;padding:5px 7px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--fg)}
+.ctl.check label{display:flex;justify-content:flex-start;gap:8px;align-items:center;color:var(--fg)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.toolbar{display:flex;gap:6px 14px;flex-wrap:wrap;align-items:center;margin-bottom:8px;font-size:.82rem}
+.toolbar label{display:inline-flex;gap:5px;align-items:center;cursor:pointer}
+.toolbar .sp{flex:1}
+.chart svg{width:100%;height:auto;display:block}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted);margin-top:6px}
+.legend i{display:inline-block;vertical-align:middle;margin-right:4px}
+.tbl-wrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.84rem;font-variant-numeric:tabular-nums}
+th,td{padding:5px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{font-weight:600;color:var(--muted);font-size:.78rem}
+th[title]{cursor:help;text-decoration:underline dotted;text-underline-offset:3px}
+td.l,th.l{text-align:left;white-space:normal}
+tr[data-cm]{cursor:pointer}
+tr[data-cm].sel td{background:var(--grid)}
+.pill{display:inline-block;padding:1px 8px;border-radius:99px;font-size:.76rem;font-weight:600}
+.pill.good{background:var(--goodBg);color:var(--good)}
+.pill.warn{background:var(--warnBg);color:var(--warn)}
+.pill.bad{background:var(--badBg);color:var(--bad)}
+.callout{border-left:4px solid var(--colA);background:var(--grid);padding:8px 12px;border-radius:0 8px 8px 0;font-size:.88rem;margin:8px 0}
+.callout.warn{border-left-color:var(--warn)}
+.callout.good{border-left-color:var(--good)}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+.stat{display:flex;gap:18px;flex-wrap:wrap;margin:6px 0 8px}
+.stat div{min-width:110px}
+.stat b{display:block;font-size:1.3rem;font-variant-numeric:tabular-nums}
+.stat span{font-size:.76rem;color:var(--muted)}
+ul.clean{padding-left:18px;margin:6px 0}
+ul.clean li{margin:3px 0}
+.q{margin:12px 0}
+.q legend{font-weight:600;font-size:.92rem;padding:0}
+.q fieldset{border:none;margin:0;padding:0}
+.q label{display:block;margin:3px 0;font-size:.9rem;cursor:pointer}
+.fit{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-top:1px solid var(--line)}
+.fit:first-child{border-top:none}
+.fit .nm{font-weight:600}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}
+.chips button{border-radius:99px;padding:3px 11px}
+.seg{padding:6px 9px;margin:3px 0;border:1px solid var(--line);border-radius:8px;background:var(--bg)}
+.seg.hl{border-color:var(--colB);background:var(--tintB)}
+.seg .tag{display:inline-block;font-size:.72rem;font-weight:600;padding:0 7px;border-radius:99px;background:var(--grid);color:var(--muted);margin-left:6px}
+footer{max-width:1360px;margin:0 auto;padding:0 20px 30px;color:var(--muted);font-size:.8rem}
+.sr{position:absolute;left:-9999px}
+dl.gl dt{font-weight:600;margin-top:8px}
+dl.gl dd{margin:2px 0 0 0;color:var(--muted)}
+ol.refs li{margin:5px 0;font-size:.85rem}
+#toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:8px 14px;border-radius:8px;font-size:.85rem;opacity:0;pointer-events:none;transition:opacity .2s}
+#toast.show{opacity:.95}
+[hidden]{display:none!important}
+.chart svg text{user-select:none}
+
+</style>
+</head>
+<body>
+<header class="top">
+  <div>
+    <h1>Quantitative Descriptive Designs Explorer</h1>
+    <p>Explore the quantitative side of descriptive research: observation, content analysis and archival research, surveys, and case studies. Included are how behavior is turned into numbers (frequency, duration and interval methods), how observations are sampled and checked for reliability, how Likert-type survey data behave and how nonresponse bias distorts them, and how descriptive statistics organize and summarize the scores.</p>
+  </div>
+  <div class="hbtns">
+    <button id="btn-link" title="Put the current settings in the page URL so you can share or bookmark them">Copy share link</button>
+    <button id="btn-theme" title="Toggle light / dark">Theme</button>
+  </div>
+</header>
+
+<nav class="tabs" role="tablist" aria-label="Sections">
+  <button role="tab" id="t-cl" aria-controls="p-cl" aria-selected="true">Strategies and classifier</button>
+  <button role="tab" id="t-ob" aria-controls="p-ob" aria-selected="false">Quantifying observations</button>
+  <button role="tab" id="t-rl" aria-controls="p-rl" aria-selected="false">Reactivity and reliability</button>
+  <button role="tab" id="t-ca" aria-controls="p-ca" aria-selected="false">Content and archival</button>
+  <button role="tab" id="t-sv" aria-controls="p-sv" aria-selected="false">Survey scales</button>
+  <button role="tab" id="t-sm" aria-controls="p-sm" aria-selected="false">Sampling and administration</button>
+  <button role="tab" id="t-cs" aria-controls="p-cs" aria-selected="false">Case study</button>
+  <button role="tab" id="t-ds" aria-controls="p-ds" aria-selected="false">Descriptive statistics</button>
+  <button role="tab" id="t-cm" aria-controls="p-cm" aria-selected="false">Strengths and weaknesses</button>
+  <button role="tab" id="t-prac" aria-controls="p-prac" aria-selected="false">Practice</button>
+  <button role="tab" id="t-ref" aria-controls="p-ref" aria-selected="false">Reference</button>
+</nav>
+
+<main>
+<noscript><div class="card">This explorer needs JavaScript enabled.</div></noscript>
+
+<!-- ================= CLASSIFIER ================= -->
+<section class="tabpanel" id="p-cl" role="tabpanel" aria-labelledby="t-cl">
+  <div class="card">
+    <h2>What descriptive research is for</h2>
+    <p>The <b>goal of descriptive research</b> is to describe a single variable, or to describe each individual variable when several are involved. Variables are measured as they exist naturally, and the researcher is not concerned with relationships between them. The results capture interesting, naturally occurring behavior. Three quantitative designs are covered here: the <b>observational</b> design, the <b>survey</b> design and the <b>case study</b>.</p>
+    <div class="chart" id="cl-spectrum"></div>
+  </div>
+  <div class="grid2">
+    <div class="card">
+      <div class="row" style="justify-content:space-between"><h2 style="margin:0">Describe a study</h2><button class="small" data-act="clq-reset" title="Return every answer to its default">Reset</button></div>
+      <div class="q"><fieldset><legend>1. What is the main goal?</legend>
+        <label><input type="radio" name="q-goal" value="describe" checked> Describe variables as they occur naturally</label>
+        <label><input type="radio" name="q-goal" value="relate"> Show that two variables are related</label>
+        <label><input type="radio" name="q-goal" value="cause"> Demonstrate cause and effect</label></fieldset></div>
+      <div class="q" data-q="src"><fieldset><legend>2. Where do the data come from?</legend>
+        <label><input type="radio" name="q-src" value="behav" checked> The researcher watches and records behavior</label>
+        <label><input type="radio" name="q-src" value="media"> Existing media or historical records</label>
+        <label><input type="radio" name="q-src" value="self"> Participants answer questions about themselves</label>
+        <label><input type="radio" name="q-src" value="single"> Detailed study of one person or a very small group</label></fieldset></div>
+      <div class="q" data-q="role"><fieldset><legend>3. What does the observer do?</legend>
+        <label><input type="radio" name="q-role" value="none" checked> Observes without intervening</label>
+        <label><input type="radio" name="q-role" value="join"> Interacts with participants and becomes one of them</label>
+        <label><input type="radio" name="q-role" value="set"> Sets up a situation likely to produce the behavior</label></fieldset></div>
+      <div class="q" data-q="mode"><fieldset><legend>4. How is the survey administered?</legend>
+        <label><input type="radio" name="q-mode" value="net" checked> Internet</label>
+        <label><input type="radio" name="q-mode" value="mail"> Mail</label>
+        <label><input type="radio" name="q-mode" value="tel"> Telephone</label>
+        <label><input type="radio" name="q-mode" value="person"> In person (group or interview)</label></fieldset></div>
+      <div class="q" data-q="tx"><fieldset><legend>5. Does the researcher deliver a treatment?</legend>
+        <label><input type="radio" name="q-tx" value="no" checked> No: history only</label>
+        <label><input type="radio" name="q-tx" value="yes"> Yes: an intervention is administered</label></fieldset></div>
+      <p class="small muted">Questions that do not apply to your design are hidden.</p>
+    </div>
+    <div>
+      <div class="card"><h2>Classification</h2><div id="cl-out"></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= OBSERVATION ================= -->
+<section class="tabpanel" id="p-ob" role="tabpanel" aria-labelledby="t-ob" hidden>
+  <div class="layout">
+    <aside class="card controls" id="ob-controls" aria-label="Observation controls"></aside>
+    <div>
+      <div class="card">
+        <div class="row" style="justify-content:space-between"><h2 style="margin:0">One observation session, three ways to quantify it</h2>
+          <div class="row"><button class="small" data-dl="csv" data-t="ob">CSV</button><button class="small" data-dl="svg" data-t="ob-chart">SVG</button><button class="small" data-dl="png" data-t="ob-chart">PNG</button></div></div>
+        <p class="muted small">A simulated child's target behavior (for example, a bout of off-task behavior) over the session. The <b>frequency method</b> counts instances, the <b>duration method</b> times how long the behavior lasts, and the <b>interval method</b> divides the period into intervals and records whether the behavior occurred in each.</p>
+        <div class="toolbar" id="ob-ov"></div>
+        <div class="chart" id="ob-chart"></div>
+        <div class="legend"><span><i style="width:18px;height:8px;background:var(--colB)"></i>Behavior bout</span><span><i style="width:11px;height:11px;background:var(--tintB);border:1px solid var(--colB)"></i>Interval scored “occurred”</span></div>
+      </div>
+      <div class="card"><h2>The scores each method produces</h2><div id="ob-stats"></div><div id="ob-msg"></div></div>
+      <div class="card"><h2>Sampling observations</h2>
+        <p class="muted small">Observing a complex situation continuously is hard. The text covers three sampling techniques: <b>time sampling</b> (observe only during selected time periods), <b>event sampling</b> (observe only specified events) and <b>individual sampling</b> (observe only selected individuals). Below, time sampling is compared with the full session. Recorded sessions can be replayed repeatedly, which makes complete coding possible.</p>
+        <div class="chart" id="ob-samp"></div><div id="ob-samp-txt"></div>
+        <h3>Individual sampling: a group of 12 children</h3>
+        <div class="chart" id="ob-ind"></div><div id="ob-ind-txt"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= RELIABILITY ================= -->
+<section class="tabpanel" id="p-rl" role="tabpanel" aria-labelledby="t-rl" hidden>
+  <div class="layout">
+    <aside class="card controls" id="rl-controls" aria-label="Reactivity and reliability controls"></aside>
+    <div>
+      <div class="card">
+        <div class="row" style="justify-content:space-between"><h2 style="margin:0">Problem 1: the observer changes the behavior</h2>
+          <div class="row"><button class="small" data-dl="csv" data-t="rl">CSV</button><button class="small" data-dl="svg" data-t="rl-chart">SVG</button><button class="small" data-dl="png" data-t="rl-chart">PNG</button></div></div>
+        <p class="muted small">Behavior must not be disrupted or influenced by the presence of an observer (demand characteristics and <b>reactivity</b>). Two remedies are to <b>conceal the observer</b> or to <b>habituate</b> participants through repeated exposure until the observer is no longer a novel stimulus.</p>
+        <div class="chart" id="rl-chart"></div>
+        <div class="legend" id="rl-legend"></div><div id="rl-txt"></div>
+      </div>
+      <div class="card">
+        <h2 style="margin-top:0">Problem 2: observations involve subjective judgment</h2>
+        <p class="muted small">Judgment raises the question of <b>reliability</b>, addressed with an inter-rater reliability method: two observers independently code the same events and their codes are compared.</p>
+        <div class="chart" id="rl-rate"></div><div id="rl-stats"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= CONTENT / ARCHIVAL ================= -->
+<section class="tabpanel" id="p-ca" role="tabpanel" aria-labelledby="t-ca" hidden>
+  <div class="grid2">
+    <div class="card">
+      <h2>Content analysis: code a text</h2>
+      <p class="muted small"><b>Content analysis</b> uses the techniques of behavioral observation to measure the occurrence of specific events in literature, movies, television programs or similar media. Define behavioral categories, list the words that signal each, and count. The passages are short invented examples.</p>
+      <div class="ctl"><label for="ca-sample">Sample text</label><select id="ca-sample"></select></div>
+      <textarea id="ca-text" rows="7" spellcheck="false"></textarea>
+      <h3>Categories and indicator words</h3>
+      <div id="ca-cats"></div>
+      <div class="row" style="margin-top:6px"><button class="small" data-act="ca-add">Add a category</button><button class="small" data-act="ca-reset">Reset</button></div>
+    </div>
+    <div>
+      <div class="card"><h2>Coded text</h2><div id="ca-hl" class="seg" style="line-height:1.8"></div><div class="legend" id="ca-leg"></div></div>
+      <div class="card"><h2>Frequency method applied to the text</h2><div class="chart" id="ca-chart"></div><div id="ca-stats"></div></div>
+    </div>
+  </div>
+  <div class="layout">
+    <aside class="card controls" id="ar-controls" aria-label="Archival research controls"></aside>
+    <div>
+      <div class="card">
+        <div class="row" style="justify-content:space-between"><h2 style="margin:0">Archival research: events in the past</h2>
+          <div class="row"><button class="small" data-dl="csv" data-t="ar">CSV</button><button class="small" data-dl="svg" data-t="ar-chart">SVG</button><button class="small" data-dl="png" data-t="ar-chart">PNG</button></div></div>
+        <p class="muted small"><b>Archival research</b> looks at historical records to measure behaviors or events that occurred in the past. The same measurement rules apply: categories, a numerical scoring method, and multiple coders for at least part of the records to obtain inter-rater reliability. The yearly counts are simulated.</p>
+        <div class="chart" id="ar-chart"></div><div id="ar-txt"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SURVEY SCALES ================= -->
+<section class="tabpanel" id="p-sv" role="tabpanel" aria-labelledby="t-sv" hidden>
+  <div class="layout">
+    <aside class="card controls" id="sv-controls" aria-label="Survey controls"></aside>
+    <div>
+      <div class="card">
+        <h2 style="margin-top:0">Three types of survey question</h2>
+        <div class="grid2">
+          <div><b>Open-ended</b><p class="small muted">Introduces a topic and lets participants answer in their own words. <i>Example: What do you like most about learning mathematics?</i> Responses must be coded before they can be counted.</p></div>
+          <div><b>Restricted</b><p class="small muted">Offers a limited number of response alternatives. <i>Example: Which do you prefer: math, reading, or science?</i> Responses are tallied by category.</p></div>
+          <div><b>Rating-scale</b><p class="small muted">Requires choosing a numerical value on a predetermined scale. <i>Example: “I enjoy math class” from 1 to 5.</i> Ratings can be added and averaged.</p></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="row" style="justify-content:space-between"><h2 style="margin:0">A Likert-type scale: elementary students’ attitudes about mathematics</h2>
+          <div class="row"><button class="small" data-dl="csv" data-t="sv">CSV</button><button class="small" data-dl="svg" data-t="sv-chart">SVG</button><button class="small" data-dl="png" data-t="sv-chart">PNG</button></div></div>
+        <p class="muted small">Respondents rate each statement from 1 (strongly disagree) to 5 (strongly agree). The numerical ratings can be added and averaged and are compatible with most standard statistics. The five statements are illustrative; the original item wording is in the course content. Respondents are simulated.</p>
+        <div class="chart" id="sv-chart"></div>
+        <div id="sv-items"></div>
+      </div>
+      <div class="card"><h2>Total scores</h2><div id="sv-stats"></div><div class="chart" id="sv-tot"></div><div id="sv-msg"></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SAMPLING / ADMINISTRATION ================= -->
+<section class="tabpanel" id="p-sm" role="tabpanel" aria-labelledby="t-sm" hidden>
+  <div class="layout">
+    <aside class="card controls" id="sm-controls" aria-label="Sampling and administration controls"></aside>
+    <div>
+      <div class="card">
+        <div class="row" style="justify-content:space-between"><h2 style="margin:0">Who answers? Nonresponse and unrepresentative samples</h2>
+          <div class="row"><button class="small" data-dl="csv" data-t="sm">CSV</button><button class="small" data-dl="svg" data-t="sm-chart">SVG</button><button class="small" data-dl="png" data-t="sm-chart">PNG</button></div></div>
+        <p class="muted small">A survey is meant to give a “snapshot” of a particular group. Participants should be <b>relevant</b>, <b>not too restricted</b> and <b>representative</b> of the group. Here a population of 5000 has true mean satisfaction near the value set on the left. Some people are more likely to respond than others, as in mail surveys where a low response rate produces <b>nonresponse bias</b>.</p>
+        <div class="chart" id="sm-chart"></div>
+        <div id="sm-stats"></div><div id="sm-msg"></div>
+      </div>
+      <div class="card"><h2>Administration methods at a glance</h2><div id="sm-modes"></div>
+        <p class="small muted">Internet surveys: sample may not be representative. Mail surveys: nonresponse bias. Telephone surveys: interviewer bias. In-person surveys and interviews: interviewer bias with individual interviews.</p></div>
+      <div class="card"><h2>Guidelines for constructing a survey</h2>
+        <ul class="clean"><li><b>Demographic questions</b> are needed to describe who responded.</li><li><b>Sensitive questions</b> need careful placement and wording.</li><li><b>Group questions</b> that share a topic.</li><li><b>Keep the format simple</b> and the <b>vocabulary and language style easy</b> to understand.</li><li>Select participants to whom the questions are relevant, and consult professional help in preparing surveys and identifying participants when needed.</li></ul>
+        <div class="q"><fieldset><legend>Check a draft item</legend>
+          <div class="ctl"><select id="sm-draft" class="fld"></select></div></fieldset></div>
+        <div id="sm-draft-out"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= CASE STUDY ================= -->
+<section class="tabpanel" id="p-cs" role="tabpanel" aria-labelledby="t-cs" hidden>
+  <div class="layout">
+    <aside class="card controls" id="cs-controls" aria-label="Case study controls"></aside>
+    <div>
+      <div class="card">
+        <div class="row" style="justify-content:space-between"><h2 style="margin:0">A case study: one individual, studied in depth</h2>
+          <div class="row"><button class="small" data-dl="csv" data-t="cs">CSV</button><button class="small" data-dl="svg" data-t="cs-chart">SVG</button><button class="small" data-dl="png" data-t="cs-chart">PNG</button></div></div>
+        <p class="muted small">A <b>case study</b> is an in-depth study and detailed description of a single individual (or a very small group) and may involve an intervention or treatment given by the researcher. A <b>case history</b> is a case study without any treatment. The weekly scores below are simulated for an imagined client; the quantitative side of a case is shown here.</p>
+        <div class="chart" id="cs-chart"></div><div id="cs-stats"></div><div id="cs-msg"></div>
+      </div>
+      <div class="card"><h2>Applications</h2>
+        <div class="grid2">
+          <div class="fit"><div><div class="nm">Rare phenomena and unusual clinical cases</div><div class="small muted">Gaining information about mental disorders such as multiple personality disorder.</div></div></div>
+          <div class="fit"><div><div class="nm">Brain injuries</div><div class="small muted">Studying individuals with brain injuries and their underlying neurological mechanisms.</div></div></div>
+          <div class="fit"><div><div class="nm">New therapies</div><div class="small muted">Trying out new therapy methods or applications.</div></div></div>
+        </div>
+      </div>
+      <div class="card"><h2>Averaging hides the individual</h2><div class="chart" id="cs-avg"></div><div id="cs-avg-txt"></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= DESCRIPTIVE STATISTICS ================= -->
+<section class="tabpanel" id="p-ds" role="tabpanel" aria-labelledby="t-ds" hidden>
+  <div class="layout">
+    <aside class="card controls" id="ds-controls" aria-label="Descriptive statistics controls"></aside>
+    <div>
+      <div class="card">
+        <div class="row" style="justify-content:space-between"><h2 style="margin:0">Frequency distribution</h2>
+          <div class="row"><button class="small" data-dl="csv" data-t="ds">CSV</button><button class="small" data-dl="svg" data-t="ds-chart">SVG</button><button class="small" data-dl="png" data-t="ds-chart">PNG</button></div></div>
+        <p class="muted small">A frequency distribution organizes a set of scores into a display. A table has two columns: the scale of measurement (X) and the frequency (f) of individuals in each category. The default is the 5-point quiz from the course content.</p>
+        <div class="toolbar" id="ds-ov"></div>
+        <div class="grid2"><div id="ds-table"></div><div class="chart" id="ds-chart"></div></div>
+        <details style="margin-top:8px"><summary><b>Use your own scores</b> <span class="muted small">(numbers separated by spaces, commas or lines)</span></summary>
+          <textarea id="ds-paste" rows="3" spellcheck="false" placeholder="5 4 4 4 3 3 3 3 2 2 2 1 1 0 0"></textarea>
+          <div class="row" style="margin-top:6px"><button class="primary small" data-act="ds-use">Analyze my scores</button><button class="small" data-act="ds-quiz">Load the quiz scores</button><button class="small" data-act="ds-sim">Back to simulation</button></div>
+          <div id="ds-msg" class="small" role="status" style="margin-top:6px"></div></details>
+      </div>
+      <div class="card"><h2>Central tendency and dispersion</h2><div id="ds-stats"></div><div id="ds-calc"></div></div>
+      <div class="card"><h2>Standard deviation and the normal distribution</h2><div class="chart" id="ds-norm"></div><div id="ds-norm-txt"></div></div>
+      <div class="card">
+        <h2>Describing non-numerical data</h2>
+        <p class="muted small">Nominal and ordinal variables are described with percentages, proportions and the mode. Edit the counts on the left.</p>
+        <div class="chart" id="ds-nom"></div><div id="ds-nom-tbl"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= COMPARISON ================= -->
+<section class="tabpanel" id="p-cm" role="tabpanel" aria-labelledby="t-cm" hidden>
+  <div class="card">
+    <h2>Strengths and weaknesses of the quantitative descriptive designs</h2>
+    <p class="muted small">Select a row to see the strengths and weaknesses listed in the course content. Colors are a teaching heuristic for how serious the main limitations are: <span class="pill good">fewer major limits</span> <span class="pill warn">some important limits</span> <span class="pill bad">serious limits</span>. Real studies vary.</p>
+    <div id="cm-matrix"></div>
+  </div>
+  <div class="card"><h2 id="cm-title">Details</h2><div id="cm-detail"></div></div>
+  <div class="card">
+    <h2>Three types of observation</h2>
+    <div class="chart" id="cm-obs"></div>
+  </div>
+</section>
+
+<!-- ================= PRACTICE ================= -->
+<section class="tabpanel" id="p-prac" role="tabpanel" aria-labelledby="t-prac" hidden>
+  <div class="card">
+    <h2>Scenario practice: name the design</h2>
+    <p class="muted">A short study description is chosen at random. Decide which design or type it is, then see the explanation.</p>
+    <div class="row"><button class="primary" data-act="pq-new">New scenario</button><button data-act="prac-reset" title="Clear the current scenario, the quiz and both scores">Reset</button><span id="pq-score" class="muted small"></span></div>
+  </div>
+  <div class="card" id="pq-card" hidden><div id="pq-desc"></div><div id="pq-opts" class="row" style="margin-top:10px"></div><div id="pq-feedback" role="status"></div></div>
+  <div class="card"><h2>Concept check</h2>
+    <div class="row"><button data-act="qz-new" class="primary small">Next question</button><span id="qz-score" class="muted small"></span></div>
+    <div id="qz-out" style="margin-top:8px"></div></div>
+</section>
+
+<!-- ================= REFERENCE ================= -->
+<section class="tabpanel" id="p-ref" role="tabpanel" aria-labelledby="t-ref" hidden>
+  <div class="grid2">
+    <div class="card"><h2>Descriptive research</h2>
+      <p>The goal is to describe a single variable, or each individual variable when several are involved. Variables are measured as they exist naturally; relationships between variables are not the concern.</p></div>
+    <div class="card"><h2>Observational design</h2>
+      <ul class="clean"><li><b>Behavioral observation</b> systematically records behavior to describe it.</li><li><b>Problem 1:</b> the presence of an observer may disrupt behavior (demand characteristics, reactivity). Remedies: conceal the observer, or habituate participants.</li><li><b>Problem 2:</b> judgments are partly subjective (reliability). Remedy: inter-rater reliability.</li><li><b>Quantifying:</b> frequency, duration and interval methods.</li><li><b>Sampling:</b> time, event and individual sampling.</li><li><b>Content analysis</b> and <b>archival research</b> use the same measurement rules.</li><li><b>Types:</b> naturalistic, participant, contrived.</li></ul></div>
+    <div class="card"><h2>Survey design</h2>
+      <ul class="clean"><li>Obtains a “snapshot” of a particular group at a particular time.</li><li>Question types: open-ended, restricted, rating-scale (Likert-type).</li><li>Construction: demographic questions, sensitive questions, grouped topics, simple format, easy vocabulary.</li><li>Participants: relevant, not too restricted, representative.</li><li>Administration: internet, mail, telephone, in person.</li></ul></div>
+    <div class="card"><h2>Case study design</h2>
+      <ul class="clean"><li>In-depth study of a single individual or very small group; may include an intervention.</li><li>A <b>case history</b> has no treatment or intervention.</li><li>Used for rare phenomena, brain injuries and new therapies.</li></ul></div>
+    <div class="card"><h2>Descriptive statistics</h2>
+      <ul class="clean"><li><b>Descriptive statistics</b> organize, summarize and simplify results; <b>inferential statistics</b> generalize from samples to populations.</li><li>A <b>statistic</b> describes a sample; a <b>parameter</b> describes a population.</li><li>Mean, median and mode locate the center. Variance is the sum of squared deviations divided by n − 1; the standard deviation is its square root.</li><li>Nominal and ordinal data: percentages, proportions, mode.</li></ul></div>
+    <div class="card"><h2>Notation and terms</h2>
+      <dl class="gl"><dt>X, f</dt><dd>A score; the frequency of that score.</dd><dt>M, s, s²</dt><dd>Sample mean, standard deviation and variance (n − 1 in the denominator).</dd><dt>Reactivity</dt><dd>Change in behavior because the person knows they are observed.</dd><dt>Habituation</dt><dd>Repeated exposure until the observer is no longer novel.</dd><dt>Nonresponse bias</dt><dd>Distortion when those who respond differ from those who do not.</dd></dl></div>
+    <div class="card"><h2>Metrics and extensions used here</h2>
+      <dl class="gl"><dt>Cohen’s κ</dt><dd>Agreement between two raters corrected for chance. The course content names inter-rater reliability without specifying an index; percent agreement and κ are shown as common examples.</dd><dt>Partial-interval versus whole-interval</dt><dd>Interval scoring is shown as “behavior occurred at any point in the interval”, one common variant.</dd><dt>Teaching aids</dt><dd>The simulations, bias sliders, the keyword coder, the case-study timeline and the normal-curve overlay are illustrations added to make the course’s points concrete.</dd></dl></div>
+    <div class="card" style="grid-column:1/-1"><h2>Source and use</h2>
+      <p class="small muted">The structure and terminology follow the course content regarding descriptive research strategies generally, and on the descriptive statistical evaluation of data specifically. Case studies appear here because the course content groups them with the quantitative descriptive designs, although case studies are often reported qualitatively; see the companion Qualitative Descriptive Designs Explorer. All data are simulated or taken from small examples from the course content and are illustrative.</p></div>
+  </div>
+</section>
+</main>
+
+<footer>
+  Simulated data are illustrative. The statistics are descriptive aids; design logic and measurement quality still carry the inference.
+</footer>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+'use strict';
+/* ================= basic helpers ================= */
+const $=(s,el=document)=>el.querySelector(s);
+const $$=(s,el=document)=>Array.from(el.querySelectorAll(s));
+const sum=a=>a.reduce((s,v)=>s+v,0);
+const mean=a=>a.length?sum(a)/a.length:NaN;
+const median=a=>{if(!a.length)return NaN;const s=a.slice().sort((x,y)=>x-y),m=s.length>>1;return s.length%2?s[m]:(s[m-1]+s[m])/2};
+const ssq=a=>{const m=mean(a);return sum(a.map(v=>(v-m)*(v-m)))};
+const vr=a=>a.length<2?0:ssq(a)/(a.length-1);
+const sd=a=>Math.sqrt(vr(a));
+const minOf=a=>{let m=Infinity;for(const v of a)if(v<m)m=v;return m};
+const maxOf=a=>{let m=-Infinity;for(const v of a)if(v>m)m=v;return m};
+const f=(v,d=2)=>Number.isFinite(v)?(+v).toFixed(d):'—';
+const pct=v=>Number.isFinite(v)?Math.round(v*100)+'%':'—';
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function makeRng(seed){
+  const u=mulberry32((seed|0)*2654435761>>>0||1);
+  let spare=null;
+  const r={u,
+    n(m,s){ if(spare!==null){const v=spare;spare=null;return m+s*v}
+      let a=0,b=0;while(a===0)a=u();b=u();const R=Math.sqrt(-2*Math.log(a));spare=R*Math.sin(2*Math.PI*b);return m+s*R*Math.cos(2*Math.PI*b)},
+    int(lo,hi){return lo+Math.floor(u()*(hi-lo+1))},
+    pick(a){return a[Math.floor(u()*a.length)]},
+    shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(u()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}};
+  return r;
+}
+const erf=x=>{const s=x<0?-1:1;x=Math.abs(x);const t=1/(1+0.3275911*x),y=1-(((((1.061405429*t-1.453152027)*t)+1.421413741)*t-0.284496736)*t+0.254829592)*t*Math.exp(-x*x);return s*y};
+const npdf=x=>Math.exp(-x*x/2)/Math.sqrt(2*Math.PI);
+const ncdf=x=>0.5*(1+erf(x/Math.SQRT2));
+
+/* ================= SVG helpers ================= */
+const COLS=['var(--colA)','var(--colB)','var(--colC)','var(--colD)','var(--colE)'];
+function ticks(min,max,cnt){
+  const span=max-min||1,raw=span/cnt,mag=Math.pow(10,Math.floor(Math.log10(raw)));
+  const res=raw/mag,step=(res<1.5?1:res<3?2:res<7?5:10)*mag,t=[];
+  for(let v=Math.ceil(min/step-1e-9)*step;v<=max+step*1e-9;v+=step)t.push(+v.toPrecision(12));
+  return{t,step};
+}
+const fmtT=(v,step)=>{const d=step>=1?0:Math.min(4,Math.ceil(-Math.log10(step)-1e-9));return(+v).toFixed(d)};
+function svgWrap(W,H,inner,label){return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(label)}" xmlns="http://www.w3.org/2000/svg" font-family="system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif" font-size="11">${inner}</svg>`}
+function frame(W,H,m,xd,yd,o){
+  o=o||{};const iw=W-m.l-m.r,ih=H-m.t-m.b;
+  const sx=v=>m.l+(v-xd[0])/(xd[1]-xd[0])*iw,sy=v=>m.t+ih-(v-yd[0])/(yd[1]-yd[0])*ih;
+  let s=`<rect x="${m.l}" y="${m.t}" width="${iw}" height="${ih}" fill="var(--plot)"/>`;
+  const yt=ticks(yd[0],yd[1],o.yn||5);
+  yt.t.forEach(v=>{const y=sy(v);s+=`<line x1="${m.l}" x2="${W-m.r}" y1="${y}" y2="${y}" stroke="var(--grid)"/><text x="${m.l-6}" y="${y+4}" text-anchor="end" fill="var(--muted)">${fmtT(v,yt.step)}</text>`});
+  if(!o.xcat){const xt=ticks(xd[0],xd[1],o.xn||6);xt.t.forEach(v=>{const x=sx(v);s+=`<line x1="${x}" x2="${x}" y1="${m.t}" y2="${H-m.b}" stroke="var(--grid)"/><text x="${x}" y="${H-m.b+15}" text-anchor="middle" fill="var(--muted)">${fmtT(v,xt.step)}</text>`})}
+  s+=`<line x1="${m.l}" x2="${m.l}" y1="${m.t}" y2="${H-m.b}" stroke="var(--axis)"/><line x1="${m.l}" x2="${W-m.r}" y1="${H-m.b}" y2="${H-m.b}" stroke="var(--axis)"/>`;
+  if(o.xlab)s+=`<text x="${m.l+iw/2}" y="${H-6}" text-anchor="middle" fill="var(--muted)">${esc(o.xlab)}</text>`;
+  if(o.ylab)s+=`<text transform="translate(14 ${m.t+ih/2}) rotate(-90)" text-anchor="middle" fill="var(--muted)">${esc(o.ylab)}</text>`;
+  return{sx,sy,s,W,H,m,iw,ih};
+}
+const cut=(t,n)=>t.length>n?t.slice(0,n-1)+'…':t;
+/* vertical bar chart: items=[{l,v,c?}] */
+function barChart(items,o){
+  o=o||{};const W=o.W||640,H=o.H||260,m={l:46,r:12,t:14,b:o.b||44};
+  const ymax=o.ymax||Math.max(1e-9,maxOf(items.map(i=>i.v)))*1.15;
+  const fr=frame(W,H,m,[0,items.length],[0,ymax],{xcat:true,ylab:o.ylab,xlab:o.xlab,yn:o.yn});
+  let s=fr.s;const bw=fr.iw/items.length;
+  items.forEach((it,i)=>{
+    const x=m.l+i*bw+bw*.14,w=bw*.72,y=fr.sy(it.v);
+    s+=`<rect x="${x}" y="${y}" width="${w}" height="${fr.sy(0)-y}" fill="${it.c||COLS[0]}" rx="2"/>`;
+    if(o.vals!==false)s+=`<text x="${x+w/2}" y="${y-4}" text-anchor="middle" fill="var(--fg)">${o.fmt?o.fmt(it.v):it.v}</text>`;
+    s+=`<text x="${x+w/2}" y="${H-m.b+15}" text-anchor="middle" fill="var(--muted)">${esc(cut(String(it.l),o.cut||12))}</text>`;
+  });
+  (o.lines||[]).forEach(L=>{const y=fr.sy(L.v);s+=`<line x1="${m.l}" x2="${W-m.r}" y1="${y}" y2="${y}" stroke="${L.c||'var(--colB)'}" stroke-dasharray="5 4" stroke-width="1.5"/><text x="${W-m.r-2}" y="${y-4}" text-anchor="end" fill="${L.c||'var(--colB)'}">${esc(L.t)}</text>`});
+  return svgWrap(W,H,s,o.label||'Bar chart');
+}
+/* line chart series=[{name,pts:[[x,y]],c}] */
+function lineChart(series,o){
+  o=o||{};const W=o.W||640,H=o.H||260,m={l:48,r:14,t:14,b:38};
+  const xs=series.flatMap(s=>s.pts.map(p=>p[0])),ys=series.flatMap(s=>s.pts.map(p=>p[1]));
+  const xd=o.xd||[minOf(xs),maxOf(xs)],yd=o.yd||[Math.min(0,minOf(ys)),maxOf(ys)*1.1||1];
+  const fr=frame(W,H,m,xd,yd,{xlab:o.xlab,ylab:o.ylab,xn:o.xn});let s=fr.s;
+  (o.bands||[]).forEach(b=>{s+=`<rect x="${fr.sx(b[0])}" y="${m.t}" width="${fr.sx(b[1])-fr.sx(b[0])}" height="${fr.ih}" fill="${b[2]||'var(--tintB)'}"/><text x="${(fr.sx(b[0])+fr.sx(b[1]))/2}" y="${m.t+12}" text-anchor="middle" fill="var(--muted)">${esc(b[3]||'')}</text>`});
+  series.forEach((se,i)=>{
+    const c=se.c||COLS[i%5];
+    s+=`<polyline fill="none" stroke="${c}" stroke-width="2" ${se.dash?'stroke-dasharray="5 4"':''} points="${se.pts.map(p=>fr.sx(p[0])+','+fr.sy(p[1])).join(' ')}"/>`;
+    if(se.dots!==false)se.pts.forEach(p=>{s+=`<circle cx="${fr.sx(p[0])}" cy="${fr.sy(p[1])}" r="3.2" fill="${c}"/>`});
+  });
+  return svgWrap(W,H,s,o.label||'Line chart');
+}
+const legendHTML=labels=>labels.map((l,i)=>`<span><i style="width:11px;height:11px;border-radius:${i%5===0?'50%':'2px'};background:${COLS[i%5]}"></i>${esc(l)}</span>`).join('');
+
+/* ================= controls ================= */
+function ctrlHTML(prefix,defs,state,presets,openN){
+  let h=presets&&presets.length?`<div class="ctl"><label for="${prefix}-preset">Scenario preset</label><select id="${prefix}-preset"><option value="">Choose a preset…</option>${presets.map((p,i)=>`<option value="${i}">${esc(p[0])}</option>`).join('')}</select></div>`:'';
+  const groups=[];defs.forEach(d=>{if(!groups.includes(d.g))groups.push(d.g)});
+  groups.forEach((g,gi)=>{
+    h+=`<details class="grp" ${gi<(openN||3)?'open':''}><summary>${esc(g)}</summary>`;
+    defs.filter(d=>d.g===g).forEach(d=>{
+      const id=`${prefix}-${d.k}`,v=state[d.k],ttl=d.help?` title="${esc(d.help)}"`:'';
+      if(d.type==='select')h+=`<div class="ctl"><label for="${id}"${ttl}>${esc(d.l)}</label><select id="${id}" data-k="${d.k}" ${d.num?'data-num="1"':''}>${d.opts.map(o=>`<option value="${o[0]}" ${String(o[0])===String(v)?'selected':''}>${esc(o[1])}</option>`).join('')}</select></div>`;
+      else if(d.type==='check')h+=`<div class="ctl check"><label><input type="checkbox" id="${id}" data-k="${d.k}" ${v?'checked':''}> ${esc(d.l)}</label></div>`;
+      else if(d.type==='text')h+=`<div class="ctl"><label for="${id}">${esc(d.l)}</label><input type="text" id="${id}" data-k="${d.k}" value="${esc(v)}"></div>`;
+      else if(d.type==='seed')h+=`<div class="ctl"><label for="${id}">${esc(d.l)}</label><div class="row"><input type="number" id="${id}" data-k="${d.k}" value="${v}" min="1" step="1" style="flex:1"><button class="small" data-act="${prefix}-rand">Randomize</button></div></div>`;
+      else h+=`<div class="ctl"><label for="${id}"${ttl}>${esc(d.l)}<output id="${id}-o">${d.fmt?d.fmt(v):v}${d.unit||''}</output></label><input type="range" id="${id}" data-k="${d.k}" min="${d.min}" max="${d.max}" step="${d.step}" value="${v}"></div>`;
+    });
+    h+='</details>';
+  });
+  return h+`<div class="row"><button class="small" data-act="${prefix}-reset">Reset all</button></div>`;
+}
+function applyVis(prefix,defs,state){defs.forEach(d=>{if(!d.show)return;const el=$('#'+prefix+'-'+d.k);const c=el&&el.closest('.ctl');if(c)c.hidden=!d.show(state)})}
+function syncControls(prefix,defs,state){
+  defs.forEach(d=>{const el=$('#'+prefix+'-'+d.k);if(!el)return;
+    if(d.type==='check')el.checked=!!state[d.k];else el.value=state[d.k];
+    const o=$('#'+prefix+'-'+d.k+'-o');if(o)o.textContent=(d.fmt?d.fmt(state[d.k]):state[d.k])+(d.unit||'');});
+  applyVis(prefix,defs,state);
+}
+function bindControls(prefix,state,defs,onChange,presets,def){
+  const root=$('#'+prefix+'-controls');
+  root.addEventListener('input',e=>{
+    const el=e.target;if(el.id===prefix+'-preset')return;
+    const k=el.dataset.k;if(!k)return;
+    let v;
+    if(el.type==='checkbox')v=el.checked;else if(el.type==='range'||el.type==='number'||el.dataset.num)v=+el.value;else v=el.value;
+    if(el.type==='number'&&!(v>=1))return;
+    state[k]=v;
+    const o=$('#'+prefix+'-'+k+'-o'),d=defs.find(x=>x.k===k);if(o&&d)o.textContent=(d.fmt?d.fmt(v):v)+(d.unit||'');
+    applyVis(prefix,defs,state);onChange(k);
+  });
+  root.addEventListener('change',e=>{
+    if(e.target.id===prefix+'-preset'){const i=e.target.value;if(i==='')return;
+      Object.assign(state,def,presets[+i][1],{seed:state.seed});syncControls(prefix,defs,state);onChange();}
+  });
+}
+
+/* ================= tables / narrative ================= */
+function tbl(head,rows){
+  const isTxt=c=>{const t=String(c).replace(/<[^>]*>/g,'').trim();return t.length>14&&!/^[+\-−0-9.]/.test(t)};
+  const L=head.map((h,i)=>i===0||rows.some(r=>isTxt(r[i])));
+  const cls=i=>L[i]?' class="l"':'';
+  return `<div class="tbl-wrap"><table><thead><tr>${head.map((h,i)=>Array.isArray(h)?`<th${cls(i)} title="${esc(h[1])}">${h[0]}</th>`:`<th${cls(i)}>${h}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${r.map((c,i)=>`<td${cls(i)}>${c}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+}
+const pill=(txt,cls)=>`<span class="pill ${cls}">${txt}</span>`;
+function statRow(items){return `<div class="stat">${items.map(([v,l])=>`<div><b>${v}</b><span>${l}</span></div>`).join('')}</div>`}
+let toastT=null;
+function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),1800)}
+
+/* ================= downloads ================= */
+function resolvedSvg(id){
+  const el=$('#'+id+' svg');if(!el)return null;
+  const cs=getComputedStyle(document.documentElement);
+  let s=new XMLSerializer().serializeToString(el);
+  s=s.replace(/var\((--[a-zA-Z0-9]+)\)/g,(m,v)=>cs.getPropertyValue(v).trim()||'#000');
+  return s;
+}
+function saveBlob(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
+function doDL(kind,target){
+  if(kind==='csv'){const fn=CSVS[target];if(!fn){toast('No data to export');return}saveBlob(new Blob([fn()],{type:'text/csv'}),target+'.csv');return}
+  const s=resolvedSvg(target);if(!s){toast('Nothing to export');return}
+  if(kind==='svg'){saveBlob(new Blob([s],{type:'image/svg+xml'}),target+'.svg');return}
+  const vb=/viewBox="0 0 ([\d.]+) ([\d.]+)"/.exec(s);if(!vb)return;
+  const W=+vb[1],H=+vb[2],img=new Image();
+  img.onload=()=>{const c=document.createElement('canvas');c.width=W*2;c.height=H*2;const x=c.getContext('2d');
+    x.fillStyle=getComputedStyle(document.documentElement).getPropertyValue('--card').trim()||'#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(img,0,0,c.width,c.height);
+    c.toBlob(b=>saveBlob(b,target+'.png'))};
+  img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(s);
+}
+const CSVS={};
+
+/* ================= quiz engine ================= */
+function makeQuiz(Q,outId,scoreId){
+  const S={i:-1,n:0,score:0,answered:false,order:[]};
+  function next(){
+    if(!S.order.length)S.order=makeRng(Date.now()%100000+1).shuffle(Q.map((_,i)=>i));
+    S.i=S.order.shift();S.answered=false;render();
+  }
+  function render(){
+    const sc=$('#'+scoreId);sc.textContent=S.n?`Score: ${S.score} / ${S.n}`:'';
+    const out=$('#'+outId);
+    if(S.i<0){out.innerHTML='<p class="muted small">Press “Next question” to start.</p>';return}
+    const q=Q[S.i];
+    out.innerHTML=`<div class="q"><fieldset><legend>${q.q}</legend>${q.o.map((t,j)=>`<label><button class="small" data-qz="${outId}:${j}" ${S.answered?'disabled':''}>${'ABCD'[j]}</button> ${t}</label>`).join('')}</fieldset></div><div id="${outId}-fb" role="status"></div>`;
+  }
+  function answer(j){
+    if(S.answered||S.i<0)return;S.answered=true;const q=Q[S.i],ok=j===q.a;S.n++;if(ok)S.score++;
+    render();
+    $('#'+outId+'-fb').innerHTML=`<div class="callout ${ok?'good':'warn'}">${ok?pill('Correct','good'):pill('Not quite','bad')} ${q.why} ${ok?'':'<br><b>Answer:</b> '+q.o[q.a]}</div>`;
+    $('#'+scoreId).textContent=`Score: ${S.score} / ${S.n}`;
+  }
+  function reset(){S.i=-1;S.n=0;S.score=0;S.answered=false;S.order=[];render()}
+  return{next,answer,reset,render,S};
+}
+
+/* ================= data tables from the slides ================= */
+const DESIGNS={
+  nat:{name:'Naturalistic observation',fam:'Observational',tone:'warn',what:'No researcher intervention: behavior is watched where it naturally occurs.',
+    s:['Behavior observed in the real world','Useful for nonmanipulated behaviors','Actual behaviors observed and recorded'],
+    w:['Time-consuming','Potential for observer influence','Potential for subjective interpretation'],key:'Real behavior, but slow and open to observer influence'},
+  par:{name:'Participant observation',fam:'Observational',tone:'warn',what:'The researcher interacts with participants and becomes one of them.',
+    s:['Useful when natural observation is impossible','Gets information not accessible otherwise','Participation gives a unique perspective'],
+    w:['Time-consuming','Potential for loss of objectivity','Increased chance for observer influence'],key:'Unique access, but objectivity is at risk'},
+  con:{name:'Contrived observation',fam:'Observational',tone:'warn',what:'The researcher sets up a situation likely to produce the desired behavior.',
+    s:['Do not have to wait for a behavior to occur'],w:['Less natural'],key:'Efficient, but less natural'},
+  net:{name:'Internet survey',fam:'Survey',tone:'warn',what:'A survey delivered online.',
+    s:['Efficient to administer to a large number of participants','Access to large numbers of individuals with common characteristics','Can be individualized based on participant responses'],
+    w:['Initial expense for the site','Sample may not be representative','Cannot control composition of the sample'],key:'Reach and efficiency, but unrepresentative samples'},
+  mail:{name:'Mail survey',fam:'Survey',tone:'bad',what:'A survey sent to participants by mail.',
+    s:['Convenient and anonymous','Nonthreatening to participants','Easy to administer'],
+    w:['Can be expensive','Low response rate and nonresponse bias','Unsure exactly who completes the survey'],key:'Easy and anonymous, but low response and nonresponse bias'},
+  tel:{name:'Telephone survey',fam:'Survey',tone:'warn',what:'Participants answer questions by phone.',
+    s:['Can be conducted from home or office','Participants can stay at home or office'],
+    w:['Time-consuming','Potential for interviewer bias'],key:'Convenient, but interviewer bias'},
+  per:{name:'In-person survey or interview',fam:'Survey',tone:'good',what:'Questions are administered face to face, to groups or individuals.',
+    s:['Efficient to administer with groups','100% response rate','Flexible (groups or individual interviews)'],
+    w:['Time-consuming with individual interviews','Risk of interviewer bias'],key:'Flexible with full response, but time-consuming and interviewer bias'},
+  case:{name:'Case study',fam:'Case study',tone:'warn',what:'In-depth study and detailed description of a single individual (or a very small group); may include an intervention.',
+    s:['Not averaged over a diverse group','Detailed description','Vivid, powerful, convincing','Compatible with clinical work','Can study rare and unusual events','Can identify exceptions to the rule'],
+    w:['Limited generalization','Potential for selective bias','Potential for subjective interpretation'],key:'Rich detail, but limited generalization'}
+};
+const DKEYS=Object.keys(DESIGNS);
+const STRAT={
+  obs:['Observational design','good'],ca:['Content analysis or archival research','good'],sur:['Survey design','good'],cas:['Case study design','good'],
+  corr:['Correlational strategy (not descriptive)','warn'],exp:['Experimental strategy (not descriptive)','warn']
+};
+function classify(c){
+  if(c.goal==='relate')return{k:'corr',d:null,note:'Descriptive research is not concerned with relationships between variables. Showing that two variables are related is the goal of the correlational strategy (see the Correlational Designs Explorer).'};
+  if(c.goal==='cause')return{k:'exp',d:null,note:'Only an experimental strategy, with a manipulated variable and control, can demonstrate cause and effect. Descriptive research simply describes variables as they naturally occur.'};
+  if(c.src==='behav')return{k:'obs',d:{none:'nat',join:'par',set:'con'}[c.role],note:'Behavior is systematically recorded and quantified with the frequency, duration or interval method, and scored by more than one observer for reliability.'};
+  if(c.src==='media')return{k:'ca',d:null,note:'Content analysis measures the occurrence of specific events in literature, film, television or similar media; archival research measures behaviors or events recorded in historical records. Both use the measurement rules of behavioral observation: categories, a numerical scoring method and multiple coders.'};
+  if(c.src==='self')return{k:'sur',d:{net:'net',mail:'mail',tel:'tel',person:'per'}[c.mode],note:'A survey obtains a “snapshot” of a particular group at a particular time. Results describe the variables being studied.'};
+  return{k:'cas',d:'case',note:c.tx==='yes'?'The case study includes an intervention or treatment administered by the researcher.':'With no treatment or intervention, this case study is called a case history.'};
+}
+
+/* ================= simulations ================= */
+const DEF_OB={seed:4,len:60,nb:10,bl:2,ivl:5,sw:3,sp:10,ik:4};
+const OB_DEFS=[
+  {k:'seed',l:'Random seed',type:'seed',g:'Session'},
+  {k:'len',l:'Session length',min:20,max:120,step:5,unit:' min',g:'Session'},
+  {k:'nb',l:'Target number of bouts',min:2,max:40,step:1,g:'Session'},
+  {k:'bl',l:'Typical bout length',min:.2,max:5,step:.1,unit:' min',g:'Session'},
+  {k:'ivl',l:'Interval length (interval method)',min:1,max:15,step:1,unit:' min',g:'Interval method'},
+  {k:'sp',l:'Time sampling: window repeats every',min:4,max:30,step:1,unit:' min',g:'Sampling'},
+  {k:'sw',l:'Time sampling: observe for',min:1,max:15,step:1,unit:' min',g:'Sampling'},
+  {k:'ik',l:'Individual sampling: children watched',min:1,max:12,step:1,g:'Sampling'}
+];
+const OB_PRESETS=[
+  ['Frequent, brief bouts',{nb:30,bl:.4,ivl:2}],
+  ['Few, long bouts',{nb:4,bl:6,ivl:5}],
+  ['Coarse intervals overstate',{nb:12,bl:.5,ivl:10}],
+  ['Window misses most behavior',{nb:8,bl:1,sw:1,sp:15}]
+];
+function simOB(p){
+  const R=makeRng(p.seed*31+7),L=p.len;
+  let b=[];for(let i=0;i<p.nb;i++){const s=R.u()*L,l=Math.max(.15,R.n(p.bl,p.bl*.4));b.push([s,l])}
+  b.sort((x,y)=>x[0]-y[0]);
+  const out=[];let end=0;
+  b.forEach(([s,l])=>{s=Math.max(s,end+.05);if(s>=L)return;const e=Math.min(L,s+l);if(e-s<.1)return;out.push([s,e]);end=e});
+  return out;
+}
+function overlap(b,lo,hi){let t=0;b.forEach(([s,e])=>{t+=Math.max(0,Math.min(e,hi)-Math.max(s,lo))});return t}
+function obStats(p,b){
+  const L=p.len,freq=b.length,dur=sum(b.map(x=>x[1]-x[0]));
+  const k=Math.ceil(L/p.ivl-1e-9);let occ=0;
+  for(let i=0;i<k;i++)if(overlap(b,i*p.ivl,Math.min(L,(i+1)*p.ivl))>1e-9)occ++;
+  return{freq,dur,pdur:dur/L,k,occ,pint:occ/k,mbl:freq?dur/freq:0};
+}
+function sampleWindows(p,off){const w=[];for(let s=off;s<p.len;s+=p.sp){w.push([s,Math.min(p.len,s+Math.min(p.sw,p.sp))])}return w}
+function sampEst(p,b,off){
+  const w=sampleWindows(p,off);let obsT=0,d=0,f=0;
+  w.forEach(([lo,hi])=>{obsT+=hi-lo;d+=overlap(b,lo,hi);b.forEach(([s,e])=>{if(s>=lo&&s<hi)f++})});
+  return{obsT,pdur:obsT?d/obsT:NaN,freqEst:obsT?f/obsT*p.len:NaN,w};
+}
+function obChart(p,b,ov){
+  const W=700,H=170,m={l:16,r:14,t:20,b:34},L=p.len,iw=W-m.l-m.r,sx=v=>m.l+v/L*iw;
+  let s=`<rect x="${m.l}" y="${m.t}" width="${iw}" height="${H-m.t-m.b}" fill="var(--plot)"/>`;
+  const k=Math.ceil(L/p.ivl-1e-9);
+  if(ov.iv)for(let i=0;i<k;i++){
+    const lo=i*p.ivl,hi=Math.min(L,lo+p.ivl),oc=overlap(b,lo,hi)>1e-9;
+    s+=`<rect x="${sx(lo)}" y="${m.t}" width="${sx(hi)-sx(lo)}" height="${H-m.t-m.b}" fill="${oc?'var(--tintB)':'none'}" stroke="var(--grid)"/>`;
+  }
+  const xt=ticks(0,L,8);xt.t.forEach(v=>{s+=`<text x="${sx(v)}" y="${H-m.b+15}" text-anchor="middle" fill="var(--muted)">${fmtT(v,xt.step)}</text>`});
+  s+=`<text x="${m.l+iw/2}" y="${H-4}" text-anchor="middle" fill="var(--muted)">Minutes into the session</text>`;
+  b.forEach(([a,e],i)=>{const y=m.t+(H-m.t-m.b)/2-7;s+=`<rect x="${sx(a)}" y="${y}" width="${Math.max(2,sx(e)-sx(a))}" height="14" rx="3" fill="var(--colB)"/>`;
+    if(ov.lab)s+=`<text x="${(sx(a)+sx(e))/2}" y="${y-4}" text-anchor="middle" fill="var(--muted)" font-size="9">${i+1}</text>`});
+  if(ov.sw)sampleWindows(p,0).forEach(([lo,hi])=>{s+=`<rect x="${sx(lo)}" y="${H-m.b-8}" width="${sx(hi)-sx(lo)}" height="6" fill="var(--colC)"/>`});
+  return svgWrap(W,H,s,'Timeline of behavior bouts');
+}
+function histBars(vals,lo,hi,nb,o){
+  o=o||{};const bw=(hi-lo)/nb,c=new Array(nb).fill(0);
+  vals.forEach(v=>{let i=Math.floor((v-lo)/bw);i=clamp(i,0,nb-1);c[i]++});
+  return{c,bw,items:c.map((v,i)=>({l:fmtT(lo+i*bw,bw),v:o.prop?v/vals.length:v,c:o.col||COLS[0]}))};
+}
+
+const DEF_RL={seed:3,ses:10,base:10,reac:60,tau:3,noise:1.2,ne:60,acc:.85,cats:3};
+const RL_DEFS=[
+  {k:'seed',l:'Random seed',type:'seed',g:'Reactivity'},
+  {k:'ses',l:'Number of sessions',min:4,max:16,step:1,g:'Reactivity'},
+  {k:'base',l:'True behaviors per session',min:4,max:30,step:1,g:'Reactivity'},
+  {k:'reac',l:'Effect of a visible, novel observer',min:-80,max:150,step:5,unit:'%',help:'Positive: behavior increases when watched. Negative: behavior is suppressed.',g:'Reactivity'},
+  {k:'tau',l:'Habituation: sessions to fade',min:.5,max:8,step:.5,help:'Larger values mean the observer stays novel for longer.',g:'Reactivity'},
+  {k:'noise',l:'Session-to-session noise',min:0,max:4,step:.2,g:'Reactivity'},
+  {k:'ne',l:'Events coded by both raters',min:20,max:200,step:10,g:'Inter-rater reliability'},
+  {k:'acc',l:'Each rater’s chance of coding an event as it truly is',min:.4,max:1,step:.01,fmt:v=>(+v).toFixed(2),g:'Inter-rater reliability'},
+  {k:'cats',l:'Behavior categories',min:2,max:5,step:1,g:'Inter-rater reliability'}
+];
+const RL_PRESETS=[
+  ['Strong reactivity, slow habituation',{reac:100,tau:6}],
+  ['Suppressed behavior',{reac:-60,tau:3}],
+  ['Careful, trained raters',{acc:.97,cats:3}],
+  ['Vague category definitions',{acc:.6,cats:5}]
+];
+function simRL(p){
+  const R=makeRng(p.seed*17+3),A=[],B=[],C=[];
+  for(let s=1;s<=p.ses;s++){
+    const d=p.reac/100,e=Math.max(0,R.n(0,p.noise));void e;
+    const n1=R.n(0,p.noise),n2=R.n(0,p.noise),n3=R.n(0,p.noise);
+    A.push(Math.max(0,p.base+n1));
+    B.push(Math.max(0,p.base*(1+d)+n2));
+    C.push(Math.max(0,p.base*(1+d*Math.exp(-(s-1)/p.tau))+n3));
+  }
+  return{A,B,C};
+}
+function simRaters(p){
+  const R=makeRng(p.seed*13+5),K=p.cats,t=[],a=[],b=[];
+  for(let i=0;i<p.ne;i++){
+    const u=R.u(),w=[.5,.25,.12,.08,.05].slice(0,K),tw=sum(w);let acc=0,c=0;
+    for(let j=0;j<K;j++){acc+=w[j]/tw;if(u<=acc){c=j;break}c=j}
+    t.push(c);
+    const code=()=>{if(R.u()<p.acc)return c;let o=R.int(0,K-2);if(o>=c)o++;return o};
+    a.push(code());b.push(code());
+  }
+  return{t,a,b};
+}
+function kappa(a,b,K){
+  const n=a.length;let po=0;const ma=new Array(K).fill(0),mb=new Array(K).fill(0);
+  for(let i=0;i<n;i++){if(a[i]===b[i])po++;ma[a[i]]++;mb[b[i]]++}
+  po/=n;let pe=0;for(let j=0;j<K;j++)pe+=ma[j]/n*mb[j]/n;
+  return{po,pe,k:pe>=1?NaN:(po-pe)/(1-pe),ma,mb};
+}
+function corr(a,b){const ma=mean(a),mb=mean(b);let sxy=0,sxx=0,syy=0;for(let i=0;i<a.length;i++){sxy+=(a[i]-ma)*(b[i]-mb);sxx+=(a[i]-ma)**2;syy+=(b[i]-mb)**2}return sxx&&syy?sxy/Math.sqrt(sxx*syy):NaN}
+
+const CA_SAMPLES=[
+  {n:'Cartoon script (aggression)',t:'Max shouted “shut up, you idiot!” and then shoved Leo into the lockers. Leo wanted to punch back but Ana stepped in to help. “Thanks,” Leo said. Max slammed the door and said he hated the whole class. Later Ana shared her lunch with Max to comfort him, and Max said thanks too.',
+    c:[['Verbal aggression','shut, idiot, hated, stupid'],['Physical aggression','shoved, punch, slammed, hit'],['Prosocial','help, thanks, shared, comfort']]},
+  {n:'Children’s story (emotion words)',t:'Pia laughed and smiled when the kite rose. Then the wind died and the kite fell. Pia cried, sad and lonely. A noise in the trees made her afraid and she hid. But her brother came, and soon they were happy again, laughing in the grass.',
+    c:[['Joy','laughed, smiled, happy, laughing'],['Sadness','cried, sad, lonely, tears'],['Fear','afraid, hid, scared, trembled']]},
+  {n:'Wartime letters (archival text)',t:'Dear Mother, the winter is hard but we are warm enough. Food is short and the men are tired. I miss home and I miss you. We heard the guns again last night and slept little. Do not worry. Tell Father that the work is steady and that I am well.',
+    c:[['Hardship','hard, short, tired, cold'],['Longing','miss, home, dear'],['Reassurance','well, worry, steady, warm']]}
+];
+const DEF_AR={seed:8,yrs:30,base:20,trend:.6,noise:3,cerr:2};
+const AR_DEFS=[
+  {k:'seed',l:'Random seed',type:'seed',g:'Archive'},
+  {k:'yrs',l:'Years of records',min:10,max:60,step:1,g:'Archive'},
+  {k:'base',l:'Events in the first year',min:5,max:60,step:1,g:'Archive'},
+  {k:'trend',l:'Change per year (true trend)',min:-1.5,max:1.5,step:.1,g:'Archive'},
+  {k:'noise',l:'Year-to-year variation',min:0,max:10,step:.5,g:'Archive'},
+  {k:'cerr',l:'Coder error (disagreement)',min:0,max:10,step:.5,help:'Random coding error added independently to each coder’s counts.',g:'Coders'}
+];
+const AR_PRESETS=[['Steady rise, careful coders',{trend:1,cerr:1}],['No trend, noisy records',{trend:0,noise:6}],['Sloppy coding',{cerr:8}]];
+function simAR(p){
+  const R=makeRng(p.seed*29+1),yr=[],t=[],a=[],b=[];
+  for(let i=0;i<p.yrs;i++){const tr=Math.max(0,p.base+p.trend*i+R.n(0,p.noise));t.push(tr);yr.push(1950+i);
+    a.push(Math.max(0,Math.round(tr+R.n(0,p.cerr))));b.push(Math.max(0,Math.round(tr+R.n(0,p.cerr))))}
+  return{yr,t,a,b};
+}
+
+const DEF_SV={seed:2,n:60,mu:3.6,sdp:.7,spread:.5,item:5};
+const SV_ITEMS=['I like doing math problems.','Math is one of my favorite subjects.','I feel confident when I do math.','I look forward to math class.','I would take extra math classes if I could.'];
+const SV_DEFS=[
+  {k:'seed',l:'Random seed',type:'seed',g:'Respondents'},
+  {k:'n',l:'Respondents',min:10,max:300,step:5,g:'Respondents'},
+  {k:'mu',l:'Average attitude (1 to 5)',min:1.5,max:4.8,step:.1,g:'Respondents'},
+  {k:'sdp',l:'Differences between students',min:.2,max:1.5,step:.1,g:'Respondents'},
+  {k:'spread',l:'Differences between items',min:0,max:1,step:.1,g:'Respondents'},
+  {k:'item',l:'Item shown in the chart',type:'select',num:true,opts:[[0,'Item 1'],[1,'Item 2'],[2,'Item 3'],[3,'Item 4'],[4,'Item 5'],[5,'All items pooled']],g:'Display'}
+];
+const SV_PRESETS=[['Positive attitudes',{mu:4.2,sdp:.5}],['Mixed attitudes',{mu:3,sdp:1.2}],['Negative attitudes',{mu:2,sdp:.6}]];
+function simSV(p){
+  const R=makeRng(p.seed*23+9),off=SV_ITEMS.map((_,j)=>(j-2)*p.spread*.4),M=[];
+  for(let i=0;i<p.n;i++){const th=R.n(p.mu,p.sdp);M.push(SV_ITEMS.map((_,j)=>clamp(Math.round(th+off[j]+R.n(0,.6)),1,5)))}
+  return M;
+}
+
+const DEF_SM={seed:6,mode:'mail',mu:60,sdv:15,n:500,rr:.3,b:0,restrict:0};
+const MODE_DEF={net:{rr:.25,b:.8,restrict:25,n:1000},mail:{rr:.25,b:1.2,restrict:0,n:1000},tel:{rr:.5,b:.3,restrict:0,n:300},per:{rr:1,b:0,restrict:0,n:100}};
+const SM_DEFS=[
+  {k:'seed',l:'Random seed',type:'seed',g:'Population'},
+  {k:'mu',l:'True mean satisfaction (0 to 100)',min:30,max:80,step:1,g:'Population'},
+  {k:'sdv',l:'Spread of the population',min:5,max:25,step:1,g:'Population'},
+  {k:'mode',l:'Administration method (sets typical defaults)',type:'select',opts:[['net','Internet'],['mail','Mail'],['tel','Telephone'],['per','In person']],g:'Survey'},
+  {k:'n',l:'People invited',min:50,max:2000,step:50,g:'Survey'},
+  {k:'rr',l:'Overall chance of responding',min:.05,max:1,step:.05,fmt:v=>Math.round(v*100)+'%',g:'Survey'},
+  {k:'b',l:'Nonresponse bias (who responds)',min:-2,max:2,step:.1,help:'Positive: more satisfied people respond. Negative: less satisfied people respond (for example, people with complaints).',g:'Survey'},
+  {k:'restrict',l:'Sampling frame leaves out the lowest',min:0,max:60,step:5,unit:'% of scores',help:'Simulates a frame that is too restricted, such as a site that only reaches satisfied customers.',g:'Survey'}
+];
+const SM_PRESETS=[['Representative and complete',{mode:'per',rr:1,b:0,restrict:0,n:100}],['Mail survey, complainers respond',{mode:'mail',rr:.2,b:-1.5,restrict:0}],['Web poll of enthusiasts',{mode:'net',rr:.2,b:1.5,restrict:30}]];
+function simSM(p){
+  const R=makeRng(p.seed*37+11),N=5000,pop=[];
+  for(let i=0;i<N;i++)pop.push(clamp(R.n(p.mu,p.sdv),0,100));
+  const sorted=pop.slice().sort((a,b)=>a-b),cutoff=sorted[Math.floor(N*p.restrict/100)]||0;
+  const frame=pop.filter(v=>v>=cutoff),inv=R.shuffle(frame).slice(0,Math.min(p.n,frame.length));
+  const lg=Math.log(clamp(p.rr,.001,.999)/(1-clamp(p.rr,.001,.999)));
+  const resp=p.rr>=1?inv.slice():inv.filter(v=>R.u()<1/(1+Math.exp(-(lg+p.b*(v-p.mu)/p.sdv))));
+  return{pop,inv,resp};
+}
+const DRAFTS=[
+  ['Do you agree that the new, unfair parking policy should be thrown out?','Loaded and double-barreled: it asks two things at once (is it unfair, should it be removed) and signals the “right” answer. Ask one neutral question at a time, for example: “How satisfied are you with the new parking policy?” on a rating scale.'],
+  ['How frequently do you utilize ambulatory means of transportation?','Vocabulary is harder than it needs to be. Use easy language: “How many days a week do you walk to work or school?”'],
+  ['(First question of the survey) Have you ever taken money from your employer?','A sensitive question placed first can cause refusals. Place sensitive questions later, after easier items, and word them carefully.'],
+  ['Q1: Favorite color?  Q2: Age?  Q3: Satisfaction with service?  Q4: Favorite food?  Q5: Satisfaction with staff?','Questions on the same topic should be grouped (service and staff together); demographic questions are normally collected in one block.'],
+  ['On a scale from 1 (strongly disagree) to 5 (strongly agree): “I enjoy my math class.”','A good item: short, one idea, simple wording, and a numerical scale that can be added and averaged.'],
+  ['Describe, in your own words, what you like most about your school.','An open-ended question. It lets respondents answer in their own words, but the responses must be coded before they can be counted.']
+];
+
+const DEF_CS={seed:5,wks:24,t0:8,base:30,eff:-12,noise:3,treat:true,het:8};
+const CS_DEFS=[
+  {k:'seed',l:'Random seed',type:'seed',g:'The case'},
+  {k:'wks',l:'Weeks recorded',min:12,max:40,step:1,g:'The case'},
+  {k:'base',l:'Typical weekly symptom score',min:10,max:60,step:1,g:'The case'},
+  {k:'noise',l:'Week-to-week fluctuation',min:0,max:8,step:.5,g:'The case'},
+  {k:'treat',l:'Researcher administers a treatment (case study)',type:'check',g:'Intervention'},
+  {k:'t0',l:'Treatment begins in week',min:3,max:20,step:1,g:'Intervention',show:s=>s.treat},
+  {k:'eff',l:'Typical effect of treatment',min:-25,max:10,step:1,g:'Intervention'},
+  {k:'het',l:'How much clients differ in their response',min:0,max:20,step:1,g:'Averaging'}
+];
+const CS_PRESETS=[['Clear improvement',{eff:-15,het:4}],['No effect for this client',{eff:0}],['Case history (no treatment)',{treat:false}],['Mixed group response',{eff:-8,het:14}]];
+function simCS(p){
+  const R=makeRng(p.seed*41+2),t0=Math.min(p.t0,p.wks-2),cl=[];
+  for(let c=0;c<12;c++){
+    const e=c===0?p.eff:p.eff+R.n(0,p.het),lvl=p.base+(c===0?0:R.n(0,5)),ys=[];
+    for(let w=1;w<=p.wks;w++){const post=p.treat&&w>=t0;ys.push(Math.max(0,lvl+(post?e:0)+R.n(0,p.noise)))}
+    cl.push({e,ys});
+  }
+  return{cl,t0};
+}
+
+const DEF_DS={seed:12,src:'quiz',n:40,mu:60,sdv:12,skew:0,bw:5,c1:34,c2:28,c3:25,c4:13};
+const DS_DEFS=[
+  {k:'src',l:'Scores',type:'select',opts:[['quiz','5-point quiz (course example)'],['sim','Simulated test scores']],g:'Data'},
+  {k:'seed',l:'Random seed',type:'seed',g:'Data',show:s=>s.src==='sim'},
+  {k:'n',l:'Number of scores',min:10,max:300,step:5,g:'Data',show:s=>s.src==='sim'},
+  {k:'mu',l:'Typical score',min:30,max:90,step:1,g:'Data',show:s=>s.src==='sim'},
+  {k:'sdv',l:'Spread',min:3,max:25,step:1,g:'Data',show:s=>s.src==='sim'},
+  {k:'skew',l:'Skew (long tail to the right if positive)',min:-2,max:2,step:.1,g:'Data',show:s=>s.src==='sim'},
+  {k:'bw',l:'Group width in the table',min:1,max:20,step:1,g:'Data',show:s=>s.src==='sim'},
+  {k:'c1',l:'Category 1: Study alone',min:0,max:100,step:1,g:'Non-numerical data'},
+  {k:'c2',l:'Category 2: Study group',min:0,max:100,step:1,g:'Non-numerical data'},
+  {k:'c3',l:'Category 3: Online course',min:0,max:100,step:1,g:'Non-numerical data'},
+  {k:'c4',l:'Category 4: Tutor',min:0,max:100,step:1,g:'Non-numerical data'}
+];
+const QUIZ_SCORES=[5,4,4,4,3,3,3,3,2,2,2,1,1,0,0];
+function simDS(p){
+  const R=makeRng(p.seed*43+5),v=[];
+  for(let i=0;i<p.n;i++){let z=R.n(0,1);if(p.skew)z=p.skew>0?(Math.exp(p.skew*z*.6)-1)/(p.skew*.6)-0:-(Math.exp(-p.skew*(-z)*.6)-1)/(-p.skew*.6);v.push(Math.round(clamp(p.mu+p.sdv*z,0,100)))}
+  return v;
+}
+function parseNums(t){const a=t.split(/[\s,;]+/).filter(Boolean).map(Number);if(a.length<2)return{error:'Enter at least two numbers.'};if(a.some(x=>!Number.isFinite(x)))return{error:'Every entry must be a number.'};if(a.length>2000)return{error:'Use at most 2000 scores.'};return{x:a}}
+function freqTable(x,bw){
+  const lo=Math.floor(minOf(x)/bw)*bw,hi=Math.floor(maxOf(x)/bw)*bw,rows=[];
+  for(let a=hi;a>=lo;a-=bw){const c=x.filter(v=>v>=a&&v<a+bw).length;rows.push({a,b:a+bw-1,f:c})}
+  return rows;
+}
+function modes(x){const m=new Map();x.forEach(v=>m.set(v,(m.get(v)||0)+1));const mx=maxOf([...m.values()]);return{m:[...m.entries()].filter(e=>e[1]===mx).map(e=>e[0]).sort((a,b)=>a-b),f:mx}}
+
+const st={tab:'cl',cl:{goal:'describe',src:'behav',role:'none',mode:'net',tx:'no'},
+  ob:Object.assign({},DEF_OB),rl:Object.assign({},DEF_RL),ar:Object.assign({},DEF_AR),sv:Object.assign({},DEF_SV),sm:Object.assign({},DEF_SM),cs:Object.assign({},DEF_CS),ds:Object.assign({},DEF_DS),
+  obOv:{iv:true,lab:false,sw:false},dsOv:{hist:true,poly:false,mean:true,med:false,mode:false},ca:{i:0,text:CA_SAMPLES[0].t,cats:CA_SAMPLES[0].c.map(c=>c.slice())},cm:0,dsCustom:null};
+const DEFAULTS={ob:DEF_OB,rl:DEF_RL,ar:DEF_AR,sv:DEF_SV,sm:DEF_SM,cs:DEF_CS,ds:DEF_DS};
+const DEFS={ob:OB_DEFS,rl:RL_DEFS,ar:AR_DEFS,sv:SV_DEFS,sm:SM_DEFS,cs:CS_DEFS,ds:DS_DEFS};
+const PRESETS={ob:OB_PRESETS,rl:RL_PRESETS,ar:AR_PRESETS,sv:SV_PRESETS,sm:SM_PRESETS,cs:CS_PRESETS,ds:[['Quiz example',{src:'quiz'}],['Symmetric scores',{src:'sim',skew:0}],['Positively skewed',{src:'sim',skew:1.5}],['Negatively skewed',{src:'sim',skew:-1.5}]]};
+
+/* ================= renderers ================= */
+function renderSpectrum(){
+  const W=700,H=120;
+  const box=(x,t,s,c,on)=>`<rect x="${x}" y="20" width="200" height="64" rx="10" fill="${on?'var(--tintB)':'var(--grid)'}" stroke="${on?c:'var(--line)'}" stroke-width="${on?2:1}"/><text x="${x+100}" y="46" text-anchor="middle" font-weight="600" fill="var(--fg)">${t}</text><text x="${x+100}" y="64" text-anchor="middle" fill="var(--muted)">${s}</text>`;
+  const k=classify(st.cl).k;
+  let s=box(20,'Descriptive','describe variables',COLS[1],['obs','ca','sur','cas'].includes(k))+box(250,'Correlational','relate variables',COLS[0],k==='corr')+box(480,'Experimental','cause and effect',COLS[2],k==='exp');
+  s+=`<text x="20" y="108" fill="var(--muted)">One variable, or each variable on its own</text><text x="250" y="108" fill="var(--muted)">Relationships, no manipulation</text><text x="480" y="108" fill="var(--muted)">Manipulation and control</text>`;
+  $('#cl-spectrum').innerHTML=svgWrap(W,H,s,'Descriptive, correlational and experimental strategies');
+}
+function renderCL(){
+  const c=st.cl;
+  const show=(q,on)=>{const e=$(`[data-q="${q}"]`);if(e)e.hidden=!on};
+  show('src',c.goal==='describe');show('role',c.goal==='describe'&&c.src==='behav');show('mode',c.goal==='describe'&&c.src==='self');show('tx',c.goal==='describe'&&c.src==='single');
+  const r=classify(c),S=STRAT[r.k];let h=`<p><b>${S[0]}</b> ${pill(r.d?DESIGNS[r.d].fam:'strategy',S[1])}</p>`;
+  if(r.d){const D=DESIGNS[r.d];h+=`<h3>${D.name}</h3><p>${D.what}</p><div class="grid2"><div><b class="small">Strengths</b><ul class="clean">${D.s.map(x=>`<li>${x}</li>`).join('')}</ul></div><div><b class="small">Weaknesses</b><ul class="clean">${D.w.map(x=>`<li>${x}</li>`).join('')}</ul></div></div>`}
+  h+=`<div class="callout">${r.note}</div>`;
+  $('#cl-out').innerHTML=h;renderSpectrum();
+}
+function renderOB(){
+  const p=st.ob,b=simOB(p),S=obStats(p,b);
+  $('#ob-ov').innerHTML=[['iv','Show intervals'],['lab','Number the bouts'],['sw','Show time-sampling windows']].map(([k,l])=>`<label><input type="checkbox" data-ov="${k}" data-pre="ob" ${st.obOv[k]?'checked':''}> ${l}</label>`).join('');
+  $('#ob-chart').innerHTML=obChart(p,b,st.obOv);
+  $('#ob-stats').innerHTML=statRow([[S.freq,'Frequency method: instances counted'],[f(S.dur,1)+' min','Duration method: total time in behavior'],[pct(S.pdur),'Share of the session'],[`${S.occ} of ${S.k}`,'Interval method: intervals with behavior'],[pct(S.pint),'Proportion of intervals']]);
+  let msg='';
+  if(S.pint>S.pdur+.15)msg=`<div class="callout warn">The interval method scores ${pct(S.pint)} of intervals as containing the behavior although the behavior fills only ${pct(S.pdur)} of the session. Long intervals overstate how much behavior occurred; shorten the interval to see the two converge.</div>`;
+  else if(S.freq>0&&S.mbl>p.ivl)msg=`<div class="callout warn">Bouts are longer than the interval, so a single bout spans several intervals. Frequency and interval scores answer different questions here.</div>`;
+  else msg=`<div class="callout">Frequency tells how often, duration tells how long, and the interval method gives a proportion of time units. Choose the method that fits the behavior being described.</div>`;
+  $('#ob-msg').innerHTML=msg;
+  CSVS.ob=()=>'start_min,end_min,length_min\n'+b.map(x=>[x[0].toFixed(2),x[1].toFixed(2),(x[1]-x[0]).toFixed(2)].join(',')).join('\n');
+  // time sampling
+  const est=sampEst(p,b,0),offs=[];
+  for(let i=0;i<60;i++)offs.push(sampEst(p,b,i/60*p.sp).pdur);
+  const hb=histBars(offs.map(v=>v*100),0,Math.max(50,Math.ceil(maxOf(offs)*100/10)*10+10),12,{col:COLS[2]});
+  $('#ob-samp').innerHTML=barChart(hb.items,{ylab:'Possible starting points (of 60)',xlab:'Estimated % of time in behavior from the sampled windows',lines:[],label:'Distribution of time-sampling estimates',W:640,H:220,cut:5});
+  $('#ob-samp-txt').innerHTML=`<p class="small">Watching ${Math.min(p.sw,p.sp)} min of every ${p.sp} min covers ${pct(est.obsT/p.len)} of the session. With the window starting at minute 0 the estimate is <b>${pct(est.pdur)}</b> of time in behavior, against the true <b>${pct(S.pdur)}</b>. Across 60 different starting points the estimates range from ${pct(minOf(offs))} to ${pct(maxOf(offs))}; short, widely spaced windows can miss most of the behavior. Event sampling would instead watch only specified events.</p>`;
+  // individual
+  const R=makeRng(p.seed*53+1),rates=[];for(let i=0;i<12;i++)rates.push(Math.max(0,Math.round(R.n(8,4))));
+  const pick=R.shuffle([...Array(12).keys()]).slice(0,p.ik),all=mean(rates),sm=mean(pick.map(i=>rates[i]));
+  $('#ob-ind').innerHTML=barChart(rates.map((v,i)=>({l:'C'+(i+1),v,c:pick.includes(i)?'var(--colB)':'var(--axis)'})),{ylab:'Behaviors in session',lines:[{v:all,t:'all 12: '+f(all,1),c:'var(--colA)'}],label:'Behavior counts for 12 children',W:640,H:200,cut:4,b:30});
+  $('#ob-ind-txt').innerHTML=`<p class="small">Watching only the ${p.ik} highlighted children gives a mean of <b>${f(sm,1)}</b> behaviors, against <b>${f(all,1)}</b> for all twelve. Individual sampling is cheaper, but the estimate depends on which children are chosen.</p>`;
+}
+function renderRL(){
+  const p=st.rl,D=simRL(p),xs=D.A.map((_,i)=>i+1);
+  $('#rl-chart').innerHTML=lineChart([{name:'Concealed observer',pts:xs.map((x,i)=>[x,D.A[i]])},{name:'Visible observer, no habituation',pts:xs.map((x,i)=>[x,D.B[i]])},{name:'Visible observer, habituated',pts:xs.map((x,i)=>[x,D.C[i]])}],{xlab:'Observation session',ylab:'Behaviors recorded',xd:[1,p.ses],yd:[0,Math.max(maxOf(D.B),maxOf(D.C),maxOf(D.A))*1.15],label:'Reactivity and habituation over sessions',W:640,H:260});
+  $('#rl-legend').innerHTML=legendHTML(['Concealed observer','Visible observer, no habituation','Visible observer, habituated']);
+  const bias=(D.C[0]-D.A[0]),last=D.C[p.ses-1]-D.A[p.ses-1];
+  $('#rl-txt').innerHTML=`<div class="callout">In session 1 the visible, novel observer shifts the record by about <b>${f(bias,1)}</b> behaviors; after ${p.ses} sessions the habituated record differs from the concealed one by <b>${f(last,1)}</b>. Habituation requires repeated exposure until the observer is no longer a novel stimulus; concealment avoids the problem but is not always possible.</div>`;
+  CSVS.rl=()=>'session,concealed,visible_no_habituation,visible_habituated\n'+xs.map((x,i)=>[x,D.A[i].toFixed(2),D.B[i].toFixed(2),D.C[i].toFixed(2)].join(',')).join('\n');
+  const T=simRaters(p),K=kappa(T.a,T.b,p.cats),n=T.a.length,show=Math.min(n,48),W=640,rowH=22;
+  let s=`<text x="4" y="14" fill="var(--muted)">Rater A</text><text x="4" y="${14+rowH}" fill="var(--muted)">Rater B</text>`;
+  const cw=(W-70)/show;
+  for(let i=0;i<show;i++){const x=64+i*cw,dis=T.a[i]!==T.b[i];
+    [T.a[i],T.b[i]].forEach((c,r)=>{s+=`<rect x="${x}" y="${r*rowH+3}" width="${cw-2}" height="16" rx="2" fill="${COLS[c%5]}"/>`});
+    if(dis)s+=`<rect x="${x-1}" y="1" width="${cw}" height="${rowH+19}" fill="none" stroke="var(--bad)" stroke-width="1.5" rx="3"/>`;}
+  s+=`<text x="64" y="${rowH*2+16}" fill="var(--muted)">First ${show} events (colors are categories; red outlines mark disagreements)</text>`;
+  $('#rl-rate').innerHTML=svgWrap(W,rowH*2+24,s,'Two raters coding the same events');
+  const rows=[];for(let j=0;j<p.cats;j++)rows.push([`Category ${j+1}`,K.ma[j],K.mb[j]]);
+  $('#rl-stats').innerHTML=statRow([[pct(K.po),'Percent agreement'],[f(K.k,2),'Cohen’s κ (chance-corrected)'],[pct(K.pe),'Agreement expected by chance']])+tbl(['Category','Rater A counted','Rater B counted'],rows)+
+    `<div class="callout ${K.k>=.8?'good':'warn'}">${K.k>=.8?'The raters agree well beyond chance, so the scores can be treated as reliable.':K.k>=.6?'Agreement is moderate. Clearer category definitions and more rater training would improve reliability.':'Agreement is poor once chance is removed. The behavioral categories need clearer operational definitions before these scores mean much.'} Percent agreement can look high when one category is very common; κ corrects for that.</div>`;
+}
+const CA_COLS=['var(--colB)','var(--colA)','var(--colC)','var(--colD)','var(--colE)'];
+function caWords(c){return c.w.split(/[,\s]+/).map(x=>x.trim().toLowerCase()).filter(Boolean)}
+function renderCA(){
+  const cats=st.ca.cats.map(c=>({n:c[0],w:c[1]})),ws=cats.map(caWords),txt=st.ca.text,counts=cats.map(()=>0);
+  let html='',tokens=0;
+  (txt.match(/[A-Za-z’']+|[^A-Za-z’']+/g)||[]).forEach(t=>{
+    if(!/^[A-Za-z’']/.test(t)){html+=esc(t);return}
+    tokens++;const lw=t.toLowerCase();let hit=-1;
+    ws.forEach((a,i)=>{if(hit<0&&a.some(w=>lw===w||(w.length>=4&&lw.startsWith(w))))hit=i});
+    if(hit>=0){counts[hit]++;html+=`<mark style="background:${CA_COLS[hit%5]};color:var(--accentFg);padding:0 3px;border-radius:3px">${esc(t)}</mark>`}else html+=esc(t);
+  });
+  $('#ca-hl').innerHTML=html||'<span class="muted">Enter some text.</span>';
+  $('#ca-leg').innerHTML=cats.map((c,i)=>`<span><i style="width:11px;height:11px;border-radius:2px;background:${CA_COLS[i%5]}"></i>${esc(c.n)}</span>`).join('');
+  $('#ca-chart').innerHTML=barChart(cats.map((c,i)=>({l:c.n,v:counts[i],c:CA_COLS[i%5]})),{ylab:'Occurrences',label:'Category frequencies',W:560,H:220,cut:24,yn:4});
+  const tot=sum(counts);
+  $('#ca-stats').innerHTML=statRow([[tokens,'Words in the text'],[tot,'Coded occurrences'],[tokens?f(tot/tokens*100,1)+'%':'—','Coded words per 100']])+
+   tbl(['Category','Frequency','Per 100 words'],cats.map((c,i)=>[esc(c.n),counts[i],tokens?f(counts[i]/tokens*100,1):'—']))+
+   `<p class="small muted">Counting occurrences is the frequency method. Duration and interval methods can be used too (for example, minutes of a program containing the behavior, or pages per category). In a real study, more than one coder would score at least part of the material to measure inter-rater reliability.</p>`;
+}
+function renderCAcats(){
+  $('#ca-cats').innerHTML=st.ca.cats.map((c,i)=>`<div class="row" style="margin:4px 0"><input class="fld" style="flex:1 1 30%" data-ci="${i}" data-f="0" value="${esc(c[0])}" aria-label="Category ${i+1} name"><input class="fld" style="flex:2 1 50%" data-ci="${i}" data-f="1" value="${esc(c[1])}" aria-label="Indicator words for category ${i+1}"><button class="small" data-act="ca-del-${i}" title="Remove this category">×</button></div>`).join('');
+}
+function renderAR(){
+  const p=st.ar,D=simAR(p),r=corr(D.a,D.b),mad=mean(D.a.map((v,i)=>Math.abs(v-D.b[i])));
+  $('#ar-chart').innerHTML=lineChart([{name:'Coder A',pts:D.yr.map((y,i)=>[y,D.a[i]])},{name:'Coder B',pts:D.yr.map((y,i)=>[y,D.b[i]]),dash:true}],{xlab:'Year',ylab:'Events coded in the records',xd:[D.yr[0],D.yr[D.yr.length-1]],label:'Yearly counts from two coders',W:640,H:260,xn:8});
+  const sl=(()=>{const x=D.yr,y=D.a,mx=mean(x),my=mean(y);let a=0,b=0;x.forEach((v,i)=>{a+=(v-mx)*(y[i]-my);b+=(v-mx)**2});return a/b})();
+  $('#ar-txt').innerHTML=legendHTML(['Coder A','Coder B']).replace(/^/,'<div class="legend">')+'</div>'+statRow([[f(r,2),'Agreement between coders (Pearson r of yearly counts)'],[f(mad,1),'Average yearly disagreement'],[f(sl,2),'Coder A’s trend (events per year)']])+
+   `<div class="callout ${r>=.9?'good':'warn'}">${r>=.9?'The two coders produce nearly the same record of the past, so the trend can be described with confidence.':'The coders’ counts diverge. Before describing historical change, the categories and coding rules need tightening.'} Archival research describes what happened; it does not explain why.</div>`;
+  CSVS.ar=()=>'year,coder_a,coder_b\n'+D.yr.map((y,i)=>[y,D.a[i],D.b[i]].join(',')).join('\n');
+}
+function renderSV(){
+  const p=st.sv,M=simSV(p),n=M.length;
+  const col=j=>M.map(r=>r[j]),all=M.flat(),tot=M.map(r=>sum(r));
+  const vals=p.item===5?all:col(p.item),cnt=[1,2,3,4,5].map(v=>vals.filter(x=>x===v).length);
+  $('#sv-chart').innerHTML=barChart(cnt.map((c,i)=>({l:['1 Strongly disagree','2','3','4','5 Strongly agree'][i],v:c,c:COLS[0]})),{ylab:'Respondents',label:'Distribution of ratings',W:640,H:230,cut:18,fmt:v=>v,b:34});
+  $('#sv-items').innerHTML=tbl(['Statement','Mean','SD','% agree (4 or 5)'],SV_ITEMS.map((t,j)=>{const c=col(j);return[esc(t),f(mean(c)),f(sd(c)),pct(c.filter(x=>x>=4).length/n)]}));
+  $('#sv-stats').innerHTML=statRow([[f(mean(tot),1),'Mean total (possible 5 to 25)'],[f(sd(tot),1),'SD of total'],[minOf(tot)+' to '+maxOf(tot),'Range of totals'],[n,'Respondents']]);
+  const hb=histBars(tot,5,26,21,{col:COLS[2]});hb.items.forEach((it,i)=>it.l=String(5+i));
+  $('#sv-tot').innerHTML=barChart(hb.items,{ylab:'Respondents',xlab:'Total score (sum of five ratings)',label:'Distribution of total scores',W:640,H:220,vals:false,cut:3});
+  $('#sv-msg').innerHTML=`<div class="callout">Because every answer is a number, ratings can be added into a total and averaged, and are compatible with most standard statistics. Open-ended answers would first have to be coded into categories or numbers.</div>`;
+  CSVS.sv=()=>'respondent,'+SV_ITEMS.map((_,j)=>'item'+(j+1)).join(',')+',total\n'+M.map((r,i)=>[i+1,...r,sum(r)].join(',')).join('\n');
+}
+function renderSM(){
+  const p=st.sm,D=simSM(p),tm=mean(D.pop),im=mean(D.inv),rm=mean(D.resp),rn=D.resp.length;
+  const bins=20,pop=histBars(D.pop,0,100,bins,{prop:true}),rs=histBars(D.resp,0,100,bins,{prop:true});
+  $('#sm-chart').innerHTML=lineChart([{name:'Population',pts:pop.items.map((it,i)=>[i*5+2.5,it.v*100])},{name:'Respondents',pts:rs.items.map((it,i)=>[i*5+2.5,rn?it.v*100:0])}],{xlab:'Satisfaction score',ylab:'% of people in each 5-point group',xd:[0,100],label:'Population and respondent distributions',W:640,H:250,dots:false});
+  const se=rn>1?sd(D.resp)/Math.sqrt(rn):NaN,bias=rm-tm;
+  $('#sm-stats').innerHTML='<div class="legend">'+legendHTML(['Population','Respondents']).replace(/^/,'')+'</div>'+statRow([[f(tm,1),'True mean (population of 5000)'],[f(rm,1),'Respondent mean'],[(bias>=0?'+':'')+f(bias,1),'Bias in the estimate'],[`${rn} of ${D.inv.length}`,'Responded'],[`±${f(1.96*se,1)}`,'Sampling margin (95%)']]);
+  const bad=Math.abs(bias)>1.96*se&&Number.isFinite(se);
+  $('#sm-msg').innerHTML=`<div class="callout ${bad?'warn':'good'}">${bad?`The bias (${f(bias,1)}) is larger than the sampling margin (±${f(1.96*se,1)}): the survey reports a precise-looking figure that is systematically wrong. Collecting more responses does not fix nonresponse bias or a frame that is too restricted; only reaching the whole group, or representative respondents, does.`:'Respondents resemble the population here, so the snapshot is close to the truth. Try increasing nonresponse bias or restricting the frame.'}</div>`;
+  const M=DESIGNS[{net:'net',mail:'mail',tel:'tel',per:'per'}[p.mode]];
+  $('#sm-modes').innerHTML=`<p><b>${M.name}</b></p><div class="grid2"><div><b class="small">Strengths</b><ul class="clean">${M.s.map(x=>`<li>${x}</li>`).join('')}</ul></div><div><b class="small">Weaknesses</b><ul class="clean">${M.w.map(x=>`<li>${x}</li>`).join('')}</ul></div></div><p class="small muted">The response rates and bias values chosen by the method selector are illustrative defaults, not findings from the course content, apart from the full response rate for in-person group surveys.</p>`;
+  CSVS.sm=()=>'respondent_score\n'+D.resp.map(v=>v.toFixed(1)).join('\n');
+}
+function renderDraft(){const i=+$('#sm-draft').value;$('#sm-draft-out').innerHTML=`<div class="callout">${DRAFTS[i][1]}</div>`}
+function renderCS(){
+  const p=st.cs,D=simCS(p),c0=D.cl[0],xs=c0.ys.map((_,i)=>i+1);
+  const pre=c0.ys.slice(0,p.treat?D.t0-1:Math.floor(p.wks/3)),post=c0.ys.slice(p.treat?D.t0-1:Math.floor(p.wks/3));
+  const sers=[{name:'The case',pts:xs.map((x,i)=>[x,c0.ys[i]])}];
+  $('#cs-chart').innerHTML=lineChart(sers,{xlab:'Week',ylab:'Symptom score (higher = worse)',xd:[1,p.wks],yd:[0,maxOf(c0.ys)*1.2],bands:p.treat?[[D.t0,p.wks,'var(--tintB)','Treatment period']]:[],label:'Weekly scores for a single case',W:640,H:250,xn:8});
+  $('#cs-stats').innerHTML=p.treat?statRow([[f(mean(pre),1),`Mean, weeks 1 to ${D.t0-1} (before)`],[f(mean(post),1),`Mean, weeks ${D.t0} to ${p.wks} (during)`],[f(mean(post)-mean(pre),1),'Change'],[pct((mean(post)-mean(pre))/mean(pre)),'Relative change']]):statRow([[f(mean(c0.ys),1),'Mean over all weeks'],[f(sd(c0.ys),1),'SD'],[f(minOf(c0.ys),1)+' to '+f(maxOf(c0.ys),1),'Range']]);
+  $('#cs-msg').innerHTML=p.treat?`<div class="callout warn">The scores improve after the treatment starts, but with one person and no comparison condition the case alone cannot show that the treatment caused the change (history, maturation and chance fluctuations are also possible). Case studies describe vividly; they do not generalize.</div>`:`<div class="callout">With no treatment or intervention this is a <b>case history</b>: an in-depth description of how one individual’s scores unfold over time.</div>`;
+  const avg=xs.map((_,i)=>mean(D.cl.map(c=>c.ys[i])));
+  $('#cs-avg').innerHTML=lineChart([...D.cl.slice(1).map(c=>({pts:xs.map((x,i)=>[x,c.ys[i]]),c:'var(--axis)',dots:false})),{pts:xs.map((x,i)=>[x,c0.ys[i]]),c:'var(--colB)',dots:false},{pts:xs.map((x,i)=>[x,avg[i]]),c:'var(--colA)',dots:false}],{xlab:'Week',ylab:'Symptom score',xd:[1,p.wks],yd:[0,maxOf(D.cl.flatMap(c=>c.ys))*1.1],bands:p.treat?[[D.t0,p.wks,'var(--tintB)','']]:[],label:'Twelve individual clients and their average',W:640,H:260,xn:8});
+  const effs=D.cl.map(c=>c.e),nBetter=effs.filter(e=>e<-2).length,nWorse=effs.filter(e=>e>2).length;
+  $('#cs-avg-txt').innerHTML=`<div class="legend"><span><i style="width:18px;height:3px;background:var(--axis)"></i>Eleven other clients</span><span><i style="width:18px;height:3px;background:var(--colB)"></i>The case</span><span><i style="width:18px;height:3px;background:var(--colA)"></i>Average of all twelve</span></div>`+(p.treat?`<p class="small">Of twelve clients, ${nBetter} respond clearly better, ${nWorse} respond worse, and ${12-nBetter-nWorse} change little. The average describes nobody exactly. A case study is <b>not averaged over a diverse group</b>, so it can reveal exceptions to the rule.</p>`:'<p class="small">Without treatment the twelve lines show natural variation between individuals; an average would blur these differences.</p>');
+  CSVS.cs=()=>'week,case,average_of_12\n'+xs.map((x,i)=>[x,c0.ys[i].toFixed(2),avg[i].toFixed(2)].join(',')).join('\n');
+}
+function dsData(){
+  if(st.dsCustom)return st.dsCustom.slice();
+  return st.ds.src==='quiz'?QUIZ_SCORES.slice():simDS(st.ds);
+}
+function renderDS(){
+  const p=st.ds,x=dsData(),n=x.length,M=mean(x),Md=median(x),Mo=modes(x),S2=ssq(x),V=S2/(n-1),SD=Math.sqrt(V);
+  const quiz=!st.dsCustom&&p.src==='quiz',bw=quiz?1:(st.dsCustom?Math.max(1,Math.ceil((maxOf(x)-minOf(x)+1)/12)):p.bw);
+  const rows=freqTable(x,bw),ov=st.dsOv,isInt=x.every(Number.isInteger),sh=isInt?.5:0;
+  $('#ds-ov').innerHTML=[['hist','Histogram'],['poly','Polygon'],['mean','Mean'],['med','Median'],['mode','Mode']].map(([k,l])=>`<label><input type="checkbox" data-ov="${k}" data-pre="ds" ${ov[k]?'checked':''}> ${l}</label>`).join('');
+  $('#ds-table').innerHTML=tbl(['X','f','Proportion'],rows.map(r=>[bw===1&&isInt?r.a:isInt?`${r.a}–${r.b}`:`${r.a} to <${r.a+bw}`,r.f,f(r.f/n,2)]).concat([['Total',n,'1.00']]));
+  const asc=rows.slice().reverse(),W=640,H=250,m={l:46,r:12,t:16,b:40},fmax=maxOf(rows.map(r=>r.f))+1,lo=asc[0].a-sh,hi=asc[asc.length-1].a+bw-sh;
+  const fr=frame(W,H,m,[lo,hi],[0,fmax],{xlab:'Score (X)',ylab:'Frequency (f)',yn:Math.min(fmax,6),xn:quiz?6:8});let s=fr.s;
+  if(ov.hist)asc.forEach(r=>{s+=`<rect x="${fr.sx(r.a-sh)+1}" y="${fr.sy(r.f)}" width="${fr.sx(r.a+bw)-fr.sx(r.a)-2}" height="${fr.sy(0)-fr.sy(r.f)}" fill="var(--colA)" opacity=".75"/>`});
+  if(ov.poly){const mid=r=>r.a+bw/2-sh;const pts=asc.map(r=>`${fr.sx(mid(r))},${fr.sy(r.f)}`);const first=`${fr.sx(mid(asc[0])-bw)},${fr.sy(0)}`,last=`${fr.sx(mid(asc[asc.length-1])+bw)},${fr.sy(0)}`;s+=`<polyline points="${first} ${pts.join(' ')} ${last}" fill="none" stroke="var(--colB)" stroke-width="2"/>`;asc.forEach(r=>{s+=`<circle cx="${fr.sx(r.a+bw/2-sh)}" cy="${fr.sy(r.f)}" r="3" fill="var(--colB)"/>`})}
+  const vl=(v,c,t,y)=>`<line x1="${fr.sx(v)}" x2="${fr.sx(v)}" y1="${m.t}" y2="${H-m.b}" stroke="${c}" stroke-width="2" stroke-dasharray="6 4"/><text x="${fr.sx(v)+4}" y="${m.t+y}" fill="${c}">${t}</text>`;
+  if(ov.mean)s+=vl(M,'var(--colC)','Mean '+f(M,2),12);if(ov.med)s+=vl(Md,'var(--colD)','Median '+f(Md,2),26);if(ov.mode)s+=vl(Mo.m[0],'var(--colE)','Mode '+Mo.m.join(', '),40);
+  $('#ds-chart').innerHTML=svgWrap(W,H,s,'Frequency distribution graph');
+  $('#ds-stats').innerHTML=statRow([[n,'n'],[f(M,2),'Mean'],[f(Md,2),'Median'],[Mo.m.length>3?Mo.m.slice(0,3).join(', ')+'…':Mo.m.join(', '),'Mode'+(Mo.m.length>1?'s':'')],[f(SD,2),'Standard deviation']]);
+  const dev=x.length<=20?`<div class="tbl-wrap" style="margin-bottom:8px"><table><thead><tr><th>X</th><th>X − M</th><th>(X − M)²</th></tr></thead><tbody>${x.slice().sort((a,b)=>b-a).map(v=>`<tr><td>${v}</td><td>${f(v-M,2)}</td><td>${f((v-M)**2,2)}</td></tr>`).join('')}<tr><td><b>Σ</b></td><td>${f(sum(x.map(v=>v-M)),2)}</td><td><b>${f(S2,2)}</b></td></tr></tbody></table></div>`:'';
+  $('#ds-calc').innerHTML=dev+`<ol class="refs"><li>Measure each score’s distance from the mean, square the distances, and sum them: <b>SS = ${f(S2,2)}</b>.</li><li>Divide by n − 1 (${n-1}) to get the average squared distance: <b>variance s² = ${f(V,2)}</b>.</li><li>Take the square root: <b>standard deviation s = ${f(SD,2)}</b>.</li></ol><p class="small muted">The mean is the mathematical average, the median divides the distribution in half, and the mode is the most common score. In a skewed distribution the mean is pulled toward the tail, away from the median.${M>Md+.05*SD?' Here the mean exceeds the median: a positive skew.':M<Md-.05*SD?' Here the mean is below the median: a negative skew.':''}</p>`;
+  const bins=Math.min(24,Math.max(6,Math.round(Math.sqrt(n)*1.5))),a=M-3.2*SD,b=M+3.2*SD,hb=histBars(x,a,b,bins),dens=hb.c.map(c=>c/n/hb.bw);
+  const ymax=Math.max(maxOf(dens),npdf(0)/SD)*1.15,fr2=frame(W,H,m,[a,b],[0,ymax],{xlab:'Score',ylab:'Density',yn:4});let s2=fr2.s;
+  dens.forEach((d,i)=>{s2+=`<rect x="${fr2.sx(a+i*hb.bw)+1}" y="${fr2.sy(d)}" width="${fr2.sx(a+hb.bw)-fr2.sx(a)-2}" height="${fr2.sy(0)-fr2.sy(d)}" fill="var(--colA)" opacity=".55"/>`});
+  let path='';for(let i=0;i<=100;i++){const v=a+(b-a)*i/100;path+=`${i?'L':'M'}${fr2.sx(v)} ${fr2.sy(npdf((v-M)/SD)/SD)}`}
+  s2+=`<path d="${path}" fill="none" stroke="var(--colB)" stroke-width="2"/>`;[-2,-1,1,2].forEach(k=>{s2+=`<line x1="${fr2.sx(M+k*SD)}" x2="${fr2.sx(M+k*SD)}" y1="${m.t}" y2="${H-m.b}" stroke="var(--axis)" stroke-dasharray="3 4"/><text x="${fr2.sx(M+k*SD)}" y="${m.t+10}" text-anchor="middle" fill="var(--muted)">${k>0?'+':''}${k} SD</text>`});
+  $('#ds-norm').innerHTML=svgWrap(W,H,s2,'Histogram with normal curve');
+  const w1=x.filter(v=>Math.abs(v-M)<=SD).length/n,w2=x.filter(v=>Math.abs(v-M)<=2*SD).length/n;
+  $('#ds-norm-txt').innerHTML=`<p class="small">Within ±1 SD of the mean: <b>${pct(w1)}</b> of these scores (a standard normal distribution has about 68%). Within ±2 SD: <b>${pct(w2)}</b> (about 95%). The standard deviation describes the typical distance from the mean, and on a normal distribution it lets researchers infer or predict aspects of the sample and population. ${n<30?'With so few scores, expect rough agreement only.':''}</p>`;
+  const cs=[p.c1,p.c2,p.c3,p.c4],lab=['Study alone','Study group','Online course','Tutor'],T=sum(cs)||1,mx=maxOf(cs);
+  $('#ds-nom').innerHTML=barChart(cs.map((c,i)=>({l:lab[i],v:+(c/T*100).toFixed(1),c:COLS[i%4]})),{ylab:'Percent',label:'Percentages for four categories',W:560,H:220,fmt:v=>v+'%',cut:14});
+  $('#ds-nom-tbl').innerHTML=tbl(['Category','Frequency','Proportion','Percent'],cs.map((c,i)=>[lab[i]+(c===mx&&c>0?' (mode)':''),c,f(c/T,2),f(c/T*100,1)+'%']));
+  CSVS.ds=()=>'X,f\n'+rows.map(r=>[bw===1?r.a:`${r.a}-${r.a+bw}`,r.f].join(',')).join('\n');
+}
+function renderCM(){
+  const sel=st.cm;
+  $('#cm-matrix').innerHTML=`<div class="tbl-wrap"><table><thead><tr><th class="l">Design</th><th class="l">Family</th><th class="l">In brief</th><th class="l">Overall</th></tr></thead><tbody>${DKEYS.map((k,i)=>{const D=DESIGNS[k];return`<tr data-cm="${i}" tabindex="0" class="${i===sel?'sel':''}"><td class="l"><b>${D.name}</b></td><td class="l">${D.fam}</td><td class="l">${D.key}</td><td class="l">${pill({good:'fewer major limits',warn:'some important limits',bad:'serious limits'}[D.tone],D.tone)}</td></tr>`}).join('')}</tbody></table></div>`;
+  const D=DESIGNS[DKEYS[sel]];$('#cm-title').textContent=D.name;
+  $('#cm-detail').innerHTML=`<p>${D.what}</p><div class="grid2"><div><b>Strengths</b><ul class="clean">${D.s.map(x=>`<li>${x}</li>`).join('')}</ul></div><div><b>Weaknesses</b><ul class="clean">${D.w.map(x=>`<li>${x}</li>`).join('')}</ul></div></div>`;
+  const W=700,H=110;let s=`<line x1="40" x2="660" y1="40" y2="40" stroke="var(--axis)" stroke-width="2"/><polygon points="660,34 672,40 660,46" fill="var(--axis)"/><text x="40" y="20" fill="var(--muted)">Less researcher involvement</text><text x="660" y="20" text-anchor="end" fill="var(--muted)">More researcher involvement</text>`;
+  [['Naturalistic',90,'no intervention'],['Participant',350,'becomes one of them'],['Contrived',600,'sets up the situation']].forEach(([t,x,d],i)=>{s+=`<circle cx="${x}" cy="40" r="9" fill="${COLS[i]}"/><text x="${x}" y="72" text-anchor="middle" font-weight="600" fill="var(--fg)">${t}</text><text x="${x}" y="88" text-anchor="middle" fill="var(--muted)">${d}</text>`});
+  $('#cm-obs').innerHTML=svgWrap(W,H,s,'Types of observation arranged by researcher involvement');
+}
+
+/* ================= practice ================= */
+const SCEN=[
+  ['A researcher sits unnoticed in a park and counts how often parents scold children.','nat','Naturalistic observation: no researcher intervention.'],
+  ['A researcher joins a group of volunteers at a food bank, works alongside them and records how they interact.','par','Participant observation: the researcher interacts with participants and becomes one of them.'],
+  ['Children are placed in a playroom with a limited number of toys to see how often they share.','con','Contrived observation: the researcher sets up a situation likely to produce the behavior.'],
+  ['A team counts the number of violent acts in one season of popular television programs.','ca','Content analysis: measuring specific events in television or similar media.'],
+  ['A researcher codes hospital admission records from 1920 to 1950 to describe rates of a condition.','arc','Archival research: measuring events from historical records.'],
+  ['A company emails a link to customers asking them to rate satisfaction from 1 to 5.','net','Internet survey.'],
+  ['Questionnaires are posted to 2,000 households, and only 15% are returned.','mail','Mail survey, with the low response rate that creates nonresponse bias.'],
+  ['Interviewers phone residents in the evening and read a set of questions aloud.','tel','Telephone survey.'],
+  ['Students in a lecture hall complete a questionnaire at the start of class, with every student handing one in.','per','In-person survey (a group administration with a 100% response rate).'],
+  ['A clinician writes a detailed account of one patient with a rare brain injury, including a new therapy she administers.','case','Case study: in-depth study of one individual that includes an intervention.'],
+  ['A researcher compiles a detailed description of one patient’s symptoms and background with no treatment given.','hist','Case history: a case study without any treatment or intervention.']
+];
+const SCEN_OPTS=[['nat','Naturalistic observation'],['par','Participant observation'],['con','Contrived observation'],['ca','Content analysis'],['arc','Archival research'],['net','Internet survey'],['mail','Mail survey'],['tel','Telephone survey'],['per','In-person survey'],['case','Case study'],['hist','Case history']];
+const pq={cur:-1,n:0,score:0,answered:false,order:[]};
+function newPQ(){if(!pq.order.length)pq.order=makeRng(Date.now()%99991+3).shuffle(SCEN.map((_,i)=>i));pq.cur=pq.order.shift();pq.answered=false;renderPQ()}
+function renderPQ(){
+  $('#pq-score').textContent=pq.n?`Score: ${pq.score} / ${pq.n}`:'';
+  if(pq.cur<0){$('#pq-card').hidden=true;return}
+  $('#pq-card').hidden=false;$('#pq-desc').innerHTML=`<p><b>${SCEN[pq.cur][0]}</b></p>`;
+  $('#pq-opts').innerHTML=SCEN_OPTS.map(o=>`<button data-pqa="${o[0]}" ${pq.answered?'disabled':''}>${o[1]}</button>`).join('');
+  if(!pq.answered)$('#pq-feedback').innerHTML='';
+}
+function answerPQ(a){
+  if(pq.answered)return;pq.answered=true;pq.n++;const S=SCEN[pq.cur],ok=a===S[1];if(ok)pq.score++;renderPQ();
+  $('#pq-feedback').innerHTML=`<div class="callout ${ok?'good':'warn'}">${ok?pill('Correct','good'):pill('Not quite','bad')} ${S[2]}</div>`;$('#pq-score').textContent=`Score: ${pq.score} / ${pq.n}`;
+}
+const QZ=[
+  {q:'What is the goal of descriptive research?',o:['To demonstrate cause and effect','To describe variables as they exist naturally','To show that two variables are related','To test a treatment under control'],a:1,why:'Descriptive research describes a single variable, or each variable on its own, as it naturally occurs; it is not concerned with relationships.'},
+  {q:'A researcher counts the number of times a child hits another child during a play session. Which method is this?',o:['Frequency method','Duration method','Interval method','Event sampling'],a:0,why:'The frequency method counts the instances of a specific behavior.'},
+  {q:'Which technique addresses the measurement problem of subjective judgment in observation?',o:['Concealing the observer','Habituation','Inter-rater reliability','Individual sampling'],a:2,why:'Subjectivity raises the question of reliability, which is addressed by comparing independent observers.'},
+  {q:'Participants become used to an observer through repeated exposure until the observer is no longer novel. This is…',o:['Reactivity','Habituation','Nonresponse bias','Time sampling'],a:1,why:'Habituation is one way to reduce reactivity to the observer’s presence.'},
+  {q:'In the interval method, the researcher…',o:['times how long each behavior lasts','counts each instance','divides the period into intervals and records behavior in each','watches only selected individuals'],a:2,why:'The interval method divides the observation period into a series of intervals and records behavior in each.'},
+  {q:'Which design measures behaviors or events that occurred in the past using historical records?',o:['Content analysis','Archival research','Contrived observation','Case study'],a:1,why:'Archival research looks at historical records; content analysis measures events in media such as literature, movies or television.'},
+  {q:'A mail survey with a very low return rate is most at risk of…',o:['Interviewer bias','Loss of objectivity','Nonresponse bias','Reactivity'],a:2,why:'Low response rate and nonresponse bias are the main weaknesses of mail surveys.'},
+  {q:'Which question type requires choosing a number on a predetermined scale?',o:['Open-ended','Restricted','Rating-scale','Demographic'],a:2,why:'Rating-scale questions (such as a Likert-type scale) produce numerical ratings that can be added and averaged.'},
+  {q:'What is a case history?',o:['A case study without any treatment or intervention','A survey of a single person','A study of many cases averaged together','A contrived observation'],a:0,why:'A case study that includes no treatment or intervention is called a case history.'},
+  {q:'Variance is computed as…',o:['SS divided by n','SS divided by n − 1','The square root of SS','The mean of the deviations'],a:1,why:'The sum of squared deviations is divided by n − 1; the standard deviation is the square root of that result.'},
+  {q:'Which statistics describe nominal data?',o:['Mean and standard deviation','Percentages, proportions and the mode','Variance and median','Correlation and regression'],a:1,why:'Non-numerical data are described with percentages, proportions and the mode.'},
+  {q:'A value that describes a population (rather than a sample) is called a…',o:['Statistic','Parameter','Variable','Frequency'],a:1,why:'A statistic describes a sample; a parameter describes a population.'}
+];
+const QZE=makeQuiz(QZ,'qz-out','qz-score');
+
+/* ================= wiring ================= */
+const TABS=['cl','ob','rl','ca','sv','sm','cs','ds','cm','prac','ref'];
+const RENDER={ob:renderOB,rl:renderRL,sv:renderSV,sm:renderSM,cs:renderCS,ds:renderDS};
+function caInit(){
+  $('#ca-sample').innerHTML=CA_SAMPLES.map((s,i)=>`<option value="${i}">${esc(s.n)}</option>`).join('');
+  $('#ca-sample').value=st.ca.i;$('#ca-text').value=st.ca.text;renderCAcats();renderCA();renderAR();
+}
+function showTab(id){
+  st.tab=id;
+  $$('nav.tabs button').forEach(b=>b.setAttribute('aria-selected',b.id==='t-'+id?'true':'false'));
+  $$('.tabpanel').forEach(p=>{p.hidden=p.id!=='p-'+id});
+  if(id==='cl')renderCL();else if(id==='prac'){renderPQ();QZE.render()}else if(id==='cm')renderCM();else if(id==='ca'){renderCA();renderAR()}else if(RENDER[id])RENDER[id]();
+}
+const CL_DEF={goal:'describe',src:'behav',role:'none',mode:'net',tx:'no'};
+const GROUPS=['ob','rl','ar','sv','sm','cs','ds'];
+const SHARE_KEYS=['ob','rl','ar','sv','sm','cs','ds','obOv','dsOv','cl'];
+function syncCL(){Object.keys(st.cl).forEach(k=>{const el=$(`input[name="q-${k}"][value="${st.cl[k]}"]`);if(el)el.checked=true})}
+function onGroupChange(pre,k){
+  if(pre==='sm'&&k==='mode'){const d=MODE_DEF[st.sm.mode];if(d){Object.assign(st.sm,d);syncControls('sm',SM_DEFS,st.sm)}}
+  if(pre==='ds'){st.dsCustom=null;$('#ds-msg').textContent=''}
+  if(pre==='ar')renderAR();else RENDER[pre]();
+}
+function init(){
+  GROUPS.forEach(pre=>{$('#'+pre+'-controls').innerHTML=ctrlHTML(pre,DEFS[pre],st[pre],PRESETS[pre],pre==='ds'?2:3)});
+  $('#sm-draft').innerHTML=DRAFTS.map((d,i)=>`<option value="${i}">${esc(cut(d[0],90))}</option>`).join('');
+  restoreHash();
+  GROUPS.forEach(pre=>{syncControls(pre,DEFS[pre],st[pre]);bindControls(pre,st[pre],DEFS[pre],k=>onGroupChange(pre,k),PRESETS[pre],DEFAULTS[pre])});
+  syncCL();caInit();renderDraft();
+  $$('nav.tabs button').forEach(b=>{
+    b.addEventListener('click',()=>showTab(b.id.slice(2)));
+    b.addEventListener('keydown',e=>{
+      if(e.key!=='ArrowRight'&&e.key!=='ArrowLeft')return;
+      const i=TABS.indexOf(b.id.slice(2)),j=(i+(e.key==='ArrowRight'?1:TABS.length-1))%TABS.length;
+      showTab(TABS[j]);$('#t-'+TABS[j]).focus();e.preventDefault();
+    });
+  });
+  document.addEventListener('keydown',e=>{const r=e.target.closest&&e.target.closest('tr[data-cm]');if(r&&(e.key==='Enter'||e.key===' ')){st.cm=+r.dataset.cm;renderCM();e.preventDefault()}});
+  $('#sm-draft').addEventListener('change',renderDraft);
+  $('#ca-sample').addEventListener('change',e=>{const s=CA_SAMPLES[+e.target.value];st.ca.i=+e.target.value;st.ca.text=s.t;st.ca.cats=s.c.map(c=>c.slice());$('#ca-text').value=s.t;renderCAcats();renderCA()});
+  $('#ca-text').addEventListener('input',e=>{st.ca.text=e.target.value;renderCA()});
+  $('#ca-cats').addEventListener('input',e=>{const i=e.target.dataset.ci;if(i===undefined)return;st.ca.cats[+i][+e.target.dataset.f]=e.target.value;renderCA()});
+  document.addEventListener('click',e=>{
+    const b=e.target.closest('[data-act],[data-dl],[data-qz],[data-pqa],tr[data-cm]');if(!b)return;
+    if(b.dataset.cm!==undefined){st.cm=+b.dataset.cm;renderCM();return}
+    if(b.dataset.qz!==undefined){QZE.answer(+b.dataset.qz.split(':')[1]);return}
+    if(b.dataset.pqa){answerPQ(b.dataset.pqa);return}
+    if(b.dataset.dl){doDL(b.dataset.dl,b.dataset.t);return}
+    const a=b.dataset.act,pre=a.split('-')[0],op=a.split('-')[1];
+    if(a==='prac-reset'){pq.cur=-1;pq.n=0;pq.score=0;pq.order=[];$('#pq-feedback').innerHTML='';renderPQ();QZE.reset();return}
+    if(a==='clq-reset'){Object.assign(st.cl,CL_DEF);syncCL();renderCL();return}
+    if(a==='pq-new'){newPQ();return}
+    if(a==='qz-new'){QZE.next();return}
+    if(a==='ca-add'){st.ca.cats.push(['New category','']);renderCAcats();renderCA();return}
+    if(a==='ca-reset'){const s=CA_SAMPLES[st.ca.i];st.ca.text=s.t;st.ca.cats=s.c.map(c=>c.slice());$('#ca-text').value=s.t;renderCAcats();renderCA();return}
+    if(pre==='ca'&&op==='del'){st.ca.cats.splice(+a.split('-')[2],1);renderCAcats();renderCA();return}
+    if(a==='ds-use'){const r=parseNums($('#ds-paste').value);if(r.error){$('#ds-msg').innerHTML=`<span style="color:var(--bad)">${esc(r.error)}</span>`}else{st.dsCustom=r.x;$('#ds-msg').textContent=`Analyzing ${r.x.length} scores.`;renderDS()}return}
+    if(a==='ds-quiz'){$('#ds-paste').value=QUIZ_SCORES.join(' ');st.dsCustom=QUIZ_SCORES.slice();$('#ds-msg').textContent='Loaded the 15 quiz scores.';renderDS();return}
+    if(a==='ds-sim'){st.dsCustom=null;$('#ds-msg').textContent='';renderDS();return}
+    if(op==='rand'&&st[pre]){st[pre].seed=1+Math.floor(Math.random()*99999);syncControls(pre,DEFS[pre],st[pre]);onGroupChange(pre)}
+    else if(op==='reset'&&DEFAULTS[pre]){Object.assign(st[pre],DEFAULTS[pre]);syncControls(pre,DEFS[pre],st[pre]);onGroupChange(pre)}
+  });
+  document.addEventListener('change',e=>{
+    const el=e.target;
+    if(el.dataset&&el.dataset.ov){st[el.dataset.pre+'Ov'][el.dataset.ov]=el.checked;RENDER[el.dataset.pre]();return}
+    if(el.name&&el.name.indexOf('q-')===0){st.cl[el.name.slice(2)]=el.value;renderCL()}
+  });
+  $('#btn-theme').addEventListener('click',()=>{
+    const cur=document.documentElement.dataset.theme||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
+    document.documentElement.dataset.theme=cur==='dark'?'light':'dark';showTab(st.tab);
+  });
+  $('#btn-link').addEventListener('click',()=>{
+    try{const o={tab:st.tab,cm:st.cm};SHARE_KEYS.forEach(k=>{o[k]=st[k]});
+      location.hash='s='+btoa(unescape(encodeURIComponent(JSON.stringify(o))));
+      if(navigator.clipboard)navigator.clipboard.writeText(location.href).then(()=>toast('Link copied'),()=>toast('Link is in the address bar'));else toast('Link is in the address bar');
+    }catch(err){toast('Could not build link')}
+  });
+  showTab(st.tab);
+}
+function restoreHash(){
+  try{const m=/s=([^&]+)/.exec(location.hash);if(!m)return;
+    const o=JSON.parse(decodeURIComponent(escape(atob(m[1]))));
+    SHARE_KEYS.forEach(k=>{if(o[k])Object.assign(st[k],o[k])});
+    if(Number.isInteger(o.cm)&&o.cm>=0&&o.cm<DKEYS.length)st.cm=o.cm;
+    if(o.tab&&TABS.includes(o.tab))st.tab=o.tab;
+  }catch(e){}
+}
+const rootObj=typeof window!=='undefined'?window:globalThis;
+rootObj.QuantExplorer={showTab,st,classify,simOB,obStats,kappa,simRaters,simSM,simSV,simCS,simDS,freqTable,modes,corr,DESIGNS,SCEN,QZ};
+if(typeof document!=='undefined'&&document.getElementById('t-cl'))init();
+
+})();
+</script>
+</body>
+</html>

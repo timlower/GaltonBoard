@@ -1,0 +1,1077 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Qualitative Descriptive Designs Explorer</title>
+<meta name="description" content="Explore qualitative approaches to descriptive research: qualitative and quantitative approaches, ethnography, grounded theory, hermeneutics, phenomenology, photovoice, liberating methods, and mixed and hybrid methods.">
+<style>
+
+:root{
+  --bg:#f5f6f4; --card:#ffffff; --fg:#1c1f24; --muted:#5b6572; --line:#d9dde3; --grid:#eceff2;
+  --plot:#ffffff; --axis:#8b94a1; --colA:#34588a; --colB:#c0531a; --tintB:rgba(192,83,26,.07); --colC:#14806f; --colD:#7c3fb0; --colE:#8a6d00;
+  --accent:#2b62c4; --accentFg:#ffffff; --good:#1f7a43; --warn:#9a6700; --bad:#b3261e;
+  --goodBg:#e5f4ea; --warnBg:#fbf0d4; --badBg:#fbe4e2;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme=light]){
+    --bg:#13161b; --card:#1b1f26; --fg:#e8eaed; --muted:#9aa3af; --line:#2d333c; --grid:#262b33;
+    --plot:#1b1f26; --axis:#6f7886; --colA:#8fb4e8; --colB:#f59a5f; --tintB:rgba(245,154,95,.10); --colC:#4fcfb8; --colD:#c39bea; --colE:#e3c64f;
+    --accent:#7aa7ff; --accentFg:#0d1117; --good:#6fd596; --warn:#e8c05a; --bad:#ff8c84;
+    --goodBg:#16301f; --warnBg:#3a3016; --badBg:#3d1d1b;
+  }
+}
+:root[data-theme=dark]{
+  --bg:#13161b; --card:#1b1f26; --fg:#e8eaed; --muted:#9aa3af; --line:#2d333c; --grid:#262b33;
+  --plot:#1b1f26; --axis:#6f7886; --colA:#8fb4e8; --colB:#f59a5f; --tintB:rgba(245,154,95,.10); --colC:#4fcfb8; --colD:#c39bea; --colE:#e3c64f;
+  --accent:#7aa7ff; --accentFg:#0d1117; --good:#6fd596; --warn:#e8c05a; --bad:#ff8c84;
+  --goodBg:#16301f; --warnBg:#3a3016; --badBg:#3d1d1b;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+header.top{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:14px 20px 6px;max-width:1360px;margin:0 auto}
+header.top h1{font-size:1.25rem;margin:0;letter-spacing:-.01em}
+header.top p{margin:2px 0 0;color:var(--muted);font-size:.9rem;max-width:62ch}
+.hbtns{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+button,.btn{font:inherit;font-size:.85rem;border:1px solid var(--line);background:var(--card);color:var(--fg);padding:6px 11px;border-radius:7px;cursor:pointer}
+button:hover{border-color:var(--accent)}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,summary:focus-visible,tr[tabindex]:focus-visible,[role=button]:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button.primary{background:var(--accent);color:var(--accentFg);border-color:var(--accent);font-weight:600}
+button.small{padding:3px 8px;font-size:.78rem}
+button.on{background:var(--accent);color:var(--accentFg);border-color:var(--accent)}
+nav.tabs{display:flex;gap:2px;max-width:1360px;margin:6px auto 0;padding:0 20px;border-bottom:1px solid var(--line);overflow-x:auto}
+nav.tabs button{border:none;border-bottom:3px solid transparent;border-radius:0;background:none;padding:9px 14px;font-size:.92rem;color:var(--muted);white-space:nowrap}
+nav.tabs button[aria-selected=true]{color:var(--fg);border-bottom-color:var(--colB);font-weight:600}
+main{max-width:1360px;margin:0 auto;padding:16px 20px 40px}
+.tabpanel[hidden]{display:none}
+.layout{display:grid;grid-template-columns:330px minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:980px){.layout{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:14px}
+.card h2{font-size:1rem;margin:0 0 8px}
+.card h3{font-size:.92rem;margin:14px 0 6px}
+.card p{margin:6px 0}
+.muted{color:var(--muted)}
+.small{font-size:.82rem}
+aside.controls{position:sticky;top:8px;max-height:calc(100vh - 16px);overflow:auto;padding:12px 14px}
+@media (max-width:980px){aside.controls{position:static;max-height:none}}
+details.grp{border-top:1px solid var(--line);padding:6px 0}
+details.grp:first-of-type{border-top:none}
+details.grp>summary{cursor:pointer;font-weight:600;font-size:.88rem;padding:4px 0;list-style:none}
+details.grp>summary::before{content:"▸ ";color:var(--muted)}
+details.grp[open]>summary::before{content:"▾ "}
+.ctl{margin:6px 0 10px}
+.ctl label{display:flex;justify-content:space-between;gap:8px;font-size:.82rem;color:var(--muted);margin-bottom:2px}
+.ctl output{color:var(--fg);font-variant-numeric:tabular-nums;font-weight:600}
+.ctl input[type=range]{width:100%;accent-color:var(--accent)}
+.ctl input[type=text],.ctl input[type=number],.ctl select,textarea,input.fld,select.fld{width:100%;font:inherit;font-size:.85rem;padding:5px 7px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--fg)}
+.ctl.check label{display:flex;justify-content:flex-start;gap:8px;align-items:center;color:var(--fg)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.toolbar{display:flex;gap:6px 14px;flex-wrap:wrap;align-items:center;margin-bottom:8px;font-size:.82rem}
+.toolbar label{display:inline-flex;gap:5px;align-items:center;cursor:pointer}
+.toolbar .sp{flex:1}
+.chart svg{width:100%;height:auto;display:block}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted);margin-top:6px}
+.legend i{display:inline-block;vertical-align:middle;margin-right:4px}
+.tbl-wrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.84rem;font-variant-numeric:tabular-nums}
+th,td{padding:5px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{font-weight:600;color:var(--muted);font-size:.78rem}
+th[title]{cursor:help;text-decoration:underline dotted;text-underline-offset:3px}
+td.l,th.l{text-align:left;white-space:normal}
+tr[data-cm]{cursor:pointer}
+tr[data-cm].sel td{background:var(--grid)}
+.pill{display:inline-block;padding:1px 8px;border-radius:99px;font-size:.76rem;font-weight:600}
+.pill.good{background:var(--goodBg);color:var(--good)}
+.pill.warn{background:var(--warnBg);color:var(--warn)}
+.pill.bad{background:var(--badBg);color:var(--bad)}
+.callout{border-left:4px solid var(--colA);background:var(--grid);padding:8px 12px;border-radius:0 8px 8px 0;font-size:.88rem;margin:8px 0}
+.callout.warn{border-left-color:var(--warn)}
+.callout.good{border-left-color:var(--good)}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+.stat{display:flex;gap:18px;flex-wrap:wrap;margin:6px 0 8px}
+.stat div{min-width:110px}
+.stat b{display:block;font-size:1.3rem;font-variant-numeric:tabular-nums}
+.stat span{font-size:.76rem;color:var(--muted)}
+ul.clean{padding-left:18px;margin:6px 0}
+ul.clean li{margin:3px 0}
+.q{margin:12px 0}
+.q legend{font-weight:600;font-size:.92rem;padding:0}
+.q fieldset{border:none;margin:0;padding:0}
+.q label{display:block;margin:3px 0;font-size:.9rem;cursor:pointer}
+.fit{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-top:1px solid var(--line)}
+.fit:first-child{border-top:none}
+.fit .nm{font-weight:600}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}
+.chips button{border-radius:99px;padding:3px 11px}
+.seg{padding:6px 9px;margin:3px 0;border:1px solid var(--line);border-radius:8px;background:var(--bg)}
+.seg.hl{border-color:var(--colB);background:var(--tintB)}
+.seg .tag{display:inline-block;font-size:.72rem;font-weight:600;padding:0 7px;border-radius:99px;background:var(--grid);color:var(--muted);margin-left:6px}
+footer{max-width:1360px;margin:0 auto;padding:0 20px 30px;color:var(--muted);font-size:.8rem}
+.sr{position:absolute;left:-9999px}
+dl.gl dt{font-weight:600;margin-top:8px}
+dl.gl dd{margin:2px 0 0 0;color:var(--muted)}
+ol.refs li{margin:5px 0;font-size:.85rem}
+#toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:8px 14px;border-radius:8px;font-size:.85rem;opacity:0;pointer-events:none;transition:opacity .2s}
+#toast.show{opacity:.95}
+[hidden]{display:none!important}
+.chart svg text{user-select:none}
+
+</style>
+</head>
+<body>
+<header class="top">
+  <div>
+    <h1>Qualitative Descriptive Designs Explorer</h1>
+    <p>Explore the qualitative approaches to descriptive research. Included are how qualitative and quantitative approaches differ in their psychological mechanisms, view of knowledge, data and goals; how ethnography, grounded theory, hermeneutics, phenomenology, photovoice and the liberating methods each proceed; and how mixed and hybrid methods combine qualitative and quantitative work.</p>
+  </div>
+  <div class="hbtns">
+    <button id="btn-link" title="Put the current settings in the page URL so you can share or bookmark them">Copy share link</button>
+    <button id="btn-theme" title="Toggle light / dark">Theme</button>
+  </div>
+</header>
+
+<nav class="tabs" role="tablist" aria-label="Sections">
+  <button role="tab" id="t-at" aria-controls="p-at" aria-selected="true">Qualitative and quantitative approaches</button>
+  <button role="tab" id="t-fd" aria-controls="p-fd" aria-selected="false">Design finder</button>
+  <button role="tab" id="t-et" aria-controls="p-et" aria-selected="false">Ethnography</button>
+  <button role="tab" id="t-gt" aria-controls="p-gt" aria-selected="false">Grounded theory</button>
+  <button role="tab" id="t-he" aria-controls="p-he" aria-selected="false">Hermeneutics</button>
+  <button role="tab" id="t-ph" aria-controls="p-ph" aria-selected="false">Phenomenology</button>
+  <button role="tab" id="t-pv" aria-controls="p-pv" aria-selected="false">Photovoice</button>
+  <button role="tab" id="t-lb" aria-controls="p-lb" aria-selected="false">Liberating methods</button>
+  <button role="tab" id="t-mx" aria-controls="p-mx" aria-selected="false">Mixed and hybrid</button>
+  <button role="tab" id="t-prac" aria-controls="p-prac" aria-selected="false">Practice</button>
+  <button role="tab" id="t-ref" aria-controls="p-ref" aria-selected="false">Reference</button>
+</nav>
+
+<main>
+<noscript><div class="card">This explorer needs JavaScript enabled.</div></noscript>
+
+<!-- ================= APPROACHES ================= -->
+<section class="tabpanel" id="p-at" role="tabpanel" aria-labelledby="t-at">
+  <div class="card">
+    <h2>Two research approaches</h2>
+    <p>Qualitative and quantitative research approaches differ in four ways: the <b>psychological mechanisms</b> involved in knowing, the <b>role and functional limitations of human knowledge</b>, the <b>practical processes and types of data</b>, and the <b>goals or intended outcomes</b>. Choose a dimension to compare them.</p>
+    <div class="chips" id="at-chips" role="tablist" aria-label="Dimensions"></div>
+    <div class="grid2" id="at-cmp"></div>
+  </div>
+  <div class="layout">
+    <aside class="card controls" id="at-controls" aria-label="Stance profile controls"></aside>
+    <div>
+      <div class="card"><h2 style="margin-top:0">Where does a study sit between the two approaches?</h2>
+        <p class="muted small">Place a hypothetical study on each of the four dimensions. The position of each marker shows which approach it leans toward; a study need not sit at the same end of every dimension.</p>
+        <div class="chart" id="at-chart"></div><div id="at-txt"></div>
+      </div>
+      <div class="card">
+        <div class="row" style="justify-content:space-between"><h2 style="margin:0">Sort the statement</h2><button class="small" data-act="srt-reset">Reset</button></div>
+        <div id="srt-out"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= FINDER ================= -->
+<section class="tabpanel" id="p-fd" role="tabpanel" aria-labelledby="t-fd" hidden>
+  <div class="grid2">
+    <div class="card">
+      <div class="row" style="justify-content:space-between"><h2 style="margin:0">Describe your aim</h2><button class="small" data-act="fd-reset">Reset</button></div>
+      <div class="q"><fieldset><legend>1. What do you most want to do?</legend>
+        <label><input type="radio" name="f-aim" value="theory" checked> Discover an underlying theory from the data</label>
+        <label><input type="radio" name="f-aim" value="text"> Interpret the meaning of a text or phenomenon in its context</label>
+        <label><input type="radio" name="f-aim" value="essence"> Describe the essence of a lived experience</label>
+        <label><input type="radio" name="f-aim" value="culture"> Understand the social relations, customs and lived experiences of a people or situation</label>
+        <label><input type="radio" name="f-aim" value="community"> Have community members record and reflect on their strengths and concerns</label>
+        <label><input type="radio" name="f-aim" value="change"> Challenge assumptions in existing knowledge systems and support advocacy</label>
+        <label><input type="radio" name="f-aim" value="combine"> Combine qualitative and quantitative approaches</label></fieldset></div>
+      <div class="q"><fieldset><legend>2. What data will you work with?</legend>
+        <label><input type="radio" name="f-data" value="lang" checked> Naturally expressed language (interviews, accounts, texts)</label>
+        <label><input type="radio" name="f-data" value="field"> Observations and experiences gathered in the field</label>
+        <label><input type="radio" name="f-data" value="visual"> Visual imagery</label>
+        <label><input type="radio" name="f-data" value="both"> Both qualitative and quantitative data</label></fieldset></div>
+      <div class="q"><fieldset><legend>3. How do participants take part?</legend>
+        <label><input type="radio" name="f-role" value="subject" checked> As sources of descriptions or texts for the researcher to analyze</label>
+        <label><input type="radio" name="f-role" value="immerse"> The researcher joins the setting and participates</label>
+        <label><input type="radio" name="f-role" value="partner"> As partners who help produce and discuss the data</label></fieldset></div>
+      <div class="q"><fieldset><legend>4. Which reasoning style fits best?</legend>
+        <label><input type="radio" name="f-style" value="induct" checked> Inductive: principles emerge from the data</label>
+        <label><input type="radio" name="f-style" value="interp"> Interpretive: understanding by moving between parts and whole</label>
+        <label><input type="radio" name="f-style" value="critical"> Critical: questioning power and knowledge</label></fieldset></div>
+      <p class="small muted">The ranking is a teaching heuristic built from the course material, not a rule.</p>
+    </div>
+    <div>
+      <div class="card"><h2>Best matches</h2><div id="fd-out"></div></div>
+      <div class="card"><h2 id="fd-title">Design profile</h2><div id="fd-detail"></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= ETHNOGRAPHY ================= -->
+<section class="tabpanel" id="p-et" role="tabpanel" aria-labelledby="t-et" hidden>
+  <div class="layout">
+    <aside class="card controls" id="et-controls" aria-label="Ethnography controls"></aside>
+    <div>
+      <div class="card">
+        <h2 style="margin-top:0">Ethnography: understanding people in their own settings</h2>
+        <p class="muted small">Ethnographers seek greater understanding of the social relations, customs and lived experiences of various peoples and situations. Field research is typified by <b>participatory observation</b>, and researchers make both <b>external</b> and <b>internal</b> observations. The more the researcher participates, the more of the setting’s lived meaning becomes accessible.</p>
+        <div class="chart" id="et-hist"></div>
+      </div>
+      <div class="card">
+        <div class="row" style="justify-content:space-between"><h2 style="margin:0">Field-note practice</h2><button class="small" data-act="et-clear">Clear tags</button></div>
+        <p class="muted small">The scene below is invented. Tag each note as an <b>external</b> observation (what can be seen or heard from outside) or an <b>internal</b> observation (the lived experience and meanings gained from inside the setting). Raise the researcher’s participation on the left to reveal more notes.</p>
+        <div id="et-notes"></div><div id="et-score"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= GROUNDED THEORY ================= -->
+<section class="tabpanel" id="p-gt" role="tabpanel" aria-labelledby="t-gt" hidden>
+  <div class="card">
+    <h2>Grounded theory: from codes to a theory grounded in the data</h2>
+    <p class="muted small">Developed by Glaser and Strauss in sociology in the late 1960s and extended to psychology, grounded theory seeks to discover underlying theories through inductive methods. It involves <b>coding</b>, <b>memoing</b> to connect and elaborate codes, <b>theory development</b>, and <b>theoretical sampling</b> to “ground” theoretical advances in the data itself. It can be used by both positivist and constructivist researchers. The excerpts below are invented interview fragments about adapting to a new workplace system.</p>
+    <div class="row"><button class="small" data-act="gt-demo">Fill in an example coding</button><button class="small" data-act="gt-reset">Clear</button></div>
+  </div>
+  <div class="grid2">
+    <div class="card"><h2>1. Code the excerpts</h2><div id="gt-ex"></div></div>
+    <div>
+      <div class="card"><h2>2. Group codes into categories</h2><div id="gt-cat"></div></div>
+      <div class="card"><h2>3. Memos</h2>
+        <p class="small muted">Memoing connects and elaborates codes. Write what you notice, or add a prompt.</p>
+        <textarea id="gt-memo" rows="4" spellcheck="false" placeholder="Memo: how do the codes relate to each other?"></textarea>
+        <div class="row" style="margin-top:6px"><button class="small" data-act="gt-prompt">Add a memo prompt</button></div>
+      </div>
+    </div>
+  </div>
+  <div class="card"><h2>4. Emerging theory and theoretical sampling</h2><div class="chart" id="gt-map"></div><div id="gt-txt"></div></div>
+</section>
+
+<!-- ================= HERMENEUTICS ================= -->
+<section class="tabpanel" id="p-he" role="tabpanel" aria-labelledby="t-he" hidden>
+  <div class="layout">
+    <aside class="card controls" id="he-controls" aria-label="Hermeneutic circle controls"></aside>
+    <div>
+      <div class="card">
+        <h2 style="margin-top:0">The hermeneutic circle</h2>
+        <p class="muted small">Hermeneutics developed in antiquity and into the Renaissance as a means of interpreting texts, particularly religious texts, and was applied to the social sciences through twentieth-century philosophers such as Heidegger (<i>Being and Time</i>) and Gadamer (<i>Truth and Method</i>). It involves repeatedly shifting the focus of investigation between the <b>parts and the whole</b> of the phenomenon, or the <b>thing and its context</b>. This iteration reveals the various influences on interpretation; isolating them can bring later interpretations closer to the thing itself.</p>
+        <p class="muted small">Below, a reader works through an invented letter. Choose the expectation the reader brings, then step through the iterations.</p>
+        <div class="chart" id="he-circle"></div>
+        <div class="row" id="he-nav"></div>
+      </div>
+      <div class="card"><h2>The letter</h2><div id="he-text"></div></div>
+      <div class="card"><h2>How the interpretation moves</h2><div class="chart" id="he-chart"></div><div id="he-txt"></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= PHENOMENOLOGY ================= -->
+<section class="tabpanel" id="p-ph" role="tabpanel" aria-labelledby="t-ph" hidden>
+  <div class="card">
+    <h2>Phenomenology: bracketing and reduction</h2>
+    <p class="muted small">Phenomenology focuses on understanding conscious experience as lived intuitively and on delineating its <b>essences</b>. All conscious experiences and events are co-constituted by the observer and the observed. The design was introduced in philosophy by Husserl; the variety most predominant in psychology is Amedeo Giorgi’s descriptive phenomenology, which uses <b>bracketing</b> and <b>phenomenological reduction</b> to identify the essences of an experience.</p>
+  </div>
+  <div class="grid2">
+    <div>
+      <div class="card"><h2>1. The participant’s description</h2><p class="small muted">An invented first-person account. Select a sentence to treat it as a meaning unit.</p><div id="ph-desc"></div></div>
+      <div class="card"><h2>2. Bracket the researcher’s presuppositions</h2><p class="small muted">Bracketing sets aside what the researcher assumes, so that the experience can be described as it is given. Check each presupposition you will set aside.</p><div id="ph-brk"></div></div>
+    </div>
+    <div>
+      <div class="card"><h2>3. Reduction: what is given in each meaning unit</h2><div id="ph-red"></div></div>
+      <div class="card"><h2>4. Essential structure</h2><div id="ph-ess"></div></div>
+    </div>
+  </div>
+  <p class="small muted" style="padding:0 4px">The slides name bracketing and phenomenological reduction. The four-part sequence shown here (description, bracketing, meaning units with reduction, essential structure) is a common way of teaching Giorgi’s method and is an illustrative extension.</p>
+</section>
+
+<!-- ================= PHOTOVOICE ================= -->
+<section class="tabpanel" id="p-pv" role="tabpanel" aria-labelledby="t-pv" hidden>
+  <div class="card">
+    <h2>Photovoice: community members as the photographers</h2>
+    <p class="muted small">Photovoice is a Community-Based Participatory Research design developed by Wang and Burris in the late twentieth century, derived from Wendy Ewald’s photographic work with children in Appalachia. Cultural participants capture visual imagery in order to (1) <b>record and reflect</b> their community’s strengths and concerns, (2) <b>promote critical dialogue</b> and knowledge about important issues through large and small group discussion of the photographs, and (3) <b>reach policymakers</b>. The eight scenes are invented illustrations, not real photographs.</p>
+    <div class="chips" id="pv-chips" role="tablist" aria-label="Photovoice aims"></div>
+  </div>
+  <div class="card"><div id="pv-grid" class="grid2"></div></div>
+  <div class="card"><h2 id="pv-title"></h2><div id="pv-out"></div></div>
+</section>
+
+<!-- ================= LIBERATING ================= -->
+<section class="tabpanel" id="p-lb" role="tabpanel" aria-labelledby="t-lb" hidden>
+  <div class="card">
+    <h2>Liberating methods</h2>
+    <p>Often inspired in part by Paulo Freire’s <i>Pedagogy of the Oppressed</i>, these methods developed during the latter half of the twentieth century and embrace <b>power/knowledge</b> paradigms. They seek to <b>challenge fundamental assumptions</b> in existing knowledge systems and often <b>integrate advocacy and activism</b>. Qualitative strategies in general acknowledge the role of knowledge in reflecting, supporting and sustaining current power structures.</p>
+    <div class="chips" id="lb-chips"></div><div id="lb-detail"></div>
+    <p class="small muted">The one-line orientations are brief, general summaries added for context; consult the primary literature for each tradition.</p>
+  </div>
+  <div class="card">
+    <div class="row" style="justify-content:space-between"><h2 style="margin:0">One question, two lenses</h2>
+      <div class="chips" id="lb-lens"></div></div>
+    <p class="muted small">Pick a research topic and compare how a conventional framing and a liberating framing treat four questions.</p>
+    <div class="ctl" style="max-width:420px"><label for="lb-topic">Topic</label><select id="lb-topic" class="fld"></select></div>
+    <div id="lb-cmp"></div>
+  </div>
+</section>
+
+<!-- ================= MIXED / HYBRID ================= -->
+<section class="tabpanel" id="p-mx" role="tabpanel" aria-labelledby="t-mx" hidden>
+  <div class="layout">
+    <aside class="card controls" id="mx-controls" aria-label="Mixed and hybrid controls"></aside>
+    <div>
+      <div class="card">
+        <h2 style="margin-top:0">Mixed and hybrid methods</h2>
+        <p class="muted small">Projects that combine quantitative and qualitative research are increasingly popular. Those that combine aspects of both approaches <b>intact</b> are <b>mixed-methods</b> approaches; those that <b>fluidly integrate</b> aspects of the two are <b>hybrid methods</b>. Move the slider to see how the strands of a project are arranged.</p>
+        <div class="chart" id="mx-chart"></div><div id="mx-txt"></div>
+      </div>
+      <div class="card"><h2>Why combine? Two goals named in the course material</h2>
+        <div class="grid2"><div class="callout"><b>Foundations for later quantitative work.</b> Some qualitative researchers see their work as developing the foundations on which follow-up quantitative research can be conducted.</div><div class="callout"><b>Agents of change.</b> Others see their work as formative and as an active agent of change.</div></div>
+      </div>
+      <div class="card"><h2>Classify the project</h2><div class="row"><button class="primary small" data-act="mx-new">Next project</button><span id="mx-score" class="muted small"></span></div><div id="mx-q"></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= PRACTICE ================= -->
+<section class="tabpanel" id="p-prac" role="tabpanel" aria-labelledby="t-prac" hidden>
+  <div class="card">
+    <h2>Scenario practice: name the design</h2>
+    <p class="muted">A short study description is chosen at random. Decide which qualitative design it describes, then see the explanation.</p>
+    <div class="row"><button class="primary" data-act="pq-new">New scenario</button><button data-act="prac-reset" title="Clear the current scenario, the quiz and both scores">Reset</button><span id="pq-score" class="muted small"></span></div>
+  </div>
+  <div class="card" id="pq-card" hidden><div id="pq-desc"></div><div id="pq-opts" class="row" style="margin-top:10px"></div><div id="pq-feedback" role="status"></div></div>
+  <div class="card"><h2>Concept check</h2>
+    <div class="row"><button data-act="qz-new" class="primary small">Next question</button><span id="qz-score" class="muted small"></span></div>
+    <div id="qz-out" style="margin-top:8px"></div></div>
+</section>
+
+<!-- ================= REFERENCE ================= -->
+<section class="tabpanel" id="p-ref" role="tabpanel" aria-labelledby="t-ref" hidden>
+  <div class="grid2" id="ref-cards"></div>
+  <div class="grid2">
+    <div class="card"><h2>Qualitative and quantitative approaches</h2>
+      <div class="tbl-wrap"><table><thead><tr><th class="l">Dimension</th><th class="l">Quantitative</th><th class="l">Qualitative</th></tr></thead><tbody id="ref-att"></tbody></table></div></div>
+    <div class="card"><h2>Types of qualitative designs named in the course slides</h2>
+      <p class="small">Critical Theory and Critical Race Theory; Decolonizing Methodologies; Ethnography; Feminist Theory; Grounded Theory; Hermeneutics; Indigenous Theory; Community-Based Participatory Research; Performance and Artistic Representation; Phenomenology; Queer Theory. Covered in more detail: liberating methods, ethnography, grounded theory, hermeneutics, phenomenology, photovoice, and mixed and hybrid methods.</p></div>
+    <div class="card"><h2>Notation and terms</h2>
+      <dl class="gl"><dt>Verstehen</dt><dd>Understanding, as opposed to simple knowledge; emphasized in qualitative strategies, particularly by those who differentiate the human sciences from the natural sciences.</dd><dt>Intersubjective</dt><dd>Knowledge shared and built between people, rather than assumed to be purely objective.</dd><dt>Bracketing</dt><dd>Setting aside the researcher’s presuppositions in phenomenological work.</dd><dt>Memo</dt><dd>A researcher’s written note connecting and elaborating codes in grounded theory.</dd></dl></div>
+    <div class="card"><h2>Metrics and extensions used here</h2>
+      <dl class="gl"><dt>Teaching aids</dt><dd>The invented excerpts, letter, field notes, participant description and photographs, the stance profile, the design-finder scoring, the hermeneutic convergence curve, and the liberating-methods lens comparison are illustrations added to make the chapter’s points concrete. They are not data.</dd><dt>Added background</dt><dd>The four-step phenomenological sequence, the brief orientation to each liberating method, and the photovoice discussion prompts are common textbook framings.</dd></dl></div>
+    <div class="card" style="grid-column:1/-1"><h2>Source and use</h2>
+      <p class="small muted">The structure and terminology follow the course slides on qualitative designs. Qualitative research cannot be reduced to a procedure; these interactive pieces are meant to show the logic of each design, not to replace training in the method.</p></div>
+  </div>
+</section>
+</main>
+
+<footer>
+  All examples are invented illustrations. Qualitative designs differ in what counts as evidence; the interactive pieces show the logic of each design rather than prescribe a procedure.
+</footer>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+'use strict';
+/* ================= basic helpers ================= */
+const $=(s,el=document)=>el.querySelector(s);
+const $$=(s,el=document)=>Array.from(el.querySelectorAll(s));
+const sum=a=>a.reduce((s,v)=>s+v,0);
+const mean=a=>a.length?sum(a)/a.length:NaN;
+const median=a=>{if(!a.length)return NaN;const s=a.slice().sort((x,y)=>x-y),m=s.length>>1;return s.length%2?s[m]:(s[m-1]+s[m])/2};
+const ssq=a=>{const m=mean(a);return sum(a.map(v=>(v-m)*(v-m)))};
+const vr=a=>a.length<2?0:ssq(a)/(a.length-1);
+const sd=a=>Math.sqrt(vr(a));
+const minOf=a=>{let m=Infinity;for(const v of a)if(v<m)m=v;return m};
+const maxOf=a=>{let m=-Infinity;for(const v of a)if(v>m)m=v;return m};
+const f=(v,d=2)=>Number.isFinite(v)?(+v).toFixed(d):'—';
+const pct=v=>Number.isFinite(v)?Math.round(v*100)+'%':'—';
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function makeRng(seed){
+  const u=mulberry32((seed|0)*2654435761>>>0||1);
+  let spare=null;
+  const r={u,
+    n(m,s){ if(spare!==null){const v=spare;spare=null;return m+s*v}
+      let a=0,b=0;while(a===0)a=u();b=u();const R=Math.sqrt(-2*Math.log(a));spare=R*Math.sin(2*Math.PI*b);return m+s*R*Math.cos(2*Math.PI*b)},
+    int(lo,hi){return lo+Math.floor(u()*(hi-lo+1))},
+    pick(a){return a[Math.floor(u()*a.length)]},
+    shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(u()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}};
+  return r;
+}
+const erf=x=>{const s=x<0?-1:1;x=Math.abs(x);const t=1/(1+0.3275911*x),y=1-(((((1.061405429*t-1.453152027)*t)+1.421413741)*t-0.284496736)*t+0.254829592)*t*Math.exp(-x*x);return s*y};
+const npdf=x=>Math.exp(-x*x/2)/Math.sqrt(2*Math.PI);
+const ncdf=x=>0.5*(1+erf(x/Math.SQRT2));
+
+/* ================= SVG helpers ================= */
+const COLS=['var(--colA)','var(--colB)','var(--colC)','var(--colD)','var(--colE)'];
+function ticks(min,max,cnt){
+  const span=max-min||1,raw=span/cnt,mag=Math.pow(10,Math.floor(Math.log10(raw)));
+  const res=raw/mag,step=(res<1.5?1:res<3?2:res<7?5:10)*mag,t=[];
+  for(let v=Math.ceil(min/step-1e-9)*step;v<=max+step*1e-9;v+=step)t.push(+v.toPrecision(12));
+  return{t,step};
+}
+const fmtT=(v,step)=>{const d=step>=1?0:Math.min(4,Math.ceil(-Math.log10(step)-1e-9));return(+v).toFixed(d)};
+function svgWrap(W,H,inner,label){return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(label)}" xmlns="http://www.w3.org/2000/svg" font-family="system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif" font-size="11">${inner}</svg>`}
+function frame(W,H,m,xd,yd,o){
+  o=o||{};const iw=W-m.l-m.r,ih=H-m.t-m.b;
+  const sx=v=>m.l+(v-xd[0])/(xd[1]-xd[0])*iw,sy=v=>m.t+ih-(v-yd[0])/(yd[1]-yd[0])*ih;
+  let s=`<rect x="${m.l}" y="${m.t}" width="${iw}" height="${ih}" fill="var(--plot)"/>`;
+  const yt=ticks(yd[0],yd[1],o.yn||5);
+  yt.t.forEach(v=>{const y=sy(v);s+=`<line x1="${m.l}" x2="${W-m.r}" y1="${y}" y2="${y}" stroke="var(--grid)"/><text x="${m.l-6}" y="${y+4}" text-anchor="end" fill="var(--muted)">${fmtT(v,yt.step)}</text>`});
+  if(!o.xcat){const xt=ticks(xd[0],xd[1],o.xn||6);xt.t.forEach(v=>{const x=sx(v);s+=`<line x1="${x}" x2="${x}" y1="${m.t}" y2="${H-m.b}" stroke="var(--grid)"/><text x="${x}" y="${H-m.b+15}" text-anchor="middle" fill="var(--muted)">${fmtT(v,xt.step)}</text>`})}
+  s+=`<line x1="${m.l}" x2="${m.l}" y1="${m.t}" y2="${H-m.b}" stroke="var(--axis)"/><line x1="${m.l}" x2="${W-m.r}" y1="${H-m.b}" y2="${H-m.b}" stroke="var(--axis)"/>`;
+  if(o.xlab)s+=`<text x="${m.l+iw/2}" y="${H-6}" text-anchor="middle" fill="var(--muted)">${esc(o.xlab)}</text>`;
+  if(o.ylab)s+=`<text transform="translate(14 ${m.t+ih/2}) rotate(-90)" text-anchor="middle" fill="var(--muted)">${esc(o.ylab)}</text>`;
+  return{sx,sy,s,W,H,m,iw,ih};
+}
+const cut=(t,n)=>t.length>n?t.slice(0,n-1)+'…':t;
+/* vertical bar chart: items=[{l,v,c?}] */
+function barChart(items,o){
+  o=o||{};const W=o.W||640,H=o.H||260,m={l:46,r:12,t:14,b:o.b||44};
+  const ymax=o.ymax||Math.max(1e-9,maxOf(items.map(i=>i.v)))*1.15;
+  const fr=frame(W,H,m,[0,items.length],[0,ymax],{xcat:true,ylab:o.ylab,xlab:o.xlab,yn:o.yn});
+  let s=fr.s;const bw=fr.iw/items.length;
+  items.forEach((it,i)=>{
+    const x=m.l+i*bw+bw*.14,w=bw*.72,y=fr.sy(it.v);
+    s+=`<rect x="${x}" y="${y}" width="${w}" height="${fr.sy(0)-y}" fill="${it.c||COLS[0]}" rx="2"/>`;
+    if(o.vals!==false)s+=`<text x="${x+w/2}" y="${y-4}" text-anchor="middle" fill="var(--fg)">${o.fmt?o.fmt(it.v):it.v}</text>`;
+    s+=`<text x="${x+w/2}" y="${H-m.b+15}" text-anchor="middle" fill="var(--muted)">${esc(cut(String(it.l),o.cut||12))}</text>`;
+  });
+  (o.lines||[]).forEach(L=>{const y=fr.sy(L.v);s+=`<line x1="${m.l}" x2="${W-m.r}" y1="${y}" y2="${y}" stroke="${L.c||'var(--colB)'}" stroke-dasharray="5 4" stroke-width="1.5"/><text x="${W-m.r-2}" y="${y-4}" text-anchor="end" fill="${L.c||'var(--colB)'}">${esc(L.t)}</text>`});
+  return svgWrap(W,H,s,o.label||'Bar chart');
+}
+/* line chart series=[{name,pts:[[x,y]],c}] */
+function lineChart(series,o){
+  o=o||{};const W=o.W||640,H=o.H||260,m={l:48,r:14,t:14,b:38};
+  const xs=series.flatMap(s=>s.pts.map(p=>p[0])),ys=series.flatMap(s=>s.pts.map(p=>p[1]));
+  const xd=o.xd||[minOf(xs),maxOf(xs)],yd=o.yd||[Math.min(0,minOf(ys)),maxOf(ys)*1.1||1];
+  const fr=frame(W,H,m,xd,yd,{xlab:o.xlab,ylab:o.ylab,xn:o.xn});let s=fr.s;
+  (o.bands||[]).forEach(b=>{s+=`<rect x="${fr.sx(b[0])}" y="${m.t}" width="${fr.sx(b[1])-fr.sx(b[0])}" height="${fr.ih}" fill="${b[2]||'var(--tintB)'}"/><text x="${(fr.sx(b[0])+fr.sx(b[1]))/2}" y="${m.t+12}" text-anchor="middle" fill="var(--muted)">${esc(b[3]||'')}</text>`});
+  series.forEach((se,i)=>{
+    const c=se.c||COLS[i%5];
+    s+=`<polyline fill="none" stroke="${c}" stroke-width="2" ${se.dash?'stroke-dasharray="5 4"':''} points="${se.pts.map(p=>fr.sx(p[0])+','+fr.sy(p[1])).join(' ')}"/>`;
+    if(se.dots!==false)se.pts.forEach(p=>{s+=`<circle cx="${fr.sx(p[0])}" cy="${fr.sy(p[1])}" r="3.2" fill="${c}"/>`});
+  });
+  return svgWrap(W,H,s,o.label||'Line chart');
+}
+const legendHTML=labels=>labels.map((l,i)=>`<span><i style="width:11px;height:11px;border-radius:${i%5===0?'50%':'2px'};background:${COLS[i%5]}"></i>${esc(l)}</span>`).join('');
+
+/* ================= controls ================= */
+function ctrlHTML(prefix,defs,state,presets,openN){
+  let h=presets&&presets.length?`<div class="ctl"><label for="${prefix}-preset">Scenario preset</label><select id="${prefix}-preset"><option value="">Choose a preset…</option>${presets.map((p,i)=>`<option value="${i}">${esc(p[0])}</option>`).join('')}</select></div>`:'';
+  const groups=[];defs.forEach(d=>{if(!groups.includes(d.g))groups.push(d.g)});
+  groups.forEach((g,gi)=>{
+    h+=`<details class="grp" ${gi<(openN||3)?'open':''}><summary>${esc(g)}</summary>`;
+    defs.filter(d=>d.g===g).forEach(d=>{
+      const id=`${prefix}-${d.k}`,v=state[d.k],ttl=d.help?` title="${esc(d.help)}"`:'';
+      if(d.type==='select')h+=`<div class="ctl"><label for="${id}"${ttl}>${esc(d.l)}</label><select id="${id}" data-k="${d.k}" ${d.num?'data-num="1"':''}>${d.opts.map(o=>`<option value="${o[0]}" ${String(o[0])===String(v)?'selected':''}>${esc(o[1])}</option>`).join('')}</select></div>`;
+      else if(d.type==='check')h+=`<div class="ctl check"><label><input type="checkbox" id="${id}" data-k="${d.k}" ${v?'checked':''}> ${esc(d.l)}</label></div>`;
+      else if(d.type==='text')h+=`<div class="ctl"><label for="${id}">${esc(d.l)}</label><input type="text" id="${id}" data-k="${d.k}" value="${esc(v)}"></div>`;
+      else if(d.type==='seed')h+=`<div class="ctl"><label for="${id}">${esc(d.l)}</label><div class="row"><input type="number" id="${id}" data-k="${d.k}" value="${v}" min="1" step="1" style="flex:1"><button class="small" data-act="${prefix}-rand">Randomize</button></div></div>`;
+      else h+=`<div class="ctl"><label for="${id}"${ttl}>${esc(d.l)}<output id="${id}-o">${d.fmt?d.fmt(v):v}${d.unit||''}</output></label><input type="range" id="${id}" data-k="${d.k}" min="${d.min}" max="${d.max}" step="${d.step}" value="${v}"></div>`;
+    });
+    h+='</details>';
+  });
+  return h+`<div class="row"><button class="small" data-act="${prefix}-reset">Reset all</button></div>`;
+}
+function applyVis(prefix,defs,state){defs.forEach(d=>{if(!d.show)return;const el=$('#'+prefix+'-'+d.k);const c=el&&el.closest('.ctl');if(c)c.hidden=!d.show(state)})}
+function syncControls(prefix,defs,state){
+  defs.forEach(d=>{const el=$('#'+prefix+'-'+d.k);if(!el)return;
+    if(d.type==='check')el.checked=!!state[d.k];else el.value=state[d.k];
+    const o=$('#'+prefix+'-'+d.k+'-o');if(o)o.textContent=(d.fmt?d.fmt(state[d.k]):state[d.k])+(d.unit||'');});
+  applyVis(prefix,defs,state);
+}
+function bindControls(prefix,state,defs,onChange,presets,def){
+  const root=$('#'+prefix+'-controls');
+  root.addEventListener('input',e=>{
+    const el=e.target;if(el.id===prefix+'-preset')return;
+    const k=el.dataset.k;if(!k)return;
+    let v;
+    if(el.type==='checkbox')v=el.checked;else if(el.type==='range'||el.type==='number'||el.dataset.num)v=+el.value;else v=el.value;
+    if(el.type==='number'&&!(v>=1))return;
+    state[k]=v;
+    const o=$('#'+prefix+'-'+k+'-o'),d=defs.find(x=>x.k===k);if(o&&d)o.textContent=(d.fmt?d.fmt(v):v)+(d.unit||'');
+    applyVis(prefix,defs,state);onChange(k);
+  });
+  root.addEventListener('change',e=>{
+    if(e.target.id===prefix+'-preset'){const i=e.target.value;if(i==='')return;
+      Object.assign(state,def,presets[+i][1],{seed:state.seed});syncControls(prefix,defs,state);onChange();}
+  });
+}
+
+/* ================= tables / narrative ================= */
+function tbl(head,rows){
+  const isTxt=c=>{const t=String(c).replace(/<[^>]*>/g,'').trim();return t.length>14&&!/^[+\-−0-9.]/.test(t)};
+  const L=head.map((h,i)=>i===0||rows.some(r=>isTxt(r[i])));
+  const cls=i=>L[i]?' class="l"':'';
+  return `<div class="tbl-wrap"><table><thead><tr>${head.map((h,i)=>Array.isArray(h)?`<th${cls(i)} title="${esc(h[1])}">${h[0]}</th>`:`<th${cls(i)}>${h}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${r.map((c,i)=>`<td${cls(i)}>${c}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+}
+const pill=(txt,cls)=>`<span class="pill ${cls}">${txt}</span>`;
+function statRow(items){return `<div class="stat">${items.map(([v,l])=>`<div><b>${v}</b><span>${l}</span></div>`).join('')}</div>`}
+let toastT=null;
+function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),1800)}
+
+/* ================= downloads ================= */
+function resolvedSvg(id){
+  const el=$('#'+id+' svg');if(!el)return null;
+  const cs=getComputedStyle(document.documentElement);
+  let s=new XMLSerializer().serializeToString(el);
+  s=s.replace(/var\((--[a-zA-Z0-9]+)\)/g,(m,v)=>cs.getPropertyValue(v).trim()||'#000');
+  return s;
+}
+function saveBlob(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
+function doDL(kind,target){
+  if(kind==='csv'){const fn=CSVS[target];if(!fn){toast('No data to export');return}saveBlob(new Blob([fn()],{type:'text/csv'}),target+'.csv');return}
+  const s=resolvedSvg(target);if(!s){toast('Nothing to export');return}
+  if(kind==='svg'){saveBlob(new Blob([s],{type:'image/svg+xml'}),target+'.svg');return}
+  const vb=/viewBox="0 0 ([\d.]+) ([\d.]+)"/.exec(s);if(!vb)return;
+  const W=+vb[1],H=+vb[2],img=new Image();
+  img.onload=()=>{const c=document.createElement('canvas');c.width=W*2;c.height=H*2;const x=c.getContext('2d');
+    x.fillStyle=getComputedStyle(document.documentElement).getPropertyValue('--card').trim()||'#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(img,0,0,c.width,c.height);
+    c.toBlob(b=>saveBlob(b,target+'.png'))};
+  img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(s);
+}
+const CSVS={};
+
+/* ================= quiz engine ================= */
+function makeQuiz(Q,outId,scoreId){
+  const S={i:-1,n:0,score:0,answered:false,order:[]};
+  function next(){
+    if(!S.order.length)S.order=makeRng(Date.now()%100000+1).shuffle(Q.map((_,i)=>i));
+    S.i=S.order.shift();S.answered=false;render();
+  }
+  function render(){
+    const sc=$('#'+scoreId);sc.textContent=S.n?`Score: ${S.score} / ${S.n}`:'';
+    const out=$('#'+outId);
+    if(S.i<0){out.innerHTML='<p class="muted small">Press “Next question” to start.</p>';return}
+    const q=Q[S.i];
+    out.innerHTML=`<div class="q"><fieldset><legend>${q.q}</legend>${q.o.map((t,j)=>`<label><button class="small" data-qz="${outId}:${j}" ${S.answered?'disabled':''}>${'ABCD'[j]}</button> ${t}</label>`).join('')}</fieldset></div><div id="${outId}-fb" role="status"></div>`;
+  }
+  function answer(j){
+    if(S.answered||S.i<0)return;S.answered=true;const q=Q[S.i],ok=j===q.a;S.n++;if(ok)S.score++;
+    render();
+    $('#'+outId+'-fb').innerHTML=`<div class="callout ${ok?'good':'warn'}">${ok?pill('Correct','good'):pill('Not quite','bad')} ${q.why} ${ok?'':'<br><b>Answer:</b> '+q.o[q.a]}</div>`;
+    $('#'+scoreId).textContent=`Score: ${S.score} / ${S.n}`;
+  }
+  function reset(){S.i=-1;S.n=0;S.score=0;S.answered=false;S.order=[];render()}
+  return{next,answer,reset,render,S};
+}
+
+/* ================= data from the slides ================= */
+const DIMS=[
+  {k:'psy',t:'Psychological mechanisms',
+   qn:['Involves rational and empirical processes','Scrutinizes data “objectively” through deductive reasoning and logical premises','Aims to reject or support a research hypothesis'],
+   ql:['Also involves rational and empirical processes, but defines them differently','Scrutinizes data “intersubjectively” through inductive reasoning applied to discovered principles or essentials','Aims to understand a phenomenon']},
+  {k:'kn',t:'Role and functional limitations of human knowledge',
+   qn:['Treats knowledge as something that can be scrutinized objectively','Does not usually make the role of power in knowledge its central concern'],
+   ql:['Acknowledges the role of knowledge in reflecting, supporting and sustaining current power structures','Questions the notion of truly objective knowledge; asserts that knowledge is subjective or inter-subjective','Emphasizes understanding (<i>verstehen</i>) rather than simple knowledge, particularly among those who differentiate the human sciences from the natural sciences','Often aligns with postmodernist, decolonizing and social constructionist or constructivist paradigms']},
+  {k:'dat',t:'Practical processes and types of data',
+   qn:['Data are in numerical (quantitative) format from the start','Steps of analysis follow a more fixed sequence'],
+   ql:['Data concern the qualities of an event or experience and are not initially in quantitative format','Data may be naturally expressed language, visual imagery, or other sensory data as experienced','Steps in analysis may vary substantially and may integrate widely variant data sources']},
+  {k:'goa',t:'Goals and intended outcomes',
+   qn:['Supporting or rejecting a hypothesis (see psychological mechanisms)'],
+   ql:['Some researchers view their work as developing foundations on which follow-up quantitative research can be conducted','Others view their work as formative and as an active agent of change']}
+];
+const STANCE=[
+  {k:'rea',l:'Reasoning',a:'Deductive, from logical premises',b:'Inductive, from discovered principles'},
+  {k:'kno',l:'View of knowledge',a:'Objective',b:'Subjective or intersubjective'},
+  {k:'dat',l:'Data',a:'Numerical from the start',b:'Language, imagery, other sensory data'},
+  {k:'goa',l:'Goal',a:'Test a hypothesis',b:'Understand a phenomenon or effect change'}
+];
+const SRT=[
+  ['Tests a research hypothesis through deductive reasoning from logical premises','quant'],
+  ['Applies inductive reasoning to discovered principles or essentials','qual'],
+  ['Questions whether knowledge can ever be truly objective','qual'],
+  ['Relies on rational and empirical processes','both'],
+  ['Works with naturally expressed language, visual imagery and other sensory data','qual'],
+  ['Emphasizes <i>verstehen</i>: understanding rather than simple knowledge','qual'],
+  ['May lay the foundations for follow-up quantitative research','qual'],
+  ['Scrutinizes data “objectively”','quant']
+];
+const DQ={
+  gt:{name:'Grounded theory',tab:'gt',aims:'theory',data:['lang','field'],role:['subject','immerse'],style:['induct'],
+    what:'Discovers underlying theories through inductive methods.',
+    origin:'Developed by Glaser and Strauss in sociology in the late 1960s and extended to psychology.',
+    tech:'Coding; memoing to connect and elaborate codes; theory development; theoretical sampling to “ground” theoretical advances in the data itself.',
+    note:'Can be used by both positivist and constructivist researchers.'},
+  he:{name:'Hermeneutics',tab:'he',aims:'text',data:['lang'],role:['subject'],style:['interp'],
+    what:'Interprets texts and phenomena by moving between parts and whole.',
+    origin:'Developed in antiquity and into the Renaissance to interpret texts, particularly religious texts; applied to the social sciences through twentieth-century philosophers such as Heidegger (<i>Being and Time</i>) and Gadamer (<i>Truth and Method</i>).',
+    tech:'Repeatedly shifting the focus between the parts and the whole, or the thing and its context (the hermeneutic circle); isolating influences on interpretation to move closer to the thing itself.',
+    note:''},
+  ph:{name:'Phenomenology',tab:'ph',aims:'essence',data:['lang'],role:['subject'],style:['induct','interp'],
+    what:'Understands conscious experience as lived intuitively and delineates its essences.',
+    origin:'Introduced in philosophy by Husserl; Amedeo Giorgi’s descriptive phenomenology is most predominant in psychology.',
+    tech:'Bracketing and phenomenological reduction to identify the essences of an experience or event.',
+    note:'All conscious experiences and events are co-constituted by the observer and the observed, and are thus complex phenomena.'},
+  et:{name:'Ethnography',tab:'et',aims:'culture',data:['field','lang'],role:['immerse'],style:['induct','interp'],
+    what:'Seeks greater understanding of the social relations, customs and lived experiences of various peoples and situations.',
+    origin:'Identified by Muller in the eighteenth century; contemporary methods were popularized by Malinowski in cultural anthropology, then advanced in education and sociology; psychology imports the techniques in related subdisciplines.',
+    tech:'Field research typified by participatory observation, with both external and internal observations.',
+    note:''},
+  pv:{name:'Photovoice',tab:'pv',aims:'community',data:['visual'],role:['partner'],style:['critical'],
+    what:'A Community-Based Participatory Research design in which cultural participants capture visual imagery.',
+    origin:'Developed by Wang and Burris in the late twentieth century, derived from Wendy Ewald’s photographic work with children in Appalachia.',
+    tech:'Participants photograph their community’s strengths and concerns; large and small group discussion of the photographs promotes critical dialogue; findings are taken to policymakers.',
+    note:''},
+  lb:{name:'Liberating methods',tab:'lb',aims:'change',data:['lang','field'],role:['partner'],style:['critical'],
+    what:'Challenge fundamental assumptions in existing knowledge systems and often integrate advocacy and activism.',
+    origin:'Often inspired in part by Paulo Freire’s <i>Pedagogy of the Oppressed</i>; developed during the latter half of the twentieth century and embrace power/knowledge paradigms.',
+    tech:'Critical Theory and Critical Race Theory, Decolonizing Methods, Feminist Theory, Indigenous Theory, Liberation Psychology, Marxist Theory and Queer Theory.',
+    note:'Community-Based Participatory Research and Performance and Artistic Representation are also listed among the qualitative designs in the slides.'},
+  mx:{name:'Mixed and hybrid methods',tab:'mx',aims:'combine',data:['both'],role:['subject','partner'],style:['induct','interp','critical'],
+    what:'Combine quantitative and qualitative approaches.',
+    origin:'Increasingly popular in contemporary research.',
+    tech:'Mixed-methods approaches combine aspects of both approaches intact; hybrid methods integrate aspects of both fluidly.',
+    note:''}
+};
+const DQK=Object.keys(DQ);
+const AIM2K={theory:'gt',text:'he',essence:'ph',culture:'et',community:'pv',change:'lb',combine:'mx'};
+
+/* ethnography field notes */
+const ET_NOTES=[
+  ['Eleven children sit at three tables while two adults circulate with folders.','ext',0,'Directly observable from outside the setting.'],
+  ['One boy slides his worksheet away whenever the tutor approaches.','ext',0,'An observable behavior; its meaning is not yet known.'],
+  ['Four children arrive together and always drop their coats in the same corner.','ext',20,'An observable pattern of behavior.'],
+  ['Talk drops to a whisper whenever the coordinator’s phone rings.','ext',10,'An observable pattern; why it happens requires more participation.'],
+  ['Among themselves the children call the room “our place”; to staff they call it “the program.”','int',35,'Meaning gained by hearing how people talk inside the group.'],
+  ['After joining the snack rotation, you learn that who sits with whom follows which school bus they ride.','int',45,'Insider knowledge of social relations, gained through participation.'],
+  ['Helping with homework, you feel pressure to appear competent, and the older children seem to feel it too; they quietly cover for each other.','int',60,'The researcher’s own lived experience, used to understand the setting.'],
+  ['Invited to the end-of-week “shout-outs,” you sense that being named matters more as recognition than as reward.','int',75,'A lived meaning accessible only after being accepted into a group ritual.'],
+  ['After several weeks you begin to see the club as the children do: a place where mistakes are safe to make.','int',90,'An internal perspective that develops with deep participation.']
+];
+const ET_HIST=[['18th century','Muller identifies ethnography'],['Cultural anthropology','Malinowski popularizes contemporary methods'],['Education and sociology','Methods are advanced'],['Psychology','Techniques imported in related subdisciplines']];
+
+/* grounded theory */
+const GT_EX=[
+  'I kept pressing the wrong button, so I wrote my own cheat sheet and taped it to the monitor.',
+  'Honestly, the new system added twenty minutes to every shift at first.',
+  'A colleague from the next unit showed me a shortcut over lunch, and that saved me.',
+  'I wasn’t sure the numbers on the screen were right, so I kept the paper chart too.',
+  'Once I saw how much faster handoffs got, I stopped complaining.',
+  'Nobody told us who to ask when it froze, so we just asked each other.',
+  'I worried that if I asked basic questions the younger staff would think I was behind.',
+  'I started doing data entry at the end of the shift instead of in the middle. It just fit better.'
+];
+const GT_CODES=['Creating workarounds','Time cost','Peer help','Distrusting the system','Seeing benefits','Unclear support','Fear of looking incompetent','Changing routines'];
+const GT_CATS=['Adapting practice','Seeking support','Managing uncertainty','Weighing costs and benefits'];
+const GT_DEMO={codes:{0:'Creating workarounds',1:'Time cost',2:'Peer help',3:'Distrusting the system',4:'Seeing benefits',5:'Unclear support',6:'Fear of looking incompetent',7:'Changing routines'},
+  cats:{'Creating workarounds':'Adapting practice','Changing routines':'Adapting practice','Time cost':'Weighing costs and benefits','Seeing benefits':'Weighing costs and benefits','Peer help':'Seeking support','Unclear support':'Seeking support','Distrusting the system':'Managing uncertainty','Fear of looking incompetent':'Managing uncertainty'}};
+const GT_SAMPLE={'Adapting practice':'Seek staff who changed their routines in different ways, to see under what conditions people adapt.','Seeking support':'Sample units with and without a named helper, to see how support arrangements shape adoption.','Managing uncertainty':'Interview staff who distrusted the system and staff who did not, to find what separates the two.','Weighing costs and benefits':'Sample staff at different stages after the change, to see when costs give way to benefits.'};
+const GT_PROMPTS=['How does one code explain another? Write a sentence that links two of them.','Which excerpt surprised you, and what does it suggest the categories are missing?','Is there a core category that most of the others depend on?','What would you have to ask the next participant to test this category?'];
+
+/* hermeneutics */
+const HE_PARTS=[
+  ['I finally packed the last box today.',0.0,'Neutral on its own: it marks a transition.'],
+  ['The house is quiet in a way it never was.',-0.4,'Leans toward loss, though quiet can also be restful.'],
+  ['I keep the key in my pocket, though the door is no longer mine.',-0.3,'Leans toward loss, but also shows a deliberate keeping of the past.'],
+  ['Tell the children I’ll call when I’m settled.',0.7,'Leans toward renewal and continuing connection.']
+];
+const HE_BIAS={loss:-0.8,newb:0.8,none:0};
+function heLabel(v){return v<-.6?'a story of loss':v<-.2?'mostly a story of loss':v<=.2?'a mixture of loss and renewal':v<=.6?'mostly a story of renewal':'a story of renewal'}
+function heRun(p){
+  const s=HE_PARTS.map(x=>x[1]),perc=[null,null,null,null],W=[HE_BIAS[p.bias]],steps=[];
+  for(let t=1;t<=8;t++){
+    const i=(t-1)%4,prev=W[t-1],pr=s[i]+(1-p.reflect)*.5*(prev-s[i]);perc[i]=pr;
+    const have=perc.filter(v=>v!==null),w=.5*prev+.5*mean(have);
+    W.push(w);steps.push({i,pr,infl:pr-s[i],prev});
+  }
+  return{W,steps,textMean:mean(s)};
+}
+
+/* phenomenology */
+const PH_S=[
+  ['Minutes before I speak, the room seems to grow louder and smaller at once.','The surroundings are given as pressing in; attention narrows and the world is felt as charged.'],
+  ['My hands feel like they belong to someone else.','The body is given as estranged from the self.'],
+  ['I keep rehearsing my first sentence, but the words come apart as I hold them.','Preparation is given as unstable: meaning slips away even as it is held.'],
+  ['Strangely, I am also aware of wanting to be there, of the pull toward the stage.','Anticipation is given as ambivalent: dread and desire together.'],
+  ['When my name is called, time seems to stop and then rush forward.','Lived time is given as discontinuous: suspended, then accelerated.']
+];
+const PH_P=[
+  ['Stage fright is anxiety that should be reduced','The experience is treated as a problem of anxiety to be managed.',-1],
+  ['Preparation determines how the experience will go','The experience is treated as a function of how well the person prepared.',-1],
+  ['Wanting to be there contradicts being afraid','The desire is dismissed as a coping story, so the ambivalence disappears from the structure.',3]
+];
+
+/* photovoice */
+const PV_THEMES=['Safety','Gathering places','Infrastructure','Play and learning'];
+const PV_ASK={Safety:'Commission a safety and lighting review of the areas residents identified.','Gathering places':'Protect and fund shared community spaces residents rely on.',Infrastructure:'Repair or provide the basic infrastructure residents photographed.','Play and learning':'Invest in places where children can play and learn.'};
+const PV=[
+  ['Community garden','“Saturday is when everyone ends up here.”','strength','Gathering places','garden'],
+  ['Broken streetlight','“We walk home in the dark from the bus.”','concern','Safety','light'],
+  ['Neighbors’ porch','“Somebody is always sitting out and watching the street.”','strength','Safety','porch'],
+  ['Vacant lot','“Nothing has been built here for years.”','concern','Gathering places','lot'],
+  ['Bus stop','“No shelter, no bench, and the rain comes straight in.”','concern','Infrastructure','bus'],
+  ['Branch library','“The one place the kids can do homework.”','strength','Play and learning','library'],
+  ['Playground','“The little ones are here every afternoon.”','strength','Play and learning','play'],
+  ['Cracked sidewalk','“Strollers and wheelchairs can’t get through.”','concern','Infrastructure','walk']
+];
+const PV_AIMS=['1. Record and reflect','2. Critical dialogue','3. Reach policymakers'];
+function pvScene(k){
+  const sky='#cfe3f2',g='#7fae6c';let s='';
+  const base=(a,b)=>`<rect width="160" height="110" fill="${a}"/><rect y="75" width="160" height="35" fill="${b}"/>`;
+  if(k==='garden')s=base(sky,'#6f4e37')+[20,50,80,110,140].map(x=>`<line x1="${x}" x2="${x}" y1="75" y2="55" stroke="${g}" stroke-width="3"/><circle cx="${x}" cy="52" r="7" fill="#e07a5f"/>`).join('')+`<rect x="10" y="30" width="30" height="6" fill="#9a7b4f"/>`;
+  else if(k==='light')s=base('#27344a','#4a4f58')+`<rect x="78" y="20" width="5" height="62" fill="#8a8f99"/><rect x="66" y="14" width="30" height="8" rx="3" fill="#8a8f99"/><line x1="70" y1="26" x2="92" y2="40" stroke="#ff6b6b" stroke-width="3"/><line x1="92" y1="26" x2="70" y2="40" stroke="#ff6b6b" stroke-width="3"/>`;
+  else if(k==='porch')s=base(sky,g)+`<rect x="30" y="35" width="100" height="45" fill="#e9c9a0"/><polygon points="22,35 80,8 138,35" fill="#a05a3c"/><rect x="70" y="52" width="20" height="28" fill="#6f4e37"/><rect x="38" y="62" width="14" height="18" fill="#3d6c8a"/><rect x="108" y="62" width="14" height="18" fill="#3d6c8a"/>`;
+  else if(k==='lot')s=base(sky,'#b9b39a')+[10,25,40,55,70,85,100,115,130,145].map(x=>`<line x1="${x}" x2="${x}" y1="58" y2="78" stroke="#8a8f99" stroke-width="2"/>`).join('')+`<line x1="5" x2="155" y1="62" y2="62" stroke="#8a8f99" stroke-width="2"/><path d="M40 100 l4-12 l4 12 M70 102 l4-14 l4 14 M110 100 l4-10 l4 10" stroke="#5f7a4a" stroke-width="2" fill="none"/>`;
+  else if(k==='bus')s=base('#9fb0c0','#666b73')+`<rect x="95" y="22" width="5" height="58" fill="#555"/><rect x="82" y="16" width="32" height="14" rx="2" fill="#2b62c4"/>`+[10,30,50,70,120,140].map(x=>`<line x1="${x}" x2="${x-6}" y1="10" y2="30" stroke="#e8f2ff" stroke-width="2"/><line x1="${x+10}" x2="${x+4}" y1="45" y2="65" stroke="#e8f2ff" stroke-width="2"/>`).join('');
+  else if(k==='library')s=base(sky,'#b9b39a')+`<polygon points="25,38 80,12 135,38" fill="#9a8f7a"/><rect x="30" y="38" width="100" height="42" fill="#d9cdb3"/>`+[42,62,82,102,118].map(x=>`<rect x="${x}" y="40" width="8" height="38" fill="#f3ead6"/>`).join('');
+  else if(k==='play')s=base(sky,'#c9a87a')+`<polygon points="25,75 25,35 60,75" fill="#e0a030"/><rect x="22" y="30" width="6" height="45" fill="#8a6d00"/><line x1="100" x2="100" y1="25" y2="60" stroke="#555" stroke-width="3"/><line x1="130" x2="130" y1="25" y2="60" stroke="#555" stroke-width="3"/><line x1="96" x2="134" y1="25" y2="25" stroke="#555" stroke-width="4"/><rect x="104" y="58" width="22" height="4" fill="#c0531a"/>`;
+  else s=base(sky,'#b8b8b8')+`<polygon points="0,110 160,110 135,75 25,75" fill="#cfcfcf" stroke="#999"/><polyline points="70,110 78,98 70,90 82,80 75,75" fill="none" stroke="#333" stroke-width="2.5"/>`;
+  return `<svg viewBox="0 0 160 110" role="img" aria-label="Illustration: ${k}" style="width:100%;height:auto;border-radius:8px;display:block">${s}</svg>`;
+}
+
+/* liberating methods */
+const LB=[
+  ['Critical Theory and Critical Race Theory','Examine how power, social structures and race shape institutions and what counts as knowledge.'],
+  ['Decolonizing Methods','Challenge colonial assumptions in research and make room for the knowledge of colonized peoples.'],
+  ['Feminist Theory','Examine how gender and power shape the production and use of knowledge.'],
+  ['Indigenous Theory','Ground research in Indigenous worldviews, relationships and accountability to community.'],
+  ['Liberation Psychology','Orient psychological work toward the liberation of oppressed communities.'],
+  ['Marxist Theory','Analyze class, economic structures and ideology in the shaping of social life and knowledge.'],
+  ['Queer Theory','Question assumed norms of gender and sexuality and the categories built around them.']
+];
+const LB_TOPICS=[
+  ['Neighborhood safety','Survey residents about crime rates and test which factors predict them.','Residents define what safety means, name who has been left out of decisions, and use the findings to press for change.'],
+  ['School discipline','Measure suspension rates and compare them across schools.','Students, families and teachers examine how discipline policy distributes power and who bears its effects, and organize for change.'],
+  ['Workplace wellbeing','Administer wellbeing scales and relate scores to working hours.','Workers analyze how conditions and pay structures shape wellbeing and take collective action.']
+];
+const LB_Q=[
+  ['Who defines the problem?','The researcher, usually from the existing literature.','The people living with the problem, together with the researcher.'],
+  ['What counts as knowledge?','Findings that meet standards of objective measurement or analysis.','Lived and community knowledge as well as formal knowledge; knowledge is read as reflecting and sustaining power structures.'],
+  ['Who owns and uses the findings?','The researcher and institution; the results are published.','The community; findings serve action.'],
+  ['What follows the study?','A report and recommendations for further study.','Advocacy and activism alongside the findings.']
+];
+
+/* mixed and hybrid */
+const MXQ=[
+  ['A team runs a survey study and, separately, a set of interviews. Each is analyzed on its own terms and the two reports are combined in the discussion.','mixed','Mixed methods: aspects of both approaches are combined intact.'],
+  ['Interview excerpts are coded and counted as they are analyzed. The counts immediately shape the next interview questions, and statistical patterns feed back into the coding scheme.','hybrid','Hybrid methods: qualitative and quantitative aspects are fluidly integrated.'],
+  ['A researcher conducts only interviews and analyzes them thematically.','single','Neither: a single (qualitative) approach is used.'],
+  ['An experiment is followed by a separate focus-group study. The findings are kept apart and compared at the end.','mixed','Mixed methods: two intact components.'],
+  ['Photographs, narrative captions and rating scales are analyzed together in one evolving framework.','hybrid','Hybrid methods: the strands are integrated rather than kept intact.'],
+  ['A randomized trial analyzes numerical outcome scores only.','single','Neither: a single (quantitative) approach is used.']
+];
+
+/* ================= state ================= */
+const DEF_AT={rea:50,kno:50,dat:50,goa:50};
+const AT_DEFS=STANCE.map(s=>({k:s.k,l:s.l+' (0 = '+s.a.split(',')[0].toLowerCase()+', 100 = '+s.b.split(',')[0].toLowerCase()+')',min:0,max:100,step:5,g:'Place the study'}));
+const AT_PRESETS=[['Hypothesis-testing experiment',{rea:10,kno:10,dat:5,goa:5}],['Interview-based grounded theory',{rea:90,kno:70,dat:90,goa:75}],['Participatory action project',{rea:80,kno:95,dat:80,goa:95}],['Qualitative first, quantitative follow-up',{rea:70,kno:45,dat:60,goa:30}]];
+const DEF_ET={part:30};
+const ET_DEFS=[{k:'part',l:'Researcher’s participation in the setting',min:0,max:100,step:5,unit:'%',help:'0 = watching from outside, 100 = fully a member of the group.',g:'Fieldwork'}];
+const DEF_HE={bias:'loss',reflect:.3,step:0};
+const HE_DEFS=[
+  {k:'bias',l:'Expectation the reader brings',type:'select',opts:[['loss','Expects a story of loss'],['newb','Expects a story of new beginning'],['none','No strong expectation']],g:'Reader'},
+  {k:'reflect',l:'Reflection on one’s own influences',min:0,max:1,step:.1,fmt:v=>(+v).toFixed(1),help:'How much the reader isolates and sets aside what they bring to the text.',g:'Reader'},
+  {k:'step',l:'Iteration (0 = before reading)',min:0,max:8,step:1,g:'Reader'}
+];
+const HE_PRESETS=[['Expects loss, little reflection',{bias:'loss',reflect:0}],['Expects renewal, careful reflection',{bias:'newb',reflect:.9}],['No expectation',{bias:'none',reflect:.5}]];
+const DEF_MX={integ:20};
+const MX_DEFS=[{k:'integ',l:'Degree of integration',min:0,max:100,step:5,unit:'%',help:'0 = components kept intact (mixed), 100 = fluidly integrated (hybrid).',g:'Project'}];
+const MX_PRESETS=[['Components kept intact',{integ:5}],['In between',{integ:50}],['Fluidly integrated',{integ:95}]];
+const DEFAULTS={at:DEF_AT,et:DEF_ET,he:DEF_HE,mx:DEF_MX},DEFS={at:AT_DEFS,et:ET_DEFS,he:HE_DEFS,mx:MX_DEFS},PRESETS={at:AT_PRESETS,et:[],he:HE_PRESETS,mx:MX_PRESETS};
+const st={tab:'at',at:Object.assign({},DEF_AT),et:Object.assign({},DEF_ET),he:Object.assign({},DEF_HE),mx:Object.assign({},DEF_MX),
+  atDim:0,srt:{},fd:{aim:'theory',data:'lang',role:'subject',style:'induct'},fdSel:null,etTags:{},
+  gt:{codes:{},cats:{},memo:''},ph:{units:PH_S.map(()=>true),brk:PH_P.map(()=>false)},pv:{aim:0,kind:{},theme:{},inc:{}},lb:{sel:0,topic:0,lens:'both'}};
+const FD_DEF={aim:'theory',data:'lang',role:'subject',style:'induct'};
+
+/* ================= renderers ================= */
+function renderAT(){
+  $('#at-chips').innerHTML=DIMS.map((d,i)=>`<button class="${i===st.atDim?'on':''}" data-dim="${i}" role="tab" aria-selected="${i===st.atDim}">${d.t}</button>`).join('');
+  const d=DIMS[st.atDim];
+  $('#at-cmp').innerHTML=`<div class="callout"><b>Quantitative approach</b><ul class="clean">${d.qn.map(x=>`<li>${x}</li>`).join('')}</ul></div><div class="callout warn"><b>Qualitative approach</b><ul class="clean">${d.ql.map(x=>`<li>${x}</li>`).join('')}</ul></div>`;
+  const W=700,H=190,L=210,R=210;let s='';
+  STANCE.forEach((r,i)=>{
+    const y=30+i*40,v=st.at[r.k],x=L+(W-L-R)*v/100;
+    s+=`<text x="${L-10}" y="${y+4}" text-anchor="end" fill="var(--muted)">${esc(cut(r.a,32))}</text><text x="${W-R+10}" y="${y+4}" fill="var(--muted)">${esc(cut(r.b,34))}</text>`;
+    s+=`<line x1="${L}" x2="${W-R}" y1="${y}" y2="${y}" stroke="var(--line)" stroke-width="6" stroke-linecap="round"/><circle cx="${x}" cy="${y}" r="9" fill="${v<35?COLS[0]:v>65?COLS[1]:COLS[2]}"/><text x="${x}" y="${y-14}" text-anchor="middle" font-weight="600" fill="var(--fg)">${r.l}</text>`;
+  });
+  s+=`<text x="${L}" y="${H-4}" fill="var(--colA)">← Quantitative approach</text><text x="${W-R}" y="${H-4}" text-anchor="end" fill="var(--colB)">Qualitative approach →</text>`;
+  $('#at-chart').innerHTML=svgWrap(W,H,s,'Stance profile on four dimensions');
+  const vals=STANCE.map(r=>st.at[r.k]),m=mean(vals),spread=maxOf(vals)-minOf(vals);
+  const lean=m<35?'leans toward a <b>quantitative</b> approach':m>65?'leans toward a <b>qualitative</b> approach':'sits <b>between</b> the two approaches';
+  $('#at-txt').innerHTML=`<div class="callout">Overall, this study ${lean} (average position ${Math.round(m)} of 100).${spread>=50?' The dimensions pull in different directions, a pattern typical of designs that combine the two approaches; see the mixed and hybrid tab.':''}</div>`;
+}
+function renderSRT(){
+  const n=Object.keys(st.srt).length,ok=Object.keys(st.srt).filter(i=>st.srt[i]===SRT[i][1]).length;
+  $('#srt-out').innerHTML=(n?`<p class="small muted">Score: ${ok} / ${n}</p>`:'')+SRT.map((r,i)=>{
+    const a=st.srt[i],done=a!==undefined;
+    return`<div class="seg ${done?(a===r[1]?'':'hl'):''}"><div>${r[0]}</div><div class="row" style="margin-top:4px">${[['quant','Quantitative approach'],['qual','Qualitative approach'],['both','Both']].map(o=>`<button class="small ${a===o[0]?'on':''}" data-srt="${i}:${o[0]}" ${done?'disabled':''}>${o[1]}</button>`).join('')}${done?(a===r[1]?pill('Correct','good'):pill('Answer: '+{quant:'Quantitative',qual:'Qualitative',both:'Both'}[r[1]],'bad')):''}</div></div>`}).join('');
+}
+function fdRank(){
+  const c=st.fd;
+  return DQK.map(k=>{const d=DQ[k];let s=0;if(d.aims===c.aim)s+=4;if(d.data.includes(c.data))s+=1;if(d.role.includes(c.role))s+=1;if(d.style.includes(c.style))s+=1;return{k,s,max:7}}).sort((a,b)=>b.s-a.s);
+}
+function renderFD(){
+  const R=fdRank(),sel=st.fdSel&&DQ[st.fdSel]?st.fdSel:R[0].k;
+  $('#fd-out').innerHTML=R.map((r,i)=>`<div class="fit"><div style="flex:1"><div class="nm"><a href="#" data-fd="${r.k}" style="color:inherit">${DQ[r.k].name}</a> ${i===0?pill('best match','good'):''}</div><div class="chart"><svg viewBox="0 0 300 12" role="img" aria-label="Fit ${r.s} of ${r.max}"><rect width="300" height="12" rx="6" fill="var(--grid)"/><rect width="${r.s/r.max*300}" height="12" rx="6" fill="${i===0?'var(--good)':'var(--colA)'}"/></svg></div></div><div class="small muted">${r.s} / ${r.max}</div></div>`).join('');
+  const d=DQ[sel];$('#fd-title').textContent=d.name;
+  $('#fd-detail').innerHTML=`<p>${d.what}</p><dl class="gl"><dt>Origin</dt><dd>${d.origin}</dd><dt>Typical techniques</dt><dd>${d.tech}</dd>${d.note?`<dt>Note</dt><dd>${d.note}</dd>`:''}</dl><button class="small" data-goto="${d.tab}">Open the ${d.name.toLowerCase()} tab</button>`;
+}
+function renderET(){
+  const p=st.et.part;
+  $('#et-hist').innerHTML=(()=>{const W=700,H=100;let s=`<line x1="40" x2="660" y1="34" y2="34" stroke="var(--axis)" stroke-width="2"/>`;
+    ET_HIST.forEach((h,i)=>{const x=80+i*180;s+=`<circle cx="${x}" cy="34" r="8" fill="${COLS[i%5]}"/><text x="${x}" y="58" text-anchor="middle" font-weight="600" fill="var(--fg)">${esc(h[0])}</text><text x="${x}" y="74" text-anchor="middle" fill="var(--muted)">${esc(cut(h[1],34))}</text>`});
+    return svgWrap(W,H,s,'Ethnography through time')})();
+  const acc=ET_NOTES.filter(n=>n[2]<=p).length;
+  $('#et-notes').innerHTML=ET_NOTES.map((n,i)=>{
+    if(n[2]>p)return`<div class="seg" style="opacity:.6"><span class="muted">Note ${i+1}: not yet accessible. It takes more participation in the setting than ${p}%.</span></div>`;
+    const t=st.etTags[i],done=t!==undefined,ok=t===n[1];
+    return`<div class="seg ${done&&!ok?'hl':''}"><div><b>Note ${i+1}.</b> ${esc(n[0])}</div><div class="row" style="margin-top:4px">${[['ext','External'],['int','Internal']].map(o=>`<button class="small ${t===o[0]?'on':''}" data-tag="${i}:${o[0]}" ${done?'disabled':''}>${o[1]}</button>`).join('')}${done?(ok?pill('Correct','good'):pill('It is '+(n[1]==='ext'?'external':'internal'),'bad'))+` <span class="small muted">${n[3]}</span>`:''}</div></div>`}).join('');
+  const tagged=Object.keys(st.etTags).length,ok=Object.keys(st.etTags).filter(i=>st.etTags[i]===ET_NOTES[i][1]).length;
+  const risk=p<30?'low':p<70?'moderate':'high';
+  $('#et-score').innerHTML=statRow([[`${acc} of ${ET_NOTES.length}`,'Notes accessible'],[`${ET_NOTES.filter(n=>n[2]<=p&&n[1]==='int').length}`,'Internal observations accessible'],[tagged?`${ok} / ${tagged}`:'—','Tagged correctly'],[risk,'Risk of observer influence and lost objectivity']])+
+   `<div class="callout">Participant observation gives access to information that is not available otherwise and a unique perspective, but it is time-consuming and increases the chance of observer influence and loss of objectivity. Ethnographers use the tension productively: external observations anchor what was seen, and internal observations explain what it meant.</div>`;
+}
+const gtCodes=()=>GT_CODES.concat(st.gt.extra||[]);
+function renderGTex(){
+  $('#gt-ex').innerHTML=GT_EX.map((t,i)=>`<div class="seg"><div>“${esc(t)}”</div><div class="ctl" style="margin:4px 0 0"><label for="gt-c${i}" class="sr">Code for excerpt ${i+1}</label><select id="gt-c${i}" class="fld" data-gtc="${i}"><option value="">Choose a code…</option>${gtCodes().map(c=>`<option ${st.gt.codes[i]===c?'selected':''}>${esc(c)}</option>`).join('')}</select></div></div>`).join('')+
+   `<div class="row" style="margin-top:8px"><input id="gt-new" class="fld" style="flex:1" placeholder="Add your own code"><button class="small" data-act="gt-add">Add</button></div>`;
+}
+function renderGT(){
+  const used=[...new Set(Object.values(st.gt.codes).filter(Boolean))];
+  $('#gt-cat').innerHTML=used.length?used.map(c=>`<div class="row" style="margin:5px 0"><span style="flex:1 1 50%">${esc(c)} <span class="muted small">(${Object.values(st.gt.codes).filter(v=>v===c).length})</span></span><select class="fld" style="flex:1 1 45%" data-gtk="${esc(c)}" aria-label="Category for ${esc(c)}"><option value="">Unassigned</option>${GT_CATS.map(k=>`<option ${st.gt.cats[c]===k?'selected':''}>${k}</option>`).join('')}</select></div>`).join(''):'<p class="muted small">Code at least one excerpt first.</p>';
+  const cnt={};GT_CATS.forEach(k=>cnt[k]=0);let un=0;
+  Object.entries(st.gt.codes).forEach(([i,c])=>{if(!c)return;const k=st.gt.cats[c];if(k)cnt[k]++;else un++});
+  const W=700,H=300,pos={'Adapting practice':[160,90],'Seeking support':[540,90],'Managing uncertainty':[160,220],'Weighing costs and benefits':[540,220]};
+  const core=GT_CATS.slice().sort((a,b)=>cnt[b]-cnt[a])[0],tot=sum(Object.values(cnt));
+  let s='';
+  if(tot>0)GT_CATS.forEach(k=>{if(k!==core&&cnt[k]>0)s+=`<line x1="${pos[core][0]}" y1="${pos[core][1]}" x2="${pos[k][0]}" y2="${pos[k][1]}" stroke="var(--axis)" stroke-dasharray="5 4"/>`});
+  GT_CATS.forEach((k,i)=>{const r=18+cnt[k]*9,[x,y]=pos[k],isCore=tot>0&&k===core;
+    s+=`<circle cx="${x}" cy="${y}" r="${r}" fill="${COLS[i]}" opacity="${cnt[k]?0.85:0.25}" stroke="${isCore?'var(--fg)':'none'}" stroke-width="3"/><text x="${x}" y="${y+4}" text-anchor="middle" font-weight="700" fill="var(--accentFg)">${cnt[k]}</text><text x="${x}" y="${y+r+16}" text-anchor="middle" fill="var(--fg)">${esc(k)}</text>`});
+  s+=`<text x="350" y="155" text-anchor="middle" fill="var(--muted)">${tot?'Outlined: candidate core category':'Categories will grow as excerpts are coded and grouped'}</text>`;
+  $('#gt-map').innerHTML=svgWrap(W,H,s,'Categories sized by supporting excerpts');
+  const thin=GT_CATS.filter(k=>cnt[k]<2);
+  $('#gt-txt').innerHTML=(tot?`<div class="callout">${un?un+' coded excerpts have a code with no category yet. ':''}The category with the most support is <b>${core}</b>. A theory is “grounded” when each category rests on data; categories with little support are where the next data collection should go.</div>`:'')+
+   `<h3>Theoretical sampling: where to look next</h3>`+(tot?`<ul class="clean">${thin.map(k=>`<li><b>${k}</b> (${cnt[k]} excerpt${cnt[k]===1?'':'s'}): ${GT_SAMPLE[k]}</li>`).join('')||'<li>Every category has at least two supporting excerpts. Test the relationships between them with new, contrasting cases.</li>'}</ul>`:'<p class="muted small">Suggestions appear once categories exist.</p>');
+}
+function renderHE(){
+  const p=st.he,R=heRun(p),t=p.step,W=700,H=300;
+  const cx=350,cy=150,pp=[[350,40],[600,150],[350,260],[100,150]];
+  let s=`<circle cx="${cx}" cy="${cy}" r="112" fill="none" stroke="var(--line)" stroke-dasharray="4 5"/>`;
+  const cur=t>0?R.steps[t-1].i:-1;
+  pp.forEach(([x,y],i)=>{const on=i===cur;
+    s+=`<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="${on?'var(--colB)':'var(--grid)'}" stroke-width="${on?3:1.5}"/><rect x="${x-62}" y="${y-18}" width="124" height="36" rx="8" fill="${on?'var(--tintB)':'var(--card)'}" stroke="${on?'var(--colB)':'var(--line)'}"/><text x="${x}" y="${y-2}" text-anchor="middle" font-weight="600" fill="var(--fg)">Part ${i+1}</text><text x="${x}" y="${y+12}" text-anchor="middle" fill="var(--muted)" font-size="10">${esc(cut(HE_PARTS[i][0],24))}</text>`});
+  const w=R.W[t],col=w<-.2?'var(--colA)':w>.2?'var(--colC)':'var(--colE)';
+  s+=`<circle cx="${cx}" cy="${cy}" r="46" fill="${col}" opacity=".85"/><text x="${cx}" y="${cy+4}" text-anchor="middle" font-weight="700" fill="var(--accentFg)">The whole</text><rect x="${cx-95}" y="${cy+52}" width="190" height="20" rx="10" fill="var(--card)" stroke="var(--line)"/><text x="${cx}" y="${cy+66}" text-anchor="middle" fill="var(--fg)">${esc(heLabel(w))}</text>`;
+  $('#he-circle').innerHTML=svgWrap(W,H,s,'Hermeneutic circle between parts and whole');
+  $('#he-nav').innerHTML=`<button class="small" data-act="he-prev" ${t<=0?'disabled':''}>← Previous</button><button class="primary small" data-act="he-next" ${t>=8?'disabled':''}>Next iteration →</button><span class="muted small">Iteration ${t} of 8${t>0?` (pass ${t>4?2:1})`:''}</span>`;
+  $('#he-text').innerHTML=HE_PARTS.map((x,i)=>`<div class="seg ${i===cur?'hl':''}"><b>Part ${i+1}.</b> ${esc(x[0])}${i===cur?`<span class="tag">now reading</span>`:''}</div>`).join('')+
+   (t>0?`<div class="callout">${(()=>{const S=R.steps[t-1];return`Reading part ${S.i+1} in light of a sense of the whole as <b>${heLabel(S.prev)}</b>, the reader perceives it as pulling toward <b>${f(S.pr,2)}</b>. On its own the part sits at <b>${f(HE_PARTS[S.i][1],2)}</b> (${HE_PARTS[S.i][2]}). The difference, <b>${f(S.infl,2)}</b>, is an influence the reader brings (scale: −1 loss to +1 renewal).`})()}</div>`:'<div class="callout">Before reading, the reader’s sense of the whole is only what they bring: <b>'+heLabel(R.W[0])+'</b>.</div>');
+  const mk=b=>{const r=heRun(Object.assign({},p,{bias:b}));return r.W.map((v,i)=>[i,v])};
+  $('#he-chart').innerHTML=lineChart([{pts:mk('loss'),c:'var(--colA)',dots:false},{pts:mk('newb'),c:'var(--colC)',dots:false},{pts:mk('none'),c:'var(--colE)',dots:false},{pts:[[0,R.textMean],[8,R.textMean]],c:'var(--fg)',dash:true,dots:false},{pts:R.W.slice(0,t+1).map((v,i)=>[i,v]),c:'var(--colB)'}],{xlab:'Iteration (part ↔ whole)',ylab:'Interpretation of the whole',xd:[0,8],yd:[-1,1],label:'Convergence of interpretations',W:640,H:240,xn:8});
+  $('#he-txt').innerHTML=`<div class="legend"><span><i style="width:18px;height:3px;background:var(--colA)"></i>Reader expecting loss</span><span><i style="width:18px;height:3px;background:var(--colC)"></i>Reader expecting renewal</span><span><i style="width:18px;height:3px;background:var(--colE)"></i>No expectation</span><span><i style="width:18px;height:3px;background:var(--fg)"></i>What the text carries on its own</span><span><i style="width:11px;height:11px;border-radius:50%;background:var(--colB)"></i>Your reader so far</span></div><p class="small">Readers with different expectations start far apart, but each pass between part and whole exposes how their expectation colored the reading. With more reflection (the slider), interpretations converge faster on what the text itself carries, a mix of loss and renewal. This curve is an illustration of the logic, not a measurement.</p>`;
+}
+function renderPH(){
+  const P=st.ph;
+  $('#ph-desc').innerHTML=PH_S.map((x,i)=>`<div class="seg ${P.units[i]?'hl':''}" role="button" tabindex="0" data-phu="${i}"><b>${i+1}.</b> ${esc(x[0])}<span class="tag">${P.units[i]?'meaning unit':'set aside'}</span></div>`).join('');
+  $('#ph-brk').innerHTML=PH_P.map((x,i)=>`<div class="ctl check"><label><input type="checkbox" data-phb="${i}" ${P.brk[i]?'checked':''}> ${esc(x[0])}</label></div>`).join('')+`<p class="small muted">${sum(P.brk.map(Number))} of ${PH_P.length} presuppositions bracketed.</p>`;
+  const red=PH_S.map((x,i)=>{if(!P.units[i])return'';const lost=!P.brk[2]&&PH_P[2][2]===i;return`<div class="seg ${lost?'hl':''}"><b>${i+1}.</b> ${lost?`<s class="muted">${esc(x[1])}</s> <span class="tag">lost to an unbracketed presupposition</span>`:esc(x[1])}</div>`}).join('');
+  $('#ph-red').innerHTML=red||'<p class="muted small">Select at least one meaning unit.</p>';
+  const items=PH_S.map((x,i)=>P.units[i]&&!(!P.brk[2]&&PH_P[2][2]===i)?x[1]:null).filter(Boolean),imp=PH_P.filter((x,i)=>!P.brk[i]).map(x=>x[1]);
+  $('#ph-ess').innerHTML=`<p><b>Structure of the experience:</b></p>`+(items.length?`<ul class="clean">${items.map(x=>`<li>${esc(x)}</li>`).join('')}${imp.map(x=>`<li style="color:var(--bad)">Imported by the researcher: ${esc(x)}</li>`).join('')}</ul>`:'<p class="muted small">No meaning units selected.</p>')+
+   `<div class="callout ${imp.length?'warn':'good'}">${imp.length?`${pill(imp.length+' unbracketed','warn')} Presuppositions left in place shape what the researcher sees, so the structure describes the researcher as much as the experience. Experiences are co-constituted by observer and observed, which is why presuppositions must be made explicit and set aside.`:`${pill('Fully bracketed','good')} Every presupposition has been set aside, so the structure stays with what is given in the description.`}</div>`;
+}
+function pvTab(){
+  $('#pv-chips').innerHTML=PV_AIMS.map((a,i)=>`<button class="${i===st.pv.aim?'on':''}" data-pva="${i}">${a}</button>`).join('');
+  $('#pv-grid').innerHTML=PV.map((p,i)=>{
+    const k=st.pv.kind[i],th=st.pv.theme[i];
+    return`<div class="seg"><div>${pvScene(p[4])}</div><div style="margin-top:6px"><b>${p[0]}</b></div><div class="small muted">${p[1]}</div><div class="row" style="margin-top:6px">${k?pill(k==='strength'?'Strength':'Concern',k==='strength'?'good':'bad'):''}${th?`<span class="pill warn">${th}</span>`:''}</div></div>`}).join('');
+  const a=st.pv.aim,out=$('#pv-out'),ttl=$('#pv-title');
+  if(a===0){
+    ttl.textContent='Record and reflect: strengths and concerns';
+    out.innerHTML=`<p class="small muted">As a member of the community, label each photograph as a strength or a concern.</p>`+PV.map((p,i)=>`<div class="row" style="margin:4px 0"><span style="flex:1 1 40%">${p[0]}</span>${['strength','concern'].map(k=>`<button class="small ${st.pv.kind[i]===k?'on':''}" data-pvk="${i}:${k}">${k==='strength'?'Strength':'Concern'}</button>`).join('')}</div>`).join('')+(()=>{const s=Object.values(st.pv.kind).filter(v=>v==='strength').length,c=Object.values(st.pv.kind).filter(v=>v==='concern').length;return`<div class="callout">Labeled so far: <b>${s}</b> strength${s===1?'':'s'}, <b>${c}</b> concern${c===1?'':'s'}. The community, not the researcher, decides what each image means.</div>`})();
+  }else if(a===1){
+    ttl.textContent='Critical dialogue: group discussion of the photographs';
+    out.innerHTML=`<p class="small muted">After small and large group discussion, group the photographs under themes.</p>`+PV.map((p,i)=>`<div class="row" style="margin:4px 0"><span style="flex:1 1 40%">${p[0]}</span><select class="fld" style="flex:1 1 40%" data-pvt="${i}" aria-label="Theme for ${p[0]}"><option value="">No theme yet</option>${PV_THEMES.map(t=>`<option ${st.pv.theme[i]===t?'selected':''}>${t}</option>`).join('')}</select></div>`).join('')+
+     `<div class="chart" id="pv-th"></div><h3>Discussion prompts</h3><ul class="clean"><li>What do you <b>see</b> here?</li><li>What is really <b>happening</b>?</li><li>How does this relate to <b>our</b> lives?</li><li><b>Why</b> does this strength or concern exist?</li><li>What can we <b>do</b> about it?</li></ul><p class="small muted">The five prompts follow a commonly used photovoice discussion sequence and are an addition to the slides.</p>`;
+    const cnt=PV_THEMES.map(t=>({l:t,v:Object.values(st.pv.theme).filter(x=>x===t).length,c:COLS[PV_THEMES.indexOf(t)]}));
+    $('#pv-th').innerHTML=barChart(cnt,{ylab:'Photographs',label:'Photographs by theme',W:560,H:180,cut:18,yn:3,ymax:Math.max(4,maxOf(cnt.map(c=>c.v))+1)});
+  }else{
+    ttl.textContent='Reach policymakers: a brief built from the photographs';
+    const inc=PV.map((p,i)=>i).filter(i=>st.pv.inc[i]);
+    out.innerHTML=`<p class="small muted">Choose the photographs to include. Each one needs a theme from the discussion stage to produce a request.</p>`+PV.map((p,i)=>`<div class="ctl check"><label><input type="checkbox" data-pvi="${i}" ${st.pv.inc[i]?'checked':''}> ${p[0]} <span class="muted small">${st.pv.kind[i]?'('+st.pv.kind[i]+')':''} ${st.pv.theme[i]?'· '+st.pv.theme[i]:''}</span></label></div>`).join('')+
+     `<h3>Draft brief</h3><textarea id="pv-brief" rows="9" readonly></textarea><div class="row" style="margin-top:6px"><button class="small" data-act="pv-copy">Copy brief</button></div>`;
+    const lines=['Community photovoice brief','','Residents photographed their community to record its strengths and concerns and discussed the images in small and large groups. They ask policymakers to consider the following.',''];
+    inc.forEach((i,n)=>{const th=st.pv.theme[i];lines.push(`${n+1}. ${PV[i][0]}: ${PV[i][1]}`+(th?`\n   Theme: ${th}. Request: ${PV_ASK[th]}`:'\n   Theme: (not yet assigned)'))});
+    if(!inc.length)lines.push('(No photographs selected yet.)');
+    $('#pv-brief').value=lines.join('\n');
+  }
+}
+function renderLB(){
+  $('#lb-chips').innerHTML=LB.map((m,i)=>`<button class="${i===st.lb.sel?'on':''}" data-lbs="${i}">${m[0]}</button>`).join('');
+  $('#lb-detail').innerHTML=`<div class="callout warn"><b>${LB[st.lb.sel][0]}</b><br>${LB[st.lb.sel][1]}</div><div class="row">${pill('Challenges fundamental assumptions','good')}${pill('Power/knowledge paradigm','good')}${pill('Integrates advocacy and activism','good')}</div>`;
+  $('#lb-lens').innerHTML=[['both','Side by side'],['conv','Conventional'],['lib','Liberating']].map(o=>`<button class="small ${st.lb.lens===o[0]?'on':''}" data-lbl="${o[0]}">${o[1]}</button>`).join('');
+  const T=LB_TOPICS[st.lb.topic],L=st.lb.lens;
+  $('#lb-cmp').innerHTML=tbl(['Question',...(L!=='lib'?['Conventional framing']:[]),...(L!=='conv'?['Liberating framing']:[])],LB_Q.map(q=>[q[0],...(L!=='lib'?[q[1]]:[]),...(L!=='conv'?[q[2]]:[])]).concat([['Example: '+T[0],...(L!=='lib'?[T[1]]:[]),...(L!=='conv'?[T[2]]:[])]]));
+}
+function renderMX(){
+  const v=st.mx.integ/100,W=700,H=230,n=8;let s='';
+  const yQ=40+v*45,yN=190-v*45;
+  s+=`<text x="12" y="${yQ+4}" fill="var(--colB)" font-weight="600">Qualitative</text><text x="12" y="${yN+4}" fill="var(--colA)" font-weight="600">Quantitative</text>`;
+  for(let i=0;i<n;i++){
+    const x=120+i*70,dx=(i%2?1:-1)*14*v;
+    if(v>.15)s+=`<line x1="${x+dx}" y1="${yQ}" x2="${x-dx}" y2="${yN}" stroke="var(--axis)" opacity="${.15+v*.7}" stroke-width="${1+v*2}"/>`;
+    if(i<n-1){s+=`<line x1="${x+dx+22}" y1="${yQ}" x2="${x+70-(((i+1)%2?1:-1)*14*v)-22}" y2="${yQ}" stroke="var(--colB)" opacity=".6"/><line x1="${x-dx+22}" y1="${yN}" x2="${x+70+(((i+1)%2?1:-1)*14*v)-22}" y2="${yN}" stroke="var(--colA)" opacity=".6"/>`}
+    s+=`<rect x="${x+dx-22}" y="${yQ-12}" width="44" height="24" rx="5" fill="var(--colB)"/><rect x="${x-dx-22}" y="${yN-12}" width="44" height="24" rx="5" fill="var(--colA)"/>`;
+  }
+  if(v<.5)s+=`<rect x="640" y="${(yQ+yN)/2-14}" width="54" height="28" rx="6" fill="none" stroke="var(--fg)" stroke-dasharray="4 3"/><text x="667" y="${(yQ+yN)/2+4}" text-anchor="middle" fill="var(--fg)" font-size="10">combined</text>`;
+  $('#mx-chart').innerHTML=svgWrap(W,H,s,'Qualitative and quantitative strands, from separate to integrated');
+  const lab=v<.35?['Mixed-methods','good']:v>.65?['Hybrid methods','warn']:['Between mixed and hybrid','warn'];
+  $('#mx-txt').innerHTML=`<p>${pill(lab[0],lab[1])}</p><div class="callout">${v<.35?'The qualitative and quantitative components stay <b>intact</b>: each is carried out and analyzed in its own terms and the results are brought together afterward.':v>.65?'The two approaches are <b>fluidly integrated</b>: aspects of each flow into the other throughout the project, so the strands cannot easily be pulled apart.':'Some links between the strands appear during the project, but the components are still largely distinguishable.'}</div>`;
+}
+const mq={cur:-1,n:0,score:0,answered:false,order:[]};
+function renderMQ(){
+  $('#mx-score').textContent=mq.n?`Score: ${mq.score} / ${mq.n}`:'';
+  if(mq.cur<0){$('#mx-q').innerHTML='<p class="muted small">Press “Next project”.</p>';return}
+  $('#mx-q').innerHTML=`<p><b>${MXQ[mq.cur][0]}</b></p><div class="row">${[['mixed','Mixed methods'],['hybrid','Hybrid methods'],['single','Neither (one approach only)']].map(o=>`<button data-mxa="${o[0]}" ${mq.answered?'disabled':''}>${o[1]}</button>`).join('')}</div><div id="mx-fb" role="status"></div>`;
+}
+/* ================= practice ================= */
+const SCEN=[
+  ['A researcher spends a year living in a fishing village, taking part in daily work and recording customs and relationships.','et','Ethnography: participatory field observation of social relations, customs and lived experience.'],
+  ['Interviews with caregivers are coded line by line and linked through memos, and further participants are chosen to fill gaps in the emerging categories.','gt','Grounded theory: coding, memoing and theoretical sampling.'],
+  ['A scholar re-reads an ancient letter, moving between single passages and the whole text and noting how her own assumptions shape each reading.','he','Hermeneutics: the hermeneutic circle between parts and whole.'],
+  ['A researcher asks participants to describe an episode of awe in their own words, sets aside her expectations, and distills the invariant structure of the experience.','ph','Phenomenology: bracketing and reduction to identify the essence of an experience.'],
+  ['Teenagers photograph places in their neighborhood they love and worry about, discuss the images in groups and present them to city officials.','pv','Photovoice: participants’ photographs, group dialogue and reaching policymakers.'],
+  ['A study draws on Freire’s ideas to have community members question how existing knowledge systems serve those in power, and ties the findings to organizing.','lb','Liberating methods: challenge to assumptions in knowledge systems and integration of advocacy.'],
+  ['A project alternates between interviews and a survey, each step reshaping the next so the two strands cannot be separated.','hyb','Hybrid methods: fluid integration of qualitative and quantitative aspects.'],
+  ['A report presents a survey in one section and a set of interviews in another, each analyzed on its own terms.','mix','Mixed methods: both approaches combined intact.'],
+  ['A researcher joins a school staff room and records both what is visible and what it feels like to belong.','et','Ethnography: external and internal observations during participation.'],
+  ['A researcher builds a theory of why volunteers stay or leave directly from coded interviews, rather than from an existing theory.','gt','Grounded theory: theory discovered inductively and grounded in the data.']
+];
+const SCEN_OPTS=[['et','Ethnography'],['gt','Grounded theory'],['he','Hermeneutics'],['ph','Phenomenology'],['pv','Photovoice'],['lb','Liberating methods'],['mix','Mixed methods'],['hyb','Hybrid methods']];
+const pq={cur:-1,n:0,score:0,answered:false,order:[]};
+function newPQ(){if(!pq.order.length)pq.order=makeRng(Date.now()%99991+3).shuffle(SCEN.map((_,i)=>i));pq.cur=pq.order.shift();pq.answered=false;renderPQ()}
+function renderPQ(){
+  $('#pq-score').textContent=pq.n?`Score: ${pq.score} / ${pq.n}`:'';
+  if(pq.cur<0){$('#pq-card').hidden=true;return}
+  $('#pq-card').hidden=false;$('#pq-desc').innerHTML=`<p><b>${SCEN[pq.cur][0]}</b></p>`;
+  $('#pq-opts').innerHTML=SCEN_OPTS.map(o=>`<button data-pqa="${o[0]}" ${pq.answered?'disabled':''}>${o[1]}</button>`).join('');
+  if(!pq.answered)$('#pq-feedback').innerHTML='';
+}
+function answerPQ(a){
+  if(pq.answered)return;pq.answered=true;pq.n++;const S=SCEN[pq.cur],ok=a===S[1];if(ok)pq.score++;renderPQ();
+  $('#pq-feedback').innerHTML=`<div class="callout ${ok?'good':'warn'}">${ok?pill('Correct','good'):pill('Not quite','bad')} ${S[2]}</div>`;$('#pq-score').textContent=`Score: ${pq.score} / ${pq.n}`;
+}
+const QZ=[
+  {q:'How do qualitative strategies often scrutinize data?',o:['Objectively, through deduction from logical premises','Intersubjectively, through inductive reasoning','Only through statistical tests','Without any reasoning'],a:1,why:'Qualitative strategies often scrutinize data intersubjectively, using inductive reasoning applied to discovered principles or essentials, in order to understand a phenomenon.'},
+  {q:'Quantitative strategies often scrutinize data “objectively” through…',o:['Inductive reasoning','Deductive reasoning and logical premises','Bracketing','Memoing'],a:1,why:'Deduction from logical premises is used to reject or support a research hypothesis.'},
+  {q:'What does <i>verstehen</i> emphasize?',o:['Prediction','Understanding rather than simple knowledge','Random sampling','Hypothesis rejection'],a:1,why:'Qualitative strategies emphasize understanding (verstehen), particularly among those who differentiate the human sciences from the natural sciences.'},
+  {q:'Which are typical qualitative data?',o:['Naturally expressed language, visual imagery and other sensory data','Only numerical ratings','Only physiological measurements','Only archival counts'],a:0,why:'Qualitative data concern the qualities of an event or experience and are not initially in quantitative format.'},
+  {q:'Grounded theory was developed by…',o:['Husserl and Giorgi','Glaser and Strauss','Wang and Burris','Heidegger and Gadamer'],a:1,why:'Glaser and Strauss developed it in sociology in the late 1960s.'},
+  {q:'What is the purpose of theoretical sampling?',o:['To obtain a random sample','To “ground” theoretical advances in the data itself','To count word frequencies','To bracket the researcher’s views'],a:1,why:'Theoretical sampling directs further data collection toward what the developing theory needs.'},
+  {q:'The hermeneutic circle involves…',o:['Repeatedly shifting focus between parts and whole','Setting aside all presuppositions at once','Randomly assigning participants','Photographing a community'],a:0,why:'Iterating between the parts and the whole, or the thing and its context, reveals influences on interpretation.'},
+  {q:'Which techniques identify essences in descriptive phenomenology?',o:['Bracketing and phenomenological reduction','Theoretical sampling and memoing','Participatory observation','Random assignment'],a:0,why:'Giorgi’s descriptive phenomenology uses bracketing and phenomenological reduction.'},
+  {q:'Photovoice was developed by…',o:['Wang and Burris','Glaser and Strauss','Malinowski and Muller','Freire and Gadamer'],a:0,why:'Wang and Burris developed photovoice, derived from Wendy Ewald’s photographic work with children in Appalachia.'},
+  {q:'Which is NOT one of photovoice’s three aims?',o:['Record and reflect community strengths and concerns','Promote critical dialogue through group discussion','Reach policymakers','Test a hypothesis with a control group'],a:3,why:'Photovoice aims to record and reflect, to promote critical dialogue, and to reach policymakers.'},
+  {q:'Which work often inspires liberating methods?',o:['Being and Time','Truth and Method','Pedagogy of the Oppressed','The Interpretation of Dreams'],a:2,why:'Paulo Freire’s Pedagogy of the Oppressed inspired many of these methods.'},
+  {q:'What distinguishes hybrid from mixed methods?',o:['Hybrid methods use only qualitative data','Hybrid methods fluidly integrate qualitative and quantitative aspects, while mixed methods combine them intact','Mixed methods avoid numbers','There is no difference'],a:1,why:'Mixed-methods approaches combine aspects intact; hybrid methods integrate them fluidly.'},
+  {q:'Ethnographic field research is typified by…',o:['Random assignment','Participatory observation','Bracketing','Archival coding'],a:1,why:'Ethnographers participate and make both external and internal observations.'}
+];
+const QZE=makeQuiz(QZ,'qz-out','qz-score');
+
+/* ================= wiring ================= */
+const TABS=['at','fd','et','gt','he','ph','pv','lb','mx','prac','ref'];
+function renderRef(){
+  $('#ref-cards').innerHTML=DQK.map(k=>{const d=DQ[k];return`<div class="card"><h2>${d.name}</h2><p>${d.what}</p><ul class="clean"><li><b>Origin:</b> ${d.origin}</li><li><b>Techniques:</b> ${d.tech}</li>${d.note?`<li>${d.note}</li>`:''}</ul></div>`}).join('');
+  $('#ref-att').innerHTML=DIMS.map(d=>`<tr><td class="l"><b>${d.t}</b></td><td class="l"><ul class="clean">${d.qn.map(x=>`<li>${x}</li>`).join('')}</ul></td><td class="l"><ul class="clean">${d.ql.map(x=>`<li>${x}</li>`).join('')}</ul></td></tr>`).join('');
+}
+function showTab(id){
+  st.tab=id;
+  $$('nav.tabs button').forEach(b=>b.setAttribute('aria-selected',b.id==='t-'+id?'true':'false'));
+  $$('.tabpanel').forEach(p=>{p.hidden=p.id!=='p-'+id});
+  ({at:()=>{renderAT();renderSRT()},fd:renderFD,et:renderET,gt:()=>{renderGTex();$('#gt-memo').value=st.gt.memo;renderGT()},he:renderHE,ph:renderPH,pv:pvTab,lb:renderLB,mx:()=>{renderMX();renderMQ()},prac:()=>{renderPQ();QZE.render()},ref:renderRef})[id]();
+}
+const SHARE_KEYS=['at','et','he','mx','atDim','srt','fd','etTags','gt','ph','pv','lb'];
+function syncFD(){Object.keys(st.fd).forEach(k=>{const el=$(`input[name="f-${k}"][value="${st.fd[k]}"]`);if(el)el.checked=true})}
+function onGroupChange(pre){({at:renderAT,et:renderET,he:renderHE,mx:renderMX})[pre]()}
+function init(){
+  ['at','et','he','mx'].forEach(pre=>{$('#'+pre+'-controls').innerHTML=ctrlHTML(pre,DEFS[pre],st[pre],PRESETS[pre],2)});
+  $('#lb-topic').innerHTML=LB_TOPICS.map((t,i)=>`<option value="${i}">${t[0]}</option>`).join('');
+  restoreHash();
+  ['at','et','he','mx'].forEach(pre=>{syncControls(pre,DEFS[pre],st[pre]);bindControls(pre,st[pre],DEFS[pre],()=>onGroupChange(pre),PRESETS[pre],DEFAULTS[pre])});
+  syncFD();$('#lb-topic').value=st.lb.topic;
+  $$('nav.tabs button').forEach(b=>{
+    b.addEventListener('click',()=>showTab(b.id.slice(2)));
+    b.addEventListener('keydown',e=>{
+      if(e.key!=='ArrowRight'&&e.key!=='ArrowLeft')return;
+      const i=TABS.indexOf(b.id.slice(2)),j=(i+(e.key==='ArrowRight'?1:TABS.length-1))%TABS.length;
+      showTab(TABS[j]);$('#t-'+TABS[j]).focus();e.preventDefault();
+    });
+  });
+  document.addEventListener('keydown',e=>{const r=e.target.closest&&e.target.closest('[data-phu]');if(r&&(e.key==='Enter'||e.key===' ')){e.preventDefault();togglePHU(+r.dataset.phu)}});
+  $('#lb-topic').addEventListener('change',e=>{st.lb.topic=+e.target.value;renderLB()});
+  $('#gt-memo').addEventListener('input',e=>{st.gt.memo=e.target.value});
+  document.addEventListener('click',e=>{
+    const b=e.target.closest('[data-act],[data-qz],[data-pqa],[data-dim],[data-srt],[data-fd],[data-goto],[data-tag],[data-phu],[data-pva],[data-pvk],[data-lbs],[data-lbl],[data-mxa]');if(!b)return;
+    const d=b.dataset;
+    if(d.dim!==undefined){st.atDim=+d.dim;renderAT();return}
+    if(d.srt){const[i,a]=d.srt.split(':');st.srt[i]=a;renderSRT();return}
+    if(d.fd){e.preventDefault();st.fdSel=d.fd;renderFD();return}
+    if(d.goto){showTab(d.goto);window.scrollTo(0,0);return}
+    if(d.tag){const[i,a]=d.tag.split(':');st.etTags[i]=a;renderET();return}
+    if(d.phu!==undefined){togglePHU(+d.phu);return}
+    if(d.pva!==undefined){st.pv.aim=+d.pva;pvTab();return}
+    if(d.pvk){const[i,k]=d.pvk.split(':');st.pv.kind[i]=k;pvTab();return}
+    if(d.lbs!==undefined){st.lb.sel=+d.lbs;renderLB();return}
+    if(d.lbl){st.lb.lens=d.lbl;renderLB();return}
+    if(d.mxa){if(mq.answered)return;mq.answered=true;mq.n++;const ok=d.mxa===MXQ[mq.cur][1];if(ok)mq.score++;renderMQ();$('#mx-fb').innerHTML=`<div class="callout ${ok?'good':'warn'}">${ok?pill('Correct','good'):pill('Not quite','bad')} ${MXQ[mq.cur][2]}</div>`;$('#mx-score').textContent=`Score: ${mq.score} / ${mq.n}`;return}
+    if(d.qz!==undefined){QZE.answer(+d.qz.split(':')[1]);return}
+    if(d.pqa){answerPQ(d.pqa);return}
+    const a=d.act,pre=a.split('-')[0],op=a.split('-')[1];
+    if(a==='prac-reset'){pq.cur=-1;pq.n=0;pq.score=0;pq.order=[];$('#pq-feedback').innerHTML='';renderPQ();QZE.reset();return}
+    if(a==='pq-new'){newPQ();return}
+    if(a==='qz-new'){QZE.next();return}
+    if(a==='srt-reset'){st.srt={};renderSRT();return}
+    if(a==='fd-reset'){Object.assign(st.fd,FD_DEF);st.fdSel=null;syncFD();renderFD();return}
+    if(a==='et-clear'){st.etTags={};renderET();return}
+    if(a==='gt-demo'){st.gt.codes=Object.assign({},GT_DEMO.codes);st.gt.cats=Object.assign({},GT_DEMO.cats);renderGTex();renderGT();return}
+    if(a==='gt-reset'){st.gt={codes:{},cats:{},memo:'',extra:st.gt.extra};$('#gt-memo').value='';renderGTex();renderGT();return}
+    if(a==='gt-add'){const v=$('#gt-new').value.trim();if(v&&!gtCodes().includes(v)){(st.gt.extra=st.gt.extra||[]).push(v);renderGTex();renderGT()}return}
+    if(a==='gt-prompt'){const m=$('#gt-memo');m.value+=(m.value?'\n\n':'')+GT_PROMPTS[Math.floor(Math.random()*GT_PROMPTS.length)];st.gt.memo=m.value;return}
+    if(a==='pv-copy'){const t=$('#pv-brief').value;if(navigator.clipboard)navigator.clipboard.writeText(t).then(()=>toast('Brief copied'),()=>toast('Select the text and copy it'));else toast('Select the text and copy it');return}
+    if(a==='he-next'){st.he.step=Math.min(8,st.he.step+1);syncControls('he',HE_DEFS,st.he);renderHE();return}
+    if(a==='he-prev'){st.he.step=Math.max(0,st.he.step-1);syncControls('he',HE_DEFS,st.he);renderHE();return}
+    if(a==='mx-new'){if(!mq.order.length)mq.order=makeRng(Date.now()%99991+7).shuffle(MXQ.map((_,i)=>i));mq.cur=mq.order.shift();mq.answered=false;renderMQ();return}
+    if(op==='reset'&&DEFAULTS[pre]){Object.assign(st[pre],DEFAULTS[pre]);syncControls(pre,DEFS[pre],st[pre]);onGroupChange(pre)}
+  });
+  document.addEventListener('change',e=>{
+    const el=e.target,d=el.dataset||{};
+    if(d.gtc!==undefined){st.gt.codes[d.gtc]=el.value;renderGT();return}
+    if(d.gtk!==undefined){st.gt.cats[d.gtk]=el.value;renderGT();return}
+    if(d.phb!==undefined){st.ph.brk[+d.phb]=el.checked;renderPH();return}
+    if(d.pvt!==undefined){st.pv.theme[d.pvt]=el.value;pvTab();return}
+    if(d.pvi!==undefined){st.pv.inc[d.pvi]=el.checked;pvTab();return}
+    if(el.name&&el.name.indexOf('f-')===0){st.fd[el.name.slice(2)]=el.value;st.fdSel=null;renderFD()}
+  });
+  $('#btn-theme').addEventListener('click',()=>{
+    const cur=document.documentElement.dataset.theme||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
+    document.documentElement.dataset.theme=cur==='dark'?'light':'dark';showTab(st.tab);
+  });
+  $('#btn-link').addEventListener('click',()=>{
+    try{const o={tab:st.tab};SHARE_KEYS.forEach(k=>{o[k]=st[k]});
+      location.hash='s='+btoa(unescape(encodeURIComponent(JSON.stringify(o))));
+      if(navigator.clipboard)navigator.clipboard.writeText(location.href).then(()=>toast('Link copied'),()=>toast('Link is in the address bar'));else toast('Link is in the address bar');
+    }catch(err){toast('Could not build link')}
+  });
+  showTab(st.tab);
+}
+function togglePHU(i){st.ph.units[i]=!st.ph.units[i];renderPH()}
+function restoreHash(){
+  try{const m=/s=([^&]+)/.exec(location.hash);if(!m)return;
+    const o=JSON.parse(decodeURIComponent(escape(atob(m[1]))));
+    SHARE_KEYS.forEach(k=>{if(o[k]!==undefined){if(o[k]&&typeof o[k]==='object'&&!Array.isArray(o[k]))Object.assign(st[k],o[k]);else st[k]=o[k]}});
+    if(o.tab&&TABS.includes(o.tab))st.tab=o.tab;
+    if(!(st.atDim>=0&&st.atDim<DIMS.length))st.atDim=0;
+    if(!Array.isArray(st.ph.units)||st.ph.units.length!==PH_S.length)st.ph.units=PH_S.map(()=>true);
+    if(!Array.isArray(st.ph.brk)||st.ph.brk.length!==PH_P.length)st.ph.brk=PH_P.map(()=>false);
+    if(!(st.lb.sel>=0&&st.lb.sel<LB.length))st.lb.sel=0;if(!(st.lb.topic>=0&&st.lb.topic<LB_TOPICS.length))st.lb.topic=0;
+    if(!(st.pv.aim>=0&&st.pv.aim<3))st.pv.aim=0;if(!HE_BIAS.hasOwnProperty(st.he.bias))st.he.bias='loss';
+  }catch(e){}
+}
+const rootObj=typeof window!=='undefined'?window:globalThis;
+rootObj.QualExplorer={showTab,st,heRun,fdRank,DQ,SCEN,QZ};
+if(typeof document!=='undefined'&&document.getElementById('t-at'))init();
+
+})();
+</script>
+</body>
+</html>
