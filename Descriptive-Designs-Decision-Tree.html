@@ -1,0 +1,1204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Descriptive Designs Decision Tree</title>
+<meta name="description" content="Interactive decision tree for choosing a quantitative, qualitative, mixed or case study descriptive research design.">
+<style>
+
+:root{
+  --bg:#f5f6f4; --card:#ffffff; --fg:#1c1f24; --muted:#5b6572; --line:#d9dde3; --grid:#eceff2;
+  --plot:#ffffff; --axis:#8b94a1; --colA:#34588a; --colB:#c0531a; --tintB:rgba(192,83,26,.07); --colC:#14806f; --colD:#7c3fb0; --colE:#8a6d00;
+  --accent:#2b62c4; --accentFg:#ffffff; --good:#1f7a43; --warn:#9a6700; --bad:#b3261e;
+  --goodBg:#e5f4ea; --warnBg:#fbf0d4; --badBg:#fbe4e2;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme=light]){
+    --bg:#13161b; --card:#1b1f26; --fg:#e8eaed; --muted:#9aa3af; --line:#2d333c; --grid:#262b33;
+    --plot:#1b1f26; --axis:#6f7886; --colA:#8fb4e8; --colB:#f59a5f; --tintB:rgba(245,154,95,.10); --colC:#4fcfb8; --colD:#c39bea; --colE:#e3c64f;
+    --accent:#7aa7ff; --accentFg:#0d1117; --good:#6fd596; --warn:#e8c05a; --bad:#ff8c84;
+    --goodBg:#16301f; --warnBg:#3a3016; --badBg:#3d1d1b;
+  }
+}
+:root[data-theme=dark]{
+  --bg:#13161b; --card:#1b1f26; --fg:#e8eaed; --muted:#9aa3af; --line:#2d333c; --grid:#262b33;
+  --plot:#1b1f26; --axis:#6f7886; --colA:#8fb4e8; --colB:#f59a5f; --tintB:rgba(245,154,95,.10); --colC:#4fcfb8; --colD:#c39bea; --colE:#e3c64f;
+  --accent:#7aa7ff; --accentFg:#0d1117; --good:#6fd596; --warn:#e8c05a; --bad:#ff8c84;
+  --goodBg:#16301f; --warnBg:#3a3016; --badBg:#3d1d1b;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+header.top{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:14px 20px 6px;max-width:1360px;margin:0 auto}
+header.top h1{font-size:1.25rem;margin:0;letter-spacing:-.01em}
+header.top p{margin:2px 0 0;color:var(--muted);font-size:.9rem;max-width:62ch}
+.hbtns{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+button,.btn{font:inherit;font-size:.85rem;border:1px solid var(--line);background:var(--card);color:var(--fg);padding:6px 11px;border-radius:7px;cursor:pointer}
+button:hover{border-color:var(--accent)}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,summary:focus-visible,tr[tabindex]:focus-visible,[role=button]:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button.primary{background:var(--accent);color:var(--accentFg);border-color:var(--accent);font-weight:600}
+button.small{padding:3px 8px;font-size:.78rem}
+button.on{background:var(--accent);color:var(--accentFg);border-color:var(--accent)}
+nav.tabs{display:flex;gap:2px;max-width:1360px;margin:6px auto 0;padding:0 20px;border-bottom:1px solid var(--line);overflow-x:auto}
+nav.tabs button{border:none;border-bottom:3px solid transparent;border-radius:0;background:none;padding:9px 14px;font-size:.92rem;color:var(--muted);white-space:nowrap}
+nav.tabs button[aria-selected=true]{color:var(--fg);border-bottom-color:var(--colB);font-weight:600}
+main{max-width:1360px;margin:0 auto;padding:16px 20px 40px}
+.tabpanel[hidden]{display:none}
+.layout{display:grid;grid-template-columns:330px minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:980px){.layout{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:14px}
+.card h2{font-size:1rem;margin:0 0 8px}
+.card h3{font-size:.92rem;margin:14px 0 6px}
+.card p{margin:6px 0}
+.muted{color:var(--muted)}
+.small{font-size:.82rem}
+aside.controls{position:sticky;top:8px;max-height:calc(100vh - 16px);overflow:auto;padding:12px 14px}
+@media (max-width:980px){aside.controls{position:static;max-height:none}}
+details.grp{border-top:1px solid var(--line);padding:6px 0}
+details.grp:first-of-type{border-top:none}
+details.grp>summary{cursor:pointer;font-weight:600;font-size:.88rem;padding:4px 0;list-style:none}
+details.grp>summary::before{content:"▸ ";color:var(--muted)}
+details.grp[open]>summary::before{content:"▾ "}
+.ctl{margin:6px 0 10px}
+.ctl label{display:flex;justify-content:space-between;gap:8px;font-size:.82rem;color:var(--muted);margin-bottom:2px}
+.ctl output{color:var(--fg);font-variant-numeric:tabular-nums;font-weight:600}
+.ctl input[type=range]{width:100%;accent-color:var(--accent)}
+.ctl input[type=text],.ctl input[type=number],.ctl select,textarea,input.fld,select.fld{width:100%;font:inherit;font-size:.85rem;padding:5px 7px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--fg)}
+.ctl.check label{display:flex;justify-content:flex-start;gap:8px;align-items:center;color:var(--fg)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.toolbar{display:flex;gap:6px 14px;flex-wrap:wrap;align-items:center;margin-bottom:8px;font-size:.82rem}
+.toolbar label{display:inline-flex;gap:5px;align-items:center;cursor:pointer}
+.toolbar .sp{flex:1}
+.chart svg{width:100%;height:auto;display:block}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted);margin-top:6px}
+.legend i{display:inline-block;vertical-align:middle;margin-right:4px}
+.tbl-wrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.84rem;font-variant-numeric:tabular-nums}
+th,td{padding:5px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{font-weight:600;color:var(--muted);font-size:.78rem}
+th[title]{cursor:help;text-decoration:underline dotted;text-underline-offset:3px}
+td.l,th.l{text-align:left;white-space:normal}
+tr[data-cm]{cursor:pointer}
+tr[data-cm].sel td{background:var(--grid)}
+.pill{display:inline-block;padding:1px 8px;border-radius:99px;font-size:.76rem;font-weight:600}
+.pill.good{background:var(--goodBg);color:var(--good)}
+.pill.warn{background:var(--warnBg);color:var(--warn)}
+.pill.bad{background:var(--badBg);color:var(--bad)}
+.callout{border-left:4px solid var(--colA);background:var(--grid);padding:8px 12px;border-radius:0 8px 8px 0;font-size:.88rem;margin:8px 0}
+.callout.warn{border-left-color:var(--warn)}
+.callout.good{border-left-color:var(--good)}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+.stat{display:flex;gap:18px;flex-wrap:wrap;margin:6px 0 8px}
+.stat div{min-width:110px}
+.stat b{display:block;font-size:1.3rem;font-variant-numeric:tabular-nums}
+.stat span{font-size:.76rem;color:var(--muted)}
+ul.clean{padding-left:18px;margin:6px 0}
+ul.clean li{margin:3px 0}
+.q{margin:12px 0}
+.q legend{font-weight:600;font-size:.92rem;padding:0}
+.q fieldset{border:none;margin:0;padding:0}
+.q label{display:block;margin:3px 0;font-size:.9rem;cursor:pointer}
+.fit{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-top:1px solid var(--line)}
+.fit:first-child{border-top:none}
+.fit .nm{font-weight:600}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}
+.chips button{border-radius:99px;padding:3px 11px}
+.seg{padding:6px 9px;margin:3px 0;border:1px solid var(--line);border-radius:8px;background:var(--bg)}
+.seg.hl{border-color:var(--colB);background:var(--tintB)}
+.seg .tag{display:inline-block;font-size:.72rem;font-weight:600;padding:0 7px;border-radius:99px;background:var(--grid);color:var(--muted);margin-left:6px}
+footer{max-width:1360px;margin:0 auto;padding:0 20px 30px;color:var(--muted);font-size:.8rem}
+.sr{position:absolute;left:-9999px}
+dl.gl dt{font-weight:600;margin-top:8px}
+dl.gl dd{margin:2px 0 0 0;color:var(--muted)}
+ol.refs li{margin:5px 0;font-size:.85rem}
+#toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:8px 14px;border-radius:8px;font-size:.85rem;opacity:0;pointer-events:none;transition:opacity .2s}
+#toast.show{opacity:.95}
+[hidden]{display:none!important}
+.chart svg text{user-select:none}
+button.opt{display:block;width:100%;text-align:left;margin:6px 0;padding:9px 12px;border-radius:8px}
+button.opt b{display:block;font-size:.92rem}
+button.opt span{display:block;font-size:.8rem;color:var(--muted);margin-top:2px}
+button.opt:hover{background:var(--grid)}
+ol.crumbs{list-style:none;margin:6px 0 10px;padding:0;font-size:.8rem}
+ol.crumbs li{margin:2px 0}
+button.crumb{border:none;background:none;padding:2px 0;color:var(--muted);text-align:left;font-size:.8rem;cursor:pointer}
+button.crumb b{color:var(--fg)}
+button.crumb:hover{color:var(--accent)}
+pre.nota{background:var(--grid);border-radius:8px;padding:8px 12px;font:600 .85rem/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;margin:6px 0;overflow-x:auto;white-space:pre-wrap}
+.treewrap{overflow-x:auto}
+.treewrap svg{min-width:960px}
+.treewrap [data-tn]{cursor:pointer}
+.ck{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-top:1px solid var(--line);cursor:pointer}
+.ck:first-child{border-top:none}
+.ck input{margin-top:4px}
+.ck .t{font-weight:600}
+.ck.done .t{text-decoration:line-through;color:var(--muted)}
+.opts4{display:grid;gap:6px}
+.progress{height:8px;background:var(--grid);border-radius:99px;overflow:hidden;margin:6px 0}
+.progress i{display:block;height:100%;background:var(--good)}
+
+</style>
+</head>
+<body>
+<header class="top">
+  <div>
+    <h1>Descriptive Designs Decision Tree</h1>
+    <p>Answer a short series of questions to find the descriptive research design that fits your study, across both quantitative and qualitative approaches. The tree separates describing from relating and explaining, numerical from qualitative data, observation from survey from records, and single cases from groups, then adds selectors for scoring methods, survey administration, case data and qualitative aims, with strengths, threats, analysis and general considerations.</p>
+  </div>
+  <div class="hbtns">
+    <button id="btn-link" title="Put your answers in the page URL so you can share or bookmark them">Copy share link</button>
+    <button id="btn-theme" title="Toggle light / dark">Theme</button>
+  </div>
+</header>
+
+<nav class="tabs" role="tablist" aria-label="Sections">
+  <button role="tab" id="t-tree" aria-controls="p-tree" aria-selected="true">Decision tree</button>
+  <button role="tab" id="t-cat" aria-controls="p-cat" aria-selected="false">Design catalog</button>
+  <button role="tab" id="t-wk" aria-controls="p-wk" aria-selected="false">Strengths and weaknesses</button>
+  <button role="tab" id="t-con" aria-controls="p-con" aria-selected="false">General considerations</button>
+  <button role="tab" id="t-prac" aria-controls="p-prac" aria-selected="false">Practice</button>
+  <button role="tab" id="t-ref" aria-controls="p-ref" aria-selected="false">Reference</button>
+</nav>
+
+<main>
+<noscript><div class="card">This decision tree needs JavaScript enabled.</div></noscript>
+
+<section class="tabpanel" id="p-tree" role="tabpanel" aria-labelledby="t-tree">
+  <div class="card">
+    <div class="toolbar"><b>The tree and your path</b><span class="sp"></span><button class="small" data-dl="svg">Download SVG</button><button class="small" data-dl="png">Download PNG</button></div>
+    <div class="treewrap chart" id="tree-chart"></div>
+    <p class="small muted">Click an answered question in the tree, or in the list of answers, to go back to it. The case selector can be reached from the quantitative branch, the qualitative branch, or directly, because a case study can use numerical data, narrative data or both.</p>
+  </div>
+  <div class="layout">
+    <aside class="card controls" id="q-card" aria-live="polite"></aside>
+    <div id="res"></div>
+  </div>
+</section>
+
+<section class="tabpanel" id="p-cat" role="tabpanel" aria-labelledby="t-cat" hidden>
+  <div class="card">
+    <div class="row" style="justify-content:space-between;align-items:flex-end">
+      <div><h2 style="margin:0">Every design the tree can recommend</h2><p class="small muted">Descriptive designs describe variables as they occur naturally; relationships are the business of correlational research and cause and effect of experimental research.</p></div>
+      <div class="ctl" style="margin:0;min-width:240px"><label for="cat-f">Show</label><select id="cat-f"></select></div>
+    </div>
+    <div id="cat-out"></div>
+  </div>
+  <div class="card">
+    <h2>Three strategies, one question</h2>
+    <p>Descriptive research describes a single variable, or each variable on its own, as it exists naturally. Correlational research establishes and describes relationships between variables, and only experimental research demonstrates cause and effect. This tree covers the first strategy and hands off to the others.</p>
+    <div class="chart" id="cat-spec"></div>
+  </div>
+  <div class="card">
+    <h2>Quantitative and qualitative: where each design sits</h2>
+    <p class="small muted">Quantitative and qualitative approaches differ in their mechanisms of knowing, view of knowledge, data and goals. The bars show the range of each design along that continuum. The case study spans the whole range because it can use numerical scores, narrative data or both.</p>
+    <div class="chart" id="cat-cont"></div>
+  </div>
+</section>
+
+<section class="tabpanel" id="p-wk" role="tabpanel" aria-labelledby="t-wk" hidden>
+  <div class="card">
+    <h2>Strengths and weaknesses of the design families</h2>
+    <p class="small muted">Click a row to read how each family fares on that issue. The course content gives formal strengths and weaknesses for observation, survey and case study designs. For qualitative designs the entries summarize what each design asks of the researcher. Colors are a teaching heuristic.</p>
+    <div id="cm-matrix"></div>
+  </div>
+  <div class="card"><h2 id="cm-title"></h2><div id="cm-detail"></div></div>
+</section>
+
+<section class="tabpanel" id="p-con" role="tabpanel" aria-labelledby="t-con" hidden>
+  <div class="layout">
+    <aside class="card controls">
+      <div class="row" style="justify-content:space-between"><h2 style="margin:0">Choose a design</h2><button class="small" data-act="con-reset" title="Clear every tick and follow the tree result again">Reset</button></div>
+      <div class="ctl"><label for="cs-key">Design</label><select id="cs-key"></select></div>
+      <div id="cs-note"></div>
+      <div id="cs-prog"></div>
+      <p class="small muted">Tick each consideration once your study plan addresses it.</p>
+    </aside>
+    <div>
+      <div class="card"><h2>Considerations for: <span id="cs-name"></span></h2><div id="cs-on"></div></div>
+      <div class="card" id="cs-off-wrap"><details><summary style="cursor:pointer;font-weight:600">Other considerations (<span id="cs-off-n"></span>) that apply less directly</summary><div id="cs-off"></div></details></div>
+      <div class="card">
+        <h2>Do two observers agree?</h2>
+        <p class="small muted">Two observers independently code the same events as present or absent. Enter the counts.</p>
+        <div class="row">
+          <div class="ctl" style="max-width:150px"><label for="kp-a">Both: present</label><input id="kp-a" type="number" min="0" step="1" value="20"></div>
+          <div class="ctl" style="max-width:150px"><label for="kp-b">A present, B absent</label><input id="kp-b" type="number" min="0" step="1" value="5"></div>
+          <div class="ctl" style="max-width:150px"><label for="kp-c">A absent, B present</label><input id="kp-c" type="number" min="0" step="1" value="4"></div>
+          <div class="ctl" style="max-width:150px"><label for="kp-d">Both: absent</label><input id="kp-d" type="number" min="0" step="1" value="21"></div>
+        </div>
+        <div id="kp-out"></div>
+        <p class="small muted">Percent agreement can look high when one category is very common; Cohen’s κ removes the agreement expected by chance. The course content names inter-rater reliability without specifying an index, so these two are shown as common examples.</p>
+      </div>
+      <div class="card">
+        <h2>How precise is my survey percentage?</h2>
+        <div class="row"><div class="ctl" style="max-width:170px"><label for="mg-p">Percentage who agree</label><input id="mg-p" type="number" step="1" min="1" max="99" value="60"></div><div class="ctl" style="max-width:170px"><label for="mg-n">Respondents n</label><input id="mg-n" type="number" step="1" min="2" max="1000000" value="400"></div></div>
+        <div id="mg-out"></div>
+        <p class="small muted">The margin reflects chance variation among respondents only. It does not repair nonresponse bias, an unrepresentative sample or leading questions, which can distort the result by much more.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="tabpanel" id="p-prac" role="tabpanel" aria-labelledby="t-prac" hidden>
+  <div class="card">
+    <div class="row" style="justify-content:space-between"><h2 style="margin:0">Choose the best design</h2><div class="row"><span id="pr-score" class="small muted"></span><button class="small primary" data-act="pr-new">New scenario</button><button class="small" data-act="prac-reset" title="Clear the scores and the current questions">Reset</button></div></div>
+    <p class="small muted">Read the scenario, pick the best fit, then open the same path in the decision tree to see how the answers lead there.</p>
+    <div id="pr-card" hidden>
+      <div class="callout" id="pr-text" style="font-size:.95rem"></div>
+      <div class="opts4" id="pr-choices"></div>
+      <div id="pr-fb"></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="row" style="justify-content:space-between"><h2 style="margin:0">Concept check</h2><div class="row"><span id="qz-score" class="small muted"></span><button class="small primary" data-act="qz-new">Next question</button></div></div>
+    <div id="qz-out"></div>
+  </div>
+</section>
+
+<section class="tabpanel" id="p-ref" role="tabpanel" aria-labelledby="t-ref" hidden>
+  <div class="grid2">
+    <div class="card">
+      <h2>How the tree decides</h2>
+      <ol class="clean">
+        <li><b>Goal.</b> Describing variables as they occur is descriptive research. Relating variables is correlational, and demonstrating cause and effect is experimental; the tree hands those off.</li>
+        <li><b>Approach.</b> Quantitative work turns behavior, ratings and records into numbers; qualitative work seeks understanding from language, imagery and sensory data; mixed and hybrid methods combine them; a single case can use either or both.</li>
+        <li><b>Data source.</b> Watching behavior leads to observational designs, existing media or archives to content analysis or archival research, self-report to surveys, and one individual to a case study. Scores already in hand call for descriptive statistics.</li>
+        <li><b>Selectors.</b> Four selectors refine the observation design and its scoring method, the survey administration mode, the qualitative design and the case study variant, and add cautions.</li>
+        <li><b>Qualitative aim.</b> Discovering theory, interpreting texts, describing essences, understanding cultures, community photography and challenging power lead to different designs.</li>
+      </ol>
+      <p class="small muted">The scores are a heuristic aid. They do not replace design judgment, ethics review or the standards of your field.</p>
+    </div>
+    <div class="card">
+      <h2>Glossary</h2>
+      <dl class="gl">
+        <dt>Reactivity</dt><dd>A change in behavior because the person knows they are observed; related to demand characteristics.</dd>
+        <dt>Habituation</dt><dd>Repeated exposure until the observer is no longer a novel stimulus.</dd>
+        <dt>Inter-rater reliability</dt><dd>Agreement between independent observers or coders.</dd>
+        <dt>Frequency, duration and interval methods</dt><dd>Counting instances, timing how long behavior lasts, and recording behavior in each of a series of intervals.</dd>
+        <dt>Time, event and individual sampling</dt><dd>Observing selected time periods, specified events or selected individuals.</dd>
+        <dt>Nonresponse bias</dt><dd>Distortion when those who respond differ from those who do not.</dd>
+        <dt>Case history</dt><dd>A case study without any treatment or intervention.</dd>
+        <dt>Statistic and parameter</dt><dd>A summary value describing a sample, and one describing a population.</dd>
+        <dt>Verstehen</dt><dd>Understanding rather than simple knowledge, emphasized in qualitative approaches.</dd>
+        <dt>Bracketing</dt><dd>Setting aside the researcher’s presuppositions in phenomenological work.</dd>
+        <dt>Hermeneutic circle</dt><dd>Repeatedly shifting between the parts and the whole to reveal influences on interpretation.</dd>
+        <dt>Mixed and hybrid methods</dt><dd>Mixed methods combine quantitative and qualitative aspects intact; hybrid methods integrate them fluidly.</dd>
+      </dl>
+    </div>
+    <div class="card">
+      <h2>Notation</h2>
+      <dl class="gl">
+        <dt>M, Mdn, Mo</dt><dd>Mean, median and mode.</dd>
+        <dt>s², s, SS</dt><dd>Sample variance, standard deviation and sum of squared deviations (variance = SS / (n − 1)).</dd>
+        <dt>κ</dt><dd>Cohen’s kappa, a chance-corrected agreement index.</dd>
+        <dt>f, n</dt><dd>A frequency and a sample size.</dd>
+      </dl>
+    </div>
+    <div class="card">
+      <h2>Related explorers</h2>
+      <p class="small">The Quantitative Descriptive Designs Explorer and the Qualitative Descriptive Designs Explorer show these designs with simulated data and worked examples. The Correlational Designs Decision Tree covers the correlational strategy this tree hands off to.</p>
+    </div>
+    <div class="card" style="grid-column:1/-1">
+      <h2>Source and use</h2>
+      <p class="small">The questions, scenarios, options and considerations follow the course content on descriptive research strategies, the descriptive statistical evaluation of data and qualitative designs, as presented in the two companion explorers. Items labeled as extensions (such as Cohen’s κ, the margin-of-error calculator and the summaries of what each qualitative design asks of the researcher) go beyond that content. Example values in the result notations are illustrative.</p>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>
+  The recommendations are heuristics. Design logic, measurement quality and ethics review still carry the inference.
+</footer>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+'use strict';
+/* ================= basic helpers ================= */
+const $=(s,el=document)=>el.querySelector(s);
+const $$=(s,el=document)=>Array.from(el.querySelectorAll(s));
+const sum=a=>a.reduce((s,v)=>s+v,0);
+const mean=a=>a.length?sum(a)/a.length:NaN;
+const median=a=>{if(!a.length)return NaN;const s=a.slice().sort((x,y)=>x-y),m=s.length>>1;return s.length%2?s[m]:(s[m-1]+s[m])/2};
+const ssq=a=>{const m=mean(a);return sum(a.map(v=>(v-m)*(v-m)))};
+const vr=a=>a.length<2?0:ssq(a)/(a.length-1);
+const sd=a=>Math.sqrt(vr(a));
+const minOf=a=>{let m=Infinity;for(const v of a)if(v<m)m=v;return m};
+const maxOf=a=>{let m=-Infinity;for(const v of a)if(v>m)m=v;return m};
+const f=(v,d=2)=>Number.isFinite(v)?(+v).toFixed(d):'—';
+const pct=v=>Number.isFinite(v)?Math.round(v*100)+'%':'—';
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function makeRng(seed){
+  const u=mulberry32((seed|0)*2654435761>>>0||1);
+  let spare=null;
+  const r={u,
+    n(m,s){ if(spare!==null){const v=spare;spare=null;return m+s*v}
+      let a=0,b=0;while(a===0)a=u();b=u();const R=Math.sqrt(-2*Math.log(a));spare=R*Math.sin(2*Math.PI*b);return m+s*R*Math.cos(2*Math.PI*b)},
+    int(lo,hi){return lo+Math.floor(u()*(hi-lo+1))},
+    pick(a){return a[Math.floor(u()*a.length)]},
+    shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(u()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}};
+  return r;
+}
+const erf=x=>{const s=x<0?-1:1;x=Math.abs(x);const t=1/(1+0.3275911*x),y=1-(((((1.061405429*t-1.453152027)*t)+1.421413741)*t-0.284496736)*t+0.254829592)*t*Math.exp(-x*x);return s*y};
+const npdf=x=>Math.exp(-x*x/2)/Math.sqrt(2*Math.PI);
+const ncdf=x=>0.5*(1+erf(x/Math.SQRT2));
+
+/* ================= SVG helpers ================= */
+const COLS=['var(--colA)','var(--colB)','var(--colC)','var(--colD)','var(--colE)'];
+function ticks(min,max,cnt){
+  const span=max-min||1,raw=span/cnt,mag=Math.pow(10,Math.floor(Math.log10(raw)));
+  const res=raw/mag,step=(res<1.5?1:res<3?2:res<7?5:10)*mag,t=[];
+  for(let v=Math.ceil(min/step-1e-9)*step;v<=max+step*1e-9;v+=step)t.push(+v.toPrecision(12));
+  return{t,step};
+}
+const fmtT=(v,step)=>{const d=step>=1?0:Math.min(4,Math.ceil(-Math.log10(step)-1e-9));return(+v).toFixed(d)};
+function svgWrap(W,H,inner,label){return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(label)}" xmlns="http://www.w3.org/2000/svg" font-family="system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif" font-size="11">${inner}</svg>`}
+function frame(W,H,m,xd,yd,o){
+  o=o||{};const iw=W-m.l-m.r,ih=H-m.t-m.b;
+  const sx=v=>m.l+(v-xd[0])/(xd[1]-xd[0])*iw,sy=v=>m.t+ih-(v-yd[0])/(yd[1]-yd[0])*ih;
+  let s=`<rect x="${m.l}" y="${m.t}" width="${iw}" height="${ih}" fill="var(--plot)"/>`;
+  const yt=ticks(yd[0],yd[1],o.yn||5);
+  yt.t.forEach(v=>{const y=sy(v);s+=`<line x1="${m.l}" x2="${W-m.r}" y1="${y}" y2="${y}" stroke="var(--grid)"/><text x="${m.l-6}" y="${y+4}" text-anchor="end" fill="var(--muted)">${fmtT(v,yt.step)}</text>`});
+  if(!o.xcat){const xt=ticks(xd[0],xd[1],o.xn||6);xt.t.forEach(v=>{const x=sx(v);s+=`<line x1="${x}" x2="${x}" y1="${m.t}" y2="${H-m.b}" stroke="var(--grid)"/><text x="${x}" y="${H-m.b+15}" text-anchor="middle" fill="var(--muted)">${fmtT(v,xt.step)}</text>`})}
+  s+=`<line x1="${m.l}" x2="${m.l}" y1="${m.t}" y2="${H-m.b}" stroke="var(--axis)"/><line x1="${m.l}" x2="${W-m.r}" y1="${H-m.b}" y2="${H-m.b}" stroke="var(--axis)"/>`;
+  if(o.xlab)s+=`<text x="${m.l+iw/2}" y="${H-6}" text-anchor="middle" fill="var(--muted)">${esc(o.xlab)}</text>`;
+  if(o.ylab)s+=`<text transform="translate(14 ${m.t+ih/2}) rotate(-90)" text-anchor="middle" fill="var(--muted)">${esc(o.ylab)}</text>`;
+  return{sx,sy,s,W,H,m,iw,ih};
+}
+const cut=(t,n)=>t.length>n?t.slice(0,n-1)+'…':t;
+/* vertical bar chart: items=[{l,v,c?}] */
+function barChart(items,o){
+  o=o||{};const W=o.W||640,H=o.H||260,m={l:46,r:12,t:14,b:o.b||44};
+  const ymax=o.ymax||Math.max(1e-9,maxOf(items.map(i=>i.v)))*1.15;
+  const fr=frame(W,H,m,[0,items.length],[0,ymax],{xcat:true,ylab:o.ylab,xlab:o.xlab,yn:o.yn});
+  let s=fr.s;const bw=fr.iw/items.length;
+  items.forEach((it,i)=>{
+    const x=m.l+i*bw+bw*.14,w=bw*.72,y=fr.sy(it.v);
+    s+=`<rect x="${x}" y="${y}" width="${w}" height="${fr.sy(0)-y}" fill="${it.c||COLS[0]}" rx="2"/>`;
+    if(o.vals!==false)s+=`<text x="${x+w/2}" y="${y-4}" text-anchor="middle" fill="var(--fg)">${o.fmt?o.fmt(it.v):it.v}</text>`;
+    s+=`<text x="${x+w/2}" y="${H-m.b+15}" text-anchor="middle" fill="var(--muted)">${esc(cut(String(it.l),o.cut||12))}</text>`;
+  });
+  (o.lines||[]).forEach(L=>{const y=fr.sy(L.v);s+=`<line x1="${m.l}" x2="${W-m.r}" y1="${y}" y2="${y}" stroke="${L.c||'var(--colB)'}" stroke-dasharray="5 4" stroke-width="1.5"/><text x="${W-m.r-2}" y="${y-4}" text-anchor="end" fill="${L.c||'var(--colB)'}">${esc(L.t)}</text>`});
+  return svgWrap(W,H,s,o.label||'Bar chart');
+}
+/* line chart series=[{name,pts:[[x,y]],c}] */
+function lineChart(series,o){
+  o=o||{};const W=o.W||640,H=o.H||260,m={l:48,r:14,t:14,b:38};
+  const xs=series.flatMap(s=>s.pts.map(p=>p[0])),ys=series.flatMap(s=>s.pts.map(p=>p[1]));
+  const xd=o.xd||[minOf(xs),maxOf(xs)],yd=o.yd||[Math.min(0,minOf(ys)),maxOf(ys)*1.1||1];
+  const fr=frame(W,H,m,xd,yd,{xlab:o.xlab,ylab:o.ylab,xn:o.xn});let s=fr.s;
+  (o.bands||[]).forEach(b=>{s+=`<rect x="${fr.sx(b[0])}" y="${m.t}" width="${fr.sx(b[1])-fr.sx(b[0])}" height="${fr.ih}" fill="${b[2]||'var(--tintB)'}"/><text x="${(fr.sx(b[0])+fr.sx(b[1]))/2}" y="${m.t+12}" text-anchor="middle" fill="var(--muted)">${esc(b[3]||'')}</text>`});
+  series.forEach((se,i)=>{
+    const c=se.c||COLS[i%5];
+    s+=`<polyline fill="none" stroke="${c}" stroke-width="2" ${se.dash?'stroke-dasharray="5 4"':''} points="${se.pts.map(p=>fr.sx(p[0])+','+fr.sy(p[1])).join(' ')}"/>`;
+    if(se.dots!==false)se.pts.forEach(p=>{s+=`<circle cx="${fr.sx(p[0])}" cy="${fr.sy(p[1])}" r="3.2" fill="${c}"/>`});
+  });
+  return svgWrap(W,H,s,o.label||'Line chart');
+}
+const legendHTML=labels=>labels.map((l,i)=>`<span><i style="width:11px;height:11px;border-radius:${i%5===0?'50%':'2px'};background:${COLS[i%5]}"></i>${esc(l)}</span>`).join('');
+
+/* ================= controls ================= */
+function ctrlHTML(prefix,defs,state,presets,openN){
+  let h=presets&&presets.length?`<div class="ctl"><label for="${prefix}-preset">Scenario preset</label><select id="${prefix}-preset"><option value="">Choose a preset…</option>${presets.map((p,i)=>`<option value="${i}">${esc(p[0])}</option>`).join('')}</select></div>`:'';
+  const groups=[];defs.forEach(d=>{if(!groups.includes(d.g))groups.push(d.g)});
+  groups.forEach((g,gi)=>{
+    h+=`<details class="grp" ${gi<(openN||3)?'open':''}><summary>${esc(g)}</summary>`;
+    defs.filter(d=>d.g===g).forEach(d=>{
+      const id=`${prefix}-${d.k}`,v=state[d.k],ttl=d.help?` title="${esc(d.help)}"`:'';
+      if(d.type==='select')h+=`<div class="ctl"><label for="${id}"${ttl}>${esc(d.l)}</label><select id="${id}" data-k="${d.k}" ${d.num?'data-num="1"':''}>${d.opts.map(o=>`<option value="${o[0]}" ${String(o[0])===String(v)?'selected':''}>${esc(o[1])}</option>`).join('')}</select></div>`;
+      else if(d.type==='check')h+=`<div class="ctl check"><label><input type="checkbox" id="${id}" data-k="${d.k}" ${v?'checked':''}> ${esc(d.l)}</label></div>`;
+      else if(d.type==='text')h+=`<div class="ctl"><label for="${id}">${esc(d.l)}</label><input type="text" id="${id}" data-k="${d.k}" value="${esc(v)}"></div>`;
+      else if(d.type==='seed')h+=`<div class="ctl"><label for="${id}">${esc(d.l)}</label><div class="row"><input type="number" id="${id}" data-k="${d.k}" value="${v}" min="1" step="1" style="flex:1"><button class="small" data-act="${prefix}-rand">Randomize</button></div></div>`;
+      else h+=`<div class="ctl"><label for="${id}"${ttl}>${esc(d.l)}<output id="${id}-o">${d.fmt?d.fmt(v):v}${d.unit||''}</output></label><input type="range" id="${id}" data-k="${d.k}" min="${d.min}" max="${d.max}" step="${d.step}" value="${v}"></div>`;
+    });
+    h+='</details>';
+  });
+  return h+`<div class="row"><button class="small" data-act="${prefix}-reset">Reset all</button></div>`;
+}
+function applyVis(prefix,defs,state){defs.forEach(d=>{if(!d.show)return;const el=$('#'+prefix+'-'+d.k);const c=el&&el.closest('.ctl');if(c)c.hidden=!d.show(state)})}
+function syncControls(prefix,defs,state){
+  defs.forEach(d=>{const el=$('#'+prefix+'-'+d.k);if(!el)return;
+    if(d.type==='check')el.checked=!!state[d.k];else el.value=state[d.k];
+    const o=$('#'+prefix+'-'+d.k+'-o');if(o)o.textContent=(d.fmt?d.fmt(state[d.k]):state[d.k])+(d.unit||'');});
+  applyVis(prefix,defs,state);
+}
+function bindControls(prefix,state,defs,onChange,presets,def){
+  const root=$('#'+prefix+'-controls');
+  root.addEventListener('input',e=>{
+    const el=e.target;if(el.id===prefix+'-preset')return;
+    const k=el.dataset.k;if(!k)return;
+    let v;
+    if(el.type==='checkbox')v=el.checked;else if(el.type==='range'||el.type==='number'||el.dataset.num)v=+el.value;else v=el.value;
+    if(el.type==='number'&&!(v>=1))return;
+    state[k]=v;
+    const o=$('#'+prefix+'-'+k+'-o'),d=defs.find(x=>x.k===k);if(o&&d)o.textContent=(d.fmt?d.fmt(v):v)+(d.unit||'');
+    applyVis(prefix,defs,state);onChange(k);
+  });
+  root.addEventListener('change',e=>{
+    if(e.target.id===prefix+'-preset'){const i=e.target.value;if(i==='')return;
+      Object.assign(state,def,presets[+i][1],{seed:state.seed});syncControls(prefix,defs,state);onChange();}
+  });
+}
+
+/* ================= tables / narrative ================= */
+function tbl(head,rows){
+  const isTxt=c=>{const t=String(c).replace(/<[^>]*>/g,'').trim();return t.length>14&&!/^[+\-−0-9.]/.test(t)};
+  const L=head.map((h,i)=>i===0||rows.some(r=>isTxt(r[i])));
+  const cls=i=>L[i]?' class="l"':'';
+  return `<div class="tbl-wrap"><table><thead><tr>${head.map((h,i)=>Array.isArray(h)?`<th${cls(i)} title="${esc(h[1])}">${h[0]}</th>`:`<th${cls(i)}>${h}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${r.map((c,i)=>`<td${cls(i)}>${c}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+}
+const pill=(txt,cls)=>`<span class="pill ${cls}">${txt}</span>`;
+function statRow(items){return `<div class="stat">${items.map(([v,l])=>`<div><b>${v}</b><span>${l}</span></div>`).join('')}</div>`}
+let toastT=null;
+function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),1800)}
+
+/* ================= downloads ================= */
+function resolvedSvg(id){
+  const el=$('#'+id+' svg');if(!el)return null;
+  const cs=getComputedStyle(document.documentElement);
+  let s=new XMLSerializer().serializeToString(el);
+  s=s.replace(/var\((--[a-zA-Z0-9]+)\)/g,(m,v)=>cs.getPropertyValue(v).trim()||'#000');
+  return s;
+}
+function saveBlob(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
+function doDL(kind,target){
+  if(kind==='csv'){const fn=CSVS[target];if(!fn){toast('No data to export');return}saveBlob(new Blob([fn()],{type:'text/csv'}),target+'.csv');return}
+  const s=resolvedSvg(target);if(!s){toast('Nothing to export');return}
+  if(kind==='svg'){saveBlob(new Blob([s],{type:'image/svg+xml'}),target+'.svg');return}
+  const vb=/viewBox="0 0 ([\d.]+) ([\d.]+)"/.exec(s);if(!vb)return;
+  const W=+vb[1],H=+vb[2],img=new Image();
+  img.onload=()=>{const c=document.createElement('canvas');c.width=W*2;c.height=H*2;const x=c.getContext('2d');
+    x.fillStyle=getComputedStyle(document.documentElement).getPropertyValue('--card').trim()||'#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(img,0,0,c.width,c.height);
+    c.toBlob(b=>saveBlob(b,target+'.png'))};
+  img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(s);
+}
+const CSVS={};
+
+/* ================= quiz engine ================= */
+function makeQuiz(Q,outId,scoreId){
+  const S={i:-1,n:0,score:0,answered:false,order:[]};
+  function next(){
+    if(!S.order.length)S.order=makeRng(Date.now()%100000+1).shuffle(Q.map((_,i)=>i));
+    S.i=S.order.shift();S.answered=false;render();
+  }
+  function render(){
+    const sc=$('#'+scoreId);sc.textContent=S.n?`Score: ${S.score} / ${S.n}`:'';
+    const out=$('#'+outId);
+    if(S.i<0){out.innerHTML='<p class="muted small">Press “Next question” to start.</p>';return}
+    const q=Q[S.i];
+    out.innerHTML=`<div class="q"><fieldset><legend>${q.q}</legend>${q.o.map((t,j)=>`<label><button class="small" data-qz="${outId}:${j}" ${S.answered?'disabled':''}>${'ABCD'[j]}</button> ${t}</label>`).join('')}</fieldset></div><div id="${outId}-fb" role="status"></div>`;
+  }
+  function answer(j){
+    if(S.answered||S.i<0)return;S.answered=true;const q=Q[S.i],ok=j===q.a;S.n++;if(ok)S.score++;
+    render();
+    $('#'+outId+'-fb').innerHTML=`<div class="callout ${ok?'good':'warn'}">${ok?pill('Correct','good'):pill('Not quite','bad')} ${q.why} ${ok?'':'<br><b>Answer:</b> '+q.o[q.a]}</div>`;
+    $('#'+scoreId).textContent=`Score: ${S.score} / ${S.n}`;
+  }
+  function reset(){S.i=-1;S.n=0;S.score=0;S.answered=false;S.order=[];render()}
+  return{next,answer,reset,render,S};
+}
+
+const DQSRC={"gt":{"name":"Grounded theory","what":"Discovers underlying theories through inductive methods.","origin":"Developed by Glaser and Strauss in sociology in the late 1960s and extended to psychology.","tech":"Coding; memoing to connect and elaborate codes; theory development; theoretical sampling to “ground” theoretical advances in the data itself.","note":"Can be used by both positivist and constructivist researchers."},"he":{"name":"Hermeneutics","what":"Interprets texts and phenomena by moving between parts and whole.","origin":"Developed in antiquity and into the Renaissance to interpret texts, particularly religious texts; applied to the social sciences through twentieth-century philosophers such as Heidegger (Being and Time) and Gadamer (Truth and Method).","tech":"Repeatedly shifting the focus between the parts and the whole, or the thing and its context (the hermeneutic circle); isolating influences on interpretation to move closer to the thing itself.","note":""},"ph":{"name":"Phenomenology","what":"Understands conscious experience as lived intuitively and delineates its essences.","origin":"Introduced in philosophy by Husserl; Amedeo Giorgi’s descriptive phenomenology is most predominant in psychology.","tech":"Bracketing and phenomenological reduction to identify the essences of an experience or event.","note":"All conscious experiences and events are co-constituted by the observer and the observed, and are thus complex phenomena."},"et":{"name":"Ethnography","what":"Seeks greater understanding of the social relations, customs and lived experiences of various peoples and situations.","origin":"Identified by Muller in the eighteenth century; contemporary methods were popularized by Malinowski in cultural anthropology, then advanced in education and sociology; psychology imports the techniques in related subdisciplines.","tech":"Field research typified by participatory observation, with both external and internal observations.","note":""},"pv":{"name":"Photovoice","what":"A Community-Based Participatory Research design in which cultural participants capture visual imagery.","origin":"Developed by Wang and Burris in the late twentieth century, derived from Wendy Ewald’s photographic work with children in Appalachia.","tech":"Participants photograph their community’s strengths and concerns; large and small group discussion of the photographs promotes critical dialogue; findings are taken to policymakers.","note":""},"lb":{"name":"Liberating methods","what":"Challenge fundamental assumptions in existing knowledge systems and often integrate advocacy and activism.","origin":"Often inspired in part by Paulo Freire’s Pedagogy of the Oppressed; developed during the latter half of the twentieth century and embrace power/knowledge paradigms.","tech":"Critical Theory and Critical Race Theory, Decolonizing Methods, Feminist Theory, Indigenous Theory, Liberation Psychology, Marxist Theory and Queer Theory.","note":"Community-Based Participatory Research and Performance and Artistic Representation are also listed among the qualitative designs in the course content."},"mx":{"name":"Mixed and hybrid methods","what":"Combine quantitative and qualitative approaches.","origin":"Increasingly popular in contemporary research.","tech":"Mixed-methods approaches combine aspects of both approaches intact; hybrid methods integrate aspects of both fluidly.","note":""}};
+const QZQ=[{"q":"What is the goal of descriptive research?","o":["To demonstrate cause and effect","To describe variables as they exist naturally","To show that two variables are related","To test a treatment under control"],"a":1,"w":"Descriptive research describes a single variable, or each variable on its own, as it naturally occurs; it is not concerned with relationships."},{"q":"A researcher counts the number of times a child hits another child during a play session. Which method is this?","o":["Frequency method","Duration method","Interval method","Event sampling"],"a":0,"w":"The frequency method counts the instances of a specific behavior."},{"q":"Which technique addresses the measurement problem of subjective judgment in observation?","o":["Concealing the observer","Habituation","Inter-rater reliability","Individual sampling"],"a":2,"w":"Subjectivity raises the question of reliability, which is addressed by comparing independent observers."},{"q":"Participants become used to an observer through repeated exposure until the observer is no longer novel. This is…","o":["Reactivity","Habituation","Nonresponse bias","Time sampling"],"a":1,"w":"Habituation is one way to reduce reactivity to the observer’s presence."},{"q":"In the interval method, the researcher…","o":["times how long each behavior lasts","counts each instance","divides the period into intervals and records behavior in each","watches only selected individuals"],"a":2,"w":"The interval method divides the observation period into a series of intervals and records behavior in each."},{"q":"Which design measures behaviors or events that occurred in the past using historical records?","o":["Content analysis","Archival research","Contrived observation","Case study"],"a":1,"w":"Archival research looks at historical records; content analysis measures events in media such as literature, movies or television."},{"q":"A mail survey with a very low return rate is most at risk of…","o":["Interviewer bias","Loss of objectivity","Nonresponse bias","Reactivity"],"a":2,"w":"Low response rate and nonresponse bias are the main weaknesses of mail surveys."},{"q":"Which question type requires choosing a number on a predetermined scale?","o":["Open-ended","Restricted","Rating-scale","Demographic"],"a":2,"w":"Rating-scale questions (such as a Likert-type scale) produce numerical ratings that can be added and averaged."},{"q":"What is a case history?","o":["A case study without any treatment or intervention","A survey of a single person","A study of many cases averaged together","A contrived observation"],"a":0,"w":"A case study that includes no treatment or intervention is called a case history."},{"q":"Variance is computed as…","o":["SS divided by n","SS divided by n − 1","The square root of SS","The mean of the deviations"],"a":1,"w":"The sum of squared deviations is divided by n − 1; the standard deviation is the square root of that result."},{"q":"Which statistics describe nominal data?","o":["Mean and standard deviation","Percentages, proportions and the mode","Variance and median","Correlation and regression"],"a":1,"w":"Non-numerical data are described with percentages, proportions and the mode."},{"q":"A value that describes a population (rather than a sample) is called a…","o":["Statistic","Parameter","Variable","Frequency"],"a":1,"w":"A statistic describes a sample; a parameter describes a population."}];
+const QZL=[{"q":"How do qualitative strategies often scrutinize data?","o":["Objectively, through deduction from logical premises","Intersubjectively, through inductive reasoning","Only through statistical tests","Without any reasoning"],"a":1,"w":"Qualitative strategies often scrutinize data intersubjectively, using inductive reasoning applied to discovered principles or essentials, in order to understand a phenomenon."},{"q":"Quantitative strategies often scrutinize data “objectively” through…","o":["Inductive reasoning","Deductive reasoning and logical premises","Bracketing","Memoing"],"a":1,"w":"Deduction from logical premises is used to reject or support a research hypothesis."},{"q":"What does verstehen emphasize?","o":["Prediction","Understanding rather than simple knowledge","Random sampling","Hypothesis rejection"],"a":1,"w":"Qualitative strategies emphasize understanding (verstehen), particularly among those who differentiate the human sciences from the natural sciences."},{"q":"Which are typical qualitative data?","o":["Naturally expressed language, visual imagery and other sensory data","Only numerical ratings","Only physiological measurements","Only archival counts"],"a":0,"w":"Qualitative data concern the qualities of an event or experience and are not initially in quantitative format."},{"q":"Grounded theory was developed by…","o":["Husserl and Giorgi","Glaser and Strauss","Wang and Burris","Heidegger and Gadamer"],"a":1,"w":"Glaser and Strauss developed it in sociology in the late 1960s."},{"q":"What is the purpose of theoretical sampling?","o":["To obtain a random sample","To “ground” theoretical advances in the data itself","To count word frequencies","To bracket the researcher’s views"],"a":1,"w":"Theoretical sampling directs further data collection toward what the developing theory needs."},{"q":"The hermeneutic circle involves…","o":["Repeatedly shifting focus between parts and whole","Setting aside all presuppositions at once","Randomly assigning participants","Photographing a community"],"a":0,"w":"Iterating between the parts and the whole, or the thing and its context, reveals influences on interpretation."},{"q":"Which techniques identify essences in descriptive phenomenology?","o":["Bracketing and phenomenological reduction","Theoretical sampling and memoing","Participatory observation","Random assignment"],"a":0,"w":"Giorgi’s descriptive phenomenology uses bracketing and phenomenological reduction."},{"q":"Photovoice was developed by…","o":["Wang and Burris","Glaser and Strauss","Malinowski and Muller","Freire and Gadamer"],"a":0,"w":"Wang and Burris developed photovoice, derived from Wendy Ewald’s photographic work with children in Appalachia."},{"q":"Which is NOT one of photovoice’s three aims?","o":["Record and reflect community strengths and concerns","Promote critical dialogue through group discussion","Reach policymakers","Test a hypothesis with a control group"],"a":3,"w":"Photovoice aims to record and reflect, to promote critical dialogue, and to reach policymakers."},{"q":"Which work often inspires liberating methods?","o":["Being and Time","Truth and Method","Pedagogy of the Oppressed","The Interpretation of Dreams"],"a":2,"w":"Paulo Freire’s Pedagogy of the Oppressed inspired many of these methods."},{"q":"What distinguishes hybrid from mixed methods?","o":["Hybrid methods use only qualitative data","Hybrid methods fluidly integrate qualitative and quantitative aspects, while mixed methods combine them intact","Mixed methods avoid numbers","There is no difference"],"a":1,"w":"Mixed-methods approaches combine aspects intact; hybrid methods integrate them fluidly."},{"q":"Ethnographic field research is typified by…","o":["Random assignment","Participatory observation","Bracketing","Archival coding"],"a":1,"w":"Ethnographers participate and make both external and internal observations."}];
+const SCQ=[["A researcher sits unnoticed in a park and counts how often parents scold children.","nat","Naturalistic observation: no researcher intervention."],["A researcher joins a group of volunteers at a food bank, works alongside them and records how they interact.","par","Participant observation: the researcher interacts with participants and becomes one of them."],["Children are placed in a playroom with a limited number of toys to see how often they share.","con","Contrived observation: the researcher sets up a situation likely to produce the behavior."],["A team counts the number of violent acts in one season of popular television programs.","ca","Content analysis: measuring specific events in television or similar media."],["A researcher codes hospital admission records from 1920 to 1950 to describe rates of a condition.","arc","Archival research: measuring events from historical records."],["A company emails a link to customers asking them to rate satisfaction from 1 to 5.","net","Internet survey."],["Questionnaires are posted to 2,000 households, and only 15% are returned.","mail","Mail survey, with the low response rate that creates nonresponse bias."],["Interviewers phone residents in the evening and read a set of questions aloud.","tel","Telephone survey."],["Students in a lecture hall complete a questionnaire at the start of class, with every student handing one in.","per","In-person survey (a group administration with a 100% response rate)."],["A clinician writes a detailed account of one patient with a rare brain injury, including a new therapy she administers.","case","Case study: in-depth study of one individual that includes an intervention."],["A researcher compiles a detailed description of one patient’s symptoms and background with no treatment given.","hist","Case history: a case study without any treatment or intervention."]];
+const SCL=[["A researcher spends a year living in a fishing village, taking part in daily work and recording customs and relationships.","et","Ethnography: participatory field observation of social relations, customs and lived experience."],["Interviews with caregivers are coded line by line and linked through memos, and further participants are chosen to fill gaps in the emerging categories.","gt","Grounded theory: coding, memoing and theoretical sampling."],["A scholar re-reads an ancient letter, moving between single passages and the whole text and noting how her own assumptions shape each reading.","he","Hermeneutics: the hermeneutic circle between parts and whole."],["A researcher asks participants to describe an episode of awe in their own words, sets aside her expectations, and distills the invariant structure of the experience.","ph","Phenomenology: bracketing and reduction to identify the essence of an experience."],["Teenagers photograph places in their neighborhood they love and worry about, discuss the images in groups and present them to city officials.","pv","Photovoice: participants’ photographs, group dialogue and reaching policymakers."],["A study draws on Freire’s ideas to have community members question how existing knowledge systems serve those in power, and ties the findings to organizing.","lb","Liberating methods: challenge to assumptions in knowledge systems and integration of advocacy."],["A project alternates between interviews and a survey, each step reshaping the next so the two strands cannot be separated.","hyb","Hybrid methods: fluid integration of qualitative and quantitative aspects."],["A report presents a survey in one section and a set of interviews in another, each analyzed on its own terms.","mix","Mixed methods: both approaches combined intact."],["A researcher joins a school staff room and records both what is visible and what it feels like to belong.","et","Ethnography: external and internal observations during participation."],["A researcher builds a theory of why volunteers stay or leave directly from coded interviews, rather than from an existing theory.","gt","Grounded theory: theory discovered inductively and grounded in the data."]];
+
+/* ================= design catalog ================= */
+const STRAT={
+  obs:['Observational design','good'],cr:['Content analysis or archival research','good'],sv:['Survey design','good'],
+  cas:['Case study design','good'],stat:['Descriptive statistics','good'],qual:['Qualitative design','good'],
+  mix:['Mixed or hybrid methods','good'],out:['Not a descriptive design','warn']
+};
+const TONE={obs:'var(--colA)',cr:'var(--colC)',sv:'var(--colB)',cas:'var(--colD)',stat:'var(--muted)',qual:'var(--colE)',mix:'var(--good)',out:'var(--warn)'};
+const NODESC='No: describes variables as they occur';
+const ODATA='Recorded behavior, scored as counts, durations or interval codes';
+const OSTAT='Frequencies, durations or proportions of intervals, summarized with descriptive statistics; inter-rater reliability (percent agreement or κ)';
+const ONOTA=['Frequency: count of instances','Duration: total time the behavior lasts','Interval: proportion of intervals in which it occurred'];
+const SVDATA='Responses to open-ended, restricted or rating-scale questions';
+const SVSTAT='Tallies and percentages for categories; sums, means and standard deviations for ratings; response rate and margin of error';
+const SVNOTA=['Percentage = f / n × 100','Total score = sum of the item ratings'];
+const DES={
+  nat:{name:'Naturalistic observation',sh:'Naturalistic obs.',s:'obs',ap:'Quantitative',data:ODATA,cause:NODESC,nota:ONOTA,
+    what:'No researcher intervention: behavior is watched where it naturally occurs and is systematically recorded.',
+    threats:'The observer’s presence can change behavior (reactivity and demand characteristics), and judgments are partly subjective (reliability).',stat:OSTAT,
+    sg:['Behavior observed in the real world','Useful for nonmanipulated behaviors','Actual behaviors observed and recorded'],wk:['Time-consuming','Potential for observer influence','Potential for subjective interpretation'],
+    up:[['par','If natural observation is impossible, join the group as a participant observer.'],['con','If the behavior is too rare to wait for, set up a situation likely to produce it.'],['et','To understand meanings and social relations from the inside, consider ethnography.']]},
+  par:{name:'Participant observation',sh:'Participant obs.',s:'obs',ap:'Quantitative',data:ODATA,cause:NODESC,nota:ONOTA,
+    what:'The researcher interacts with participants and becomes one of them while recording behavior.',
+    threats:'Loss of objectivity and an increased chance of observer influence.',stat:OSTAT,
+    sg:['Useful when natural observation is impossible','Gets information not accessible otherwise','Participation gives a unique perspective'],wk:['Time-consuming','Potential for loss of objectivity','Increased chance for observer influence'],
+    up:[['nat','If you can watch without joining, naturalistic observation limits the researcher’s influence.'],['et','To describe a culture or setting from inside, with both external and internal observations, consider ethnography.']]},
+  con:{name:'Contrived observation',sh:'Contrived obs.',s:'obs',ap:'Quantitative',data:ODATA,cause:NODESC,nota:ONOTA,
+    what:'The researcher sets up a situation likely to produce the desired behavior, then observes it.',
+    threats:'The situation is less natural than the real world; observer influence and subjective judgment still apply.',stat:OSTAT,
+    sg:['Do not have to wait for a behavior to occur'],wk:['Less natural'],
+    up:[['nat','If the behavior occurs often enough, naturalistic observation keeps the setting natural.'],['exp','If you need to show that the situation causes the behavior, an experimental strategy is required.']]},
+  cont:{name:'Content analysis',sh:'Content analysis',s:'cr',ap:'Quantitative',data:'Occurrences of defined events in literature, movies, television programs or similar media',cause:NODESC,nota:['Frequency: count of each category','Agreement between two coders'],
+    what:'Uses the techniques of behavioral observation to measure the occurrence of specific events in literature, movies, television programs or similar media.',
+    threats:'Vague categories, subjective coding and unreliable coders.',stat:'Counts or proportions per category, with agreement between coders (inter-rater reliability)',
+    sg:['Measures events already recorded in media','Uses the same explicit measurement rules as behavioral observation: categories, a numerical scoring method and multiple coders'],wk:['Depends on clear definitions of the categories','Needs reliable coding by more than one coder'],
+    up:[['arch','If the material is a historical record of past behavior or events, use archival research.'],['he','To interpret meaning in a text rather than count events, consider hermeneutics.']]},
+  arch:{name:'Archival research',sh:'Archival research',s:'cr',ap:'Quantitative',data:'Behaviors or events recorded in historical records',cause:NODESC,nota:['Frequency: count of events per period','Agreement between two coders'],
+    what:'Looks at historical records to measure behaviors or events that occurred in the past, using the same measurement rules as behavioral observation.',
+    threats:'Records may be incomplete, and coding categories can be subjective.',stat:'Counts or rates per period, with agreement between coders on at least part of the records',
+    sg:['Measures behavior or events that occurred in the past','Uses existing records, so participants are not disturbed'],wk:['Limited to what was recorded','Needs clear categories and multiple coders'],
+    up:[['cont','If the material is current media rather than records, use content analysis.'],['hist','To describe one person’s history in detail, use a case history.']]},
+  net:{name:'Internet survey',sh:'Internet survey',s:'sv',ap:'Quantitative',data:SVDATA,cause:NODESC,nota:SVNOTA,
+    what:'A survey delivered online that gives a “snapshot” of a particular group at a particular time.',
+    threats:'The sample may not be representative, and you cannot control the composition of the sample.',stat:SVSTAT,
+    sg:['Efficient to administer to a large number of participants','Access to large numbers of individuals with common characteristics','Can be individualized based on participant responses'],wk:['Initial expense for the site','Sample may not be representative','Cannot control composition of the sample'],
+    up:[['per','When a high response rate matters and participants can gather, an in-person survey reaches everyone present.'],['mail','If participants lack internet access, consider a mail survey.']]},
+  mail:{name:'Mail survey',sh:'Mail survey',s:'sv',ap:'Quantitative',data:SVDATA,cause:NODESC,nota:SVNOTA,
+    what:'A survey sent to participants by mail that gives a “snapshot” of a particular group.',
+    threats:'A low response rate and nonresponse bias; you cannot be sure who completes the survey.',stat:SVSTAT,
+    sg:['Convenient and anonymous','Nonthreatening to participants','Easy to administer'],wk:['Can be expensive','Low response rate and nonresponse bias','Unsure exactly who completes the survey'],
+    up:[['net','If participants are online, an internet survey is cheaper but has its own sampling problems.'],['per','If participants can gather, an in-person survey avoids nonresponse.']]},
+  tel:{name:'Telephone survey',sh:'Phone survey',s:'sv',ap:'Quantitative',data:SVDATA,cause:NODESC,nota:SVNOTA,
+    what:'Participants answer questions by phone, giving a “snapshot” of a particular group.',
+    threats:'Interviewer bias, and calls take time.',stat:SVSTAT,
+    sg:['Can be conducted from home or office','Participants can stay at home or office'],wk:['Time-consuming','Potential for interviewer bias'],
+    up:[['per','If participants can gather, in-person administration is faster for groups.'],['net','If many respondents are needed cheaply, an internet survey is more efficient.']]},
+  per:{name:'In-person survey or interview',sh:'In-person survey',s:'sv',ap:'Quantitative',data:SVDATA,cause:NODESC,nota:SVNOTA,
+    what:'Questions are administered face to face, to groups or to individuals.',
+    threats:'Interviewer bias, and individual interviews are time-consuming.',stat:SVSTAT,
+    sg:['Efficient to administer with groups','100% response rate','Flexible (groups or individual interviews)'],wk:['Time-consuming with individual interviews','Risk of interviewer bias'],
+    up:[['net','If participants are dispersed, an internet survey reaches them more cheaply.'],['gt','If the interviews are open-ended and the aim is to build a theory, consider grounded theory.']]},
+  dstat:{name:'Descriptive statistics',sh:'Desc. statistics',s:'stat',ap:'Quantitative',data:'A set of scores you already have (numerical, or nominal and ordinal categories)',cause:NODESC,nota:['M = ΣX / n','s² = SS / (n − 1)','s = √s²'],
+    what:'Organize, summarize and simplify results. Inferential statistics generalize from samples to populations; descriptive statistics describe the data in hand.',
+    threats:'Averages can hide the individual, and a sample statistic is not a population parameter.',stat:'Frequency distribution; mean, median and mode; variance and standard deviation; percentages, proportions and the mode for nominal and ordinal data',
+    sg:['Organizes and simplifies a set of scores','Works with any of the quantitative designs'],wk:['Describes the sample only; it does not generalize to a population','Cannot repair poor measurement or an unrepresentative sample'],
+    up:[['net','If you still need to collect scores from people, choose a survey or observation design first.']]},
+  case:{name:'Case study',sh:'Case study',s:'cas',ap:'Quantitative, qualitative or both',data:'A detailed record of one individual or a very small group: numerical scores, narrative accounts, or both',cause:NODESC,nota:['Case study: includes a treatment or intervention','Case history: no treatment or intervention'],
+    what:'In-depth study and detailed description of a single individual or a very small group, which may include an intervention or treatment given by the researcher. It can be quantitative, qualitative or both, depending on the data.',
+    threats:'Limited generalization, selective bias and subjective interpretation.',stat:'Numerical records can be plotted and summarized over time; narrative records are described and interpreted. Both can be reported together.',
+    sg:['Not averaged over a diverse group','Detailed description','Vivid, powerful, convincing','Compatible with clinical work','Can study rare and unusual events','Can identify exceptions to the rule'],wk:['Limited generalization','Potential for selective bias','Potential for subjective interpretation'],
+    up:[['mix','Keep numerical and narrative strands intact and report both: a mixed approach.'],['exp','To test whether a treatment works, move to an experimental strategy; a single case cannot show cause and effect.']]},
+  hist:{name:'Case history',sh:'Case history',s:'cas',ap:'Quantitative, qualitative or both',data:'A detailed record of one individual or a very small group: numerical scores, narrative accounts, or both',cause:NODESC,nota:['Case history: no treatment or intervention'],
+    what:'A case study without any treatment or intervention: the individual or small group is described in detail, in numbers, in narrative, or in both.',
+    threats:'Limited generalization, selective bias and subjective interpretation.',stat:'Numerical records can be plotted and summarized over time; narrative records are described and interpreted. Both can be reported together.',
+    sg:['Not averaged over a diverse group','Detailed description','Can study rare and unusual events','Can identify exceptions to the rule'],wk:['Limited generalization','Potential for selective bias','Potential for subjective interpretation'],
+    up:[['case','If you will deliver a treatment or intervention, it becomes a case study.'],['mix','Keep numerical and narrative strands intact and report both: a mixed approach.']]},
+  gt:{name:'Grounded theory',sh:'Grounded theory',s:'qual',ap:'Qualitative',data:'Language and field data, such as interviews and field notes',cause:NODESC,nota:[],
+    threats:'The theory depends on the researcher’s coding choices and must stay grounded in the data.',
+    sg:['Builds theory directly from the data','Theoretical sampling directs further data collection to what the theory needs'],wk:['Coding and memoing are time-intensive','Interpretation rests on the researcher’s judgment'],
+    up:[['mix','To test the emerging theory with numbers, add a quantitative strand (mixed methods).'],['et','If the aim is to understand a culture rather than build a theory, consider ethnography.']]},
+  he:{name:'Hermeneutics',sh:'Hermeneutics',s:'qual',ap:'Qualitative',data:'Language: texts and other expressions to be interpreted',cause:NODESC,nota:[],
+    threats:'Interpretation is shaped by the interpreter’s own assumptions, which must be isolated and examined.',
+    sg:['Attends to context by moving between the parts and the whole','Makes the influences on interpretation explicit'],wk:['Interpretations are not final or unique','Depends on the interpreter’s knowledge and judgment'],
+    up:[['cont','To count defined events in a text rather than interpret it, use content analysis.'],['ph','To describe the essence of a lived experience, consider phenomenology.']]},
+  ph:{name:'Phenomenology',sh:'Phenomenology',s:'qual',ap:'Qualitative',data:'Language: participants’ descriptions of their conscious experience',cause:NODESC,nota:[],
+    threats:'Presuppositions that are not bracketed; experiences are co-constituted by the observer and the observed.',
+    sg:['Stays close to experience as it is lived','Bracketing makes the researcher’s presuppositions explicit'],wk:['Setting aside presuppositions completely is difficult','Findings describe essences, not frequencies'],
+    up:[['he','To interpret how context and the researcher’s assumptions shape meaning, consider hermeneutics.'],['hist','To describe one person’s experience over time, a case history is also possible.']]},
+  et:{name:'Ethnography',sh:'Ethnography',s:'qual',ap:'Qualitative',data:'Field observations (external and internal) and language',cause:NODESC,nota:[],
+    threats:'The researcher is part of what is studied, and field research takes long immersion.',
+    sg:['Understanding from the inside of a group or setting','Combines external and internal observations'],wk:['Time-consuming','Participation can change the setting'],
+    up:[['par','To count specific behaviors while participating, participant observation records them quantitatively.'],['gt','To build a theory from field data, consider grounded theory.']]},
+  pv:{name:'Photovoice',sh:'Photovoice',s:'qual',ap:'Qualitative',data:'Visual imagery captured by cultural participants, with their group discussion',cause:NODESC,nota:[],
+    threats:'Depends on participants’ power to shape the project, and on whether findings reach policymakers.',
+    sg:['Participants record and reflect their community’s strengths and concerns','Group discussion promotes critical dialogue','Findings are taken to policymakers'],wk:['Needs sustained participation from community members','Impact depends on reaching policymakers'],
+    up:[['lb','If the central aim is to challenge assumptions in existing knowledge systems, consider liberating methods.'],['mix','To add numerical data about the community, combine with a quantitative strand.']]},
+  lb:{name:'Liberating methods',sh:'Liberating methods',s:'qual',ap:'Qualitative',data:'Language and field data produced with participants as partners',cause:NODESC,nota:[],
+    threats:'The researcher’s own position within power structures, and advocacy that is integrated with inquiry.',
+    sg:['Challenges fundamental assumptions in existing knowledge systems','Integrates advocacy and activism with research'],wk:['Advocacy goals must be made explicit','Depends on a sustained partnership with participants'],
+    up:[['pv','To involve community members through images, consider photovoice.']]},
+  mix:{name:'Mixed methods',sh:'Mixed methods',s:'mix',ap:'Quantitative and qualitative',data:'Both quantitative and qualitative data',cause:NODESC,nota:[],
+    what:'Combines quantitative and qualitative aspects intact, so each strand can be collected and analyzed on its own terms.',stat:'Each strand is analyzed with its own methods (descriptive statistics for numbers, qualitative techniques for language and imagery), then the findings are brought together',ex:'Increasingly popular in contemporary research.',
+    threats:'Strands that are poorly planned or not reported on their own terms.',
+    sg:['Brings the strengths of both approaches','Each strand can be analyzed on its own terms'],wk:['Needs expertise in both approaches','Takes more time and planning'],
+    up:[['hyb','If the strands cannot be separated, you are integrating them fluidly: hybrid methods.']]},
+  hyb:{name:'Hybrid methods',sh:'Hybrid methods',s:'mix',ap:'Quantitative and qualitative',data:'Both quantitative and qualitative data, integrated',cause:NODESC,nota:[],
+    what:'Integrates quantitative and qualitative aspects fluidly, so that steps in one reshape the other.',stat:'Analysis moves between the quantitative and qualitative aspects as the study proceeds',ex:'Increasingly popular in contemporary research.',
+    threats:'Strands that merge so fully that neither approach’s standards can be applied.',
+    sg:['Integrates quantitative and qualitative aspects fluidly','Each step can reshape the next'],wk:['Needs expertise in both approaches','Harder to separate and evaluate each strand'],
+    up:[['mix','If the strands can be kept intact, mixed methods keeps them separate.']]},
+  corr:{name:'Correlational strategy',sh:'Correlational',s:'out',ap:'—',data:'Two or more variables measured in each individual',cause:'No, but it describes relationships',nota:[],
+    what:'Descriptive research is not concerned with relationships between variables. Establishing and describing a relationship is the goal of the correlational strategy.',
+    threats:'The third-variable and directionality problems.',stat:'Correlation, regression and related statistics',
+    sg:['Describes the direction, form and strength of a relationship','Observes natural behavior without interfering'],wk:['Cannot assess cause and effect','Third-variable and directionality problems'],up:[],
+    ex:'See the Correlational Designs Decision Tree for this strategy.'},
+  exp:{name:'Experimental strategy',sh:'Experimental',s:'out',ap:'—',data:'Scores from conditions the researcher creates',cause:'Yes, with manipulation, control and random assignment',nota:[],
+    what:'Only an experimental strategy, with a manipulated variable and control of other variables, can demonstrate cause and effect. Descriptive research simply describes variables as they occur naturally.',
+    threats:'Artificial conditions can lower external validity; groups must be equivalent.',stat:'Comparison of scores across conditions',
+    sg:['Can demonstrate cause and effect through manipulation, control and random assignment'],wk:['Conditions can be artificial','Often impossible for naturally occurring behavior'],up:[],
+    ex:'Experimental designs are outside the scope of this tree.'}
+};
+/* fill what/stat/ex for qualitative designs from the qualitative explorer content */
+Object.keys(DQSRC).forEach(k=>{
+  const q=DQSRC[k],d=DES[k];if(!d)return;
+  d.what=q.what;d.stat='Typical techniques: '+q.tech.replace(/\.$/,'')+'.';d.ex='Origin: '+q.origin+(q.note?' '+q.note:'');
+});
+const KEYS=Object.keys(DES);
+const nm=k=>DES[k].name;
+
+/* ================= selectors (forms) ================= */
+const FORMS={
+  obs:{sh:'Observer role',title:'Observation: role and scoring',intro:'The observer’s role selects the observational design; the scoring method and the number of targets add advice.',qs:[
+    {k:'role',t:'What does the observer do?',o:[['none','Observes without intervening'],['join','Interacts with participants and becomes one of them'],['set','Sets up a situation likely to produce the behavior']]},
+    {k:'score',t:'How will the behavior be scored?',o:[['freq','Count each instance (frequency)'],['dur','Time how long it lasts (duration)'],['ivl','Record whether it occurred in each interval (interval)']]},
+    {k:'beh',t:'How much must be watched?',o:[['one','One behavior or a few people'],['many','Many behaviors or many people at once']]}]},
+  sv:{sh:'Administration',title:'Survey: how will it be administered?',intro:'Answer the questions to see which administration method fits best. The scores are a heuristic built from the strengths and weaknesses listed for each method.',qs:[
+    {k:'grp',t:'Can participants be gathered in one place?',o:[['yes','Yes'],['no','No']]},
+    {k:'online',t:'Can everyone be reached online?',o:[['yes','Yes'],['no','No']]},
+    {k:'rep',t:'How important is a representative sample?',o:[['high','Very important'],['low','Less important']]},
+    {k:'cost',t:'What are the budget and time per respondent?',o:[['tight','Tight'],['flex','Flexible']]},
+    {k:'sens',t:'Are the questions sensitive or embarrassing?',o:[['yes','Yes'],['no','No']]},
+    {k:'resp',t:'Do you need a very high response rate?',o:[['high','Yes'],['ok','Not necessarily']]}]},
+  qf:{sh:'Match my study',title:'Qualitative design finder',intro:'Describe your study and the finder scores each qualitative design: the main aim counts 4 points, and the data, the participants’ role and the reasoning style 1 point each.',qs:[
+    {k:'aim',t:'What do you most want to do?',o:[['theory','Discover an underlying theory from the data'],['text','Interpret the meaning of a text or phenomenon in its context'],['essence','Describe the essence of a lived experience'],['culture','Understand the social relations, customs and lived experiences of a people or situation'],['community','Have community members record and reflect on their strengths and concerns'],['change','Challenge assumptions in existing knowledge systems and support advocacy'],['combine','Combine qualitative and quantitative approaches']]},
+    {k:'data',t:'What data will you work with?',o:[['lang','Naturally expressed language (interviews, accounts, texts)'],['field','Observations and experiences gathered in the field'],['visual','Visual imagery'],['both','Both qualitative and quantitative data']]},
+    {k:'role',t:'How do participants take part?',o:[['subject','As sources of descriptions or texts for the researcher to analyze'],['immerse','The researcher joins the setting and participates'],['partner','As partners who help produce and discuss the data']]},
+    {k:'style',t:'Which reasoning style fits best?',o:[['induct','Inductive: principles emerge from the data'],['interp','Interpretive: understanding by moving between parts and whole'],['critical','Critical: questioning power and knowledge']]}]},
+  case:{sh:'Case variant',title:'Case study: treatment and data',intro:'A case study can be quantitative, qualitative or both. Whether a treatment is given decides between a case study and a case history; the kind of data decides how it is analyzed.',qs:[
+    {k:'tx',t:'Does the researcher deliver a treatment or intervention?',o:[['no','No: the case is described only (case history)'],['yes','Yes: an intervention is administered (case study)']]},
+    {k:'data',t:'What kind of data does the case use?',o:[['num','Numerical scores (for example repeated ratings or counts)'],['narr','Narrative accounts, interviews and observations'],['both','Both numerical and narrative data']]}]}
+};
+const FDEF={obs:{role:'none',score:'freq',beh:'one'},sv:{grp:'no',online:'yes',rep:'low',cost:'tight',sens:'no',resp:'ok'},qf:{aim:'theory',data:'lang',role:'subject',style:'induct'},case:{tx:'no',data:'both'}};
+
+const SVW={
+  grp:{yes:{per:3},no:{per:-1}},
+  online:{yes:{net:1},no:{net:-4}},
+  rep:{high:{net:-2,mail:-1,tel:1,per:1},low:{net:1}},
+  cost:{tight:{net:3,mail:1,tel:-1,per:-2},flex:{tel:1,per:1}},
+  sens:{yes:{net:2,mail:2,tel:-1,per:-2},no:{}},
+  resp:{high:{net:-2,mail:-3,tel:1,per:3},ok:{}}
+};
+const SVK=['net','mail','tel','per'];
+function svResult(a){
+  const raw={},why={};let lo={},hi={};
+  SVK.forEach(k=>{raw[k]=0;why[k]=[];lo[k]=0;hi[k]=0});
+  FORMS.sv.qs.forEach(q=>{
+    SVK.forEach(k=>{
+      const vals=q.o.map(o=>(SVW[q.k][o[0]]||{})[k]||0);lo[k]+=Math.min(...vals);hi[k]+=Math.max(...vals);
+      const w=(SVW[q.k][a[q.k]]||{})[k]||0;raw[k]+=w;
+      if(w)why[k].push(q.t+' '+q.o.find(o=>o[0]===a[q.k])[1]+' ('+(w>0?'+':'−')+Math.abs(w)+')');
+    });
+  });
+  const S={};SVK.forEach(k=>{S[k]=Math.round(100*(raw[k]-lo[k])/(hi[k]-lo[k]))});
+  const ranked=SVK.slice().sort((x,y)=>raw[y]-raw[x]||SVK.indexOf(x)-SVK.indexOf(y));
+  const top=ranked[0],tie=ranked.filter(k=>raw[k]===raw[top]);
+  const notes=[];
+  if(tie.length>1)notes.push(['warn','Tied best fit: '+tie.map(nm).join(' and ')+'. Weigh the weaknesses listed for each.']);
+  notes.push(['','Main weaknesses to plan for: '+DES[top].wk.join('; ').toLowerCase()+'.']);
+  notes.push(['','Participants should be relevant to the questions, not too restricted and representative of the group the survey is meant to describe.']);
+  return{key:top,notes,ranked,S,why,fitTitle:'Fit of each administration method (0–100)'};
+}
+function qfResult(a){
+  const R=Object.keys(QFMETA).map(k=>{const m=QFMETA[k];let s=0;if(m.aims===a.aim)s+=4;if(m.data.includes(a.data))s+=1;if(m.role.includes(a.role))s+=1;if(m.style.includes(a.style))s+=1;return{k,s}});
+  const idx=k=>Object.keys(QFMETA).indexOf(k);
+  R.sort((x,y)=>y.s-x.s||idx(x.k)-idx(y.k));
+  const S={},why={};
+  R.forEach(r=>{S[r.k]=Math.round(100*r.s/7);const m=QFMETA[r.k],w=[];
+    if(m.aims===a.aim)w.push('Main aim matches (+4)');if(m.data.includes(a.data))w.push('Data match (+1)');if(m.role.includes(a.role))w.push('Participants’ role matches (+1)');if(m.style.includes(a.style))w.push('Reasoning style matches (+1)');why[r.k]=w});
+  const top=R[0],tie=R.filter(r=>r.s===top.s);
+  const notes=[];
+  if(tie.length>1)notes.push(['warn','Tied best fit: '+tie.map(r=>nm(r.k)).join(' and ')+'. Decide on the main aim first; it carries most of the weight.']);
+  if(top.s<4)notes.push(['warn','No design matches your main aim, so treat these scores cautiously.']);
+  return{key:top.k,notes,ranked:R.map(r=>r.k),S,why,fitTitle:'Fit of each qualitative design (0–100)'};
+}
+const QFMETA={
+  gt:{aims:'theory',data:['lang','field'],role:['subject','immerse'],style:['induct']},
+  he:{aims:'text',data:['lang'],role:['subject'],style:['interp']},
+  ph:{aims:'essence',data:['lang'],role:['subject'],style:['induct','interp']},
+  et:{aims:'culture',data:['field','lang'],role:['immerse'],style:['induct','interp']},
+  pv:{aims:'community',data:['visual'],role:['partner'],style:['critical']},
+  lb:{aims:'change',data:['lang','field'],role:['partner'],style:['critical']},
+  mix:{aims:'combine',data:['both'],role:['subject','partner'],style:['induct','interp','critical']}
+};
+function obsResult(a){
+  const key={none:'nat',join:'par',set:'con'}[a.role],notes=[];
+  notes.push(['',{freq:'Frequency method: count each instance. It suits brief, discrete behaviors and says nothing about how long each lasted.',dur:'Duration method: time how long the behavior lasts. It suits behaviors that persist and does not show how often they began.',ivl:'Interval method: divide the period into intervals and record whether the behavior occurred in each. A coarse interval can misstate the amount of behavior.'}[a.score]]);
+  if(a.beh==='many')notes.push(['','Sampling: observe only selected time periods (time sampling), specified events (event sampling) or selected individuals (individual sampling). A recorded session can be replayed for complete coding.']);
+  if(a.role==='join')notes.push(['warn','Participant observation risks loss of objectivity and increases the chance of observer influence.']);
+  if(a.role==='set')notes.push(['warn','A contrived situation is less natural than behavior seen in the real world.']);
+  notes.push(['','Have more than one observer score at least part of the data, to obtain inter-rater reliability.']);
+  return{key,notes};
+}
+function caseResult(a){
+  const key=a.tx==='yes'?'case':'hist',notes=[];
+  notes.push(['good',{num:'Numerical case data: record repeated scores (for example weekly ratings) and plot them over time. Averaging across people would hide the individual, which is the point of a case.',narr:'Narrative case data: gather detailed accounts, interviews and observations in the person’s own words, then describe and interpret them. Selective bias and subjective interpretation are the main weaknesses.',both:'Numerical and narrative data together: report the scores and the account side by side so that each can illuminate the other. Keep the two strands clearly identified.'}[a.data]]);
+  notes.push(['','A case study is one design that can serve the quantitative approach, the qualitative approach, or both. What changes is the kind of data and how they are analyzed, not the design.']);
+  return{key,notes};
+}
+function resolve(term,forms){
+  if(!term)return null;
+  if(term.type==='leaf'){const k=term.key;return{key:k,notes:k==='dstat'?[['','Use this when you already have scores. If you still need to collect them, choose an observation, content, survey or case design first.']]:[]}}
+  const fk=term.key,a=forms[fk];
+  let r;
+  if(fk==='obs')r=obsResult(a);else if(fk==='sv')r=svResult(a);else if(fk==='case')r=caseResult(a);else r=qfResult(a);
+  r.form=fk;return r;
+}
+
+/* ================= the tree ================= */
+const T={
+  root:{sh:'Purpose',q:'What is the main purpose of the study?',opts:[
+    {l:'Describe variables as they occur naturally',d:'Describe a single variable, or each variable on its own, without manipulating them or relating them.',s:'describe',to:'appr'},
+    {l:'Show that two variables are related',d:'Establishing and describing relationships is the correlational strategy, not descriptive research.',s:'relate',to:'leaf:corr'},
+    {l:'Demonstrate cause and effect',d:'Only an experimental strategy, with manipulation and control, can do this.',s:'cause',to:'leaf:exp'}]},
+  appr:{sh:'Approach',q:'Which approach fits your question and data?',opts:[
+    {l:'Quantitative: turn behavior, ratings or records into numbers',d:'Data are numerical from the start, and the analysis follows a more fixed sequence.',s:'quantitative',to:'qsrc'},
+    {l:'Qualitative: understand meaning from language, imagery or experience',d:'Seeks understanding (verstehen) from naturally expressed language, visual imagery and other sensory data.',s:'qualitative',to:'qaim'},
+    {l:'Both: combine quantitative and qualitative aspects',d:'Mixed methods keep the two intact; hybrid methods integrate them fluidly.',s:'both',to:'mixq'},
+    {l:'One individual or a very small group, in depth',d:'A case study can use numerical data, narrative data or both, so it serves either approach.',s:'single case',to:'form:case'}]},
+  qsrc:{sh:'Data source',q:'Where will the quantitative data come from?',opts:[
+    {l:'The researcher watches and records behavior',d:'An observational design: the observer’s role selects the type.',s:'behavior',to:'form:obs'},
+    {l:'Existing media or historical records',d:'Content analysis or archival research, using the measurement rules of behavioral observation.',s:'records',to:'rec'},
+    {l:'Participants answer questions about themselves',d:'A survey design gives a snapshot of a particular group at a particular time.',s:'self-report',to:'form:sv'},
+    {l:'One individual or a very small group, in depth',d:'A case study with numerical scores (it can also use narrative data).',s:'one case',to:'form:case'},
+    {l:'I already have scores and need to summarize them',d:'Descriptive statistics organize, summarize and simplify the results.',s:'have scores',to:'leaf:dstat'}]},
+  rec:{sh:'Media or records',q:'What material will be measured?',opts:[
+    {l:'Literature, movies, television programs or similar media',d:'Content analysis measures the occurrence of specific events.',s:'media',to:'leaf:cont'},
+    {l:'Historical records of past behaviors or events',d:'Archival research looks at events that occurred in the past.',s:'history',to:'leaf:arch'}]},
+  qaim:{sh:'Main aim',q:'What is the main aim of the qualitative study?',opts:[
+    {l:'Discover an underlying theory from the data',d:'Inductive methods that “ground” theory in the data itself.',s:'theory',to:'leaf:gt'},
+    {l:'Interpret the meaning of a text or phenomenon in its context',d:'Moving between the parts and the whole.',s:'text',to:'leaf:he'},
+    {l:'Describe the essence of a lived experience',d:'Understand conscious experience as lived and delineate its essences.',s:'essence',to:'leaf:ph'},
+    {l:'Understand the social relations, customs and lived experiences of a people or situation',d:'Field research with external and internal observations.',s:'culture',to:'leaf:et'},
+    {l:'Have community members record and reflect on their strengths and concerns',d:'Participants capture visual imagery and take findings to policymakers.',s:'community',to:'leaf:pv'},
+    {l:'Challenge assumptions in existing knowledge systems and support advocacy',d:'Often integrate advocacy and activism with research.',s:'change',to:'leaf:lb'},
+    {l:'Understand one individual or a very small group in depth',d:'A case study, here with narrative data (numbers can be added).',s:'one case',to:'form:case'},
+    {l:'Combine qualitative and quantitative approaches',d:'Mixed or hybrid methods.',s:'combine',to:'mixq'},
+    {l:'I am not sure: match my data, participants and reasoning style',d:'A selector scores each qualitative design.',s:'not sure',to:'form:qf'}]},
+  mixq:{sh:'Integration',q:'How are the quantitative and qualitative aspects combined?',opts:[
+    {l:'Combined intact, each strand analyzed on its own terms',d:'Mixed methods.',s:'intact',to:'leaf:mix'},
+    {l:'Integrated fluidly, so the strands cannot be separated',d:'Hybrid methods.',s:'integrated',to:'leaf:hyb'}]}
+};
+function isTerm(to){return to.startsWith('form:')||to.startsWith('leaf:')}
+function walk(path){
+  let id='root';const steps=[];
+  for(const i of path){
+    const n=T[id],o=n&&n.opts[i];if(!o)break;
+    steps.push({id,i});
+    if(isTerm(o.to))return{steps,cur:null,term:{type:o.to.slice(0,4),key:o.to.slice(5)}};
+    id=o.to;
+  }
+  return{steps,cur:id,term:null};
+}
+
+/* ================= considerations ================= */
+const G=(...k)=>new Set(k.flat());
+const OBS=['nat','par','con'],REC=['cont','arch'],SURV=['net','mail','tel','per'],CAS=['case','hist'],QUAL=['gt','he','ph','et','pv','lb'],MIX=['mix','hyb'];
+const DESC=G(OBS,REC,SURV,CAS,QUAL,MIX,'dstat');
+const CONS=[
+ {id:'notrel',t:'Describe; do not claim relationships or effects',a:DESC,b:'Descriptive research describes variables as they exist naturally and is not concerned with relationships between them. Write “shows how often” or “describes”, not “is related to” or “causes”.'},
+ {id:'ndef',t:'Define behaviors and categories before you start',a:G(OBS,REC),b:'Behaviors or content categories need clear definitions and a numerical scoring method so that different observers or coders score the same events the same way.'},
+ {id:'score',t:'Choose a scoring method that matches the behavior',a:G(OBS,REC),b:'Frequency counts instances, duration times how long the behavior lasts, and the interval method records behavior in each of a series of intervals. A coarse interval can misstate the amount.'},
+ {id:'samp',t:'Sample times, events or individuals when you cannot watch everything',a:G(OBS),b:'Time sampling observes selected periods, event sampling observes specified events, and individual sampling observes selected individuals. Recorded sessions can be replayed for complete coding.'},
+ {id:'react',t:'Reduce reactivity to the observer',a:G(OBS),b:'The observer’s presence can change behavior (demand characteristics and reactivity). Conceal the observer, or habituate participants through repeated exposure until the observer is no longer a novel stimulus.'},
+ {id:'rel',t:'Check inter-rater reliability',a:G(OBS,REC),b:'Judgments are partly subjective, so independent observers or coders should score at least part of the data and their agreement should be reported. The calculator below shows percent agreement and κ.'},
+ {id:'partobj',t:'Guard your objectivity as a participant observer',a:G('par'),b:'Becoming one of the group gives a unique perspective but risks loss of objectivity and increases observer influence.'},
+ {id:'contr',t:'Remember that a contrived situation is less natural',a:G('con'),b:'You do not have to wait for the behavior to occur, but behavior in a situation you set up may differ from behavior in the real world.'},
+ {id:'recsrc',t:'Say how the media or records were selected',a:G(REC),b:'Content analysis and archival research measure events that were already recorded, so the results describe only the materials you sampled. State which materials were used and why.'},
+ {id:'items',t:'Choose the question type deliberately',a:G(SURV),b:'Open-ended items let participants answer in their own words but must be coded; restricted items offer a limited number of alternatives that are tallied; rating-scale items give numbers that can be added and averaged.'},
+ {id:'constr',t:'Construct the survey carefully',a:G(SURV),b:'Include demographic questions to describe who responded, place sensitive questions with care, group questions that share a topic, keep the format simple and the vocabulary easy, and consult professional help when needed.'},
+ {id:'repres',t:'Select relevant, representative participants',a:G(SURV),b:'Participants should be relevant to the questions, not too restricted and representative of the group. A snapshot of an unrepresentative group describes only that group.'},
+ {id:'nonresp',t:'Watch for nonresponse bias and unrepresentative samples',a:G('mail','net'),b:'A low response rate lets those who respond differ from those who do not; mail surveys are most at risk. Internet surveys cannot control the composition of the sample.'},
+ {id:'intbias',t:'Limit interviewer bias',a:G('tel','per'),b:'Telephone and in-person surveys risk interviewer bias. Use the same wording and delivery for every participant.'},
+ {id:'margin',t:'Report how precise survey percentages are',a:G(SURV),b:'Report how many people responded and the margin of error due to chance. The calculator below shows it; the margin does not repair bias.'},
+ {id:'casescope',t:'Describe the case and state its limits',a:G(CAS),b:'A case study is not averaged over a diverse group and gives detailed description, but generalization is limited. It can study rare and unusual events and identify exceptions to the rule.'},
+ {id:'casebias',t:'Guard against selective bias and subjective interpretation',a:G(CAS),b:'Selective bias and subjective interpretation are the main weaknesses of a case study. Say how material was chosen and be explicit about how it was interpreted.'},
+ {id:'casetx',t:'Distinguish a case history from a case study with treatment',a:G(CAS),b:'A case history includes no treatment or intervention; a case study may include an intervention administered by the researcher. Report which one you have.'},
+ {id:'casedat',t:'Decide what kinds of data the case will use',a:G(CAS),b:'A case can be reported with numerical scores, narrative accounts or both. Numerical records can be plotted over time; narrative data are described and interpreted. Reporting both gives a fuller picture.'},
+ {id:'dstats',t:'Summarize numerical scores with descriptive statistics',a:G(OBS,REC,SURV,CAS,MIX,'dstat'),b:'Organize scores in a frequency distribution, describe the center with the mean, median and mode, and the spread with the variance (SS divided by n − 1) and the standard deviation.'},
+ {id:'nominal',t:'Describe categories with percentages and the mode',a:G(SURV,REC,MIX,'dstat'),b:'Nominal and ordinal data are described with percentages, proportions and the mode, not with a mean.'},
+ {id:'statpar',t:'Do not mistake a statistic for a parameter',a:G(SURV,'dstat'),b:'A statistic describes a sample and a parameter describes a population. Generalizing from one to the other requires inferential statistics and a representative sample.'},
+ {id:'qstance',t:'State your qualitative approach',a:G(QUAL,MIX,CAS),b:'Qualitative work scrutinizes data inductively and intersubjectively, aims at understanding (verstehen) and may question whether knowledge can be truly objective. Say how your design reflects this.'},
+ {id:'qdata',t:'Plan for data that are not initially numerical',a:G(QUAL,MIX,CAS),b:'Naturally expressed language, visual imagery and other sensory data must be recorded and analyzed, and the steps of analysis may vary substantially from study to study.'},
+ {id:'reflex',t:'Examine your own assumptions',a:G('gt','he','ph','et'),b:'Interpretation is shaped by the researcher. Hermeneutics isolates influences on interpretation, phenomenology brackets presuppositions, and ethnographers combine external and internal observations.'},
+ {id:'gtc',t:'Code, write memos and sample theoretically',a:G('gt'),b:'Code the data, write memos to connect and elaborate the codes, develop the theory, and use theoretical sampling to ground theoretical advances in the data itself.'},
+ {id:'hec',t:'Move repeatedly between the parts and the whole',a:G('he'),b:'The hermeneutic circle shifts focus between the thing and its context, isolating influences on interpretation to move closer to the thing itself.'},
+ {id:'phc',t:'Bracket presuppositions and reduce to essences',a:G('ph'),b:'Set aside presuppositions (bracketing) and use phenomenological reduction to identify the essences of an experience. All conscious experiences are co-constituted by the observer and the observed.'},
+ {id:'etc',t:'Participate and record both external and internal observations',a:G('et'),b:'Field research is typified by participatory observation. External observations record what can be seen; internal observations capture meanings gained from inside the group.'},
+ {id:'pvc',t:'Plan the three aims of photovoice',a:G('pv'),b:'Participants photograph their community’s strengths and concerns, group discussion of the photographs promotes critical dialogue, and the findings are taken to policymakers.'},
+ {id:'lbc',t:'Make the power analysis and any advocacy explicit',a:G('lb'),b:'Liberating methods challenge fundamental assumptions in existing knowledge systems and often integrate advocacy and activism. Name the framework, such as critical theory, feminist theory, decolonizing methods or liberation psychology.'},
+ {id:'partner',t:'Treat participants as partners',a:G('pv','lb'),b:'Community-based participatory designs involve participants in producing and discussing the data and in deciding how the findings are used.'},
+ {id:'mixc',t:'Decide how the strands combine',a:G(MIX),b:'Mixed methods combine quantitative and qualitative aspects intact; hybrid methods integrate them fluidly. Say which you are doing and report each strand on its own terms.'},
+ {id:'needrel',t:'If you need relationships or cause, change strategy',a:DESC,b:'Relating variables is the correlational strategy, and demonstrating cause and effect requires an experimental strategy with manipulation and control.'},
+ {id:'handoff',t:'Use the strategy’s own decision tree or explorer',a:G('corr','exp'),b:'This tree only hands off. The Correlational Designs Decision Tree covers relationships; cause and effect require manipulation, control and random assignment.'},
+ {id:'ethics',t:'Review ethics and participant protection',a:null,b:'Obtain informed consent, protect privacy and dignity (especially in participatory, clinical and field settings), and report the results honestly.'}
+];
+function consFor(key){return CONS.map(c=>({c,on:c.a===null||c.a.has(key)}))}
+
+/* ================= practice scenarios ================= */
+const OF=(o)=>Object.assign({},FDEF.obs,o),SF=(o)=>Object.assign({},FDEF.sv,o),CF=(o)=>Object.assign({},FDEF.case,o);
+const SC=[
+ {key:'nat',text:SCQ[0][0],why:SCQ[0][2],path:[0,0,0],forms:{obs:OF({role:'none'})}},
+ {key:'par',text:SCQ[1][0],why:SCQ[1][2],path:[0,0,0],forms:{obs:OF({role:'join'})}},
+ {key:'con',text:SCQ[2][0],why:SCQ[2][2],path:[0,0,0],forms:{obs:OF({role:'set'})}},
+ {key:'cont',text:SCQ[3][0],why:SCQ[3][2],path:[0,0,1,0]},
+ {key:'arch',text:SCQ[4][0],why:SCQ[4][2],path:[0,0,1,1]},
+ {key:'net',text:SCQ[5][0],why:SCQ[5][2],path:[0,0,2],forms:{sv:SF({online:'yes',rep:'low',cost:'tight',grp:'no'})}},
+ {key:'mail',text:SCQ[6][0],why:SCQ[6][2],path:[0,0,2],forms:{sv:SF({online:'no',rep:'low',cost:'tight',sens:'yes',grp:'no'})}},
+ {key:'tel',text:SCQ[7][0],why:SCQ[7][2],path:[0,0,2],forms:{sv:SF({online:'no',rep:'high',cost:'flex',sens:'no',grp:'no'})}},
+ {key:'per',text:SCQ[8][0],why:SCQ[8][2],path:[0,0,2],forms:{sv:SF({grp:'yes',online:'yes',rep:'high',cost:'flex',resp:'high'})}},
+ {key:'case',text:SCQ[9][0],why:SCQ[9][2]+' Here the data are likely a mix of scores and clinical narrative, so it serves both approaches.',path:[0,0,3],forms:{case:CF({tx:'yes',data:'both'})}},
+ {key:'hist',text:SCQ[10][0],why:SCQ[10][2],path:[0,0,3],forms:{case:CF({tx:'no',data:'narr'})}},
+ {key:'dstat',text:'A teacher has the quiz scores of 30 students and wants to report the typical score and how spread out the scores are.',why:'The scores are already collected; descriptive statistics (mean, median, mode, variance and standard deviation) summarize them.',path:[0,0,4]},
+ {key:'et',text:SCL[0][0],why:SCL[0][2],path:[0,1,3]},
+ {key:'gt',text:SCL[1][0],why:SCL[1][2],path:[0,1,0]},
+ {key:'he',text:SCL[2][0],why:SCL[2][2],path:[0,1,1]},
+ {key:'ph',text:SCL[3][0],why:SCL[3][2],path:[0,1,2]},
+ {key:'pv',text:SCL[4][0],why:SCL[4][2],path:[0,1,4]},
+ {key:'lb',text:SCL[5][0],why:SCL[5][2],path:[0,1,5]},
+ {key:'hyb',text:SCL[6][0],why:SCL[6][2],path:[0,2,1]},
+ {key:'mix',text:SCL[7][0],why:SCL[7][2],path:[0,2,0]},
+ {key:'hist',text:'A researcher interviews one woman repeatedly over a year about her recovery from a stroke and describes the course of her recovery in her own words, with no treatment given.',why:'One individual studied in depth with narrative data and no intervention is a case history: a qualitative use of the case study design.',path:[0,1,6],forms:{case:CF({tx:'no',data:'narr'})}},
+ {key:'case',text:'A therapist records weekly symptom ratings for one client while trying a new therapy, and also keeps detailed session notes.',why:'One individual, a treatment administered by the researcher, and both numerical and narrative data: a case study that serves both approaches.',path:[0,0,3],forms:{case:CF({tx:'yes',data:'both'})}},
+ {key:'gt',text:SCL[9][0],why:SCL[9][2],path:[0,1,0]},
+ {key:'corr',text:'A researcher asks whether hours of sleep are related to grade point average across 200 students.',why:'The goal is to show that two variables are related, which is the correlational strategy rather than descriptive research.',path:[1]},
+ {key:'exp',text:'A researcher randomly assigns volunteers to a new teaching method or the usual method to find out whether the method improves scores.',why:'Demonstrating cause and effect requires an experimental strategy: manipulation, control and random assignment.',path:[2]}
+];
+const FIRST={};SC.forEach((s,i)=>{if(!(s.key in FIRST))FIRST[s.key]=i});
+function choicesFor(sc,rnd){
+  const k=sc.key,sh=a=>a.slice().sort(()=>rnd()-.5);
+  const same=KEYS.filter(x=>x!==k&&DES[x].s===DES[k].s),oth=KEYS.filter(x=>x!==k&&DES[x].s!==DES[k].s);
+  let pool=sh(same).slice(0,2);
+  const near=sh(oth.filter(x=>DES[x].ap===DES[k].ap||DES[k].ap.indexOf('both')>=0));
+  pool=pool.concat(near.filter(x=>!pool.includes(x)).slice(0,3-pool.length));
+  const rest=sh(KEYS.filter(x=>x!==k&&!pool.includes(x)));
+  while(pool.length<3)pool.push(rest.shift());
+  return sh([k].concat(pool.slice(0,3)));
+}
+
+/* ================= strengths and weaknesses matrix ================= */
+const CM_COLS=['Observation','Content and archival','Survey','Case study','Qualitative designs'];
+const CM_ROWS=[
+ {n:'Behavior in its natural setting',c:[['c','Actual behavior is observed and recorded where it occurs (contrived observation is less natural).'],['p','Measures behavior or events as already recorded in media or records.'],['p','Participants report on behavior rather than being observed.'],['p','Detailed description, often of a clinical or unusual situation.'],['c','Field and language data are gathered as they occur; photovoice uses participants’ own imagery.']]},
+ {n:'Freedom from observer or interviewer influence',c:[['x','The observer’s presence can disrupt behavior (reactivity, demand characteristics).'],['c','Existing material cannot react to the researcher.'],['p','Interviewer bias in telephone and in-person surveys; none in mail or internet surveys.'],['p','Close contact with one individual can shape what is observed.'],['x','The researcher is often a participant, and experiences are co-constituted by observer and observed.']]},
+ {n:'Freedom from subjective interpretation',c:[['x','Judgments are partly subjective; inter-rater reliability is the remedy.'],['p','Categories and coding can be subjective; use multiple coders.'],['p','Restricted and rating-scale items are tallied directly; open-ended items must be coded.'],['x','Potential for subjective interpretation.'],['p','Interpretation is central and accepted; knowledge is treated as subjective or intersubjective, so the researcher’s assumptions must be examined.']]},
+ {n:'Generalization to a population',c:[['p','Depends on who and when is observed.'],['p','Depends on how the media or records were chosen.'],['c','A representative sample gives a snapshot of a group, unless nonresponse or sample bias intrudes.'],['x','Limited generalization.'],['x','Seeks understanding of particular people, settings or texts rather than generalization to a population.']]},
+ {n:'Depth and detail',c:[['p','Detailed behavioral records, limited to what can be observed.'],['p','Detail is limited to what was recorded.'],['x','Limited to the questions asked.'],['c','Detailed, vivid, powerful and convincing description.'],['c','Rich description of meaning, experience and context.']]},
+ {n:'Reaching many people efficiently',c:[['x','Time-consuming; usually few people can be watched.'],['p','Many records can be coded once collected.'],['c','Efficient with many participants, especially internet and in-person group surveys.'],['x','One individual or a very small group.'],['x','Typically time-intensive with few participants.']]},
+ {n:'Studying rare or unusual events',c:[['p','Naturalistic observation must wait for the behavior; contrived observation can produce it.'],['p','Records may preserve rare events.'],['x','Rare events are hard to capture in a general sample.'],['c','Can study rare and unusual events and identify exceptions to the rule.'],['p','Suits unusual experiences and settings when understanding, not frequency, is the aim.']]},
+ {n:'Numerical description',c:[['c','Frequency, duration and interval scores are summarized with descriptive statistics.'],['c','Counts per category are summarized with descriptive statistics.'],['c','Ratings can be added and averaged; categories use percentages.'],['p','Repeated scores can be tracked over time; averaging across people is not the aim.'],['x','Data are not initially in numerical format (mixed and hybrid methods can add numbers).']]},
+ {n:'Understanding meaning and lived experience',c:[['x','Records what can be seen, not what it means.'],['p','Can describe the content of media or records, not the experience of those involved.'],['p','Open-ended items allow answers in participants’ own words.'],['c','With narrative data, gives a detailed account of one person’s experience.'],['c','Understanding (verstehen) is the central aim.']]},
+ {n:'Participants as partners and action for change',c:[['n','–'],['n','–'],['n','–'],['n','–'],['p','Photovoice and liberating methods make participants partners and often aim at change.']]}
+];
+const QZ=QZQ.concat(QZL).concat([
+ {q:'Which design can use numerical data, narrative data or both?',o:['Case study','Mail survey','Content analysis','Photovoice'],a:0,w:'A case study of one individual or a very small group can be reported with numerical scores, narrative accounts or both, so it serves the quantitative and qualitative approaches.'},
+ {q:'A researcher wants to show that two variables are related. Which strategy fits?',o:['Descriptive','Correlational','Case history','Hermeneutic'],a:1,w:'Descriptive research is not concerned with relationships between variables; establishing and describing a relationship is the goal of the correlational strategy.'},
+ {q:'What separates a case history from a case study?',o:['Whether a treatment or intervention is given','Whether the data are numerical','Whether the researcher is a participant','Whether the case is rare'],a:0,w:'A case history has no treatment or intervention; a case study may include an intervention administered by the researcher.'},
+ {q:'Which approach would suit a project that keeps a survey and a set of interviews separate and analyzes each on its own terms?',o:['Hybrid methods','Mixed methods','Grounded theory','Content analysis'],a:1,w:'Mixed methods combine quantitative and qualitative aspects intact; hybrid methods integrate them fluidly.'}
+]);
+
+/* ================= state and rendering ================= */
+const clone=o=>JSON.parse(JSON.stringify(o));
+const st={tab:'tree',path:[],forms:clone(FDEF),cons:null,ck:{},cat:'all',cm:0};
+const pr={n:0,ok:0,idx:-1,choices:[],answered:false,last:null};
+const qz={n:0,score:0,i:-1,done:false};
+const TABS=['tree','cat','wk','con','prac','ref'];
+let LAY=null;
+function desOf(res){return DES[res.key]}
+function buildLayout(){
+  let row=0;const nodes=[];
+  function mk(tid,depth,id){
+    const n=T[tid],node={id,kind:'q',tid,label:n.sh,depth,kids:[]};
+    n.opts.forEach((o,i)=>{
+      const cid=id+'.'+i;let kid;
+      if(o.to.startsWith('form:')){const fk=o.to.slice(5);kid={id:cid,kind:'form',fk,label:FORMS[fk].sh,depth:depth+1,kids:[]}}
+      else if(o.to.startsWith('leaf:')){const k=o.to.slice(5);kid={id:cid,kind:'leaf',key:k,label:DES[k].sh,depth:depth+1,kids:[]}}
+      else kid=mk(o.to,depth+1,cid);
+      kid.el=o.s;node.kids.push(kid);
+    });
+    return node;
+  }
+  const rootN=mk('root',0,'r');
+  (function place(nd){
+    if(!nd.kids.length)nd.row=row++;else{nd.kids.forEach(place);nd.row=(nd.kids[0].row+nd.kids[nd.kids.length-1].row)/2}
+    nodes.push(nd);
+  })(rootN);
+  return{root:rootN,nodes,rows:row};
+}
+const CW=140,GAP=70,RH=31,PX=8,PY=12,NH=24;
+function treeSVG(w,res){
+  if(!LAY)LAY=buildLayout();
+  const ids=['r'];w.steps.forEach((s,k)=>ids.push(['r'].concat(st.path.slice(0,k+1)).join('.')));
+  const onPath=new Set(ids),maxD=Math.max(...LAY.nodes.map(n=>n.depth));
+  const W=PX*2+(maxD+1)*CW+maxD*GAP,H=LAY.rows*RH+PY*2+36;
+  const X=n=>PX+n.depth*(CW+GAP),Y=n=>PY+n.row*RH+RH/2;
+  const curId=w.cur?ids[ids.length-1]:null;
+  let edges='',nodes='';
+  LAY.nodes.forEach(p=>p.kids.forEach(k=>{
+    const on=onPath.has(k.id);
+    edges+=`<line x1="${X(p)+CW}" y1="${Y(p)}" x2="${X(k)}" y2="${Y(k)}" stroke="${on?'var(--accent)':'var(--line)'}" stroke-width="${on?2.6:1.3}"/>`;
+  }));
+  LAY.nodes.forEach(p=>p.kids.forEach(k=>{
+    const on=onPath.has(k.id);
+    edges+=`<text x="${X(k)-5}" y="${Y(k)-4}" text-anchor="end" font-size="10.5" fill="${on?'var(--accent)':'var(--muted)'}" font-weight="${on?700:400}" stroke="var(--card)" stroke-width="3.5" paint-order="stroke">${esc(k.el)}</text>`;
+  }));
+  LAY.nodes.forEach(n=>{
+    const x=X(n),y=Y(n)-NH/2,on=onPath.has(n.id),reached=on&&n.id===ids[ids.length-1]&&w.term;
+    let fill='var(--card)',stroke='var(--line)',sw=1.2,dash='',label=n.label;
+    if(n.kind==='leaf'||n.kind==='form'){
+      stroke=n.kind==='form'?'var(--colA)':TONE[DES[n.key].s];sw=on?2.6:1.4;if(n.kind==='form')dash='4 3';
+      if(reached){fill=n.kind==='leaf'?'var(--goodBg)':'var(--grid)';if(n.kind==='form'&&res)label=desOf(res).sh}
+    }else if(on){fill='var(--grid)';stroke='var(--accent)';sw=2.4}
+    if(n.id===curId){stroke='var(--accent)';sw=3;dash='5 3'}
+    const click=on&&n.kind==='q'&&n.id!==curId?` data-tn="${n.id}" tabindex="0" role="button" aria-label="Go back to: ${esc(T[n.tid].q)}"`:'';
+    nodes+=`<g${click}><rect x="${x}" y="${y}" width="${CW}" height="${NH}" rx="6" fill="${fill}" stroke="${stroke}" stroke-width="${sw}" ${dash?`stroke-dasharray="${dash}"`:''}/><text x="${x+CW/2}" y="${y+NH/2+3.6}" text-anchor="middle" font-size="11.5" fill="var(--fg)" font-weight="${on?700:400}">${esc(label)}</text></g>`;
+  });
+  const leg=`<text x="${PX}" y="${H-20}" font-size="11" fill="var(--muted)">Blue path: your answers. Dashed blue outline: next question. Dashed outline on a design: a selector decides.</text><text x="${PX}" y="${H-6}" font-size="11" fill="var(--muted)">Outline colors: observation (blue), content and records (teal), survey (orange), case study (purple), qualitative (gold), mixed (green), other (gray or amber).</text>`;
+  return svgWrap(W,H,edges+nodes+leg,'Decision tree for choosing a descriptive research design, with your path highlighted');
+}
+function spectrum(s){
+  const W=760,H=130,xs=[20,260,500],ws=240;let o='';
+  const labs=[['Descriptive','variables described as they occur','var(--goodBg)','var(--good)'],['Correlational','relationships between variables','var(--grid)','var(--colC)'],['Experimental','manipulation, control, random assignment','var(--warnBg)','var(--warn)']];
+  labs.forEach((l,i)=>{o+=`<rect x="${xs[i]}" y="26" width="${ws}" height="56" rx="6" fill="${l[2]}" stroke="${l[3]}"/><text x="${xs[i]+ws/2}" y="50" text-anchor="middle" fill="var(--fg)" font-weight="700" font-size="13">${l[0]}</text><text x="${xs[i]+ws/2}" y="68" text-anchor="middle" fill="var(--muted)" font-size="10">${l[1]}</text>`});
+  o+=`<text x="20" y="16" fill="var(--muted)">describes one variable at a time</text><text x="740" y="16" text-anchor="end" fill="var(--muted)">can demonstrate cause and effect</text><line x1="20" y1="94" x2="740" y2="94" stroke="var(--axis)"/><polygon points="740,94 732,90 732,98" fill="var(--axis)"/>`;
+  const i=s?(s==='out'?-1:0):undefined;
+  if(i===0)o+=`<polygon points="${xs[0]+ws/2},88 ${xs[0]+ws/2-8},104 ${xs[0]+ws/2+8},104" fill="var(--fg)"/><text x="${xs[0]+ws/2}" y="120" text-anchor="middle" fill="var(--fg)" font-weight="600">your design</text>`;
+  return svgWrap(W,H,o,'Spectrum of research strategies by what they can show');
+}
+/* continuum of quantitative to qualitative */
+const CONT={nat:[0,.25],par:[.1,.45],con:[0,.15],cont:[0,.3],arch:[0,.2],net:[0,.2],mail:[0,.2],tel:[0,.2],per:[0,.25],dstat:[0,.05],case:[0,1],hist:[0,1],gt:[.65,1],he:[.75,1],ph:[.8,1],et:[.55,1],pv:[.7,1],lb:[.7,1],mix:[.2,.8],hyb:[.2,.8]};
+function contChart(sel){
+  const keys=KEYS.filter(k=>CONT[k]),W=760,rowH=19,H=keys.length*rowH+42,x0=170,x1=730;
+  let o=`<text x="${x0}" y="12" fill="var(--muted)">quantitative</text><text x="${x1}" y="12" text-anchor="end" fill="var(--muted)">qualitative</text>`;
+  keys.forEach((k,i)=>{
+    const y=22+i*rowH,c=CONT[k],on=k===sel;
+    o+=`<text x="${x0-8}" y="${y+11}" text-anchor="end" fill="${on?'var(--fg)':'var(--muted)'}" font-weight="${on?700:400}">${esc(DES[k].name)}</text><rect x="${x0}" y="${y+3}" width="${x1-x0}" height="10" rx="5" fill="var(--grid)"/><rect x="${x0+c[0]*(x1-x0)}" y="${y+3}" width="${Math.max(6,(c[1]-c[0])*(x1-x0))}" height="10" rx="5" fill="${TONE[DES[k].s]}"/>`;
+  });
+  return svgWrap(W,H,o,'Where each design sits between quantitative and qualitative approaches');
+}
+function formHTML(fk){
+  const F=FORMS[fk],a=st.forms[fk];
+  let h=`<p class="small muted">${esc(F.intro)}</p>`;
+  F.qs.forEach(q=>{
+    h+=`<div class="q"><fieldset><legend>${esc(q.t)}</legend>${q.o.map(o=>`<label><input type="radio" name="f-${fk}-${q.k}" value="${o[0]}" ${String(a[q.k])===String(o[0])?'checked':''}> ${esc(o[1])}</label>`).join('')}</fieldset></div>`;
+  });
+  return h;
+}
+function renderQ(w){
+  const steps=w.steps;
+  let h=`<div class="row" style="justify-content:space-between"><h2 style="margin:0">${w.cur?'Question '+(steps.length+1):w.term.type==='form'?esc(FORMS[w.term.key].title):'Design reached'}</h2><div class="row"><button class="small" data-act="back" ${steps.length?'':'disabled'}>Back</button><button class="small" data-act="reset" title="Clear every answer and start again">Reset</button></div></div>`;
+  if(steps.length)h+=`<ol class="crumbs" aria-label="Your answers">${steps.map((s,k)=>`<li><button class="crumb" data-jump="${k}" title="Return to this question">${esc(T[s.id].sh)} → <b>${esc(T[s.id].opts[s.i].s)}</b></button></li>`).join('')}</ol>`;
+  if(w.cur){
+    const n=T[w.cur];
+    h+=`<p style="font-weight:600;margin:8px 0">${esc(n.q)}</p>`+n.opts.map((o,i)=>`<button class="opt" data-pick="${i}"><b>${esc(o.l)}</b><span>${esc(o.d)}</span></button>`).join('');
+  }else if(w.term.type==='form'){
+    h+=formHTML(w.term.key)+`<div class="row"><button class="small" data-act="form-reset" title="Return this selector to its default answers">Reset answers</button></div>`;
+  }else h+=`<p class="small muted">This path leads straight to one design. Use Back to revisit an answer.</p>`;
+  $('#q-card').innerHTML=h;
+}
+function notesHTML(res){return (res.notes||[]).map(n=>`<div class="callout ${n[0]}">${esc(n[1])}</div>`).join('')}
+function fitsHTML(res){
+  if(!res.ranked)return '';
+  return `<h3>${esc(res.fitTitle)}</h3>`+res.ranked.map(k=>{const sc=res.S[k];return `<div class="fit"><div style="min-width:60px">${pill(sc,sc>=70?'good':sc>=50?'warn':'bad')}</div><div style="flex:1"><div class="nm">${esc(DES[k].name)}</div><div class="progress"><i style="width:${sc}%"></i></div><details><summary class="small muted" style="cursor:pointer">Why this score</summary><ul class="clean small muted">${(res.why[k]||[]).map(t=>`<li>${esc(t)}</li>`).join('')||'<li>No answers moved this score.</li>'}</ul></details></div></div>`}).join('');
+}
+function pathSummary(w){
+  const items=w.steps.map(s=>`<li>${esc(T[s.id].q)} <b>${esc(T[s.id].opts[s.i].l)}</b></li>`);
+  return items.length?`<h3>How you got here</h3><ol class="clean small">${items.join('')}</ol>`:'';
+}
+function swHTML(d){
+  const ext=d.s==='qual'||d.s==='mix'?'<p class="small muted">For qualitative and mixed designs, strengths and limits summarize what each design asks of the researcher. They are teaching extensions rather than formal course content.</p>':'';
+  return `<div class="grid2"><div><h3>Strengths</h3><ul class="clean small">${d.sg.map(t=>`<li>${esc(t)}</li>`).join('')}</ul></div><div><h3>Weaknesses</h3><ul class="clean small">${d.wk.map(t=>`<li>${esc(t)}</li>`).join('')}</ul></div></div>${ext}`;
+}
+function renderRes(w,res){
+  if(!res){
+    $('#res').innerHTML=`<div class="card"><h2>Recommended design</h2><p class="muted">Answer the questions and the recommended design, its main threats, its strengths and weaknesses and the usual analysis appear here.</p><div class="chart">${spectrum(null)}</div></div>`;
+    return;
+  }
+  const d=desOf(res),sp=STRAT[d.s];
+  const ups=(d.up||[]).map(u=>`<li><b>${esc(nm(u[0]))}:</b> ${esc(u[1])}</li>`).join('');
+  $('#res').innerHTML=`<div class="card">
+    <div class="row" style="justify-content:space-between"><h2 style="margin:0">Recommended: ${esc(d.name)}</h2><div class="row">${pill(sp[0],sp[1])}<span class="pill good" style="background:var(--grid);color:var(--fg)">${esc(d.ap)}</span></div></div>
+    <p>${esc(d.what)}</p>${notesHTML(res)}
+    <div class="grid2" style="margin-top:6px">
+      <div><h3>Data and notation</h3><p class="small">${esc(d.data)}. Cause and effect: <b>${esc(d.cause)}</b>.</p>${d.nota&&d.nota.length?`<pre class="nota">${esc(d.nota.join('\n'))}</pre>`:''}</div>
+      <div><h3>Position between quantitative and qualitative</h3>${CONT[res.key]?`<div class="chart">${contChart(res.key)}</div>`:'<p class="small muted">Not a descriptive design.</p>'}</div>
+    </div>
+    ${swHTML(d)}
+    <div class="grid2">
+      <div><h3>Main threats</h3><p>${esc(d.threats)}</p></div>
+      <div><h3>${d.s==='qual'?'Typical techniques':'Usual analysis'}</h3><p>${esc(d.s==='qual'?d.stat.replace(/^Typical techniques: /,''):d.stat)}</p></div>
+    </div>
+    ${fitsHTML(res)}
+    ${ups?`<h3>Related designs and next steps</h3><ul class="clean small">${ups}</ul>`:''}
+    ${pathSummary(w)}
+    <div class="row" style="margin-top:10px"><button class="primary" data-goto="con">General considerations for this design</button><button data-goto="cat">Compare with other designs</button></div>
+    ${d.ex?`<p class="small muted">${esc(d.ex)}</p>`:''}
+  </div>`;
+}
+function current(){const w=walk(st.path);return{w,res:resolve(w.term,st.forms)}}
+function renderTree(){
+  const {w,res}=current();
+  renderQ(w);
+  $('#tree-chart').innerHTML=treeSVG(w,res);
+  renderRes(w,res);
+}
+function renderCat(){
+  const f=st.cat,sel=$('#cat-f');
+  if(!sel.options.length)sel.innerHTML='<option value="all">All designs</option>'+Object.keys(STRAT).map(k=>`<option value="${k}">${esc(STRAT[k][0])}</option>`).join('');
+  sel.value=f;
+  const keys=KEYS.filter(k=>f==='all'||DES[k].s===f);
+  const rows=keys.map(k=>{const d=DES[k],sp=STRAT[d.s];return [`<b>${esc(d.name)}</b>`,pill(sp[0],sp[1]),esc(d.ap),esc(d.data),esc(d.stat.replace(/^Typical techniques: /,'')),esc(d.threats),FIRST[k]!==undefined?`<button class="small" data-open="${FIRST[k]}">Show in tree</button>`:'']});
+  $('#cat-spec').innerHTML=spectrum(null);
+  $('#cat-cont').innerHTML=contChart(null);
+  $('#cat-out').innerHTML=tbl(['Design','Family','Approach','Data','Usual analysis or techniques','Main threats',''],rows)+(keys.length?'':'<p class="muted">No designs match this filter.</p>');
+}
+function renderCM(){
+  const cls={c:'good',p:'warn',x:'bad'},sym={c:'strong',p:'partial',x:'weak'};
+  const head='<tr><th class="l">Issue</th>'+CM_COLS.map(c=>`<th>${c}</th>`).join('')+'</tr>';
+  const cell=v=>v[0]==='n'?'<span class="muted">–</span>':pill(sym[v[0]],cls[v[0]]);
+  const body=CM_ROWS.map((r,i)=>`<tr data-cm="${i}" tabindex="0" style="cursor:pointer;${i===st.cm?'background:var(--grid)':''}"><td class="l"><b>${esc(r.n)}</b></td>`+r.c.map(v=>`<td style="text-align:center">${cell(v)}</td>`).join('')+'</tr>').join('');
+  $('#cm-matrix').innerHTML=`<div class="tbl-wrap"><table><thead>${head}</thead><tbody>${body}</tbody></table></div>`;
+  const r=CM_ROWS[st.cm];$('#cm-title').textContent=r.n;
+  $('#cm-detail').innerHTML='<ul class="clean">'+CM_COLS.map((n,i)=>`<li><b>${n}:</b> ${cell(r.c[i])} ${r.c[i][0]==='n'?'':esc(r.c[i][1])}</li>`).join('')+'</ul>';
+}
+function consKey(){const {res}=current();return st.cons||(res?res.key:'nat')}
+function kappaOut(){
+  const a=+$('#kp-a').value,b=+$('#kp-b').value,c=+$('#kp-c').value,d=+$('#kp-d').value,o=$('#kp-out');
+  const n=a+b+c+d;
+  if(![a,b,c,d].every(v=>Number.isFinite(v)&&v>=0)||n<1){o.innerHTML='<p class="muted small">Enter counts of zero or more, with at least one event.</p>';return}
+  const po=(a+d)/n,pe=((a+b)*(a+c)+(c+d)*(b+d))/(n*n),k=pe>=1?NaN:(po-pe)/(1-pe);
+  const lab=Number.isFinite(k)?(k>=.8?'strong':k>=.6?'substantial':k>=.4?'moderate':'weak'):'';
+  o.innerHTML=statRow([[pct(po),'percent agreement'],[Number.isFinite(k)?f(k,2):'—','Cohen’s κ'],[String(n),'events coded']])+(lab?`<div class="callout ${k>=.6?'good':'warn'}">κ = ${f(k,2)}: ${lab} agreement after removing the agreement expected by chance (${pct(pe)}).</div>`:'<div class="callout warn">κ is undefined when chance agreement is complete.</div>');
+}
+function marginOut(){
+  const p=+$('#mg-p').value,n=+$('#mg-n').value,o=$('#mg-out');
+  if(!(p>0&&p<100)||!(n>=2)){o.innerHTML='<p class="muted small">Enter a percentage between 1 and 99 and at least 2 respondents.</p>';return}
+  const q=p/100,m=1.96*Math.sqrt(q*(1-q)/n)*100;
+  o.innerHTML=statRow([[f(p,0)+'%','observed'],['± '+f(m,1),'margin of error (points, 95%)'],[f(p-m,1)+'–'+f(p+m,1)+'%','plausible range']])+`<div class="callout">With ${n} respondents, a result of ${f(p,0)}% would typically vary by about ${f(m,1)} points from sampling chance alone.</div>`;
+}
+function renderCon(){
+  const {res}=current(),key=consKey();
+  const sel=$('#cs-key');
+  if(!sel.options.length)sel.innerHTML='<option value="">Same as my tree result</option>'+KEYS.map(k=>`<option value="${k}">${esc(nm(k))}</option>`).join('');
+  sel.value=st.cons||'';
+  const list=consFor(key),on=list.filter(x=>x.on),off=list.filter(x=>!x.on);
+  const done=on.filter(x=>st.ck[x.c.id]).length;
+  const item=x=>`<label class="ck ${st.ck[x.c.id]?'done':''}"><input type="checkbox" data-ck="${x.c.id}" ${st.ck[x.c.id]?'checked':''}><span><span class="t">${esc(x.c.t)}</span><br><span class="small muted">${esc(x.c.b)}</span></span></label>`;
+  $('#cs-note').innerHTML=!st.cons&&!res?'<div class="callout warn">You have not reached a design in the tree yet, so the checklist shows naturalistic observation. Choose a design above or finish the tree.</div>':'';
+  $('#cs-name').textContent=nm(key);
+  $('#cs-prog').innerHTML=`<div class="small muted">${done} of ${on.length} relevant considerations addressed</div><div class="progress"><i style="width:${on.length?100*done/on.length:0}%"></i></div>`;
+  $('#cs-on').innerHTML=on.map(item).join('');
+  $('#cs-off').innerHTML=off.map(item).join('');
+  $('#cs-off-wrap').hidden=!off.length;
+  $('#cs-off-n').textContent=off.length;
+  kappaOut();marginOut();
+}
+function newSC(){
+  let i;do{i=Math.floor(Math.random()*SC.length)}while(SC.length>1&&i===pr.idx);
+  pr.idx=i;pr.choices=choicesFor(SC[i],Math.random);pr.answered=false;pr.last=null;renderPR();
+}
+function renderPR(){
+  $('#pr-score').textContent=pr.n?`Score: ${pr.ok} of ${pr.n} correct`:'';
+  const card=$('#pr-card');card.hidden=pr.idx<0;if(pr.idx<0)return;
+  const s=SC[pr.idx];
+  $('#pr-text').textContent=s.text;
+  $('#pr-choices').innerHTML=pr.choices.map((k,j)=>`<button class="opt" data-ch="${j}" ${pr.answered?'disabled':''}><b>${esc(nm(k))}</b></button>`).join('');
+  $('#pr-fb').innerHTML=pr.answered?`<div class="callout ${pr.last?'good':'warn'}"><b>${pr.last?'Correct.':'Not quite.'}</b> The best answer is <b>${esc(nm(s.key))}</b>. ${esc(s.why)}</div><div class="row"><button class="small" data-open="${pr.idx}">Open this path in the decision tree</button><button class="small primary" data-act="pr-new">Next scenario</button></div>`:'';
+}
+function answerPR(j){
+  if(pr.answered)return;const s=SC[pr.idx];
+  pr.last=pr.choices[j]===s.key;pr.n++;if(pr.last)pr.ok++;pr.answered=true;renderPR();
+}
+function newQ(){let i;do{i=Math.floor(Math.random()*QZ.length)}while(QZ.length>1&&i===qz.i);qz.i=i;qz.done=false;qz.pick=-1;renderQZ()}
+function renderQZ(){
+  $('#qz-score').textContent=qz.n?`Score: ${qz.score} of ${qz.n}`:'';
+  if(qz.i<0){$('#qz-out').innerHTML='<p class="muted">Press "Next question".</p>';return}
+  const q=QZ[qz.i];
+  $('#qz-out').innerHTML=`<p><b>${esc(q.q)}</b></p>`+q.o.map((t,j)=>`<div><button class="small" data-qz="${j}" style="margin:2px 0;text-align:left" ${qz.done?'disabled':''}>${'ABCD'[j]}. ${esc(t)}</button></div>`).join('')+(qz.done?`<div class="callout ${qz.pick===q.a?'good':'warn'}"><b>${qz.pick===q.a?'Correct.':'Not quite.'}</b> ${esc(q.w)}</div><div class="row"><button class="small primary" data-act="qz-new">Next question</button></div>`:'');
+}
+function answerQ(j){
+  if(qz.done)return;qz.done=true;qz.pick=j;qz.n++;if(j===QZ[qz.i].a)qz.score++;renderQZ();
+}
+function showTab(id){
+  st.tab=id;
+  $$('nav.tabs button').forEach(b=>b.setAttribute('aria-selected',b.id==='t-'+id?'true':'false'));
+  $$('.tabpanel').forEach(p=>{p.hidden=p.id!=='p-'+id});
+  if(id==='tree')renderTree();else if(id==='cat')renderCat();else if(id==='wk')renderCM();else if(id==='con')renderCon();else if(id==='prac'){renderPR();renderQZ()}
+}
+function openScenario(i){
+  const s=SC[i];st.path=s.path.slice();st.forms=Object.assign(clone(FDEF),clone(s.forms||{}));st.cons=null;showTab('tree');if(typeof window.scrollTo==='function')window.scrollTo(0,0);
+}
+function formChange(el){
+  const m=/^f-(\w+)-(\w+)$/.exec(el.name);if(!m)return false;
+  st.forms[m[1]][m[2]]=el.value;renderTree();return true;
+}
+function init(){
+  document.addEventListener('click',e=>{
+    const g=e.target.closest('[data-tn]');
+    if(g){const id=g.dataset.tn,k=id.split('.').length-1;st.path=st.path.slice(0,k);renderTree();return}
+    const cm=e.target.closest('[data-cm]');
+    if(cm){st.cm=+cm.dataset.cm;renderCM();return}
+    const b=e.target.closest('[data-act],[data-pick],[data-jump],[data-goto],[data-open],[data-ch],[data-dl],[data-qz]');if(!b)return;
+    if(b.dataset.pick!==undefined){st.path.push(+b.dataset.pick);renderTree();return}
+    if(b.dataset.jump!==undefined){st.path=st.path.slice(0,+b.dataset.jump);renderTree();return}
+    if(b.dataset.goto){showTab(b.dataset.goto);window.scrollTo(0,0);return}
+    if(b.dataset.open!==undefined){openScenario(+b.dataset.open);return}
+    if(b.dataset.ch!==undefined){answerPR(+b.dataset.ch);return}
+    if(b.dataset.qz!==undefined){answerQ(+b.dataset.qz);return}
+    if(b.dataset.dl){doDL(b.dataset.dl,'tree-chart');return}
+    const a=b.dataset.act;
+    if(a==='back'){st.path.pop();renderTree()}
+    else if(a==='reset'){st.path=[];st.forms=clone(FDEF);renderTree()}
+    else if(a==='form-reset'){const w=walk(st.path);if(w.term&&w.term.type==='form'){st.forms[w.term.key]=clone(FDEF[w.term.key]);renderTree()}}
+    else if(a==='pr-new')newSC();
+    else if(a==='qz-new')newQ();
+    else if(a==='prac-reset'){pr.n=0;pr.ok=0;pr.idx=-1;pr.answered=false;pr.last=null;qz.n=0;qz.score=0;qz.i=-1;qz.done=false;renderPR();renderQZ()}
+    else if(a==='con-reset'){st.ck={};st.cons=null;renderCon()}
+  });
+  document.addEventListener('keydown',e=>{
+    const t=e.target;if(e.key!=='Enter'&&e.key!==' ')return;
+    if(t.dataset&&t.dataset.tn){st.path=st.path.slice(0,t.dataset.tn.split('.').length-1);renderTree();e.preventDefault()}
+    else if(t.dataset&&t.dataset.cm!==undefined){st.cm=+t.dataset.cm;renderCM();e.preventDefault()}
+  });
+  document.addEventListener('change',e=>{
+    const el=e.target;
+    if(el.name&&el.name.indexOf('f-')===0){formChange(el);return}
+    if(el.id==='cs-key'){st.cons=el.value||null;renderCon();return}
+    if(el.id==='cat-f'){st.cat=el.value;renderCat();return}
+    if(el.dataset&&el.dataset.ck){st.ck[el.dataset.ck]=el.checked;renderCon()}
+  });
+  document.addEventListener('input',e=>{
+    const id=e.target.id;
+    if(id&&id.indexOf('kp-')===0)kappaOut();else if(id==='mg-p'||id==='mg-n')marginOut();
+  });
+  $$('nav.tabs button').forEach(b=>{
+    b.addEventListener('click',()=>showTab(b.id.slice(2)));
+    b.addEventListener('keydown',e=>{
+      if(e.key!=='ArrowRight'&&e.key!=='ArrowLeft')return;
+      const i=TABS.indexOf(b.id.slice(2)),j=(i+(e.key==='ArrowRight'?1:TABS.length-1))%TABS.length;
+      showTab(TABS[j]);$('#t-'+TABS[j]).focus();e.preventDefault();
+    });
+  });
+  $('#btn-theme').addEventListener('click',()=>{
+    const cur=document.documentElement.dataset.theme||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
+    document.documentElement.dataset.theme=cur==='dark'?'light':'dark';showTab(st.tab);
+  });
+  $('#btn-link').addEventListener('click',()=>{
+    try{
+      const payload=btoa(unescape(encodeURIComponent(JSON.stringify({tab:st.tab,path:st.path,forms:st.forms,cons:st.cons,ck:st.ck}))));
+      location.hash='s='+payload;
+      if(navigator.clipboard)navigator.clipboard.writeText(location.href).then(()=>toast('Link copied'),()=>toast('Link is in the address bar'));
+      else toast('Link is in the address bar');
+    }catch(err){toast('Could not build link')}
+  });
+  restoreHash();
+  showTab(st.tab);
+}
+function restoreHash(){
+  try{
+    const m=/s=([^&]+)/.exec(location.hash);if(!m)return;
+    const o=JSON.parse(decodeURIComponent(escape(atob(m[1]))));
+    if(Array.isArray(o.path))st.path=o.path.filter(x=>Number.isInteger(x));
+    if(o.forms)Object.keys(FDEF).forEach(k=>{if(o.forms[k])Object.assign(st.forms[k],o.forms[k])});
+    if(o.cons&&DES[o.cons])st.cons=o.cons;
+    if(o.ck&&typeof o.ck==='object')st.ck=o.ck;
+    if(o.tab&&TABS.includes(o.tab))st.tab=o.tab;
+    st.path=st.path.slice(0,walk(st.path).steps.length);
+  }catch(e){}
+}
+const root=typeof window!=='undefined'?window:globalThis;
+root.DescTree={st,pr,qz,walk,resolve,treeSVG,SC,DES,T,FORMS,FDEF,CONS,consFor,choicesFor,QZ,CM_ROWS,showTab,openScenario};
+if(typeof document!=='undefined'&&document.getElementById('t-tree'))init();
+
+})();
+</script>
+</body>
+</html>
