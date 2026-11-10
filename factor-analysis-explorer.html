@@ -1,0 +1,1097 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Factor Analysis Explorer</title>
+<meta name="description" content="Interactive explorer for exploratory and confirmatory factor analysis, using the Five Factor Model of personality and contemporary intelligence-test batteries as worked examples: extraction, factor retention, rotation, CFA model fit, model comparison and modification indices. Self-contained and runs entirely in the browser.">
+<style>
+:root{
+  --bg:#f5f4ef;--panel:#ffffff;--ink:#1b1e25;--muted:#5b6370;--line:#dedbd1;--soft:#efede6;
+  --a:#2468d6;--b:#d9730d;--rej:#c8372d;--ok:#1b8a5a;--accent:#2468d6;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#13151a;--panel:#1c1f26;--ink:#e8e9ed;--muted:#9aa1ae;--line:#323744;--soft:#252932;
+    --a:#6ba4ff;--b:#ffa24f;--rej:#ff7064;--ok:#4cc58c;--accent:#6ba4ff;}
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{padding:26px 22px 8px;max-width:1280px;margin:0 auto}
+h1{margin:0 0 4px;font-size:1.65rem;letter-spacing:-.01em}
+header p{margin:0;color:var(--muted);max-width:820px}
+.tabs{display:flex;gap:6px;margin-top:16px;flex-wrap:wrap}
+.tab{border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:9px 16px;border-radius:999px;font:inherit;font-weight:600;cursor:pointer}
+.tab[aria-selected="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.tab:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,summary:focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 55%,transparent);outline-offset:2px}
+.layout{max-width:1280px;margin:0 auto;padding:14px 22px 22px;display:grid;grid-template-columns:330px minmax(0,1fr);gap:18px;align-items:start}
+.layout[hidden]{display:none}
+@media(max-width:940px){.layout{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 18px}
+.controls{position:sticky;top:10px;max-height:calc(100vh - 20px);overflow:auto}
+@media(max-width:940px){.controls{position:static;max-height:none}}
+.stack{display:flex;flex-direction:column;gap:18px;min-width:0}
+h2{margin:0 0 10px;font-size:1.02rem}
+h2 .n{display:inline-block;background:var(--soft);border-radius:6px;padding:0 7px;margin-right:6px;color:var(--muted);font-variant-numeric:tabular-nums}
+h3{margin:14px 0 6px;font-size:.78rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.controls h3:first-child{margin-top:0}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+button.pill{border:1px solid var(--line);background:var(--soft);color:var(--ink);padding:5px 11px;border-radius:8px;font:inherit;font-size:.85rem;cursor:pointer}
+button.pill:hover{border-color:var(--accent)}
+button.pill[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.mlist{display:flex;flex-direction:column;gap:5px}
+.mlist button.pill{text-align:left;padding:7px 11px}
+.sl{margin:9px 0}
+.sl label{display:flex;justify-content:space-between;font-size:.88rem;gap:8px}
+.sl output{font-family:var(--mono);font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--accent)}
+select,textarea{font:inherit;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:6px 8px;width:100%}
+.opt{margin:8px 0}.opt>label{display:block;font-size:.85rem;color:var(--muted);margin-bottom:3px}
+.chk{display:flex;gap:8px;align-items:center;font-size:.88rem;margin:6px 0;cursor:pointer}
+.chk input{accent-color:var(--accent);width:16px;height:16px;flex:none}
+[hidden]{display:none!important}
+.note{font-size:.85rem;color:var(--muted);margin:6px 0}
+.msg{background:color-mix(in srgb,var(--accent) 9%,var(--panel));border-left:4px solid var(--accent);padding:9px 12px;border-radius:6px;margin-top:12px;font-size:.92rem}
+.msg.warn{background:color-mix(in srgb,var(--b) 11%,var(--panel));border-left-color:var(--b)}
+.msg p{margin:0 0 6px}.msg p:last-child{margin:0}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:8px;margin-top:12px}
+.tile{background:var(--soft);border-radius:10px;padding:8px 10px;text-align:center}
+.tile b{display:block;font-size:1.2rem;font-family:var(--mono);font-variant-numeric:tabular-nums}
+.tile span{font-size:.74rem;color:var(--muted)}
+.good{color:var(--ok)}.fair{color:var(--b)}.poor{color:var(--rej)}
+svg{width:100%;height:auto;display:block;overflow:visible}
+svg text{fill:var(--muted);font:11px system-ui,sans-serif}
+svg text.strong{fill:var(--ink)}
+svg .ax{stroke:var(--line)}
+svg .gr{stroke:var(--line);stroke-opacity:.55}
+svg .bd{fill:none;stroke:var(--ink);stroke-opacity:.8;stroke-dasharray:4 3}
+.twrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.88rem}
+th,td{padding:5px 8px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums}
+th{font-size:.75rem;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);font-weight:600}
+th:first-child,td:first-child{text-align:left}
+th.nt{text-transform:none;letter-spacing:0}
+td.l,th.l{text-align:left}
+td small,th small{color:var(--muted);font-weight:400;font-size:.72rem;letter-spacing:0;text-transform:none}
+tr.sel td{background:color-mix(in srgb,var(--accent) 9%,transparent)}
+tr.best td:first-child{box-shadow:inset 3px 0 0 var(--ok)}
+.sw{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:7px;vertical-align:-1px;border:1px solid color-mix(in srgb,var(--ink) 25%,transparent)}
+.bar{display:inline-block;height:8px;border-radius:4px;vertical-align:middle;margin-right:6px;min-width:1px}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px}
+.two.wl{grid-template-columns:minmax(0,1.7fr) minmax(0,1fr)}
+@media(max-width:760px){.two,.two.wl{grid-template-columns:minmax(0,1fr)}}
+.cap{font-size:.8rem;font-weight:600;color:var(--ink);margin:0 0 2px}
+.sw-switch{display:inline-flex;align-items:center;gap:10px;cursor:pointer;font-weight:600;font-size:.9rem}
+.sw-switch input{position:absolute;opacity:0;width:1px;height:1px}
+.sw-switch .track{position:relative;flex:none;width:40px;height:22px;border-radius:11px;background:#9aa5b1;transition:background .15s}
+.sw-switch .track::after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.3);transition:transform .15s}
+.sw-switch input:checked+.track{background:var(--accent)}
+.sw-switch input:checked+.track::after{transform:translateX(18px)}
+.sw-switch input:focus-visible+.track{outline:3px solid color-mix(in srgb,var(--accent) 55%,transparent);outline-offset:2px}
+.key{display:grid;grid-template-columns:minmax(130px,max-content) 1fr;gap:6px 16px;margin:12px 0 0;font-size:.88rem}
+.key h3{grid-column:1/-1;margin:10px 0 0;border-bottom:1px solid var(--line);padding-bottom:2px}
+.key dt{font-weight:600;font-family:Georgia,'Times New Roman',serif;white-space:nowrap}
+.key dd{margin:0;color:var(--muted)}
+.guide{max-width:1280px;margin:0 auto;padding:0 22px 30px;display:flex;flex-direction:column;gap:18px}
+.guide td,.guide th{text-align:left;vertical-align:top}
+.guide td:first-child{font-weight:600;white-space:nowrap}
+footer{max-width:1280px;margin:0 auto;padding:0 22px 36px;color:var(--muted);font-size:.82rem}
+footer p{margin:0 0 6px}
+button.pill:disabled{opacity:.45;cursor:default}
+button.pill:disabled:hover{border-color:var(--line)}
+table button.pill{padding:1px 8px;line-height:1.3}
+td.hm{text-align:center;min-width:40px;padding:5px 3px}
+td.it{white-space:nowrap}
+table button.pill{white-space:nowrap}
+td.hm small{display:block;line-height:1.1}
+.dim{color:var(--muted);opacity:.55}
+.chips{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:.8rem;color:var(--muted);margin:6px 0 0}
+.chips span{white-space:nowrap}
+.dgm{min-width:860px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Factor Analysis Explorer</h1>
+  <p>Ask what common causes could lie behind a set of correlated measures. Explore the structure of the data with exploratory factor analysis (extraction, how many factors, rotation), then test a stated structure with confirmatory factor analysis (fit, model comparison, modification). Two worked examples: the Five Factor Model of personality and the factor structure of contemporary intelligence tests.</p>
+  <div class="tabs" role="tablist" aria-label="Factor analysis approaches">
+    <button class="tab" role="tab" id="t-efa" aria-selected="true" aria-controls="v-efa">1 &middot; Exploratory (EFA)</button>
+    <button class="tab" role="tab" id="t-cfa" aria-selected="false" aria-controls="v-cfa">2 &middot; Confirmatory (CFA)</button>
+  </div>
+</header>
+
+<main>
+  <section class="layout" id="v-efa" role="tabpanel" aria-labelledby="t-efa">
+    <aside class="panel controls" id="c-efa" aria-label="Exploratory factor analysis controls"></aside>
+    <div class="stack">
+      <div class="panel" id="p-e1"></div>
+      <div class="panel" id="p-e2"></div>
+      <div class="panel" id="p-e3"></div>
+    </div>
+  </section>
+  <section class="layout" id="v-cfa" role="tabpanel" aria-labelledby="t-cfa" hidden>
+    <aside class="panel controls" id="c-cfa" aria-label="Confirmatory factor analysis controls"></aside>
+    <div class="stack">
+      <div class="panel" id="p-f1"></div>
+      <div class="panel" id="p-f2"></div>
+      <div class="panel" id="p-f3"></div>
+      <div class="panel" id="p-f4"></div>
+    </div>
+  </section>
+</main>
+
+<div class="guide">
+  <div class="panel">
+    <h2>Method guide</h2>
+    <div class="twrap"><table>
+      <thead><tr><th>Method</th><th>How it works</th><th>Reach for it when&hellip;</th><th>Watch out for&hellip;</th></tr></thead>
+      <tbody>
+      <tr><td>Principal Components (PCA)</td><td>Rotates the axes to uncorrelated components ranked by variance, analysing <em>all</em> the variance in each item (1s on the diagonal of the correlation matrix).</td><td>You want to summarise many correlated measures into a few scores and make no claim about latent causes.</td><td>Not a factor model: it treats unique and error variance as signal, so loadings and communalities are inflated.</td></tr>
+      <tr><td>Principal Axis Factoring (PAF)</td><td>Puts communality estimates on the diagonal, extracts factors, re-estimates communalities, and repeats until they settle. Only shared variance is analysed.</td><td>You want a common-factor solution without distributional assumptions, or ML will not converge.</td><td>No fit statistics. Communalities can drift to 1 (a Heywood case) when there are too many factors.</td></tr>
+      <tr><td>Maximum Likelihood EFA</td><td>Finds the loadings and unique variances that best reproduce the correlation matrix under multivariate normality. Gives &chi;&sup2;, RMSEA and BIC for each number of factors.</td><td>You want to compare solutions with different numbers of factors by formal fit.</td><td>The &chi;&sup2; test is hypersensitive in large samples; ordinal items (Likert) violate the normality assumption.</td></tr>
+      <tr><td>Varimax</td><td>Orthogonal rotation that makes each factor&rsquo;s squared loadings as spread out (some large, many near zero) as possible, keeping factors uncorrelated.</td><td>You need uncorrelated factors or a quick, easy-to-read simple structure.</td><td>Forces zero factor correlation. When the true factors correlate (as in cognitive abilities) loadings smear across factors.</td></tr>
+      <tr><td>Quartimax</td><td>Orthogonal rotation that simplifies the <em>rows</em> of the loading matrix: each item loads mainly on one factor, which tends to leave a large general first factor.</td><td>You expect a dominant general factor.</td><td>Can hide group factors behind the general one.</td></tr>
+      <tr><td>Promax</td><td>Starts from varimax, raises the loadings to a power (&kappa;) to create a target, then rotates obliquely toward it so factors may correlate.</td><td>A fast oblique rotation that is easy to explain.</td><td>Larger &kappa; makes the factors more distinct but also inflates their correlations.</td></tr>
+      <tr><td>Oblimin (quartimin)</td><td>Direct oblique rotation that minimises cross-products of squared loadings, trading simple structure against factor correlation.</td><td>Factors are expected to correlate: personality traits, cognitive abilities.</td><td>Solutions vary with the &delta; setting (fixed here at 0, quartimin). Interpret the <em>pattern</em> and the factor correlations together.</td></tr>
+      <tr><td>Parallel analysis</td><td>Compares the observed eigenvalues with those from random, uncorrelated data of the same size. Keep factors whose eigenvalue beats the 95th percentile of the random ones.</td><td>You need a defensible number of factors; it is usually the most accurate single rule.</td><td>Based on PCA eigenvalues. With strongly correlated factors (intelligence) it can suggest fewer factors than truly exist.</td></tr>
+      <tr><td>Kaiser rule and scree</td><td>Keep components with eigenvalue &gt; 1, or those before the &ldquo;elbow&rdquo; on the scree plot.</td><td>A quick first look only.</td><td>The Kaiser rule over-extracts with many items and under-extracts with few; the elbow is subjective.</td></tr>
+      <tr><td>Velicer&rsquo;s MAP</td><td>Extracts components one at a time and stops when the average squared <em>partial</em> correlation among the items is smallest.</td><td>A second opinion beside parallel analysis.</td><td>Tends to under-extract when factors are weak or strongly correlated.</td></tr>
+      <tr><td>Confirmatory factor model</td><td>You state in advance which items load on which factors, fix all other loadings to zero, estimate by maximum likelihood, and ask whether the implied correlations reproduce the observed ones.</td><td>You have a theory, a published structure or an earlier EFA to test in new data.</td><td>Good fit never proves a model true; rival models can fit equally well. Fit can also look good because the model is flexible.</td></tr>
+      <tr><td>Correlated vs. uncorrelated factors</td><td>Correlated-factor models estimate every factor correlation; uncorrelated models fix them to zero.</td><td>Compare them to test whether the factors really are independent.</td><td>Forcing zero correlations when factors overlap produces clear misfit.</td></tr>
+      <tr><td>Higher-order model</td><td>Factor correlations are explained by a second-order factor (g) that influences each first-order factor.</td><td>You believe a general factor sits above a set of broad abilities or traits.</td><td>It implies a tidy pattern among the factor correlations; a general factor can be the effect of only some indicators.</td></tr>
+      <tr><td>Bifactor model</td><td>Every item loads on a general factor and on one specific factor; all factors are uncorrelated.</td><td>You want to separate general from specific variance.</td><td>Very flexible, so it often wins on fit even when wrong. Check for tiny or negative specific loadings and improper solutions.</td></tr>
+      <tr><td>Fit indices</td><td>&chi;&sup2; tests exact fit. CFI and TLI compare with a no-correlation baseline; RMSEA measures misfit per degree of freedom; SRMR averages residual correlations; AIC and BIC trade fit against complexity.</td><td>CFI/TLI &ge; .95, RMSEA &le; .06 and SRMR &le; .08 are common guides; lower AIC/BIC means a better compromise.</td><td>Cut-offs are rules of thumb, not laws. Judge them together with the residuals and the theory.</td></tr>
+      <tr><td>Modification indices</td><td>Score tests estimating how much &chi;&sup2; would fall if one fixed loading were freed, plus the loading it would take.</td><td>You need to find where a model is mis-specified.</td><td>Specification searches capitalise on chance. Free only paths you can justify, then confirm in a new sample.</td></tr>
+      </tbody>
+    </table></div>
+  </div>
+  <div class="panel">
+    <label class="sw-switch" for="keybtn">
+      <input type="checkbox" role="switch" id="keybtn" aria-controls="key">
+      <span class="track" aria-hidden="true"></span>
+      <span>Show key: symbols &amp; terms</span>
+    </label>
+    <dl class="key" id="key" hidden>
+      <h3>The factor model</h3>
+      <dt>Factor</dt><dd>An unobserved variable assumed to influence several measured items, so that they correlate.</dd>
+      <dt>&lambda;, &Lambda;</dt><dd>Loading: the effect of a factor on an item. &Lambda; is the whole matrix (the pattern matrix). With standardized items and factors a loading behaves like a regression weight.</dd>
+      <dt>&Phi;</dt><dd>Correlations among the factors. Zero when the factors are uncorrelated (orthogonal).</dd>
+      <dt>h&sup2;, u&sup2;</dt><dd>Communality and uniqueness. h&sup2; is the share of an item&rsquo;s variance explained by the common factors; u&sup2; = 1 &minus; h&sup2; is its unique (specific + error) variance.</dd>
+      <dt>Model equation</dt><dd>R &asymp; &Lambda;&Phi;&Lambda;&prime; + &Psi;, where &Psi; holds the unique variances. Estimation searches for &Lambda;, &Phi;, &Psi; that reproduce the observed correlations R.</dd>
+      <dt>Pattern vs. structure</dt><dd>With correlated factors, the pattern matrix holds unique effects of each factor; the structure matrix (pattern &times; &Phi;) holds item&ndash;factor correlations. This page shows the pattern.</dd>
+      <dt>Simple structure</dt><dd>Each item loads strongly on one factor and near zero on the rest. Rotation aims for it.</dd>
+      <dt>Cross-loading</dt><dd>A non-trivial loading of an item on a factor other than its main one.</dd>
+      <dt>Heywood case</dt><dd>An impossible estimate, such as a communality at or above 1 (negative unique variance). It signals too many factors, too little data or a mis-specified model.</dd>
+      <h3>Exploratory analysis</h3>
+      <dt>Eigenvalue</dt><dd>Variance captured by a component of the correlation matrix. Items are standardized, so one item contributes 1.</dd>
+      <dt>Scree plot</dt><dd>Eigenvalues in descending order. The elbow, or where the observed line meets the random-data line, hints at the number of factors.</dd>
+      <dt>MAP</dt><dd>Velicer&rsquo;s Minimum Average Partial test: the number of components after which the average squared partial correlation among items stops falling.</dd>
+      <dt>KMO</dt><dd>Kaiser&ndash;Meyer&ndash;Olkin measure of sampling adequacy: how small the partial correlations are compared with the raw ones. Above .80 is good, below .50 unacceptable.</dd>
+      <dt>Bartlett&rsquo;s test</dt><dd>Tests whether the correlation matrix is an identity matrix (no relationships at all). Nearly always significant; it only rules out the hopeless case.</dd>
+      <dt>Congruence (&phi;)</dt><dd>Tucker&rsquo;s coefficient: similarity between an estimated factor and the true one used to simulate the data. Above .95 is essentially identical, .85&ndash;.94 fair. Known only because the data are simulated.</dd>
+      <dt>&kappa; (kappa)</dt><dd>The power used by promax. Larger values give a cleaner but more correlated solution.</dd>
+      <h3>Confirmatory analysis</h3>
+      <dt>Identification</dt><dd>Factor variances are fixed to 1 so that every loading can be estimated; loadings are therefore standardized. Degrees of freedom = distinct correlations and variances (p(p+1)/2) minus estimated parameters.</dd>
+      <dt>&chi;&sup2;, df, p</dt><dd>The likelihood-ratio test of exact fit. A small p means the model-implied correlations differ from the observed ones by more than sampling error would allow.</dd>
+      <dt>CFI, TLI</dt><dd>Comparative and Tucker&ndash;Lewis indices: improvement in fit over a baseline in which items are uncorrelated. Higher is better; &ge; .95 is a common benchmark.</dd>
+      <dt>RMSEA</dt><dd>Root mean square error of approximation: misfit per degree of freedom, adjusted for sample size. &le; .06 is a common benchmark.</dd>
+      <dt>SRMR</dt><dd>Standardized root mean square residual: the typical size of the gaps between observed and implied correlations. &le; .08 is a common benchmark.</dd>
+      <dt>AIC, BIC</dt><dd><b>Akaike Information Criterion</b> (AIC) and <b>Bayesian Information Criterion</b> (BIC): each is a model&rsquo;s misfit (&chi;&sup2;) plus a penalty for the number of estimated parameters. BIC&rsquo;s penalty grows with sample size, so it favours simpler models more strongly than AIC. Only differences between models fitted to the same data mean anything; lower is better.</dd>
+      <dt>Residual</dt><dd>Observed correlation minus the correlation the model implies. Large residuals show what the model fails to explain.</dd>
+      <dt>MI, EPC</dt><dd>Modification index: the expected drop in &chi;&sup2; (1 df) if a fixed loading were freed. Expected parameter change: the loading it would probably take.</dd>
+      <dt>&omega; (omega)</dt><dd>Composite reliability: the share of variance in a sum score of a factor&rsquo;s items that is due to that factor.</dd>
+      <dt>AVE</dt><dd>Average variance extracted: the mean squared standardized loading of a factor&rsquo;s items.</dd>
+      <dt>Higher-order, &gamma;</dt><dd>&gamma; is the loading of a first-order factor on the second-order factor g. Its square is the share of that factor&rsquo;s variance that g explains.</dd>
+      <dt>Bifactor</dt><dd>A model with one general factor and several specific factors, all uncorrelated, where each item loads on the general factor and one specific factor.</dd>
+      <h3>Personality</h3>
+      <dt>Five Factor Model (FFM)</dt><dd>The leading trait model of personality: individual differences are organised into five broad, relatively independent dimensions, often called the Big Five. Each trait is measured here by five questionnaire items.</dd>
+      <dt>E: Extraversion</dt><dd>Sociability, assertiveness, energy and enjoyment of company. Example item: &ldquo;Makes friends easily&rdquo;.</dd>
+      <dt>A: Agreeableness</dt><dd>Warmth, trust, sympathy and cooperativeness toward others. Example item: &ldquo;Takes time to help people&rdquo;.</dd>
+      <dt>C: Conscientiousness</dt><dd>Organisation, self-discipline, dependability and goal-directed effort. Example item: &ldquo;Finishes tasks on time&rdquo;.</dd>
+      <dt>N: Neuroticism</dt><dd>Tendency to experience anxiety, moodiness and emotional instability; the low pole is emotional stability. Example item: &ldquo;Worries a lot&rdquo;.</dd>
+      <dt>O: Openness</dt><dd>Openness to experience: imagination, curiosity, and interest in ideas and the arts. Example item: &ldquo;Enjoys abstract ideas&rdquo;.</dd>
+      <dt>Reverse-keyed item</dt><dd>An item worded in the opposite direction of its trait (for example &ldquo;Keeps in the background&rdquo; for Extraversion). It loads <em>negatively</em> on its factor and correlates negatively with the rest of its scale.</dd>
+      <dt>Likert response</dt><dd>A rating on an ordered agreement scale, here 1 to 5. Rounding to a few categories slightly weakens correlations, and treating the ratings as continuous is an approximation.</dd>
+      <dt>Item codes</dt><dd>Each item is labelled by its trait letter and number, such as E1 to E5 or N1 to N5.</dd>
+      <h3>Intelligence</h3>
+      <dt>g (general intelligence)</dt><dd>The general factor behind the positive correlations among all cognitive tests. In higher-order models it sits above the broad abilities; in bifactor models every subtest loads on it directly.</dd>
+      <dt>Positive manifold</dt><dd>The finding that every cognitive test correlates positively with every other, which is the empirical basis for g.</dd>
+      <dt>CHC</dt><dd>The Cattell&ndash;Horn&ndash;Carroll theory: a widely used model of cognitive abilities with a general factor at the top, broad abilities beneath, and narrow abilities below those. Five broad abilities are used here.</dd>
+      <dt>Gc: Comprehension-Knowledge</dt><dd>Crystallised ability: breadth and depth of acquired knowledge and verbal reasoning. Subtests: Similarities, Vocabulary, Information, Comprehension.</dd>
+      <dt>Gf: Fluid Reasoning</dt><dd>Solving novel problems by inductive and deductive reasoning, independent of acquired knowledge. Subtests: Matrix Reasoning, Figure Weights, Arithmetic.</dd>
+      <dt>Gv: Visual Processing</dt><dd>Perceiving, analysing and mentally manipulating visual patterns. Subtests: Block Design, Visual Puzzles, Picture Completion.</dd>
+      <dt>Gwm: Working Memory</dt><dd>Holding information in mind and manipulating it over a few seconds. Subtests: Digit Span, Letter&ndash;Number Sequencing.</dd>
+      <dt>Gs: Processing Speed</dt><dd>Speed and fluency of simple, well-practised visual tasks under time pressure. Subtests: Symbol Search, Coding, Cancellation.</dd>
+      <dt>VCI, PRI, WMI, PSI</dt><dd>The four index scores of Wechsler-type batteries: Verbal Comprehension, Perceptual Reasoning, Working Memory and Processing Speed. The &ldquo;four index&rdquo; model groups subtests this way; Gf and Gv are combined in PRI, and Arithmetic is grouped with working memory.</dd>
+      <dt>Subtest</dt><dd>One task within a test battery. Subtests are coded here by short labels such as SIM (Similarities), VOC (Vocabulary), MR (Matrix Reasoning), BD (Block Design), DS (Digit Span), SS (Symbol Search) and CD (Coding).</dd>
+      <dt>Scaled score</dt><dd>A subtest score standardised to a mean of 10 and a standard deviation of 3. The &ldquo;integer scaled scores&rdquo; option rounds the simulated data this way.</dd>
+    </dl>
+  </div>
+</div>
+<footer>
+  <p>All data are simulated in your browser; nothing is uploaded. Item wordings are original, and the population parameters are illustrative values in the range reported for personality questionnaires and for Wechsler-type batteries (modelled on the Cattell&ndash;Horn&ndash;Carroll framework). They are not norms for any published test. Subtest names are used descriptively.</p>
+  <p>Estimation: PAF, ML (Jöreskog) and PCA extraction; gradient-projection rotation (Bernaards &amp; Jennrich); Horn&rsquo;s parallel analysis and Velicer&rsquo;s MAP; CFA by maximum likelihood with BFGS and analytic gradients. Standard errors come from the observed information, with the delta method for standardized loadings.</p>
+</footer>
+
+<script>
+/*CORE-START*/
+'use strict';
+/* ---------- utilities ---------- */
+function mulberry(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function randn(r){var u=0;while(!u)u=r();var v=r();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)}
+function sum(a){var s=0;for(var i=0;i<a.length;i++)s+=a[i];return s}
+function mean(a){return sum(a)/a.length}
+function rep(n,f){var o=[];for(var i=0;i<n;i++)o.push(f(i));return o}
+function clamp(x,a,b){return Math.max(a,Math.min(b,x))}
+function zeros(n,m){return rep(n,function(){return new Array(m).fill(0)})}
+function eye(n){return rep(n,function(i){var r=new Array(n).fill(0);r[i]=1;return r})}
+function tp(A){var n=A.length,m=A[0].length,T=zeros(m,n),i,j;for(i=0;i<n;i++)for(j=0;j<m;j++)T[j][i]=A[i][j];return T}
+function mmul(A,B){var n=A.length,k=B.length,m=B[0].length,C=zeros(n,m),i,j,l,a,Bl,Ci;for(i=0;i<n;i++){Ci=C[i];for(l=0;l<k;l++){a=A[i][l];if(a===0)continue;Bl=B[l];for(j=0;j<m;j++)Ci[j]+=a*Bl[j]}}return C}
+function fro2(A){var s=0,i,j;for(i=0;i<A.length;i++)for(j=0;j<A[0].length;j++)s+=A[i][j]*A[i][j];return s}
+function chol(A){var n=A.length,L=zeros(n,n),i,j,k,s;for(i=0;i<n;i++){for(j=0;j<=i;j++){s=A[i][j];for(k=0;k<j;k++)s-=L[i][k]*L[j][k];if(i===j){if(!(s>1e-12))return null;L[i][i]=Math.sqrt(s)}else L[i][j]=s/L[j][j]}}return L}
+function cholInv(L){var n=L.length,Li=zeros(n,n),A=zeros(n,n),i,j,k,s;
+  for(i=0;i<n;i++){Li[i][i]=1/L[i][i];for(j=0;j<i;j++){s=0;for(k=j;k<i;k++)s+=L[i][k]*Li[k][j];Li[i][j]=-s/L[i][i]}}
+  for(i=0;i<n;i++)for(j=0;j<=i;j++){s=0;for(k=i;k<n;k++)s+=Li[k][i]*Li[k][j];A[i][j]=s;A[j][i]=s}
+  return A}
+function logdetChol(L){var s=0;for(var i=0;i<L.length;i++)s+=Math.log(L[i][i]);return 2*s}
+function inv(A){var n=A.length,M=A.map(function(r,i){return r.concat(rep(n,function(j){return i===j?1:0}))}),i,j,k,p,t,f;
+  for(i=0;i<n;i++){p=i;for(j=i+1;j<n;j++)if(Math.abs(M[j][i])>Math.abs(M[p][i]))p=j;if(Math.abs(M[p][i])<1e-12)return null;t=M[i];M[i]=M[p];M[p]=t;f=M[i][i];for(k=0;k<2*n;k++)M[i][k]/=f;
+    for(j=0;j<n;j++)if(j!==i){f=M[j][i];if(f!==0)for(k=0;k<2*n;k++)M[j][k]-=f*M[i][k]}}
+  return M.map(function(r){return r.slice(n)})}
+/* symmetric eigen-decomposition (cyclic Jacobi). vals descending, vecs[k] = k-th eigenvector (sign: largest entry positive) */
+function eigSym(M,tol){
+  var n=M.length,A=M.map(function(r){return r.slice()}),V=eye(n),sw,p,q,k,t0=tol||1e-24;
+  for(sw=0;sw<60;sw++){
+    var off=0;for(p=0;p<n;p++)for(q=p+1;q<n;q++)off+=A[p][q]*A[p][q];
+    if(off<t0)break;
+    for(p=0;p<n-1;p++)for(q=p+1;q<n;q++){
+      if(Math.abs(A[p][q])<1e-300)continue;
+      var th=(A[q][q]-A[p][p])/(2*A[p][q]),t=(th>=0?1:-1)/(Math.abs(th)+Math.sqrt(th*th+1)),c=1/Math.sqrt(t*t+1),s=t*c;
+      for(k=0;k<n;k++){var x=A[k][p],y=A[k][q];A[k][p]=c*x-s*y;A[k][q]=s*x+c*y}
+      for(k=0;k<n;k++){var x2=A[p][k],y2=A[q][k];A[p][k]=c*x2-s*y2;A[q][k]=s*x2+c*y2}
+      for(k=0;k<n;k++){var x3=V[k][p],y3=V[k][q];V[k][p]=c*x3-s*y3;V[k][q]=s*x3+c*y3}
+    }
+  }
+  var ord=rep(n,function(i){return i}).sort(function(a,b){return A[b][b]-A[a][a]});
+  return {vals:ord.map(function(i){return A[i][i]}),vecs:ord.map(function(i){var v=V.map(function(r){return r[i]}),bi=0;v.forEach(function(x,j){if(Math.abs(x)>Math.abs(v[bi]))bi=j});return v[bi]<0?v.map(function(x){return -x}):v})};
+}
+/* chi-square upper tail */
+function lgam(x){var c=[76.18009172947146,-86.50532032941677,24.01409824083091,-1.231739572450155,0.1208650973866179e-2,-0.5395239384953e-5],y=x,t=x+5.5,s=1.000000000190015,j;t-=(x+0.5)*Math.log(t);for(j=0;j<6;j++)s+=c[j]/++y;return -t+Math.log(2.5066282746310005*s/x)}
+function gammaQ(a,x){
+  if(x<=0)return 1;
+  if(x<a+1){var ap=a,del=1/a,s=del,n;for(n=0;n<500;n++){ap++;del*=x/ap;s+=del;if(Math.abs(del)<Math.abs(s)*1e-14)break}return Math.max(0,1-s*Math.exp(-x+a*Math.log(x)-lgam(a)))}
+  var b=x+1-a,c=1e300,d=1/b,h=d,i,an,dl;
+  for(i=1;i<500;i++){an=-i*(i-a);b+=2;d=an*d+b;if(Math.abs(d)<1e-300)d=1e-300;c=b+an/c;if(Math.abs(c)<1e-300)c=1e-300;d=1/d;dl=d*c;h*=dl;if(Math.abs(dl-1)<1e-14)break}
+  return Math.exp(-x+a*Math.log(x)-lgam(a))*h;
+}
+function pChi(x,df){return df>0?gammaQ(df/2,Math.max(x,0)/2):NaN}
+
+/* ---------- generic BFGS (f(x) -> {F,g}) ---------- */
+function bfgs(f,x0,o){
+  o=o||{};var n=x0.length,x=x0.slice(),H=eye(n),fx=f(x),it,i,j,maxit=o.maxit||300,tol=o.tol||1e-6,gn=0,conv=false;
+  for(it=0;it<maxit;it++){
+    gn=0;for(i=0;i<n;i++)gn=Math.max(gn,Math.abs(fx.g[i]));
+    if(gn<tol){conv=true;break}
+    var d=new Array(n),gd=0;
+    for(i=0;i<n;i++){var s=0;for(j=0;j<n;j++)s-=H[i][j]*fx.g[j];d[i]=s;gd+=s*fx.g[i]}
+    if(!(gd<0)){H=eye(n);for(i=0;i<n;i++){d[i]=-fx.g[i]}gd=0;for(i=0;i<n;i++)gd+=d[i]*fx.g[i]}
+    var step=it===0?Math.min(1,0.5/Math.sqrt(-gd)):1,xn=null,fn=null,ok=false,ls;
+    for(ls=0;ls<40;ls++){xn=x.map(function(v,k){return v+step*d[k]});fn=f(xn);if(isFinite(fn.F)&&fn.g&&fn.F<=fx.F+1e-4*step*gd){ok=true;break}step*=0.5}
+    if(!ok){var isId=true;for(i=0;i<n&&isId;i++)if(H[i][i]!==1)isId=false;if(isId)break;H=eye(n);continue}
+    var sv=new Array(n),yv=new Array(n),sy=0;
+    for(i=0;i<n;i++){sv[i]=xn[i]-x[i];yv[i]=fn.g[i]-fx.g[i];sy+=sv[i]*yv[i]}
+    if(sy>1e-12){
+      var rho=1/sy,Hy=new Array(n),yHy=0;
+      for(i=0;i<n;i++){var h=0;for(j=0;j<n;j++)h+=H[i][j]*yv[j];Hy[i]=h;yHy+=h*yv[i]}
+      for(i=0;i<n;i++)for(j=0;j<n;j++)H[i][j]+=-rho*(Hy[i]*sv[j]+sv[i]*Hy[j])+(rho*rho*yHy+rho)*sv[i]*sv[j];
+    }
+    var dF=Math.abs(fx.F-fn.F);x=xn;fx=fn;
+    if(dF<1e-14*(1+Math.abs(fx.F))&&gn<1e-3){conv=true;break}
+  }
+  gn=0;for(i=0;i<n;i++)gn=Math.max(gn,Math.abs(fx.g[i]));
+  return {x:x,F:fx.F,g:fx.g,iter:it,conv:conv||gn<1e-4,gmax:gn};
+}
+
+/* =====================  DATA SETS (simulated populations)  ===================== */
+function mkCross(p,m,seed,prob,skipFn){var r=mulberry(seed),X=zeros(p,m),i,j;for(i=0;i<p;i++)for(j=0;j<m;j++){var u=r(),v=r(),w=r();if(skipFn(i,j))continue;if(u<prob)X[i][j]=(w<0.5?-1:1)*(0.4+0.6*v)}return X}
+var B5ITEMS=(function(){
+  var fac=[
+    ['Talks a lot at gatherings','Makes friends easily','Feels energised around people','Keeps in the background','Is quiet around strangers'],
+    ['Sympathises with others','Takes time to help people','Trusts what people say','Is rude to others','Suspects hidden motives'],
+    ['Follows a schedule','Finishes tasks on time','Keeps things tidy','Leaves things undone','Wastes time'],
+    ['Worries a lot','Gets upset easily','Has frequent mood swings','Stays calm under pressure','Rarely feels blue'],
+    ['Has a vivid imagination','Enjoys abstract ideas','Is curious about many things','Avoids philosophical talk','Dislikes the arts']
+  ],sh=['E','A','C','N','O'],base=[.74,.70,.66,.68,.60],pf=[1,.93,1,1.04,.9],out=[],k;
+  for(k=0;k<25;k++){var f=k%5,q=(k-f)/5;out.push({k:sh[f]+(q+1),n:fac[f][q],f:f,sg:q>=3?-1:1,base:base[q]*pf[f]})}
+  return out})();
+var B5CROSS=mkCross(25,5,4242,0.4,function(i,j){return j===i%5});
+var IQSPEC=[ /* in administration order */
+  ['BD','Block Design',2,.78],['SIM','Similarities',0,.78],['DS','Digit Span',3,.72],['MR','Matrix Reasoning',1,.70],['VOC','Vocabulary',0,.80],
+  ['AR','Arithmetic',1,.55],['SS','Symbol Search',4,.78],['VP','Visual Puzzles',2,.74],['INF','Information',0,.78],['CD','Coding',4,.70],
+  ['LN','Letter–Number Sequencing',3,.76],['FW','Figure Weights',1,.72],['COM','Comprehension',0,.72],['CA','Cancellation',4,.52],['PC','Picture Completion',2,.55]];
+var IQITEMS=IQSPEC.map(function(s){return {k:s[0],n:s[1],f:s[2],sg:1,base:s[3]}});
+var IQX={AR:{3:2.5},SIM:{1:1.2},BD:{1:1.2},PC:{0:1.0},MR:{2:0.8},FW:{2:0.8}};
+var IQCROSS=IQITEMS.map(function(it){var row=new Array(5).fill(0),x=IQX[it.k];if(x)for(var j in x)row[+j]=x[j];return row});
+var B5PHI=[[1,.20,.20,-.30,.35],[.20,1,.25,-.30,.10],[.20,.25,1,-.35,.10],[-.30,-.30,-.35,1,-.10],[.35,.10,.10,-.10,1]];
+var IQGAM=[.83,.95,.80,.80,.55];
+var DSETS={
+  big5:{id:'big5',name:'Five Factor Model (25 personality items)',short:'Big Five',items:B5ITEMS,
+    fac:['Extraversion','Agreeableness','Conscientiousness','Neuroticism','Openness'],fs:['E','A','C','N','O'],
+    cross:function(i,j){return B5CROSS[i][j]},
+    phi:function(s){var m=5,P=eye(5),i,j;for(i=0;i<m;i++)for(j=0;j<m;j++)if(i!==j)P[i][j]=B5PHI[i][j]*s;return P},
+    disc:function(z){return z<-1.5?1:z<-0.5?2:z<0.5?3:z<1.5?4:5},discLabel:'Round to 5-point Likert responses',
+    scale:'responses',discScale:1,groupName:'Intended scale'},
+  iq:{id:'iq',name:'Intelligence battery (15 subtests, CHC factors)',short:'Intelligence',items:IQITEMS,
+    fac:['Comprehension-Knowledge (Gc)','Fluid Reasoning (Gf)','Visual Processing (Gv)','Working Memory (Gwm)','Processing Speed (Gs)'],fs:['Gc','Gf','Gv','Gwm','Gs'],
+    cross:function(i,j){return IQCROSS[i][j]},
+    phi:function(s){var m=5,P=eye(5),i,j,g=IQGAM.map(function(v){return Math.min(.985,v*s)});for(i=0;i<m;i++)for(j=0;j<m;j++)if(i!==j)P[i][j]=g[i]*g[j];return P},
+    disc:function(z){return clamp(Math.round(10+3*z),1,19)},discLabel:'Round to integer scaled scores (M = 10, SD = 3)',
+    scale:'scores',discScale:3,groupName:'Intended ability'}
+};
+/* population model: loadings (p x m), factor correlations */
+function popModel(ds,P){
+  var p=ds.items.length,m=ds.fac.length,L=zeros(p,m),i,j,Phi=ds.phi(P.fc),it;
+  for(i=0;i<p;i++){it=ds.items[i];for(j=0;j<m;j++)L[i][j]=j===it.f?clamp(it.base*P.ls,0.2,0.92)*it.sg:ds.cross(i,j)*P.cx}
+  /* keep communalities below .95 */
+  var LP=mmul(L,Phi);
+  for(i=0;i<p;i++){var h=0;for(j=0;j<m;j++)h+=LP[i][j]*L[i][j];if(h>0.95){var sc=Math.sqrt(0.95/h);for(j=0;j<m;j++)L[i][j]*=sc}}
+  return {L:L,Phi:Phi};
+}
+function corrMat(X){
+  var n=X.length,p=X[0].length,mu=new Array(p).fill(0),sd=new Array(p).fill(0),i,j,k;
+  for(i=0;i<n;i++)for(j=0;j<p;j++)mu[j]+=X[i][j];
+  for(j=0;j<p;j++)mu[j]/=n;
+  var Z=X.map(function(r){return r.map(function(v,j){return v-mu[j]})});
+  for(i=0;i<n;i++)for(j=0;j<p;j++)sd[j]+=Z[i][j]*Z[i][j];
+  sd=sd.map(function(s){return Math.sqrt(s/(n-1))||1});
+  var R=zeros(p,p);
+  for(i=0;i<n;i++){var z=Z[i];for(j=0;j<p;j++){var a=z[j];for(k=j;k<p;k++)R[j][k]+=a*z[k]}}
+  for(j=0;j<p;j++)for(k=j;k<p;k++){R[j][k]/=((n-1)*sd[j]*sd[k]);R[k][j]=R[j][k]}
+  return R;
+}
+function covMat(X,sc){
+  var n=X.length,p=X[0].length,mu=new Array(p).fill(0),i,j,k;
+  for(i=0;i<n;i++)for(j=0;j<p;j++)mu[j]+=X[i][j];
+  for(j=0;j<p;j++)mu[j]/=n;
+  var S=zeros(p,p),z=new Array(p);
+  for(i=0;i<n;i++){for(j=0;j<p;j++)z[j]=(X[i][j]-mu[j])/sc;for(j=0;j<p;j++){var a=z[j];for(k=j;k<p;k++)S[j][k]+=a*z[k]}}
+  for(j=0;j<p;j++)for(k=j;k<p;k++){S[j][k]/=(n-1);S[k][j]=S[j][k]}
+  return S;
+}
+function cov2cor(S){var d=S.map(function(r,i){return Math.sqrt(r[i])});return S.map(function(r,i){return r.map(function(v,j){return v/(d[i]*d[j])})})}
+function genSample(ds,P,n,seed,disc){
+  var pm=popModel(ds,P),p=ds.items.length,m=ds.fac.length,r=mulberry(seed*7919+101),C=chol(pm.Phi)||eye(m),X=[],i,j,k,uq=[],LP=mmul(pm.L,pm.Phi);
+  for(i=0;i<p;i++){var h=0;for(j=0;j<m;j++)h+=LP[i][j]*pm.L[i][j];uq.push(Math.sqrt(Math.max(0.02,1-h)))}
+  for(i=0;i<n;i++){
+    var z0=rep(m,function(){return randn(r)}),f=rep(m,function(a){var s=0;for(var b=0;b<=a;b++)s+=C[a][b]*z0[b];return s}),row=new Array(p);
+    for(j=0;j<p;j++){var s=0;for(k=0;k<m;k++)s+=pm.L[j][k]*f[k];s+=uq[j]*randn(r);row[j]=disc?ds.disc(s):s}
+    X.push(row);
+  }
+  var S=covMat(X,disc?ds.discScale:1);
+  return {R:cov2cor(S),S:S,N:n,pop:pm};
+}
+
+/* =====================  EFA  ===================== */
+function loadsFrom(e,m,p){var L=zeros(p,m),k,i;for(k=0;k<m;k++){var w=Math.sqrt(Math.max(e.vals[k],0));for(i=0;i<p;i++)L[i][k]=e.vecs[k][i]*w}return L}
+function rowSS(L){return L.map(function(r){return sum(r.map(function(v){return v*v}))})}
+function smc(R){var Ri=inv(R),p=R.length;return rep(p,function(i){return Ri?clamp(1-1/Ri[i][i],0.05,0.98):0.5})}
+function extractPCA(R,m){var p=R.length,e=eigSym(R,1e-18),L=loadsFrom(e,m,p),h=rowSS(L);return {L:L,h:h,psi:h.map(function(v){return 1-v}),F:NaN,eig:e.vals}}
+function extractPAF(R,m){
+  var p=R.length,h=smc(R),Rr=R.map(function(r){return r.slice()}),it,i,L,e,hn;
+  for(it=0;it<500;it++){
+    for(i=0;i<p;i++)Rr[i][i]=h[i];
+    e=eigSym(Rr,1e-18);L=loadsFrom(e,m,p);hn=rowSS(L).map(function(v){return Math.min(v,0.995)});
+    var d=0;for(i=0;i<p;i++)d=Math.max(d,Math.abs(hn[i]-h[i]));h=hn;if(d<1e-7)break;
+  }
+  return {L:L,h:h,psi:h.map(function(v){return 1-v}),F:NaN,iter:it};
+}
+function mlEval(R,psi,m,wantG){
+  var p=R.length,s=psi.map(Math.sqrt),C=zeros(p,p),i,j,k;
+  for(i=0;i<p;i++)for(j=0;j<p;j++)C[i][j]=R[i][j]/(s[i]*s[j]);
+  var e=eigSym(C,1e-15),F=0;
+  for(k=m;k<p;k++){var lk=Math.max(e.vals[k],1e-9);F+=lk-Math.log(lk)-1}
+  var L=zeros(p,m);for(k=0;k<m;k++){var w=Math.sqrt(Math.max(e.vals[k]-1,0));for(i=0;i<p;i++)L[i][k]=s[i]*e.vecs[k][i]*w}
+  var out={F:F,L:L,g:null};
+  if(wantG){
+    var Sg=mmul(L,tp(L));for(i=0;i<p;i++)Sg[i][i]+=psi[i];
+    var Lc=chol(Sg);if(!Lc){out.F=1e12;return out}
+    var Si=cholInv(Lc),D=zeros(p,p);for(i=0;i<p;i++)for(j=0;j<p;j++)D[i][j]=Sg[i][j]-R[i][j];
+    var M=mmul(D,Si);out.g=rep(p,function(a){var q=0;for(var b=0;b<p;b++)q+=Si[a][b]*M[b][a];return q});
+  }
+  return out;
+}
+function extractML(R,m,start){
+  var p=R.length,ps0=(start||smc(R).map(function(v){return 1-v})).map(function(v){return Math.max(v,0.02)}),t0=ps0.map(function(v){return Math.log(v-0.005)});
+  var res=bfgs(function(t){var psi=t.map(function(v){return 0.005+Math.exp(Math.min(v,6))}),ev=mlEval(R,psi,m,true);if(!ev.g)return {F:1e12,g:t.map(function(){return 0})};return {F:ev.F,g:ev.g.map(function(gv,i){return gv*Math.exp(Math.min(t[i],6))}),L:ev.L,psi:psi}},t0,{maxit:250,tol:1e-6});
+  var psi=res.x.map(function(v){return 0.005+Math.exp(Math.min(v,6))}),ev=mlEval(R,psi,m,false);
+  return {L:ev.L,h:rowSS(ev.L),psi:psi,F:ev.F,iter:res.iter,conv:res.conv};
+}
+function mlStats(F,p,m,N){
+  var df=((p-m)*(p-m)-(p+m))/2,chi=Math.max(0,(N-1-(2*p+5)/6-2*m/3))*F;
+  return {chi:chi,df:df,pv:df>0?pChi(chi,df):NaN,rmsea:df>0?Math.sqrt(Math.max(chi-df,0)/(df*(N-1))):NaN,bic:chi-df*Math.log(N)};
+}
+/* ---- rotations (gradient projection; Bernaards & Jennrich 2005) ---- */
+function vgVarimax(L){var p=L.length,m=L[0].length,sq=L.map(function(r){return r.map(function(v){return v*v})}),cm=rep(m,function(j){var s=0;for(var i=0;i<p;i++)s+=sq[i][j];return s/p}),f=0,G=zeros(p,m),i,j;
+  for(i=0;i<p;i++)for(j=0;j<m;j++){var q=sq[i][j]-cm[j];f+=q*q;G[i][j]=-L[i][j]*q}return {f:-f/4,G:G}}
+function vgQuartimax(L){var p=L.length,m=L[0].length,f=0,G=zeros(p,m),i,j;for(i=0;i<p;i++)for(j=0;j<m;j++){var v=L[i][j];f+=v*v*v*v;G[i][j]=-v*v*v}return {f:-f/4,G:G}}
+function vgOblimin(L){var p=L.length,m=L[0].length,f=0,G=zeros(p,m),i,j;for(i=0;i<p;i++){var tot=0;for(j=0;j<m;j++)tot+=L[i][j]*L[i][j];for(j=0;j<m;j++){var x=tot-L[i][j]*L[i][j];f+=L[i][j]*L[i][j]*x;G[i][j]=L[i][j]*x}}return {f:f/4,G:G}}
+function polar(X){var e=eigSym(mmul(tp(X),X),1e-22),m=X[0].length,W=zeros(m,m),k,i,j;
+  for(k=0;k<m;k++){var w=1/Math.sqrt(Math.max(e.vals[k],1e-14));for(i=0;i<m;i++)for(j=0;j<m;j++)W[i][j]+=w*e.vecs[k][i]*e.vecs[k][j]}return mmul(X,W)}
+function rotOrth(A,vg){
+  var m=A[0].length,T=eye(m),q=vg(A),f=q.f,G=mmul(tp(A),q.G),al=1,it,i,j,L;
+  for(it=0;it<500;it++){
+    var M=mmul(tp(T),G),S=zeros(m,m);for(i=0;i<m;i++)for(j=0;j<m;j++)S[i][j]=(M[i][j]+M[j][i])/2;
+    var TS=mmul(T,S),Gp=zeros(m,m);for(i=0;i<m;i++)for(j=0;j<m;j++)Gp[i][j]=G[i][j]-TS[i][j];
+    var s=Math.sqrt(fro2(Gp));if(s<1e-6)break;
+    al*=2;var Tt=T,qt=q;
+    for(i=0;i<=10;i++){var X=zeros(m,m);for(var a=0;a<m;a++)for(var b=0;b<m;b++)X[a][b]=T[a][b]-al*Gp[a][b];Tt=polar(X);qt=vg(mmul(A,Tt));if(qt.f<f-0.5*s*s*al)break;al/=2}
+    T=Tt;q=qt;f=q.f;G=mmul(tp(A),q.G);
+  }
+  return {L:mmul(A,T),Phi:eye(m),T:T};
+}
+function rotOblq(A,vg){
+  var m=A[0].length,T=eye(m),Ti=eye(m),L=A,q=vg(L),f=q.f,it,i,j;
+  function grad(L,Gq,Ti){var M=mmul(mmul(tp(L),Gq),Ti);return tp(M).map(function(r){return r.map(function(v){return -v})})}
+  var G=grad(L,q.G,Ti),al=1;
+  for(it=0;it<500;it++){
+    var cs=rep(m,function(j){var s=0;for(var i=0;i<m;i++)s+=T[i][j]*G[i][j];return s}),Gp=zeros(m,m);
+    for(i=0;i<m;i++)for(j=0;j<m;j++)Gp[i][j]=G[i][j]-T[i][j]*cs[j];
+    var s=Math.sqrt(fro2(Gp));if(s<1e-6)break;
+    al*=2;var Tt=T,Tit=Ti,qt=q,Lt=L;
+    for(i=0;i<=10;i++){
+      var X=zeros(m,m);for(var a=0;a<m;a++)for(var b=0;b<m;b++)X[a][b]=T[a][b]-al*Gp[a][b];
+      var v=rep(m,function(j){var q2=0;for(var a2=0;a2<m;a2++)q2+=X[a2][j]*X[a2][j];return 1/Math.sqrt(q2)});
+      Tt=X.map(function(r){return r.map(function(x,j){return x*v[j]})});Tit=inv(Tt);if(!Tit)break;
+      Lt=mmul(A,tp(Tit));qt=vg(Lt);if(qt.f<f-0.5*s*s*al)break;al/=2;
+    }
+    if(!Tit)break;
+    T=Tt;Ti=Tit;L=Lt;q=qt;f=q.f;G=grad(L,q.G,Ti);
+  }
+  return {L:L,Phi:mmul(tp(T),T),T:T};
+}
+function normRows(A){var sc=A.map(function(r){return Math.sqrt(sum(r.map(function(v){return v*v})))||1});return {An:A.map(function(r,i){return r.map(function(v){return v/sc[i]})}),sc:sc}}
+function unnorm(L,sc){return L.map(function(r,i){return r.map(function(v){return v*sc[i]})})}
+function rotVarimax(A,gam){var n=normRows(A),r=rotOrth(n.An,gam===0?vgQuartimax:vgVarimax);return {L:unnorm(r.L,n.sc),Phi:r.Phi}}
+function rotPromax(A,kappa){
+  var v=rotVarimax(A),Lv=v.L,p=Lv.length,m=Lv[0].length,P=Lv.map(function(r){return r.map(function(x){return x*Math.pow(Math.abs(x),kappa-1)})});
+  var Ai=inv(mmul(tp(Lv),Lv));if(!Ai)return v;
+  var U=mmul(mmul(Ai,tp(Lv)),P),UU=inv(mmul(tp(U),U));if(!UU)return v;
+  var d=rep(m,function(j){return Math.sqrt(UU[j][j])});U=U.map(function(r){return r.map(function(x,j){return x*d[j]})});
+  var Ui=inv(U);if(!Ui)return v;
+  return {L:mmul(Lv,U),Phi:mmul(Ui,tp(Ui))};
+}
+function rotate(A,kind,kappa){
+  if(kind==='none')return {L:A,Phi:eye(A[0].length)};
+  if(A[0].length<2)return {L:A,Phi:[[1]]};
+  if(kind==='varimax')return rotVarimax(A,1);
+  if(kind==='quartimax')return rotVarimax(A,0);
+  if(kind==='promax')return rotPromax(A,kappa||4);
+  if(kind==='oblimin')return rotOblq(A,vgOblimin);
+  return {L:A,Phi:eye(A[0].length)};
+}
+/* order factors by variance explained, make each factor's loadings sum positive */
+function tidy(L,Phi){
+  var p=L.length,m=L[0].length,j,k,i;
+  L=L.map(function(r){return r.slice()});Phi=Phi.map(function(r){return r.slice()});
+  for(j=0;j<m;j++){var s=0;for(i=0;i<p;i++)s+=L[i][j];if(s<0){for(i=0;i<p;i++)L[i][j]=-L[i][j];for(k=0;k<m;k++){if(k!==j){Phi[j][k]=-Phi[j][k];Phi[k][j]=-Phi[k][j]}}}}
+  var S=mmul(L,Phi),ss=rep(m,function(j){var s=0;for(var i=0;i<p;i++)s+=S[i][j]*L[i][j];return s}),ord=rep(m,function(i){return i}).sort(function(a,b){return ss[b]-ss[a]});
+  return {L:L.map(function(r){return ord.map(function(j){return r[j]})}),Phi:ord.map(function(a){return ord.map(function(b){return Phi[a][b]})}),ss:ord.map(function(j){return ss[j]})};
+}
+function solveEFA(R,N,meth,m,rot,kappa){
+  var p=R.length,ex=meth==='pca'?extractPCA(R,m):meth==='paf'?extractPAF(R,m):extractML(R,m),
+      ro=rotate(ex.L,rot,kappa),td=tidy(ro.L,ro.Phi),S=mmul(td.L,td.Phi),h=td.L.map(function(r,i){var s=0;for(var j=0;j<r.length;j++)s+=r[j]*S[i][j];return s});
+  var res={meth:meth,m:m,rot:rot,P:td.L,Phi:td.Phi,S:S,ss:td.ss,h:h,psi:ex.psi,raw:ex,heywood:h.some(function(v){return v>0.995})};
+  if(meth==='ml'){res.stats=mlStats(ex.F,p,m,N);res.conv=ex.conv}
+  return res;
+}
+/* ---- factor-number criteria ---- */
+function parallelAnalysis(N,p,reps,seed){
+  var r=mulberry(seed*31+7),all=[],t,i,j;
+  for(t=0;t<reps;t++){var X=[];for(i=0;i<N;i++){var row=new Array(p);for(j=0;j<p;j++)row[j]=randn(r);X.push(row)}all.push(eigSym(corrMat(X),1e-12).vals)}
+  var mn=[],p95=[];
+  for(j=0;j<p;j++){var v=all.map(function(e){return e[j]}).sort(function(a,b){return a-b});mn.push(mean(v));p95.push(v[Math.min(reps-1,Math.ceil(0.95*reps)-1)])}
+  return {mean:mn,p95:p95};
+}
+function mapTest(R){
+  var p=R.length,e=eigSym(R,1e-18),res=[],m,i,j,k;
+  for(m=0;m<=Math.min(p-2,12);m++){
+    var C=R.map(function(r){return r.slice()});
+    for(k=0;k<m;k++){var w=Math.sqrt(Math.max(e.vals[k],0));for(i=0;i<p;i++)for(j=0;j<p;j++)C[i][j]-=e.vecs[k][i]*e.vecs[k][j]*w*w}
+    var d=C.map(function(r,i){return Math.sqrt(Math.max(r[i],1e-9))}),s=0;
+    for(i=0;i<p;i++)for(j=0;j<p;j++)if(i!==j){var q=C[i][j]/(d[i]*d[j]);s+=q*q}
+    res.push(s/(p*(p-1)));
+  }
+  var best=0;res.forEach(function(v,i){if(v<res[best])best=i});
+  return {vals:res,best:best};
+}
+function kmoBartlett(R,N){
+  var p=R.length,Ri=inv(R),Lc=chol(R),ld=Lc?logdetChol(Lc):NaN,i,j,sr=0,sq=0,msa=new Array(p).fill(0),ri=new Array(p).fill(0),qi=new Array(p).fill(0);
+  if(Ri)for(i=0;i<p;i++)for(j=0;j<p;j++)if(i!==j){var q=-Ri[i][j]/Math.sqrt(Ri[i][i]*Ri[j][j]),r=R[i][j];sr+=r*r;sq+=q*q;ri[i]+=r*r;qi[i]+=q*q}
+  for(i=0;i<p;i++)msa[i]=ri[i]/(ri[i]+qi[i]);
+  var chi=-(N-1-(2*p+5)/6)*ld,df=p*(p-1)/2;
+  return {kmo:Ri?sr/(sr+sq):NaN,msa:msa,det:Lc?Math.exp(ld):NaN,chi:chi,df:df,pv:pChi(chi,df)};
+}
+/* Tucker congruence between estimated pattern columns and true pattern columns; greedy one-to-one matching */
+function congruence(P,T){
+  var p=P.length,m=P[0].length,mt=T[0].length,C=zeros(mt,m),i,j,k;
+  for(j=0;j<mt;j++)for(k=0;k<m;k++){var a=0,b=0,c=0;for(i=0;i<p;i++){a+=T[i][j]*P[i][k];b+=T[i][j]*T[i][j];c+=P[i][k]*P[i][k]}C[j][k]=a/Math.sqrt(b*c||1)}
+  var usedT={},usedE={},match=new Array(m).fill(null),vals=new Array(mt).fill(0),n=Math.min(m,mt),t;
+  for(t=0;t<n;t++){var bj=-1,bk=-1,bv=-1;for(j=0;j<mt;j++)if(!usedT[j])for(k=0;k<m;k++)if(!usedE[k]&&Math.abs(C[j][k])>bv){bv=Math.abs(C[j][k]);bj=j;bk=k}
+    usedT[bj]=1;usedE[bk]=1;match[bk]={t:bj,phi:bv};vals[bj]=bv}
+  return {C:C,match:match,vals:vals,mean:sum(vals)/mt};
+}
+
+/* =====================  CFA  ===================== */
+var CFAMODELS={
+  big5:[
+    {id:'one',name:'One general factor',desc:'All 25 items load on a single factor. A deliberately too-simple baseline.',groups:[null],phi:'orth'},
+    {id:'five',name:'Five correlated factors',desc:'The Five Factor Model: each item loads only on its intended trait; traits may correlate (simple structure).',groups:'f',phi:'free'},
+    {id:'fiveo',name:'Five uncorrelated factors',desc:'Same pattern as the five-factor model but with all trait correlations fixed to zero.',groups:'f',phi:'orth'},
+    {id:'four',name:'Four factors (E and O merged)',desc:'A plausible rival: Extraversion and Openness items form one factor, the other three traits stay separate.',groups:'merge',phi:'free'},
+    {id:'bif',name:'Bifactor: general + five traits',desc:'Every item loads on a general factor and on its own trait factor; all factors uncorrelated.',groups:'f',bif:true,phi:'orth'}
+  ],
+  iq:[
+    {id:'one',name:'One factor (g only)',desc:'Spearman’s single general factor: all 15 subtests load on g.',groups:[null],phi:'orth'},
+    {id:'four',name:'Four index factors (VCI, PRI, WMI, PSI)',desc:'The familiar four-index structure of Wechsler-type batteries: Verbal Comprehension, Perceptual Reasoning, Working Memory, Processing Speed; factors correlate.',groups:'four',phi:'free'},
+    {id:'five',name:'Five CHC broad abilities',desc:'Cattell–Horn–Carroll structure: Gc, Gf, Gv, Gwm, Gs, with correlated factors.',groups:'f',phi:'free'},
+    {id:'ho4',name:'Higher-order g over four indexes',desc:'The four index factors are themselves explained by a second-order general factor g.',groups:'four',phi:'higher'},
+    {id:'ho5',name:'Higher-order g over five CHC factors',desc:'The five CHC factors are explained by a second-order general factor g.',groups:'f',phi:'higher'},
+    {id:'bif',name:'Bifactor: g + four indexes',desc:'Each subtest loads directly on g and on one index factor; all factors uncorrelated.',groups:'four',bif:true,phi:'orth'}
+  ]
+};
+var IQFOUR={VOC:0,SIM:0,INF:0,COM:0,BD:1,MR:1,VP:1,FW:1,PC:1,DS:2,AR:2,LN:2,SS:3,CD:3,CA:3};
+var IQFOURNAMES=['Verbal Comprehension (VCI)','Perceptual Reasoning (PRI)','Working Memory (WMI)','Processing Speed (PSI)'];
+function buildSpec(ds,mid,extra){
+  var def=CFAMODELS[ds.id].filter(function(d){return d.id===mid})[0]||CFAMODELS[ds.id][0],p=ds.items.length,grp=new Array(p),names,i,j;
+  if(def.groups[0]===null&&def.groups.length===1){grp.fill(0);names=['General factor']}
+  else if(def.groups==='f'){for(i=0;i<p;i++)grp[i]=ds.items[i].f;names=ds.fac.slice()}
+  else if(def.groups==='merge'){var map={0:0,4:0,1:1,2:2,3:3};for(i=0;i<p;i++)grp[i]=map[ds.items[i].f];names=['Extraversion + Openness','Agreeableness','Conscientiousness','Neuroticism']}
+  else if(def.groups==='four'){for(i=0;i<p;i++)grp[i]=IQFOUR[ds.items[i].k];names=IQFOURNAMES.slice()}
+  var k=names.length,off=def.bif?1:0,m=k+off,mask=zeros(p,m);
+  for(i=0;i<p;i++){mask[i][off+grp[i]]=1;if(def.bif)mask[i][0]=1}
+  var fsh=def.groups[0]===null&&def.groups.length===1?['g']:def.groups==='f'?ds.fs.slice():def.groups==='merge'?['E+O','A','C','N']:['VCI','PRI','WMI','PSI'];
+  if(def.bif)fsh=['g'].concat(fsh);
+  var fn=def.bif?['General factor (g)'].concat(names):names.slice();
+  var base=mask.map(function(r){return r.slice()});
+  (extra||[]).forEach(function(e){mask[e[0]][e[1]]=1});
+  return {id:def.id,name:def.name,desc:def.desc,p:p,m:m,mask:mask,base:base,fn:fn,fsh:fsh,phi:def.phi,bif:!!def.bif,grp:grp,off:off,k:k,extra:(extra||[]).slice(),ds:ds};
+}
+function layout(spec,allFree){
+  var lp=[],i,j,p=spec.p,m=spec.m;
+  for(i=0;i<p;i++)for(j=0;j<m;j++)if(allFree||spec.mask[i][j])lp.push([i,j]);
+  var np=spec.phi==='free'?m*(m-1)/2:spec.phi==='higher'?m:0;
+  return {lp:lp,nl:lp.length,np:np,n:lp.length+np+p,p:p,m:m};
+}
+function cfaUnpack(spec,lay,x){
+  var p=spec.p,m=spec.m,L=zeros(p,m),Phi=eye(m),th=new Array(p),gam=null,i,j,k,q;
+  for(q=0;q<lay.nl;q++)L[lay.lp[q][0]][lay.lp[q][1]]=x[q];
+  if(spec.phi==='free'){q=lay.nl;for(j=0;j<m;j++)for(k=j+1;k<m;k++){var r=Math.tanh(x[q++]);Phi[j][k]=r;Phi[k][j]=r}}
+  else if(spec.phi==='higher'){gam=[];for(j=0;j<m;j++)gam.push(Math.tanh(x[lay.nl+j]));for(j=0;j<m;j++)for(k=0;k<m;k++)if(j!==k)Phi[j][k]=gam[j]*gam[k]}
+  for(i=0;i<p;i++)th[i]=0.005+Math.exp(Math.min(x[lay.nl+lay.np+i],6));
+  return {L:L,Phi:Phi,th:th,gam:gam};
+}
+function cfaImplied(u){var p=u.L.length,S=mmul(mmul(u.L,u.Phi),tp(u.L)),i;for(i=0;i<p;i++)S[i][i]+=u.th[i];return S}
+function cfaF(spec,lay,x,S,logdetS,wantG){
+  var u=cfaUnpack(spec,lay,x),p=spec.p,m=spec.m,Sg=cfaImplied(u),Lc=chol(Sg),i,j,k,q;
+  if(!Lc)return {F:1e12,g:null};
+  var Si=cholInv(Lc),F=logdetChol(Lc)-logdetS-p;
+  for(i=0;i<p;i++)for(j=0;j<p;j++)F+=S[i][j]*Si[i][j];
+  if(!wantG)return {F:F};
+  var SiS=mmul(Si,S),SSi=mmul(SiS,Si),G=zeros(p,p);
+  for(i=0;i<p;i++)for(j=0;j<p;j++)G[i][j]=Si[i][j]-SSi[i][j];
+  var GL=mmul(G,u.L),dL=mmul(GL,u.Phi),D=mmul(tp(u.L),GL),g=new Array(lay.n).fill(0);
+  for(q=0;q<lay.nl;q++)g[q]=2*dL[lay.lp[q][0]][lay.lp[q][1]];
+  if(spec.phi==='free'){q=lay.nl;for(j=0;j<m;j++)for(k=j+1;k<m;k++){var r=Math.tanh(x[q]);g[q]=2*D[j][k]*(1-r*r);q++}}
+  else if(spec.phi==='higher'){for(j=0;j<m;j++){var s=0;for(k=0;k<m;k++)if(k!==j)s+=D[j][k]*u.gam[k];g[lay.nl+j]=2*s*(1-u.gam[j]*u.gam[j])}}
+  for(i=0;i<p;i++)g[lay.nl+lay.np+i]=G[i][i]*(u.th[i]-0.005);
+  return {F:F,g:g};
+}
+function cfaStart(spec,lay,R){
+  var x=new Array(lay.n).fill(0),q,i;
+  for(q=0;q<lay.nl;q++){var a=lay.lp[q][0],b=lay.lp[q][1],isBase=spec.base[a][b]===1,ref=-1;
+    for(i=0;i<spec.p;i++)if(spec.base[i][b]){ref=i;break}
+    var sg=ref>=0?(R[a][ref]<0?-1:1):1;
+    x[q]=isBase?sg*(spec.bif&&b===0?0.4:0.5):0.02}
+  for(q=0;q<lay.np;q++)x[lay.nl+q]=spec.phi==='higher'?Math.atanh(0.6):Math.atanh(0.3);
+  for(i=0;i<spec.p;i++)x[lay.nl+lay.np+i]=Math.log(0.5-0.005);
+  return x;
+}
+function cfaIndices(F,N,npar,p,logdetS){
+  var df=p*(p+1)/2-npar,chi=(N-1)*F,df0=p*(p-1)/2,chi0=(N-1)*(-logdetS),
+      d=Math.max(chi-df,0),d0=Math.max(chi0-df0,0),cfi=d0>0?1-d/Math.max(d,d0):1,
+      tli=(chi0/df0-chi/df)/(chi0/df0-1),rm=df>0?Math.sqrt(d/(df*(N-1))):NaN;
+  return {chi:chi,df:df,pv:df>0?pChi(chi,df):NaN,cfi:Math.min(1,cfi),tli:tli,rmsea:rm,aic:chi+2*npar,bic:chi+npar*Math.log(N),npar:npar,chi0:chi0,df0:df0};
+}
+function fitCFA(S,R,N,spec){
+  var lay=layout(spec),p=spec.p,Lc=chol(S),ldS=logdetChol(Lc),x0=cfaStart(spec,lay,R),i,j,q;
+  var res=bfgs(function(x){return cfaF(spec,lay,x,S,ldS,true)},x0,{maxit:400,tol:1e-6});
+  var u=cfaUnpack(spec,lay,res.x),flip=new Array(spec.m).fill(1);
+  for(j=0;j<spec.m;j++){var ref=-1;for(i=0;i<p;i++)if(spec.base[i][j]){ref=i;break}if(ref>=0&&u.L[ref][j]<0)flip[j]=-1}
+  var L=u.L.map(function(r){return r.map(function(v,j){return v*flip[j]})}),Phi=u.Phi.map(function(r,a){return r.map(function(v,b){return v*flip[a]*flip[b]})}),gam=u.gam?u.gam.map(function(v,j){return v*flip[j]}):null;
+  var Sg=cfaImplied(u),dsg=Sg.map(function(r,i){return Math.sqrt(r[i])}),std=L.map(function(r,i){return r.map(function(v){return v/dsg[i]})}),
+      Rm=Sg.map(function(r,i){return r.map(function(v,j){return v/(dsg[i]*dsg[j])})}),E=R.map(function(r,i){return r.map(function(v,j){return v-Rm[i][j]})});
+  var ss=0,cnt=0;for(i=0;i<p;i++)for(j=0;j<=i;j++){ss+=E[i][j]*E[i][j];cnt++}
+  var ix=cfaIndices(res.F,N,lay.nl+lay.np+p,p,ldS-sum(S.map(function(r,i){return Math.log(r[i])})));
+  ix.srmr=Math.sqrt(ss/cnt);
+  var r2=u.th.map(function(t,i){return 1-t/Sg[i][i]}),thS=u.th.map(function(t,i){return t/Sg[i][i]});
+  return {spec:spec,lay:lay,x:res.x,F:res.F,L:L,std:std,Phi:Phi,gam:gam,th:u.th,thS:thS,r2:r2,Sig:Sg,Rm:Rm,E:E,ix:ix,flip:flip,conv:res.conv,gmax:res.gmax,iter:res.iter,S:S,
+    heywood:u.th.some(function(t,i){return t/Sg[i][i]<0.0125})||std.some(function(r){return r.some(function(v){return Math.abs(v)>1.0001})}),R:R,N:N,ldS:ldS};
+}
+/* Hessian-based standard errors and modification indices (score tests for fixed loadings) */
+function cfaDiag(fit){
+  if(fit.diag)return fit.diag;
+  var spec=fit.spec,N=fit.N,p=spec.p,m=spec.m,all=layout(spec,true),lay=fit.lay,u=cfaUnpack(spec,lay,fit.x),i,j,k,q;
+  var x2=new Array(all.n).fill(0);
+  for(q=0;q<all.nl;q++)x2[q]=u.L[all.lp[q][0]][all.lp[q][1]];
+  for(q=0;q<all.np;q++)x2[all.nl+q]=fit.x[lay.nl+q];
+  for(i=0;i<p;i++)x2[all.nl+all.np+i]=fit.x[lay.nl+lay.np+i];
+  var grad=function(x){var r=cfaF(spec,all,x,fit.S,fit.ldS,true);return r.g},n=all.n,H=zeros(n,n);
+  for(k=0;k<n;k++){var h=1e-5*Math.max(1,Math.abs(x2[k])),xp=x2.slice(),xm=x2.slice();xp[k]+=h;xm[k]-=h;var gp=grad(xp),gm=grad(xm);if(!gp||!gm){fit.diag={ok:false};return fit.diag}for(j=0;j<n;j++)H[j][k]=(gp[j]-gm[j])/(2*h)}
+  for(j=0;j<n;j++)for(k=j+1;k<n;k++){var a=(H[j][k]+H[k][j])/2;H[j][k]=a;H[k][j]=a}
+  var g0=grad(x2),pos={};all.lp.forEach(function(e,qq){pos[e[0]+','+e[1]]=qq});
+  var rIdx=[];for(q=0;q<lay.nl;q++)rIdx.push(pos[lay.lp[q][0]+','+lay.lp[q][1]]);
+  for(q=0;q<lay.np;q++)rIdx.push(all.nl+q);
+  for(i=0;i<p;i++)rIdx.push(all.nl+all.np+i);
+  var Hrr=rIdx.map(function(a){return rIdx.map(function(b){return H[a][b]})}),Hi=inv(Hrr);
+  if(!Hi){fit.diag={ok:false};return fit.diag}
+  var cf=2/(N-1),seL=zeros(p,m),seP=zeros(m,m),seG=null;
+  var stdOf=function(x){var uu=cfaUnpack(spec,lay,x),Sg=cfaImplied(uu);return uu.L.map(function(r,i){return r.map(function(v){return v/Math.sqrt(Sg[i][i])})})},nP=lay.n,Dk=[];
+  for(k=0;k<nP;k++){var hh=1e-5,xa=fit.x.slice(),xb=fit.x.slice();xa[k]+=hh;xb[k]-=hh;var sa=stdOf(xa),sb=stdOf(xb);Dk.push(sa.map(function(r,a){return r.map(function(v,b){return (v-sb[a][b])/(2*hh)})}))}
+  for(q=0;q<lay.nl;q++){var ia=lay.lp[q][0],ja=lay.lp[q][1],dv=Dk.map(function(D){return D[ia][ja]}),vv=0,k1,k2;
+    for(k1=0;k1<nP;k1++)for(k2=0;k2<nP;k2++)vv+=dv[k1]*Hi[k1][k2]*dv[k2];
+    seL[ia][ja]=Math.sqrt(Math.max(0,cf*vv))}
+  var u0=u;
+  if(spec.phi==='free'){q=lay.nl;for(j=0;j<m;j++)for(k=j+1;k<m;k++){var se=Math.sqrt(Math.max(0,cf*Hi[q][q]))*(1-u0.Phi[j][k]*u0.Phi[j][k]);seP[j][k]=se;seP[k][j]=se;q++}}
+  else if(spec.phi==='higher'){seG=[];for(j=0;j<m;j++)seG.push(Math.sqrt(Math.max(0,cf*Hi[lay.nl+j][lay.nl+j]))*(1-u0.gam[j]*u0.gam[j]))}
+  var mis=[];
+  for(i=0;i<p;i++)for(j=0;j<m;j++){
+    if(spec.mask[i][j])continue;
+    var a=pos[i+','+j],hv=rIdx.map(function(b){return H[a][b]}),Hh=hv.map(function(_,r){var s=0;for(var c=0;c<hv.length;c++)s+=Hi[r][c]*hv[c];return s}),sch=H[a][a]-sum(hv.map(function(v,r){return v*Hh[r]}));
+    if(sch>1e-8){var mi=(N-1)*g0[a]*g0[a]/(2*sch);mis.push({i:i,j:j,mi:mi,epc:-g0[a]/sch})}
+  }
+  mis.sort(function(a,b){return b.mi-a.mi});
+  fit.diag={ok:true,seL:seL,seP:seP,seG:seG,mis:mis};
+  return fit.diag;
+}
+/* composite reliability for each factor (share of subscale-score variance due to the factor) */
+function cfaReliab(fit){
+  var spec=fit.spec,m=spec.m,out=[],j,i,a,b;
+  for(j=0;j<m;j++){
+    var items=[];for(i=0;i<spec.p;i++)if(spec.base[i][j])items.push(i);
+    if(items.length<2){out.push({n:items.length,omega:NaN,ave:NaN});continue}
+    var sg=items.map(function(ii){return fit.L[ii][j]<0?-1:1}),sl=0,tot=0,av=0;
+    items.forEach(function(ii,q){sl+=sg[q]*fit.L[ii][j];av+=fit.std[ii][j]*fit.std[ii][j]});
+    for(a=0;a<items.length;a++)for(b=0;b<items.length;b++)tot+=sg[a]*sg[b]*fit.Sig[items[a]][items[b]];
+    out.push({n:items.length,omega:sl*sl/tot,ave:av/items.length});
+  }
+  return out;
+}
+/*CORE-END*/
+
+/* =====================  UI helpers  ===================== */
+var $=function(id){return document.getElementById(id)};
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;')}
+function pc(x,d){return (100*x).toFixed(d||0)+'%'}
+function f2(v){return (v<0?'−':'')+Math.abs(v).toFixed(2).replace(/^0\./,'.')}
+function f3(v){return (v<0?'−':'')+Math.abs(v).toFixed(3).replace(/^0\./,'.')}
+function fp(p){return !isFinite(p)?'–':p<0.001?'<.001':p.toFixed(3).replace(/^0\./,'.')}
+function lin(d0,d1,r0,r1){var k=(r1-r0)/((d1-d0)||1);return function(v){return r0+(v-d0)*k}}
+function niceTicks(lo,hi,n){var span=hi-lo||1,s0=span/Math.max(1,n),mag=Math.pow(10,Math.floor(Math.log10(s0))),e=s0/mag,st=(e>=7.5?10:e>=3.5?5:e>=1.5?2:1)*mag,t=[];for(var v=Math.ceil(lo/st-1e-9)*st;v<=hi+1e-9;v+=st)t.push(+v.toPrecision(12));return t}
+var CAT=['#3b73d9','#e07b1a','#2a9d6a','#c2479b','#7f5fd0','#1fa5b8','#d64545','#a3a31f','#8c6d46'];
+function catc(i){return CAT[i%CAT.length]}
+var raf={};function sched(name,fn){if(raf[name])return;raf[name]=requestAnimationFrame(function(){raf[name]=0;fn()})}
+var tmr=null;function debounce(fn,ms){return function(){clearTimeout(tmr);tmr=setTimeout(fn,ms||90)}}
+function sliderH(id,label,min,max,step,val,dec){return '<div class="sl"><label for="'+id+'"><span>'+label+'</span><output id="'+id+'-o">'+(dec!==undefined?(+val).toFixed(dec):val)+'</output></label><input type="range" id="'+id+'" min="'+min+'" max="'+max+'" step="'+step+'" value="'+val+'"></div>'}
+function selH(id,label,opts,val){return '<div class="opt"><label for="'+id+'">'+label+'</label><select id="'+id+'">'+opts.map(function(o){return '<option value="'+o[0]+'"'+(String(o[0])===String(val)?' selected':'')+'>'+esc(o[1])+'</option>'}).join('')+'</select></div>'}
+function chkH(id,label,val){return '<label class="chk"><input type="checkbox" id="'+id+'"'+(val?' checked':'')+'><span id="'+id+'-l">'+label+'</span></label>'}
+function pillsH(id,opts,val){return '<div class="mlist" id="'+id+'" role="group">'+opts.map(function(o){return '<button type="button" class="pill" data-v="'+o[0]+'" aria-pressed="'+(o[0]===val)+'">'+o[1]+'</button>'}).join('')+'</div>'}
+function setPills(id,v){var e=$(id);if(!e)return;Array.prototype.forEach.call(e.querySelectorAll('button[data-v]'),function(b){b.setAttribute('aria-pressed',b.getAttribute('data-v')===v)})}
+function setSl(id,v,dec){var e=$(id),o=$(id+'-o');if(!e)return;e.value=v;if(o)o.textContent=dec!==undefined?(+v).toFixed(dec):String(v)}
+function onPills(id,fn){$(id).addEventListener('click',function(e){var b=e.target.closest('button[data-v]');if(!b)return;fn(b.getAttribute('data-v'))})}
+function onSl(id,dec,fn,fast){var e=$(id),o=$(id+'-o');e.addEventListener('input',function(){if(o)o.textContent=dec!==undefined?(+e.value).toFixed(dec):e.value;fn(+e.value)})}
+function tile(v,l,c){return '<div class="tile"><b'+(c?' class="'+c+'"':'')+'>'+v+'</b><span>'+l+'</span></div>'}
+function svgOpen(w,h,label){return '<svg viewBox="0 0 '+w+' '+h+'" role="img" aria-label="'+esc(label)+'">'}
+function heatBg(v,vmax){var a=Math.min(1,Math.abs(v)/vmax)*85;return 'background:color-mix(in srgb,var('+(v>=0?'--a':'--b')+') '+a.toFixed(0)+'%,transparent)'}
+
+/* =====================  state  ===================== */
+var S={ds:'big5',n:500,seed:1,ls:1,cx:0.12,fc:1,disc:false,
+  meth:'paf',m:5,rot:'oblimin',kappa:4,thr:0.3,sort:true,la:0,lb:1,
+  model:{big5:'five',iq:'five'},showCor:true,showErr:false,free:{}};
+var DEF={meth:'paf',m:5,rot:'oblimin',kappa:4,thr:0.3,sort:true};
+var curTab=0;
+var DC={key:'',d:null};
+var PAC={};
+function dataKey(){return [S.ds,S.n,S.seed,S.ls,S.cx,S.fc,S.disc].join('|')}
+function getData(){
+  var k=dataKey();
+  if(DC.key!==k){
+    var ds=DSETS[S.ds],smp=genSample(ds,{ls:S.ls,cx:S.cx,fc:S.fc},S.n,S.seed,S.disc);
+    DC={key:k,ds:ds,R:smp.R,S:smp.S,N:smp.N,pop:smp.pop,p:ds.items.length,kb:kmoBartlett(smp.R,smp.N),eig:eigSym(smp.R,1e-14).vals,map:mapTest(smp.R),ml:{},mlq:false,sols:{},fits:{}};
+  }
+  return DC;
+}
+function getPA(d){var k=[d.N,d.p,S.seed].join('|');if(!PAC[k]){PAC={};PAC[k]=parallelAnalysis(d.N,d.p,60,S.seed)}return PAC[k]}
+function getEFA(d){
+  var k=[S.meth,S.m,S.rot,S.kappa].join('|');
+  if(!d.sols[k])d.sols[k]=solveEFA(d.R,d.N,S.meth,S.m,S.rot,S.kappa);
+  return d.sols[k];
+}
+function ensureML(d){
+  if(d.mlq)return;d.mlq=true;
+  (function step(m){
+    if(DC!==d||m>8)return;
+    setTimeout(function(){
+      if(DC!==d)return;
+      var ex=extractML(d.R,m);d.ml[m]=mlStats(ex.F,d.p,m,d.N);
+      if(curTab===0)sched('e2',renderE2);
+      step(m+1);
+    },12);
+  })(1);
+}
+function freeKey(mid){return S.ds+'|'+mid}
+function getFit(d,mid,extra){
+  var k=mid+'|'+(extra||[]).map(function(e){return e.join(',')}).join(';');
+  if(!d.fits[k])d.fits[k]=fitCFA(d.S,d.R,d.N,buildSpec(d.ds,mid,extra));
+  return d.fits[k];
+}
+function itemOrder(sol,d){
+  var p=d.p,ord=rep(p,function(i){return i});
+  if(!S.sort)return ord;
+  var dom=rep(p,function(i){var b=0;sol.P[i].forEach(function(v,j){if(Math.abs(v)>Math.abs(sol.P[i][b]))b=j});return b});
+  return ord.sort(function(a,b){return dom[a]!==dom[b]?dom[a]-dom[b]:Math.abs(sol.P[b][dom[b]])-Math.abs(sol.P[a][dom[a]])});
+}
+
+/* =====================  shared drawing  ===================== */
+function heatSVG(M,labels,cols,o){
+  var p=M.length,W=o.W||520,ml=o.ml||34,mt=o.mt||22,cell=(W-ml-6)/p,H=mt+cell*p+6,ord=o.order||rep(p,function(i){return i}),out=svgOpen(W,H,o.label||'Heat map'),a,b,fs=Math.min(10,Math.max(7.5,cell*0.48));
+  for(a=0;a<p;a++){
+    var ia=ord[a];
+    out+='<text style="font-size:'+fs+'px;fill:'+cols[ia]+';font-weight:600" x="'+(ml+cell*(a+0.5))+'" y="'+(mt-6)+'" text-anchor="middle">'+esc(labels[ia])+'</text>'
+      +'<text style="font-size:'+fs+'px;fill:'+cols[ia]+';font-weight:600" x="'+(ml-4)+'" y="'+(mt+cell*(a+0.5)+fs*0.35)+'" text-anchor="end">'+esc(labels[ia])+'</text>';
+    for(b=0;b<p;b++){
+      var ib=ord[b],v=M[ia][ib];
+      if(a===b&&o.diagSoft){out+='<rect x="'+(ml+cell*b)+'" y="'+(mt+cell*a)+'" width="'+cell+'" height="'+cell+'" fill="var(--soft)"/>';continue}
+      out+='<rect x="'+(ml+cell*b).toFixed(1)+'" y="'+(mt+cell*a).toFixed(1)+'" width="'+cell.toFixed(1)+'" height="'+cell.toFixed(1)+'" fill="var('+(v>=0?'--a':'--b')+')" fill-opacity="'+(Math.min(1,Math.abs(v)/o.vmax)*0.9).toFixed(3)+'" stroke="var(--panel)" stroke-width=".5"><title>'+esc(labels[ia]+' × '+labels[ib]+': '+f2(v))+'</title></rect>';
+    }
+  }
+  return out+'</svg>';
+}
+function itemCols(ds){return ds.items.map(function(it){return catc(it.f)})}
+function itemCodes(ds){return ds.items.map(function(it){return it.k})}
+
+/* =====================  data controls (shared by both tabs)  ===================== */
+function dataCtl(px){
+  var ds=DSETS[S.ds];
+  return '<h3>Data set</h3>'+pillsH(px+'-ds',[['big5','Five Factor Model: personality items'],['iq','Intelligence test battery: subtests']],S.ds)
+   +sliderH(px+'-n','Sample size (N)',100,3000,50,S.n)
+   +'<div class="row"><button type="button" class="pill" id="'+px+'-new">New random sample</button></div>'
+   +'<h3>Simulated population</h3>'
+   +sliderH(px+'-ls','Loading strength (× typical)',0.6,1.3,0.05,S.ls,2)
+   +sliderH(px+'-cx','Cross-loading size',0,0.35,0.01,S.cx,2)
+   +sliderH(px+'-fc','Factor correlation strength (×)',0,1.5,0.05,S.fc,2)
+   +chkH(px+'-disc',ds.discLabel,S.disc);
+}
+function syncData(){
+  ['e','c'].forEach(function(px){
+    if(!$(px+'-ds'))return;
+    setPills(px+'-ds',S.ds);setSl(px+'-n',S.n);setSl(px+'-ls',S.ls,2);setSl(px+'-cx',S.cx,2);setSl(px+'-fc',S.fc,2);
+    $(px+'-disc').checked=S.disc;$(px+'-disc-l').textContent=DSETS[S.ds].discLabel;
+  });
+}
+function bindData(px){
+  var go=debounce(renderCur);
+  onPills(px+'-ds',function(v){if(v===S.ds)return;S.ds=v;S.m=5;S.la=0;S.lb=1;syncData();sched('rc',renderCur)});
+  onSl(px+'-n',undefined,function(v){S.n=v;syncData();go()});
+  onSl(px+'-ls',2,function(v){S.ls=v;syncData();go()});
+  onSl(px+'-cx',2,function(v){S.cx=v;syncData();go()});
+  onSl(px+'-fc',2,function(v){S.fc=v;syncData();go()});
+  $(px+'-disc').addEventListener('change',function(){S.disc=this.checked;syncData();sched('rc',renderCur)});
+  $(px+'-new').addEventListener('click',function(){S.seed++;sched('rc',renderCur)});
+}
+
+/* =====================  TAB 1: EFA  ===================== */
+var METHS=[['pca','Principal components (PCA)'],['paf','Principal axis factoring (PAF)'],['ml','Maximum likelihood (ML)']];
+var METHNAME={pca:'principal components',paf:'principal axis factoring',ml:'maximum likelihood'};
+var ROTS=[['none','None (unrotated)'],['varimax','Varimax (orthogonal)'],['quartimax','Quartimax (orthogonal)'],['promax','Promax (oblique)'],['oblimin','Oblimin (oblique)']];
+var ROTNAME={none:'no rotation',varimax:'varimax',quartimax:'quartimax',promax:'promax',oblimin:'oblimin'};
+function buildEFA(){
+  $('c-efa').innerHTML=dataCtl('e')
+   +'<h3>Extraction</h3>'+pillsH('e-meth',METHS,S.meth)
+   +sliderH('e-m','Number of factors (m)',1,8,1,S.m)
+   +'<div class="note">See the criteria in panel 2 for how many to keep.</div>'
+   +'<h3>Rotation</h3>'+pillsH('e-rot',ROTS,S.rot)
+   +'<div id="e-kbox">'+sliderH('e-kap','Promax power (κ)',2,6,0.5,S.kappa,1)+'</div>'
+   +'<h3>Display</h3>'+sliderH('e-thr','Show loadings of at least',0,0.6,0.05,S.thr,2)
+   +chkH('e-sort','Sort items by factor',S.sort)
+   +'<div id="e-axes"></div>'
+   +'<div class="row" style="margin-top:14px"><button type="button" class="pill" id="e-rs">Reset settings</button></div>';
+  bindData('e');
+  var go=function(){sched('rc',renderCur)},gd=debounce(renderCur);
+  onPills('e-meth',function(v){S.meth=v;go()});
+  onSl('e-m',undefined,function(v){S.m=v;S.la=Math.min(S.la,v-1);S.lb=Math.min(S.lb,v-1);go()});
+  onPills('e-rot',function(v){S.rot=v;go()});
+  onSl('e-kap',1,function(v){S.kappa=v;gd()});
+  onSl('e-thr',2,function(v){S.thr=v;gd()});
+  $('e-sort').addEventListener('change',function(){S.sort=this.checked;go()});
+  $('e-rs').addEventListener('click',function(){Object.assign(S,DEF);setPills('e-meth',S.meth);setSl('e-m',S.m);setPills('e-rot',S.rot);setSl('e-kap',S.kappa,1);setSl('e-thr',S.thr,2);$('e-sort').checked=S.sort;go()});
+  $('p-e2').addEventListener('click',function(e){var b=e.target.closest('button[data-use]');if(!b)return;S.m=+b.getAttribute('data-use');S.la=Math.min(S.la,S.m-1);S.lb=Math.min(S.lb,S.m-1);go()});
+}
+var lastAxM=-1;
+function syncEFA(){
+  setPills('e-meth',S.meth);setPills('e-rot',S.rot);setSl('e-m',S.m);setSl('e-kap',S.kappa,1);setSl('e-thr',S.thr,2);$('e-sort').checked=S.sort;
+  $('e-kbox').hidden=S.rot!=='promax';
+  if(lastAxM!==S.m){
+    lastAxM=S.m;
+    var o=rep(S.m,function(i){return [i,'Factor '+(i+1)]});
+    $('e-axes').innerHTML=S.m>1?selH('e-la','Loading plot: horizontal axis',o,S.la)+selH('e-lb','Loading plot: vertical axis',o,S.lb):'';
+    if(S.m>1){$('e-la').addEventListener('change',function(){S.la=+this.value;sched('e3',function(){renderE3(getData(),getEFA(getData()))})});$('e-lb').addEventListener('change',function(){S.lb=+this.value;sched('e3',function(){renderE3(getData(),getEFA(getData()))})})}
+  }
+}
+function renderE1(d,sol){
+  var ds=d.ds,ord=itemOrder(sol,d),kb=d.kb,k=kb.kmo,kc=k>=0.8?'good':k>=0.6?'fair':'poor',minI=0;
+  kb.msa.forEach(function(v,i){if(v<kb.msa[minI])minI=i});
+  var neg=0,i,j,mx=0,sm=0,c=0;for(i=0;i<d.p;i++)for(j=0;j<i;j++){if(d.R[i][j]<0)neg++;mx=Math.max(mx,Math.abs(d.R[i][j]));sm+=Math.abs(d.R[i][j]);c++}
+  var msg='<p>'+(k>=0.8?'The correlations are well suited to factor analysis':k>=0.6?'The correlations are adequate for factor analysis':'The correlations are weak for factor analysis')+': KMO = '+f2(k)+', and the average absolute correlation is '+f2(sm/c)+'. '
+    +(S.sort?'Items are ordered by the factor they load on in the current solution, so correlated blocks appear along the diagonal.':'Items are in the order they were administered, so the structure is hidden until you sort them.')+'</p>'
+    +(ds.id==='big5'?'<p>Reverse-keyed items (for example &ldquo;Keeps in the background&rdquo; for Extraversion) correlate <em>negatively</em> with the rest of their scale, so the orange cells sit inside the blocks.</p>':'<p>Every subtest correlates positively with every other (&ldquo;positive manifold&rdquo;), which is why a general factor appears in test batteries.</p>');
+  $('p-e1').innerHTML='<h2><span class="n">1</span>Data: correlations among the '+d.p+' '+(ds.id==='big5'?'items':'subtests')+'</h2><div class="two"><div>'
+    +heatSVG(d.R,itemCodes(ds),itemCols(ds),{W:520,vmax:0.6,order:ord,diagSoft:true,label:'Correlation matrix of all items'})
+    +'<div class="chips">'+ds.fac.map(function(n,j){return '<span><i class="sw" style="background:'+catc(j)+'"></i>'+esc(n)+'</span>'}).join('')+'</div><p class="note">Blue = positive correlation, orange = negative; depth of colour = size of |r| (full colour at .60). Label colours show the scale each item was written for; the simulation knows this but the analysis below does not.</p></div>'
+    +'<div><div class="tiles">'+tile(d.N.toLocaleString('en-US'),'Sample size')+tile(f2(k),'KMO (adequacy)',kc)+tile(fp(kb.pv),'Bartlett test p')+tile(f2(kb.msa[minI]),'Lowest item MSA ('+esc(ds.items[minI].k)+')')+'</div><div class="msg">'+msg+'</div></div></div>';
+}
+function renderE2(){
+  if(curTab!==0)return;
+  var d=getData(),ds=d.ds,p=d.p,pa=getPA(d),eig=d.eig,i;
+  ensureML(d);
+  var kaiser=eig.filter(function(v){return v>1}).length,npa=0;
+  while(npa<p&&eig[npa]>pa.p95[npa])npa++;
+  var mapK=d.map.best,mlDone=Object.keys(d.ml).length>=8,bicK=null,rmK=null,chK=null,m;
+  if(mlDone){var bb=1;for(m=2;m<=8;m++)if(d.ml[m].bic<d.ml[bb].bic)bb=m;bicK=bb}
+  for(m=1;m<=8;m++){if(!d.ml[m])break;if(rmK===null&&d.ml[m].rmsea<=0.05)rmK=m;if(chK===null&&d.ml[m].pv>0.05)chK=m}
+  var allDone=mlDone;if(!allDone){if(rmK===null)rmK=undefined;if(chK===null)chK=undefined}
+  function cell(v){return v===undefined?'…':v===null?'none ≤ 8':String(v)}
+  var rows=[['Kaiser: eigenvalue &gt; 1',kaiser],['Parallel analysis (95th percentile)',npa],['Velicer&rsquo;s MAP test',mapK],['ML: lowest BIC',mlDone?bicK:undefined],['ML: first RMSEA ≤ .05',mlDone?rmK:undefined],['ML: first non-significant χ²',mlDone?chK:undefined]];
+  var crit='<div class="twrap"><table><thead><tr><th>Criterion</th><th>Suggests</th><th></th></tr></thead><tbody>'+rows.map(function(r){var v=r[1],ok=typeof v==='number'&&v>=1&&v<=8;return '<tr'+(v===S.m?' class="sel"':'')+'><td class="l">'+r[0]+'</td><td>'+cell(v)+'</td><td>'+(ok?'<button type="button" class="pill" data-use="'+v+'"'+(v===S.m?' disabled':'')+'>Use</button>':'')+'</td></tr>'}).join('')+'</tbody></table></div>';
+  var mt='<div class="twrap"><table><thead><tr><th class="nt">m</th><th class="nt">χ²</th><th>df</th><th>p</th><th>RMSEA</th><th>BIC</th></tr></thead><tbody>';
+  for(m=1;m<=8;m++){var s=d.ml[m];mt+='<tr'+(m===S.m?' class="sel"':'')+'><td>'+m+'</td>'+(s?'<td>'+s.chi.toFixed(1)+'</td><td>'+s.df+'</td><td>'+fp(s.pv)+'</td><td>'+f3(s.rmsea)+'</td><td>'+s.bic.toFixed(0)+'</td>':'<td colspan="5" class="dim">computing…</td>')+'</tr>'}
+  mt+='</tbody></table></div>';
+  /* scree */
+  var W=520,H=300,mg={l:40,r:14,t:14,b:36},pw=W-mg.l-mg.r,ph=H-mg.t-mg.b,ymax=Math.ceil(Math.max(eig[0],pa.p95[0])*1.05),x=lin(1,p,mg.l+8,mg.l+pw-4),y=lin(0,ymax,mg.t+ph,mg.t),o=svgOpen(W,H,'Scree plot of eigenvalues with parallel analysis');
+  niceTicks(0,ymax,5).forEach(function(t){o+='<line class="gr" x1="'+mg.l+'" x2="'+(mg.l+pw)+'" y1="'+y(t)+'" y2="'+y(t)+'"/><text x="'+(mg.l-6)+'" y="'+(y(t)+4)+'" text-anchor="end">'+t+'</text>'});
+  o+='<rect x="'+(x(1)-(x(2)-x(1))/2)+'" y="'+mg.t+'" width="'+((x(2)-x(1))*S.m)+'" height="'+ph+'" fill="var(--accent)" fill-opacity=".09"/>';
+  o+='<line class="bd" x1="'+mg.l+'" x2="'+(mg.l+pw)+'" y1="'+y(1)+'" y2="'+y(1)+'" style="stroke:var(--muted)"/><text x="'+(mg.l+pw-2)+'" y="'+(y(1)-4)+'" text-anchor="end">Kaiser = 1</text>';
+  o+='<polyline fill="none" stroke="var(--b)" stroke-width="2" stroke-dasharray="5 3" points="'+pa.p95.map(function(v,i){return x(i+1).toFixed(1)+','+y(v).toFixed(1)}).join(' ')+'"/>';
+  o+='<polyline fill="none" stroke="var(--a)" stroke-width="2" points="'+eig.map(function(v,i){return x(i+1).toFixed(1)+','+y(v).toFixed(1)}).join(' ')+'"/>';
+  eig.forEach(function(v,i){o+='<circle cx="'+x(i+1).toFixed(1)+'" cy="'+y(v).toFixed(1)+'" r="3.4" fill="'+(v>pa.p95[i]?'var(--a)':'var(--panel)')+'" stroke="var(--a)" stroke-width="1.6"><title>Factor '+(i+1)+': eigenvalue '+v.toFixed(2)+', random-data 95th percentile '+pa.p95[i].toFixed(2)+'</title></circle>'});
+  for(i=1;i<=p;i+=(p>15?2:1))o+='<text x="'+x(i)+'" y="'+(mg.t+ph+15)+'" text-anchor="middle">'+i+'</text>';
+  o+='<text x="'+(mg.l+pw/2)+'" y="'+(H-3)+'" text-anchor="middle">Component number</text><text transform="rotate(-90)" x="'+(-(mg.t+ph/2))+'" y="11" text-anchor="middle">Eigenvalue</text>';
+  o+='<rect x="'+(mg.l+pw-196)+'" y="'+(mg.t+4)+'" width="10" height="10" rx="2" fill="var(--a)"/><text x="'+(mg.l+pw-182)+'" y="'+(mg.t+13)+'">Observed data</text><line x1="'+(mg.l+pw-100)+'" x2="'+(mg.l+pw-86)+'" y1="'+(mg.t+9)+'" y2="'+(mg.t+9)+'" stroke="var(--b)" stroke-width="2" stroke-dasharray="4 2"/><text x="'+(mg.l+pw-82)+'" y="'+(mg.t+13)+'">Random data</text></svg>';
+  var truth=ds.fac.length,txt='<p>In this simulation the data were generated from <b>'+truth+' factors</b>, so you can check each rule against the truth. '
+    +(ds.id==='iq'?'The factors are strongly correlated through a general factor, which is why rules based on eigenvalues usually suggest fewer factors than the five that exist.':'The five traits are only modestly correlated, so most rules point to five.')+'</p>'
+    +'<p>Filled dots beat the random-data line. The shaded band marks the m = '+S.m+' factors you are currently extracting.</p>';
+  $('p-e2').innerHTML='<h2><span class="n">2</span>How many factors? Scree plot and retention criteria</h2><div class="two"><div>'+o+'<div class="msg">'+txt+'</div></div><div>'+crit+'<p class="cap" style="margin-top:12px">Maximum-likelihood fit by number of factors</p>'+mt+'<p class="note">Rules disagree because they answer different questions. Treat them as evidence, then check that the solution is interpretable.</p></div></div>';
+}
+function renderE3(d,sol){
+  var ds=d.ds,p=d.p,m=S.m,ord=itemOrder(sol,d),thr=S.thr,i,j,cg=congruence(sol.P,d.pop.L),oblique=(S.rot==='promax'||S.rot==='oblimin')&&m>1;
+  var head='<th class="l">Item</th>'+rep(m,function(j){var mt=cg.match[j],lab=mt&&mt.phi>=0.8?'<br><small>≈ '+esc(ds.fs[mt.t])+' ('+f2(mt.phi)+')</small>':'';return '<th class="nt">F'+(j+1)+lab+'</th>'}).join('')+'<th>h&sup2;</th><th>u&sup2;</th>';
+  var rows='',clean=0,cross=0;
+  ord.forEach(function(ii){
+    var it=ds.items[ii],big=0;
+    rows+='<tr><td class="l it" title="'+esc(it.n)+'"><i class="sw" style="background:'+catc(it.f)+'"></i><b>'+esc(it.k)+'</b> <small>'+esc(it.n)+'</small></td>';
+    for(j=0;j<m;j++){var v=sol.P[ii][j],on=Math.abs(v)>=thr;if(Math.abs(v)>=Math.max(thr,0.3))big++;rows+='<td class="hm" style="'+heatBg(v,0.8)+'">'+(on?f2(v):'<span class="dim">·</span>')+'</td>'}
+    if(big===1)clean++;else if(big>1)cross++;
+    rows+='<td>'+f2(sol.h[ii])+'</td><td>'+f2(1-sol.h[ii])+'</td></tr>';
+  });
+  var ssr='<tr><td class="l"><b>Sum of squared loadings</b></td>'+rep(m,function(j){var s=0;for(var i=0;i<p;i++)s+=sol.P[i][j]*sol.P[i][j];return '<td>'+s.toFixed(2)+'</td>'}).join('')+'<td colspan="2"></td></tr>'
+    +'<tr><td class="l"><b>Share of total variance</b></td>'+rep(m,function(j){return '<td>'+pc(sol.ss[j]/p,1)+'</td>'}).join('')+'<td colspan="2"></td></tr>';
+  var tbl='<div class="twrap"><table><thead><tr>'+head+'</tr></thead><tbody>'+rows+ssr+'</tbody></table></div><p class="note">Pattern loadings. Blue = positive, orange = negative; loadings below '+thr.toFixed(2)+' are hidden. Where a factor matches a true one (Tucker &phi; ≥ .80) its header shows which.</p>';
+  /* loading plot */
+  var plot='';
+  if(m>1){
+    var a=Math.min(S.la,m-1),b=Math.min(S.lb,m-1),W=380,H=380,mg=34,x=lin(-1,1,mg,W-10),y=lin(-1,1,H-mg,10);
+    plot=svgOpen(W,H,'Loading plot of items on two factors');
+    [-1,-0.5,0,0.5,1].forEach(function(t){plot+='<line class="gr" x1="'+x(t)+'" x2="'+x(t)+'" y1="'+y(-1)+'" y2="'+y(1)+'"/><line class="gr" x1="'+x(-1)+'" x2="'+x(1)+'" y1="'+y(t)+'" y2="'+y(t)+'"/><text x="'+x(t)+'" y="'+(H-mg+14)+'" text-anchor="middle">'+t+'</text><text x="'+(mg-5)+'" y="'+(y(t)+4)+'" text-anchor="end">'+t+'</text>'});
+    plot+='<line class="ax" x1="'+x(0)+'" x2="'+x(0)+'" y1="'+y(-1)+'" y2="'+y(1)+'" style="stroke-opacity:1"/><line class="ax" x1="'+x(-1)+'" x2="'+x(1)+'" y1="'+y(0)+'" y2="'+y(0)+'" style="stroke-opacity:1"/>';
+    for(i=0;i<p;i++){var cx=x(clamp(sol.P[i][a],-1,1)),cy=y(clamp(sol.P[i][b],-1,1));plot+='<circle cx="'+cx.toFixed(1)+'" cy="'+cy.toFixed(1)+'" r="4.2" fill="'+catc(ds.items[i].f)+'" fill-opacity=".85" stroke="var(--panel)" stroke-width=".8"><title>'+esc(ds.items[i].k+' '+ds.items[i].n+': '+f2(sol.P[i][a])+', '+f2(sol.P[i][b]))+'</title></circle>'+(Math.max(Math.abs(sol.P[i][a]),Math.abs(sol.P[i][b]))>=0.3?'<text style="font-size:8.5px" x="'+(cx+5.5).toFixed(1)+'" y="'+(cy-4.5).toFixed(1)+'">'+esc(ds.items[i].k)+'</text>':'')}
+    plot+='<text x="'+(mg+(W-10-mg)/2)+'" y="'+(H-3)+'" text-anchor="middle">Factor '+(a+1)+'</text><text transform="rotate(-90)" x="'+(-(10+(H-mg-10)/2))+'" y="11" text-anchor="middle">Factor '+(b+1)+'</text></svg>';
+    plot='<p class="cap">Loading plot: items in the plane of two factors</p>'+plot;
+  } else plot='<p class="note">With one factor there is no plane to plot. Increase m to see items in factor space.</p>';
+  var ph='';
+  if(oblique){ph='<p class="cap" style="margin-top:10px">Factor correlations (Φ)</p><div class="twrap"><table><thead><tr><th></th>'+rep(m,function(j){return '<th>F'+(j+1)+'</th>'}).join('')+'</tr></thead><tbody>'+rep(m,function(a){return '<tr><td class="l"><b>F'+(a+1)+'</b></td>'+rep(m,function(b){return a===b?'<td class="dim">1</td>':'<td class="hm" style="'+heatBg(sol.Phi[a][b],0.8)+'">'+f2(sol.Phi[a][b])+'</td>'}).join('')+'</tr>'}).join('')+'</tbody></table></div>'}
+  var maxPhi=0;if(oblique)for(i=0;i<m;i++)for(j=0;j<i;j++)maxPhi=Math.max(maxPhi,Math.abs(sol.Phi[i][j]));
+  var tiles=tile(pc(mean(sol.h)),'Variance explained (mean h²)')+tile(clean+' / '+p,'Items with one clear loading')+tile(cross,'Cross-loading items')+tile(f2(cg.mean),'Congruence with true factors',cg.mean>=0.95?'good':cg.mean>=0.85?'fair':'poor');
+  if(oblique)tiles+=tile(f2(maxPhi),'Largest factor correlation');
+  if(sol.stats)tiles+=tile(sol.stats.chi.toFixed(1),'χ² (df = '+sol.stats.df+')')+tile(f3(sol.stats.rmsea),'RMSEA',sol.stats.rmsea<=0.06?'good':sol.stats.rmsea<=0.08?'fair':'poor');
+  var tr=ds.fac.length,mm='<p>'+(S.meth==='pca'?'Principal components analyses all of each item&rsquo;s variance, so the “variance explained” is higher than for the common-factor methods.':'Using '+METHNAME[S.meth]+' extraction with '+ROTNAME[S.rot]+', the '+m+' factor'+(m>1?'s':'')+' explain'+(m>1?'':'s')+' '+pc(mean(sol.h))+' of the items&rsquo; variance (the communalities).')+' '
+    +(m===tr?'You are extracting the true number of factors, and the solution recovers them with mean congruence '+f2(cg.mean)+'.':m<tr?'You are extracting fewer factors than the '+tr+' that generated the data, so factors merge and congruence is only '+f2(cg.mean)+'.':'You are extracting more factors than the '+tr+' that generated the data; the extra factors split true ones or pick up noise.')+'</p>';
+  if(S.rot==='none'&&m>1)mm+='<p>Unrotated loadings are mathematically valid but arbitrary: the first factor absorbs as much variance as possible, so many items load on it. Try a rotation: communalities and fit stay exactly the same, only the way the loadings are distributed changes.</p>';
+  else if((S.rot==='varimax'||S.rot==='quartimax')&&m>1)mm+='<p>An orthogonal rotation keeps the factors uncorrelated'+(ds.id==='iq'?', but the true ability factors correlate strongly, so loadings are forced to smear across factors (compare with oblimin).':'; if the true traits correlate a little, as here, an oblique rotation will describe them more faithfully.')+'</p>';
+  else if(oblique)mm+='<p>An oblique rotation lets the factors correlate (largest estimated correlation '+f2(maxPhi)+'). Interpret the pattern loadings together with the factor correlation matrix.</p>';
+  if(sol.heywood)mm+='<p><b>Heywood case:</b> at least one communality is at or above 1, which is impossible. This usually means too many factors for the data.</p>';
+  if(S.meth==='ml'&&sol.conv===false)mm+='<p><b>The ML optimiser did not fully converge</b>; treat this solution cautiously.</p>';
+  $('p-e3').innerHTML='<h2><span class="n">3</span>Factor solution: '+METHNAME[S.meth]+', '+ROTNAME[S.rot]+', m = '+m+'</h2><div class="two wl"><div>'+tbl+'</div><div>'+plot+ph+'</div></div><div class="tiles">'+tiles+'</div><div class="msg'+(sol.heywood?' warn':'')+'">'+mm+'</div>';
+}
+function renderEFA(){
+  var d=getData(),sol=getEFA(d);
+  syncEFA();
+  renderE1(d,sol);renderE2();renderE3(d,sol);
+}
+
+/* =====================  TAB 2: CFA  ===================== */
+function buildCFA(){
+  $('c-cfa').innerHTML=dataCtl('c')
+   +'<h3>Model to test</h3><div id="c-models"></div><div class="note" id="c-mdesc"></div>'
+   +'<h3>Diagram</h3>'+chkH('c-cor','Show factor correlations',S.showCor)+chkH('c-err','Show residual variances',S.showErr)
+   +'<div class="row" style="margin-top:14px"><button type="button" class="pill" id="c-rs">Reset settings</button></div>';
+  bindData('c');
+  var go=function(){sched('rc',renderCur)};
+  $('c-cor').addEventListener('change',function(){S.showCor=this.checked;go()});
+  $('c-err').addEventListener('change',function(){S.showErr=this.checked;go()});
+  $('c-rs').addEventListener('click',function(){S.showCor=true;S.showErr=false;S.model={big5:'five',iq:'five'};S.free={};$('c-cor').checked=true;$('c-err').checked=false;go()});
+  $('p-f3').addEventListener('click',function(e){var b=e.target.closest('button[data-model]');if(!b)return;S.model[S.ds]=b.getAttribute('data-model');go()});
+  $('p-f4').addEventListener('click',function(e){
+    var b=e.target.closest('button');if(!b)return;var fk=freeKey(S.model[S.ds]);S.free[fk]=S.free[fk]||[];
+    if(b.hasAttribute('data-free')){var t=b.getAttribute('data-free').split(',').map(Number);S.free[fk].push(t);go()}
+    else if(b.hasAttribute('data-unfree')){var q=+b.getAttribute('data-unfree');S.free[fk].splice(q,1);go()}
+    else if(b.id==='f-clear'){S.free[fk]=[];go()}
+  });
+}
+var lastCfaDs='';
+function syncCFA(){
+  var ds=DSETS[S.ds],mid=S.model[S.ds];
+  if(lastCfaDs!==S.ds||!$('c-models').firstChild){
+    lastCfaDs=S.ds;
+    $('c-models').innerHTML=pillsH('c-mod',CFAMODELS[S.ds].map(function(m){return [m.id,esc(m.name)]}),mid);
+    onPills('c-mod',function(v){S.model[S.ds]=v;sched('rc',renderCur)});
+  }
+  setPills('c-mod',mid);
+  var def=CFAMODELS[S.ds].filter(function(m){return m.id===mid})[0];
+  $('c-mdesc').textContent=def.desc;
+  $('c-cor').checked=S.showCor;$('c-err').checked=S.showErr;
+}
+function pathSVG(fit,o){
+  var spec=fit.spec,ds=spec.ds,p=spec.p,m=spec.m,off=spec.off,k=spec.k,W=1000,bh=28,i,j,g,hasG0=spec.bif||spec.phi==='higher',arcs=spec.phi==='free'&&o.cor&&m>1,
+      yG=40,yF=hasG0?214:(arcs?Math.ceil(22+0.75*(20+24*(m-1))+22):66),yI=yF+(hasG0?140:150),H=yI+bh+(o.err?36:12);
+  var groups=rep(k,function(){return []});for(i=0;i<p;i++)groups[spec.grp[i]].push(i);
+  var gap=22,bw=Math.max(26,Math.min(56,Math.floor((W-50-(k-1)*gap)/p)-5)),step=bw+5,total=p*step-5+(k-1)*(gap-5),cur=(W-total)/2,xi=new Array(p),gx=[];
+  groups.forEach(function(gl){gl.forEach(function(ii){xi[ii]=cur+bw/2;cur+=step});gx.push((xi[gl[0]]+xi[gl[gl.length-1]])/2);cur+=gap-5});
+  var out=svgOpen(W,H,'Path diagram of the '+spec.name+' model'),fsh=spec.fsh;
+  out+='<defs><marker id="ah-p" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" markerUnits="userSpaceOnUse" orient="auto"><path d="M0,1 L10,5 L0,9 z" fill="var(--a)"/></marker><marker id="ah-n" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" markerUnits="userSpaceOnUse" orient="auto"><path d="M0,1 L10,5 L0,9 z" fill="var(--b)"/></marker></defs>';
+  function lab(x,y,t,col){var w=t.length*5.8+5;return '<rect x="'+(x-w/2).toFixed(1)+'" y="'+(y-8).toFixed(1)+'" width="'+w.toFixed(1)+'" height="15" rx="3" fill="var(--panel)" fill-opacity=".92"/><text x="'+x.toFixed(1)+'" y="'+(y+3.5).toFixed(1)+'" text-anchor="middle" style="font-size:11px;font-weight:600;fill:'+(col||'var(--ink)')+'">'+t+'</text>'}
+  function edge(x1,y1,x2,y2,v,dash,t,drawLab,op){var pos=v>=0;return '<line x1="'+x1.toFixed(1)+'" y1="'+y1.toFixed(1)+'" x2="'+x2.toFixed(1)+'" y2="'+y2.toFixed(1)+'" stroke="var('+(pos?'--a':'--b')+')" stroke-width="'+(0.9+3.2*Math.abs(v)).toFixed(2)+'" stroke-opacity="'+(op||0.8)+'"'+(dash?' stroke-dasharray="5 4"':'')+' marker-end="url(#'+(pos?'ah-p':'ah-n')+')"/>'+(drawLab?lab(x1+(x2-x1)*t,y1+(y2-y1)*t,f2(v),'var('+(pos?'--a':'--b')+')'):'')}
+  var fx=function(j){return gx[j-off]},gnx=W/2,hasG=spec.bif||spec.phi==='higher';
+  /* factor correlation arcs */
+  if(spec.phi==='free'&&o.cor&&m>1){
+    for(i=0;i<m;i++)for(j=i+1;j<m;j++){
+      var lv=j-i,h=20+24*lv,x1=fx(i),x2=fx(j),y0=yF-22,r=fit.Phi[i][j],pos=r>=0;
+      out+='<path d="M'+x1+','+y0+' C'+x1+','+(y0-h)+' '+x2+','+(y0-h)+' '+x2+','+y0+'" fill="none" stroke="var('+(pos?'--a':'--b')+')" stroke-width="'+(0.9+2.2*Math.abs(r)).toFixed(2)+'" stroke-opacity=".7"/>'+lab((x1+x2)/2,y0-0.75*h,f2(r),'var('+(pos?'--a':'--b')+')');
+    }
+  }
+  /* general factor lines */
+  if(spec.bif){for(i=0;i<p;i++)out+=edge(gnx,yG+20,xi[i],yI-1,fit.std[i][0],false,0.93,true,0.45)}
+  /* second-order lines */
+  if(spec.phi==='higher'){for(j=0;j<m;j++)out+=edge(gnx,yG+20,fx(j),yF-23,fit.gam[j],false,0.5,true)}
+  /* loadings */
+  for(i=0;i<p;i++)for(j=off;j<m;j++){
+    if(!spec.mask[i][j])continue;var base=spec.base[i][j]===1;
+    var qi=groups[spec.grp[i]].indexOf(i);out+=edge(fx(j),yF+22,xi[i],yI-1,fit.std[i][j],!base,base?(spec.bif?(qi%2===0?0.36:0.6):(qi%2===0?0.58:0.8)):0.45,true);
+  }
+  /* nodes */
+  for(j=off;j<m;j++){var gc=catc(j-off),cx=fx(j);out+='<ellipse cx="'+cx+'" cy="'+yF+'" rx="60" ry="22" fill="var(--panel)"/><ellipse cx="'+cx+'" cy="'+yF+'" rx="60" ry="22" fill="'+gc+'" fill-opacity=".16" stroke="'+gc+'" stroke-width="2"><title>'+esc(spec.fn[j])+'</title></ellipse><text x="'+cx+'" y="'+(yF+4.5)+'" text-anchor="middle" class="strong" style="font-size:13px;font-weight:700">'+esc(fsh[j])+'</text>'}
+  if(hasG)out+='<ellipse cx="'+gnx+'" cy="'+yG+'" rx="44" ry="21" fill="var(--panel)"/><ellipse cx="'+gnx+'" cy="'+yG+'" rx="44" ry="21" fill="var(--ink)" fill-opacity=".08" stroke="var(--ink)" stroke-width="2"/><text x="'+gnx+'" y="'+(yG+5)+'" text-anchor="middle" class="strong" style="font-size:15px;font-weight:700;font-style:italic">g</text>';
+  for(i=0;i<p;i++){var it=ds.items[i],gc2=catc(spec.grp[i]);
+    out+='<rect x="'+(xi[i]-bw/2).toFixed(1)+'" y="'+yI+'" width="'+bw+'" height="'+bh+'" rx="5" fill="var(--panel)"/><rect x="'+(xi[i]-bw/2).toFixed(1)+'" y="'+yI+'" width="'+bw+'" height="'+bh+'" rx="5" fill="'+gc2+'" fill-opacity=".16" stroke="'+gc2+'" stroke-width="1.6"><title>'+esc(it.k+': '+it.n+' (R² = '+f2(fit.r2[i])+')')+'</title></rect><text x="'+xi[i].toFixed(1)+'" y="'+(yI+bh/2+4)+'" text-anchor="middle" class="strong" style="font-size:'+(bw<34?10:11.5)+'px;font-weight:600">'+esc(it.k)+'</text>';
+    if(o.err)out+='<text x="'+xi[i].toFixed(1)+'" y="'+(yI+bh+14)+'" text-anchor="middle" style="font-size:'+(bw<34?8.5:10)+'px">'+f2(fit.thS[i])+'</text>';
+  }
+  if(o.err)out+='<text x="'+(W/2)+'" y="'+(H-2)+'" text-anchor="middle" style="font-size:10.5px">Numbers under the boxes: residual (unique) variance, as a proportion of each item&rsquo;s variance</text>';
+  return out+'</svg>';
+}
+function fitCls(kind,v){
+  if(kind==='cfi')return v>=0.95?'good':v>=0.9?'fair':'poor';
+  if(kind==='rmsea')return v<=0.06?'good':v<=0.08?'fair':'poor';
+  if(kind==='srmr')return v<=0.08?'good':v<=0.1?'fair':'poor';
+  return '';
+}
+function truthNote(d,mid){
+  var id=d.ds.id,cx=S.cx,ok=id==='big5'?(mid==='five'||(mid==='fiveo'&&S.fc===0)):(mid==='five'||mid==='ho5'),t;
+  if(id==='big5')t='These data were generated from five correlated traits'+(cx>0?', with small cross-loadings (up to about ±'+f2(cx)+') like those found in real questionnaires':', with no cross-loadings')+'.';
+  else t='These data were generated from five correlated CHC abilities whose correlations come from a general factor'+(cx>0?', with a few realistic cross-loadings (for example Arithmetic also draws on working memory)':', with no cross-loadings')+'.';
+  if(ok)return t+(cx>0?' This model has the right shape but leaves out the small cross-loadings, so a little misfit is expected.':' This model matches how the data were made, so any misfit is sampling error'+(S.disc?' and rounding.':'.'));
+  return t+' This model has a different shape, so misfit is expected. Does the fit evidence expose it?';
+}
+function renderF1(d,fit,dg){
+  var spec=fit.spec,ix=fit.ix,cfiC=fitCls('cfi',ix.cfi),rmC=fitCls('rmsea',ix.rmsea),srC=fitCls('srmr',ix.srmr),extra=spec.extra.length;
+  var verdict=(ix.cfi>=0.95&&ix.rmsea<=0.06&&ix.srmr<=0.08)?'meets the usual cut-offs for close fit':(ix.cfi>=0.9&&ix.rmsea<=0.08)?'is acceptable by lenient cut-offs but not close':'fits poorly';
+  var tiles=tile(ix.chi.toFixed(1),'χ² (df = '+ix.df+')')+tile(fp(ix.pv),'χ² p-value')+tile(f3(ix.cfi),'CFI',cfiC)+tile(f3(ix.tli),'TLI',fitCls('cfi',ix.tli))+tile(f3(ix.rmsea),'RMSEA',rmC)+tile(f3(ix.srmr),'SRMR',srC);
+  var msg='<p>The <b>'+esc(spec.name)+'</b> model '+verdict+': CFI '+f3(ix.cfi)+', RMSEA '+f3(ix.rmsea)+', SRMR '+f3(ix.srmr)+'. '
+    +(ix.pv<0.05?'The χ² test rejects exact fit (p '+(ix.pv<0.001?'< .001':'= '+fp(ix.pv))+')'+(d.N>=1000?', which is common with N = '+d.N.toLocaleString('en-US')+' because the test detects even trivial misfit':'')+'. ':'The χ² test does not reject exact fit. ')+'</p>'
+    +'<p>'+truthNote(d,spec.id)+'</p>';
+  if(extra){var base=getFit(d,spec.id,[]);msg+='<p>You have freed '+extra+' path'+(extra>1?'s':'')+': χ² fell from '+base.ix.chi.toFixed(1)+' to '+ix.chi.toFixed(1)+' (Δχ² = '+(base.ix.chi-ix.chi).toFixed(1)+' for '+extra+' df). Because these paths were chosen by looking at this sample, treat the improvement with suspicion and check it in a new sample.</p>'}
+  if(fit.heywood)msg+='<p><b>Improper solution:</b> a residual variance has hit zero or a standardized loading exceeds 1 (a Heywood case). The model is too flexible for these data or poorly identified; do not interpret its parameters.</p>';
+  if(!fit.conv)msg+='<p><b>The optimiser did not fully converge</b> (largest gradient '+fit.gmax.toExponential(1)+').</p>';
+  var legend='<div class="chips"><span><i class="sw" style="background:var(--a)"></i>positive loading</span><span><i class="sw" style="background:var(--b)"></i>negative loading</span><span>thicker arrow = larger loading</span>'+(extra?'<span>dashed = path you freed</span>':'')+(spec.phi==='free'?'<span>curves = factor correlations</span>':'')+'<span>numbers are completely standardized</span></div>';
+  $('p-f1').innerHTML='<h2><span class="n">1</span>Model and fit: '+esc(spec.name)+'</h2><div class="twrap"><div class="dgm">'+pathSVG(fit,{cor:S.showCor,err:S.showErr})+'</div></div>'+legend
+    +'<div class="tiles">'+tiles+'</div><div class="msg'+(fit.heywood||!fit.conv?' warn':'')+'">'+msg+'</div>';
+}
+function renderF2(d,fit,dg){
+  var spec=fit.spec,ds=spec.ds,p=spec.p,m=spec.m,i,j,off=spec.off,ord=rep(p,function(i){return i}).sort(function(a,b){return spec.grp[a]!==spec.grp[b]?spec.grp[a]-spec.grp[b]:a-b});
+  function est(v,se,fixedBase){var z=se>0?Math.abs(v)/se:Infinity;return '<td class="hm" style="'+heatBg(v,0.8)+'" title="z = '+(isFinite(z)?z.toFixed(1):'–')+'">'+f2(v)+'<small>'+(dg.ok?'('+se.toFixed(2).replace(/^0\./,'.')+')':'')+'</small></td>'}
+  var head='<th class="l">Item</th>'+rep(m,function(j){return '<th class="nt" title="'+esc(spec.fn[j])+'">'+esc(spec.fsh[j])+'</th>'}).join('')+'<th>R&sup2;</th><th>Resid.</th>';
+  var rows=ord.map(function(ii){var it=ds.items[ii],r='<tr><td class="l it" title="'+esc(it.n)+'"><i class="sw" style="background:'+catc(spec.grp[ii])+'"></i><b>'+esc(it.k)+'</b> <small>'+esc(it.n)+'</small></td>';
+    for(j=0;j<m;j++)r+=spec.mask[ii][j]?est(fit.std[ii][j],dg.ok?dg.seL[ii][j]:0):'<td class="dim">·</td>';
+    return r+'<td>'+f2(fit.r2[ii])+'</td><td>'+f2(fit.thS[ii])+'</td></tr>'}).join('');
+  var tbl='<div class="twrap"><table><thead><tr>'+head+'</tr></thead><tbody>'+rows+'</tbody></table></div><p class="note">Completely standardized loadings with standard errors in brackets (hover for z). Dots are loadings fixed to zero by the model.</p>';
+  var rel=cfaReliab(fit),rt='<p class="cap" style="margin-top:10px">Reliability and convergent validity</p><div class="twrap"><table><thead><tr><th class="l">Factor</th><th>Items</th><th class="nt">ω</th><th>AVE</th></tr></thead><tbody>'+rel.map(function(r,j){return '<tr><td class="l"><i class="sw" style="background:'+(j<off?'var(--ink)':catc(j-off))+'"></i>'+esc(spec.fsh[j])+'</td><td>'+r.n+'</td><td>'+(isFinite(r.omega)?f2(r.omega):'–')+'</td><td>'+(isFinite(r.ave)?f2(r.ave):'–')+'</td></tr>'}).join('')+'</tbody></table></div><p class="note">ω = share of a sum score&rsquo;s variance due to the factor; AVE = mean squared loading. Rules of thumb: ω ≥ .70, AVE ≥ .50 (many personality scales fall short of AVE).</p>';
+  var ct='';
+  if(spec.phi==='free'&&m>1){ct='<p class="cap" style="margin-top:10px">Factor correlations</p><div class="twrap"><table><thead><tr><th></th>'+rep(m,function(j){return '<th>'+esc(spec.fsh[j])+'</th>'}).join('')+'</tr></thead><tbody>'+rep(m,function(a){return '<tr><td class="l"><b>'+esc(spec.fsh[a])+'</b></td>'+rep(m,function(b){return a===b?'<td class="dim">1</td>':'<td class="hm" style="'+heatBg(fit.Phi[a][b],0.8)+'">'+f2(fit.Phi[a][b])+(dg.ok&&b<a?'':'')+'</td>'}).join('')+'</tr>'}).join('')+'</tbody></table></div>'}
+  else if(spec.phi==='higher'){ct='<p class="cap" style="margin-top:10px">Second-order loadings on g</p><div class="twrap"><table><thead><tr><th class="l">First-order factor</th><th class="nt">γ</th><th class="nt">γ&sup2; (g share)</th></tr></thead><tbody>'+rep(m,function(j){return '<tr><td class="l"><i class="sw" style="background:'+catc(j)+'"></i>'+esc(spec.fsh[j])+'</td><td>'+f2(fit.gam[j])+(dg.ok&&dg.seG?' <small>('+dg.seG[j].toFixed(2).replace(/^0\./,'.')+')</small>':'')+'</td><td>'+pc(fit.gam[j]*fit.gam[j])+'</td></tr>'}).join('')+'</tbody></table></div><p class="note">The model-implied correlation between two first-order factors is the product of their γ values.</p>'}
+  else if(m>1)ct='<p class="note" style="margin-top:10px">All factor correlations are fixed to zero in this model.</p>';
+  $('p-f2').innerHTML='<h2><span class="n">2</span>Parameter estimates</h2><div class="two wl"><div>'+tbl+'</div><div>'+ct+rt+'</div></div>';
+}
+function renderF3(d){
+  var ds=d.ds,defs=CFAMODELS[ds.id],cur=S.model[S.ds],res=defs.map(function(df){return {id:df.id,name:df.name,fit:getFit(d,df.id,[])}}),best=0;
+  res.forEach(function(r,i){if(r.fit.ix.bic<res[best].fit.ix.bic)best=i});
+  var bmin=res[best].fit.ix.bic,rows=res.map(function(r,i){var x=r.fit.ix,db=x.bic-bmin;
+    return '<tr class="'+(r.id===cur?'sel ':'')+(i===best?'best':'')+'">'+'<td class="l"><button type="button" class="pill" data-model="'+r.id+'" aria-pressed="'+(r.id===cur)+'">'+esc(r.name)+'</button></td><td>'+x.chi.toFixed(0)+'</td><td>'+x.df+'</td>'
+      +'<td class="'+fitCls('cfi',x.cfi)+'"><i class="bar" style="width:'+Math.max(1,(x.cfi-0.5)*100).toFixed(0)+'px;background:currentColor;opacity:.55"></i>'+f3(x.cfi)+'</td><td class="'+fitCls('cfi',x.tli)+'">'+f3(x.tli)+'</td>'
+      +'<td class="'+fitCls('rmsea',x.rmsea)+'">'+f3(x.rmsea)+'</td><td class="'+fitCls('srmr',x.srmr)+'">'+f3(x.srmr)+'</td><td>'+x.aic.toFixed(0)+'</td><td>'+x.bic.toFixed(0)+'</td><td>'+(db<0.5?'<b class="good">best</b>':'+'+db.toFixed(0))+'</td></tr>'}).join('');
+  var bf=res[best],note='<p>Lowest BIC: <b>'+esc(bf.name)+'</b>. '+(res.filter(function(r){return r.fit.ix.cfi>=0.95&&r.fit.ix.rmsea<=0.06&&r.fit.ix.srmr<=0.08}).length>1?'Several models pass the conventional fit cut-offs, so fit alone cannot pick the right one: use parsimony (BIC), theory, and whether parameters are sensible.':'Click a row to inspect that model in panels 1, 2 and 4.')+'</p>'
+    +(ds.id==='big5'?'<p>The bifactor model often has the best CFI and RMSEA because it is the most flexible, even though these data were not generated with a general personality factor. BIC penalises the extra parameters. A good fit is not evidence that the extra factor is real.</p>':'<p>Models with a general factor (higher-order, bifactor) can reproduce the same correlations in different ways; the higher-order model is the more constrained of the two.</p>');
+  $('p-f3').innerHTML='<h2><span class="n">3</span>Compare competing models on the same data</h2><div class="twrap"><table><thead><tr><th class="l">Model</th><th class="nt">χ²</th><th>df</th><th>CFI</th><th>TLI</th><th>RMSEA</th><th>SRMR</th><th>AIC</th><th>BIC</th><th>ΔBIC</th></tr></thead><tbody>'+rows+'</tbody></table></div><div class="msg">'+note+'</div>';
+}
+function renderF4(d,fit,dg){
+  var spec=fit.spec,ds=spec.ds,p=spec.p,fk=freeKey(spec.id),extra=S.free[fk]||[],body='';
+  var ordG=rep(p,function(i){return i}).sort(function(a,b){return spec.grp[a]!==spec.grp[b]?spec.grp[a]-spec.grp[b]:a-b});
+  if(dg.ok){
+    var top=dg.mis.slice(0,8),tbl='<div class="twrap"><table><thead><tr><th class="l">Candidate path</th><th class="nt">MI (Δχ²)</th><th>Expected loading</th><th></th></tr></thead><tbody>'+top.map(function(t){
+      return '<tr><td class="l it"><b>'+esc(ds.items[t.i].k)+'</b> <small>'+esc(ds.items[t.i].n)+'</small><br><small>← '+esc(spec.fn[t.j])+'</small></td><td class="'+(t.mi>=10.83?'poor':t.mi>=3.84?'fair':'')+'">'+t.mi.toFixed(1)+'</td><td>'+f2(t.epc)+'</td><td><button type="button" class="pill" data-free="'+t.i+','+t.j+'">Free ▶</button></td></tr>'}).join('')+'</tbody></table></div>';
+    var fl='';
+    if(extra.length)fl='<p class="cap" style="margin-top:10px">Paths you have freed</p><div class="row">'+extra.map(function(e,q){return '<button type="button" class="pill" data-unfree="'+q+'" title="Remove this path">'+esc(ds.items[e[0]].k)+' ← '+esc(spec.fsh[e[1]])+' ✕</button>'}).join('')+'<button type="button" class="pill" id="f-clear">Remove all</button></div>';
+    body=tbl+fl+'<p class="note">MI above 3.84 is significant for a single path (p &lt; .05); above 10.83 at p &lt; .001. Freeing a path replaces a fixed zero with a free loading.</p>';
+  } else body='<p class="note">Modification indices could not be computed for this model (the information matrix is singular).</p>';
+  var big=0,i,j,mx=0;for(i=0;i<p;i++)for(j=0;j<i;j++){if(Math.abs(fit.E[i][j])>0.1)big++;mx=Math.max(mx,Math.abs(fit.E[i][j]))}
+  var heat=heatSVG(fit.E,itemCodes(ds),itemCols(ds),{W:440,vmax:0.15,order:ordG,diagSoft:true,label:'Residual correlation matrix'});
+  var msg='<p>'+(mx<0.05?'Residual correlations are all below .05: the model reproduces the data very closely.':big?big+' pair'+(big>1?'s of items have':' of items has')+' a residual correlation above .10 (largest '+f2(mx)+'): the model leaves these relationships unexplained.':'The largest residual correlation is '+f2(mx)+'.')+'</p><p>Specification searches use the sample at hand, so some &ldquo;improvements&rdquo; are noise. Free only paths that make theoretical sense, then press <b>New random sample</b> and see whether the same paths are suggested again.</p>';
+  $('p-f4').innerHTML='<h2><span class="n">4</span>Where does the model misfit? Residuals and modification indices</h2><div class="two"><div><p class="cap">Residual correlations (observed − implied)</p>'+heat+'<p class="note">Blue = the model under-predicts the correlation; orange = it over-predicts. Full colour at ±.15. Items are grouped by the model&rsquo;s factors.</p></div><div>'+body+'</div></div><div class="msg">'+msg+'</div>';
+}
+function renderCFA(){
+  var d=getData(),mid=S.model[S.ds],extra=S.free[freeKey(mid)]||[];
+  syncCFA();
+  var fit=getFit(d,mid,extra),dg=cfaDiag(fit);
+  renderF1(d,fit,dg);renderF2(d,fit,dg);renderF3(d);renderF4(d,fit,dg);
+}
+
+/* =====================  tabs & start-up  ===================== */
+function renderCur(){if(curTab===0)renderEFA();else renderCFA()}
+(function(){
+  buildEFA();buildCFA();
+  var tabs=[['t-efa','v-efa'],['t-cfa','v-cfa']];
+  function sel(i,focus){curTab=i;tabs.forEach(function(t,j){$(t[0]).setAttribute('aria-selected',j===i);$(t[0]).tabIndex=j===i?0:-1;$(t[1]).hidden=j!==i});syncData();renderCur();if(focus)$(tabs[i][0]).focus()}
+  tabs.forEach(function(t,i){$(t[0]).addEventListener('click',function(){sel(i)});$(t[0]).addEventListener('keydown',function(e){if(e.key==='ArrowRight'||e.key==='ArrowLeft')sel((i+1)%2,true)})});
+  $('keybtn').addEventListener('change',function(){$('key').hidden=!this.checked});
+  sel(0);
+})();
+</script>
+</body>
+</html>
