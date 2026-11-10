@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cluster Analysis Explorer</title>
+<meta name="description" content="Interactive explorer for clustering two-dimensional data: Hierarchical Clustering, Expectation-Maximization and Model-Based Clustering.">
+<style>
+:root{
+  --bg:#f5f4ef;--panel:#ffffff;--ink:#1b1e25;--muted:#5b6370;--line:#dedbd1;--soft:#efede6;
+  --a:#2468d6;--b:#d9730d;--rej:#c8372d;--ok:#1b8a5a;--accent:#2468d6;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#13151a;--panel:#1c1f26;--ink:#e8e9ed;--muted:#9aa1ae;--line:#323744;--soft:#252932;
+    --a:#6ba4ff;--b:#ffa24f;--rej:#ff7064;--ok:#4cc58c;--accent:#6ba4ff;}
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{padding:26px 22px 8px;max-width:1280px;margin:0 auto}
+h1{margin:0 0 4px;font-size:1.65rem;letter-spacing:-.01em}
+header p{margin:0;color:var(--muted);max-width:820px}
+.tabs{display:flex;gap:6px;margin-top:16px;flex-wrap:wrap}
+.tab{border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:9px 16px;border-radius:999px;font:inherit;font-weight:600;cursor:pointer}
+.tab[aria-selected="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.tab:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,summary:focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 55%,transparent);outline-offset:2px}
+.layout{max-width:1280px;margin:0 auto;padding:14px 22px 22px;display:grid;grid-template-columns:330px minmax(0,1fr);gap:18px;align-items:start}
+.layout[hidden]{display:none}
+@media(max-width:940px){.layout{grid-template-columns:1fr}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 18px}
+.controls{position:sticky;top:10px;max-height:calc(100vh - 20px);overflow:auto}
+@media(max-width:940px){.controls{position:static;max-height:none}}
+.stack{display:flex;flex-direction:column;gap:18px;min-width:0}
+h2{margin:0 0 10px;font-size:1.02rem}
+h2 .n{display:inline-block;background:var(--soft);border-radius:6px;padding:0 7px;margin-right:6px;color:var(--muted);font-variant-numeric:tabular-nums}
+h3{margin:14px 0 6px;font-size:.78rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.controls h3:first-child{margin-top:0}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+button.pill{border:1px solid var(--line);background:var(--soft);color:var(--ink);padding:5px 11px;border-radius:8px;font:inherit;font-size:.85rem;cursor:pointer}
+button.pill:hover{border-color:var(--accent)}
+button.pill[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.mlist{display:flex;flex-direction:column;gap:5px}
+.mlist button.pill{text-align:left;padding:7px 11px}
+.sl{margin:9px 0}
+.sl label{display:flex;justify-content:space-between;font-size:.88rem}
+.sl output{font-family:var(--mono);font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--accent)}
+select,textarea{font:inherit;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:6px 8px;width:100%}
+textarea{font-family:var(--mono);font-size:.85rem;min-height:70px;resize:vertical}
+.opt{margin:8px 0}.opt>label{display:block;font-size:.85rem;color:var(--muted);margin-bottom:3px}
+.chk{display:flex;gap:8px;align-items:center;font-size:.88rem;margin:6px 0;cursor:pointer}
+.chk input{accent-color:var(--accent);width:16px;height:16px}
+[hidden]{display:none!important}
+.note{font-size:.85rem;color:var(--muted);margin:6px 0}
+.msg{background:color-mix(in srgb,var(--accent) 9%,var(--panel));border-left:4px solid var(--accent);padding:9px 12px;border-radius:6px;margin-top:12px;font-size:.92rem}
+.msg.warn{background:color-mix(in srgb,var(--b) 11%,var(--panel));border-left-color:var(--b)}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:8px;margin-top:12px}
+.tile{background:var(--soft);border-radius:10px;padding:8px 10px;text-align:center}
+.tile b{display:block;font-size:1.2rem;font-family:var(--mono);font-variant-numeric:tabular-nums}
+.tile span{font-size:.74rem;color:var(--muted)}
+svg{width:100%;height:auto;display:block;overflow:visible}
+svg text{fill:var(--muted);font:11px system-ui,sans-serif}
+svg text.strong{fill:var(--ink)}
+svg .ax{stroke:var(--line)}
+svg .gr{stroke:var(--line);stroke-opacity:.55}
+svg .bd{fill:none;stroke:var(--ink);stroke-opacity:.8;stroke-dasharray:4 3}
+svg .hit{cursor:pointer}
+.twrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.88rem}
+th,td{padding:5px 8px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums}
+th{font-size:.75rem;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);font-weight:600}
+th:first-child,td:first-child{text-align:left}
+td.l,th.l{text-align:left}
+.sw{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:7px;vertical-align:-1px;border:1px solid color-mix(in srgb,var(--ink) 25%,transparent)}
+.bar{display:inline-block;height:8px;border-radius:4px;vertical-align:middle;margin-right:6px;min-width:1px}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px}
+@media(max-width:760px){.two{grid-template-columns:1fr}}
+.grid4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+@media(max-width:900px){.grid4{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.cap{font-size:.8rem;font-weight:600;color:var(--ink);margin:0 0 2px}
+.cmp{display:grid;grid-template-columns:150px minmax(0,1fr) 120px;gap:10px;align-items:center;width:100%;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:10px;padding:6px 10px;margin:0 0 6px;font:inherit;cursor:pointer;text-align:left}
+.cmp:hover{border-color:var(--accent)}
+.cmp[aria-pressed="true"]{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 8%,var(--panel))}
+.cmp .nm{font-weight:600;font-size:.88rem}
+.cmp .nm small{display:block;font-weight:400;color:var(--muted);font-size:.74rem}
+.cmp .gv{font-family:var(--mono);font-size:.82rem;text-align:right}
+.cmp .gv i{display:block;height:6px;border-radius:3px;background:var(--accent);margin-top:3px}
+@media(max-width:700px){.cmp{grid-template-columns:1fr}.cmp .gv{text-align:left}}
+.sw-switch{display:inline-flex;align-items:center;gap:10px;cursor:pointer;font-weight:600;font-size:.9rem}
+.sw-switch input{position:absolute;opacity:0;width:1px;height:1px}
+.sw-switch .track{position:relative;flex:none;width:40px;height:22px;border-radius:11px;background:#9aa5b1;transition:background .15s}
+.sw-switch .track::after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.3);transition:transform .15s}
+.sw-switch input:checked+.track{background:var(--accent)}
+.sw-switch input:checked+.track::after{transform:translateX(18px)}
+.sw-switch input:focus-visible+.track{outline:3px solid color-mix(in srgb,var(--accent) 55%,transparent);outline-offset:2px}
+.key{display:grid;grid-template-columns:minmax(130px,max-content) 1fr;gap:6px 16px;margin:12px 0 0;font-size:.88rem}
+.key h3{grid-column:1/-1;margin:10px 0 0;border-bottom:1px solid var(--line);padding-bottom:2px}
+.key dt{font-weight:600;font-family:Georgia,'Times New Roman',serif;white-space:nowrap}
+.key dd{margin:0;color:var(--muted)}
+.guide{max-width:1280px;margin:0 auto;padding:0 22px 30px;display:flex;flex-direction:column;gap:18px}
+.guide td,.guide th{text-align:left;vertical-align:top}
+.guide td:first-child{font-weight:600;white-space:nowrap}
+footer{max-width:1280px;margin:0 auto;padding:0 22px 36px;color:var(--muted);font-size:.82rem}
+.formula{font-family:Georgia,'Times New Roman',serif;font-size:1.05rem;margin:2px 0 8px}
+table.cls th,table.cls td{padding:5px 5px}
+button.pill:disabled{opacity:.45;cursor:default}
+button.pill:disabled:hover{border-color:var(--line)}
+table.cls button.pill{padding:1px 8px;line-height:1.3}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Cluster Analysis Explorer</h1>
+  <p>See how three methods find groups in two-dimensional data. Cut a dendrogram, step through the E- and M-steps of a Gaussian mixture, or let BIC choose the model, on data that range from tidy blobs to moons and rings.</p>
+</header>
+
+<main>
+  <section class="layout" id="v-clus" aria-label="Clustering">
+    <aside class="panel controls" id="c-clus" aria-label="Clustering controls"></aside>
+    <div class="stack">
+      <div class="panel" id="p-k1"></div>
+      <div class="panel" id="p-k2"></div>
+    </div>
+  </section>
+</main>
+
+<div class="guide">
+  <div class="panel">
+    <h2>Method guide</h2>
+    <div class="twrap"><table>
+      <thead><tr><th>Method</th><th>How it works</th><th>Reach for it when&hellip;</th><th>Watch out for&hellip;</th></tr></thead>
+      <tbody>
+      <tr><td>Hierarchical Clustering</td><td>Starts with every point alone and repeatedly merges the two closest clusters; you cut the resulting dendrogram at any height.</td><td>You want structure at every scale, do not know k in advance, and n is small to moderate.</td><td>Merges can never be undone; single linkage chains, complete and Ward favour compact round groups; memory grows with n&sup2;.</td></tr>
+      <tr><td>Expectation-Maximization</td><td>Fits a mixture of Gaussians by alternating soft assignment of points to components (E-step) and re-estimating each component (M-step).</td><td>Groups overlap or are elliptical and you want membership probabilities, not hard labels.</td><td>You must choose k; the result depends on the starting point; non-elliptical shapes (moons, rings) are split badly.</td></tr>
+      <tr><td>Model-Based Clustering</td><td>Fits Gaussian mixtures with several covariance structures and several values of k, then picks the best by BIC.</td><td>You do not know how many groups there are or what shape they have, and want a principled comparison.</td><td>Assumes Gaussian-shaped groups; BIC may add extra clusters to approximate curved shapes.</td></tr>
+      </tbody>
+    </table></div>
+  </div>
+  <div class="panel">
+    <label class="sw-switch" for="keybtn">
+      <input type="checkbox" role="switch" id="keybtn" aria-controls="key">
+      <span class="track" aria-hidden="true"></span>
+      <span>Show key: symbols &amp; terms</span>
+    </label>
+    <dl class="key" id="key" hidden>
+      
+      <h3>Clustering (2-D)</h3>
+      <dt>Linkage</dt><dd>How the distance between two clusters is defined: single (closest pair), complete (farthest pair), average (mean of all pairs), Ward (smallest increase in within-cluster variance).</dd>
+      <dt>Dendrogram</dt><dd>Tree of merges. Height is the distance at which two clusters joined. A horizontal cut gives clusters.</dd>
+      <dt>Silhouette</dt><dd>How well each point fits its own cluster compared with the nearest other one, averaged. From &minus;1 to 1; above 0.5 is good separation.</dd>
+      <dt>ARI</dt><dd>Adjusted Rand Index: agreement with the true groups the data were generated from. 1 is perfect; 0 is no better than chance.</dd>
+      <dt>&pi;<sub>k</sub>, &mu;<sub>k</sub>, &Sigma;<sub>k</sub></dt><dd>Mixing weight, mean and covariance of component k in a Gaussian mixture.</dd>
+      <dt>Responsibility</dt><dd>Probability that a point belongs to component k, given the current parameters. Point colours blend by responsibility.</dd>
+      <dt>E-step / M-step</dt><dd>E: compute responsibilities from parameters. M: recompute weights, means and covariances from responsibilities.</dd>
+      <dt>Log-likelihood</dt><dd>How probable the data are under the model. EM never lets it decrease.</dd>
+      <dt>BIC</dt><dd>2 &middot; log-likelihood &minus; (parameters) &middot; ln n. Rewards fit, penalises complexity. Higher is better (the convention used by the R package mclust).</dd>
+      <dt>EII, VII, EEE, VVV</dt><dd>Covariance structures. First letter: volume (E equal, V varying); second: shape; third: orientation. I = identity (circular). EII equal circles, VII circles of different sizes, EEE identical ellipses, VVV free ellipses.</dd>
+      </dl>
+  </div>
+</div>
+<footer>All data are simulated in your browser; nothing is uploaded.</footer>
+
+<script>
+/* ---------- utilities ---------- */
+function mulberry(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function randn(r){var u=0;while(!u)u=r();var v=r();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)}
+function sum(a){var s=0;for(var i=0;i<a.length;i++)s+=a[i];return s}
+function mean(a){return sum(a)/a.length}
+function r2(x){return Math.round(x*100)/100}
+function rep(n,f){var o=[];for(var i=0;i<n;i++)o.push(f(i));return o}
+
+/* ---------- 2-D clustering data ---------- */
+function genCluster(kind,n,spread,seed){
+  var r=mulberry(seed*7919+101),X=[],lab=[],i,t,c;
+  function blob(cx,cy,sd,m,l,A){for(var q=0;q<m;q++){var x=sd*randn(r),y=sd*randn(r);if(A){var u=A[0]*x+A[1]*y,v=A[2]*x+A[3]*y;x=u;y=v}X.push([cx+x,cy+y]);lab.push(l)}}
+  if(kind==='blobs3'){var m=Math.floor(n/3);blob(-2.2,-1.2,0.6*spread,m,0);blob(2.2,-1.2,0.6*spread,m,1);blob(0,2.3,0.6*spread,n-2*m,2)}
+  else if(kind==='aniso'){var m2=Math.floor(n/3),A=[1.25*spread,0.9*spread,-0.25*spread,0.35*spread];blob(-2.5,-1.5,0.55,m2,0,A);blob(1,-2.2,0.55,m2,1,A);blob(2.2,1.6,0.55,n-2*m2,2,A)}
+  else if(kind==='moons'){var h=Math.floor(n/2);for(i=0;i<n;i++){c=i<h?0:1;t=Math.PI*r();var x=c?1-Math.cos(t):Math.cos(t),y=c?0.5-Math.sin(t):Math.sin(t);X.push([1.6*(x+0.09*spread*randn(r)),1.6*(y+0.09*spread*randn(r))]);lab.push(c)}}
+  else if(kind==='rings'){var h2=Math.floor(n*0.4);for(i=0;i<n;i++){c=i<h2?0:1;t=2*Math.PI*r();var rad=(c?2.6:1)+0.13*spread*randn(r);X.push([rad*Math.cos(t),rad*Math.sin(t)]);lab.push(c)}}
+  else if(kind==='varied'){var a=Math.floor(n*0.3),b=Math.floor(n*0.45);blob(-3,0,0.28*spread,a,0);blob(0.3,0.3,1.0*spread,b,1);blob(3.6,-1,0.45*spread,n-a-b,2)}
+  else{for(i=0;i<n;i++){X.push([6*r()-3,4.5*r()-2.25]);lab.push(0)}}
+  return {X:X,lab:lab};
+}
+
+/* ---------- hierarchical clustering ---------- */
+function hclust(X,link){
+  var n=X.length,D=new Float64Array(n*n),i,j,m,ward=link==='ward';
+  for(i=0;i<n;i++)for(j=i+1;j<n;j++){var dx=X[i][0]-X[j][0],dy=X[i][1]-X[j][1],q=dx*dx+dy*dy;D[i*n+j]=D[j*n+i]=ward?q:Math.sqrt(q)}
+  var size=new Int32Array(n).fill(1),id=new Int32Array(n),act=new Uint8Array(n).fill(1),merges=[],step;
+  for(i=0;i<n;i++)id[i]=i;
+  for(step=0;step<n-1;step++){
+    var bi=-1,bj=-1,bd=Infinity;
+    for(i=0;i<n;i++){if(!act[i])continue;for(j=i+1;j<n;j++){if(act[j]&&D[i*n+j]<bd){bd=D[i*n+j];bi=i;bj=j}}}
+    var ni=size[bi],nj=size[bj];
+    for(m=0;m<n;m++){
+      if(!act[m]||m===bi||m===bj)continue;
+      var dim=D[bi*n+m],djm=D[bj*n+m],nm=size[m],v;
+      if(link==='single')v=Math.min(dim,djm);
+      else if(link==='complete')v=Math.max(dim,djm);
+      else if(link==='average')v=(ni*dim+nj*djm)/(ni+nj);
+      else v=((ni+nm)*dim+(nj+nm)*djm-nm*bd)/(ni+nj+nm);
+      D[bi*n+m]=D[m*n+bi]=v;
+    }
+    merges.push({a:id[bi],b:id[bj],h:ward?Math.sqrt(bd):bd,size:ni+nj});
+    id[bi]=n+step;size[bi]=ni+nj;act[bj]=0;
+  }
+  return merges;
+}
+function cutTree(merges,n,K){
+  var mem=new Array(2*n-1),alive=new Uint8Array(2*n-1),i,m;
+  for(i=0;i<n;i++){mem[i]=[i];alive[i]=1}
+  for(m=0;m<n-K;m++){var g=merges[m];mem[n+m]=mem[g.a].concat(mem[g.b]);alive[g.a]=0;alive[g.b]=0;alive[n+m]=1;mem[g.a]=mem[g.b]=null}
+  var lab=new Array(n).fill(0),roots=[];
+  for(i=0;i<2*n-1;i++)if(alive[i])roots.push(i);
+  roots.sort(function(a,b){return Math.min.apply(null,mem[a])-Math.min.apply(null,mem[b])});
+  roots.forEach(function(rt,c){mem[rt].forEach(function(p){lab[p]=c})});
+  return lab;
+}
+
+/* ---------- metrics ---------- */
+function ari(a,b){
+  var n=a.length,ca={},cb={},cab={},i,k,s=0,sa=0,sb=0;
+  function c2(x){return x*(x-1)/2}
+  for(i=0;i<n;i++){ca[a[i]]=(ca[a[i]]||0)+1;cb[b[i]]=(cb[b[i]]||0)+1;k=a[i]+'|'+b[i];cab[k]=(cab[k]||0)+1}
+  for(k in cab)s+=c2(cab[k]);for(k in ca)sa+=c2(ca[k]);for(k in cb)sb+=c2(cb[k]);
+  var exp=sa*sb/c2(n),mx=(sa+sb)/2;
+  return mx===exp?1:(s-exp)/(mx-exp);
+}
+function silhouette(X,lab){
+  var n=X.length,K=0,i,j,c;
+  for(i=0;i<n;i++)K=Math.max(K,lab[i]+1);
+  if(K<2)return NaN;
+  var tot=0;
+  for(i=0;i<n;i++){
+    var s=new Array(K).fill(0),cn=new Array(K).fill(0);
+    for(j=0;j<n;j++){if(j===i)continue;var dx=X[i][0]-X[j][0],dy=X[i][1]-X[j][1];s[lab[j]]+=Math.sqrt(dx*dx+dy*dy);cn[lab[j]]++}
+    if(cn[lab[i]]===0)continue;
+    var a=s[lab[i]]/cn[lab[i]],b=Infinity;
+    for(c=0;c<K;c++)if(c!==lab[i]&&cn[c])b=Math.min(b,s[c]/cn[c]);
+    tot+=(b-a)/Math.max(a,b);
+  }
+  return tot/n;
+}
+
+/* ---------- Gaussian mixtures (2-D): cov stored as [a,b,c] = [[a,b],[b,c]] ---------- */
+function globalCov(X){
+  var n=X.length,mx=0,my=0,i;
+  for(i=0;i<n;i++){mx+=X[i][0];my+=X[i][1]}mx/=n;my/=n;
+  var a=0,b=0,c=0;
+  for(i=0;i<n;i++){var dx=X[i][0]-mx,dy=X[i][1]-my;a+=dx*dx;b+=dx*dy;c+=dy*dy}
+  return [a/n,b/n,c/n];
+}
+function initMeans(X,K,method,seed){
+  var r=mulberry(seed*977+31),n=X.length,pick=[Math.floor(r()*n)],i,k;
+  if(method==='random'){while(pick.length<K){var q=Math.floor(r()*n);if(pick.indexOf(q)<0)pick.push(q)}}
+  else{
+    var d2=new Float64Array(n).fill(Infinity);
+    while(pick.length<K){
+      var last=X[pick[pick.length-1]],tot=0;
+      for(i=0;i<n;i++){var dx=X[i][0]-last[0],dy=X[i][1]-last[1];d2[i]=Math.min(d2[i],dx*dx+dy*dy);tot+=d2[i]}
+      var u=r()*tot,acc=0,ch=n-1;
+      for(i=0;i<n;i++){acc+=d2[i];if(acc>=u){ch=i;break}}
+      pick.push(ch);
+    }
+  }
+  return pick.map(function(p){return [X[p][0],X[p][1]]});
+}
+function gmmE(X,th){
+  var n=X.length,K=th.pi.length,R=new Float64Array(n*K),ll=0,i,k,pre=[];
+  for(k=0;k<K;k++){var c=th.cov[k],det=Math.max(c[0]*c[2]-c[1]*c[1],1e-300);pre.push({ia:c[2]/det,ib:-c[1]/det,ic:c[0]/det,lc:Math.log(Math.max(th.pi[k],1e-300))-Math.log(2*Math.PI)-0.5*Math.log(det)})}
+  var l=new Float64Array(K);
+  for(i=0;i<n;i++){
+    var mx=-Infinity;
+    for(k=0;k<K;k++){var dx=X[i][0]-th.mu[k][0],dy=X[i][1]-th.mu[k][1],p=pre[k];l[k]=p.lc-0.5*(p.ia*dx*dx+2*p.ib*dx*dy+p.ic*dy*dy);if(l[k]>mx)mx=l[k]}
+    var s=0;for(k=0;k<K;k++){l[k]=Math.exp(l[k]-mx);s+=l[k]}
+    ll+=mx+Math.log(s);
+    for(k=0;k<K;k++)R[i*K+k]=l[k]/s;
+  }
+  return {R:R,ll:ll};
+}
+function gmmM(X,R,K,type,floor,prev){
+  var n=X.length,pi=[],mu=[],S=[],Nk=[],i,k;
+  for(k=0;k<K;k++){
+    var nk=0,mx=0,my=0;
+    for(i=0;i<n;i++){var r=R[i*K+k];nk+=r;mx+=r*X[i][0];my+=r*X[i][1]}
+    if(nk<1e-8){Nk.push(1e-8);mu.push(prev?prev.mu[k].slice():[X[0][0],X[0][1]]);S.push(prev?prev.cov[k].slice():[1,0,1]);continue}
+    mx/=nk;my/=nk;
+    var a=0,b=0,c=0;
+    for(i=0;i<n;i++){var rr=R[i*K+k],dx=X[i][0]-mx,dy=X[i][1]-my;a+=rr*dx*dx;b+=rr*dx*dy;c+=rr*dy*dy}
+    Nk.push(nk);mu.push([mx,my]);S.push([a/nk,b/nk,c/nk]);
+  }
+  var cov=[];
+  if(type==='VVV'){cov=S.map(function(s){return s.slice()})}
+  else if(type==='VII'){cov=S.map(function(s){var v=(s[0]+s[2])/2;return [v,0,v]})}
+  else{
+    var pa=0,pb=0,pc=0;
+    for(k=0;k<K;k++){pa+=Nk[k]*S[k][0];pb+=Nk[k]*S[k][1];pc+=Nk[k]*S[k][2]}
+    pa/=n;pb/=n;pc/=n;
+    if(type==='EEE')cov=rep(K,function(){return [pa,pb,pc]});
+    else{var v=(pa+pc)/2;cov=rep(K,function(){return [v,0,v]})}
+  }
+  cov=cov.map(function(c){return [c[0]+floor,c[1],c[2]+floor]});
+  for(k=0;k<K;k++)pi.push(Nk[k]/n);
+  return {pi:pi,mu:mu,cov:cov};
+}
+function gmmFloor(X){var g=globalCov(X);return 1e-3*(g[0]+g[2])/2}
+function gmmInitHard(X,K,type,seed){
+  var mu=initMeans(X,K,'kpp',seed),n=X.length,R=new Float64Array(n*K),i,k;
+  for(i=0;i<n;i++){var b=0,bd=Infinity;for(k=0;k<K;k++){var dx=X[i][0]-mu[k][0],dy=X[i][1]-mu[k][1],q=dx*dx+dy*dy;if(q<bd){bd=q;b=k}}R[i*K+b]=1}
+  return gmmM(X,R,K,type,gmmFloor(X),null);
+}
+function fitGMM(X,K,type,seed,restarts,maxIt){
+  var best=null,fl=gmmFloor(X);
+  for(var r=0;r<restarts;r++){
+    var th=gmmInitHard(X,K,type,seed+r*17),prev=-Infinity,e=null;
+    for(var it=0;it<maxIt;it++){
+      e=gmmE(X,th);
+      if(it>0&&Math.abs(e.ll-prev)<1e-7*Math.abs(e.ll)){break}
+      prev=e.ll;th=gmmM(X,e.R,K,type,fl,th);
+    }
+    e=gmmE(X,th);
+    if(!best||e.ll>best.ll)best={th:th,ll:e.ll,R:e.R};
+  }
+  return best;
+}
+function gmmParams(type,K){var cp={EII:1,VII:K,EEE:3,VVV:3*K}[type];return 2*K+(K-1)+cp}
+function gmmBIC(ll,type,K,n){return 2*ll-gmmParams(type,K)*Math.log(n)}
+function hardLabels(R,n,K){var o=new Array(n),i,k;for(i=0;i<n;i++){var b=0;for(k=1;k<K;k++)if(R[i*K+k]>R[i*K+b])b=k;o[i]=b}return o}
+
+
+/* =====================  UI helpers  ===================== */
+var $=function(id){return document.getElementById(id)};
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;')}
+function nf(x){if(x===null||x===undefined||!isFinite(x))return '–';var a=Math.abs(x);if(a>=1000)return Math.round(x).toLocaleString('en-US');if(a>=100)return x.toFixed(1);if(a>=1)return x.toFixed(2);if(a===0)return '0';return x.toPrecision(2)}
+function pc(x,d){return (100*x).toFixed(d||0)+'%'}
+function lin(d0,d1,r0,r1){var k=(r1-r0)/((d1-d0)||1);return function(v){return r0+(v-d0)*k}}
+function niceTicks(lo,hi,n){var span=hi-lo||1,s0=span/Math.max(1,n),mag=Math.pow(10,Math.floor(Math.log10(s0))),e=s0/mag,st=(e>=7.5?10:e>=3.5?5:e>=1.5?2:1)*mag,t=[];for(var v=Math.ceil(lo/st-1e-9)*st;v<=hi+1e-9;v+=st)t.push(+v.toPrecision(12));return t}
+function tl(v){return Math.abs(v)>=1e5?v.toExponential(0):(+v.toPrecision(6)).toLocaleString('en-US',{maximumFractionDigits:4})}
+function hex2rgb(h){return [parseInt(h.substr(1,2),16),parseInt(h.substr(3,2),16),parseInt(h.substr(5,2),16)]}
+function rgb2hex(c){return '#'+c.map(function(v){v=Math.max(0,Math.min(255,Math.round(v)));return (v<16?'0':'')+v.toString(16)}).join('')}
+var VIR=['#440154','#482878','#3e4989','#31688e','#26828e','#1f9e89','#35b779','#6ece58','#b5de2b','#fde725'];
+function ramp(t){var p=Math.max(0,Math.min(1,t))*(VIR.length-1),i=Math.min(VIR.length-2,Math.floor(p)),f=p-i,a=hex2rgb(VIR[i]),b=hex2rgb(VIR[i+1]);return rgb2hex([a[0]+(b[0]-a[0])*f,a[1]+(b[1]-a[1])*f,a[2]+(b[2]-a[2])*f])}
+function ccol(i,k){return ramp(k<2?0.5:i/(k-1))}
+var CAT=['#3b73d9','#e07b1a','#2a9d6a','#c2479b','#7f5fd0','#1fa5b8','#d64545','#a3a31f','#8c6d46'];
+function catc(i){return CAT[i%CAT.length]}
+var raf={};function sched(name,fn){if(raf[name])return;raf[name]=requestAnimationFrame(function(){raf[name]=0;fn()})}
+
+function sliderH(id,label,min,max,step,val){return '<div class="sl"><label for="'+id+'"><span>'+label+'</span><output id="'+id+'-o">'+val+'</output></label><input type="range" id="'+id+'" min="'+min+'" max="'+max+'" step="'+step+'" value="'+val+'"></div>'}
+function selH(id,label,opts,val){return '<div class="opt"><label for="'+id+'">'+label+'</label><select id="'+id+'">'+opts.map(function(o){return '<option value="'+o[0]+'"'+(o[0]===val?' selected':'')+'>'+o[1]+'</option>'}).join('')+'</select></div>'}
+function chkH(id,label,val){return '<label class="chk"><input type="checkbox" id="'+id+'"'+(val?' checked':'')+'>'+label+'</label>'}
+function pillsH(id,opts,val){return '<div class="mlist" id="'+id+'" role="group">'+opts.map(function(o){return '<button type="button" class="pill" data-v="'+o[0]+'" aria-pressed="'+(o[0]===val)+'">'+o[1]+'</button>'}).join('')+'</div>'}
+function bindR(id,obj,key,cb,fmt){var e=$(id),o=$(id+'-o');e.addEventListener('input',function(){obj[key]=+e.value;if(o)o.textContent=fmt?fmt(+e.value):e.value;cb()})}
+function bindS(id,obj,key,cb,num){$(id).addEventListener('input',function(){obj[key]=num?+this.value:this.value;cb()})}
+function bindC(id,obj,key,cb){$(id).addEventListener('change',function(){obj[key]=this.checked;cb()})}
+function bindP(id,obj,key,cb){var c=$(id);c.addEventListener('click',function(e){var b=e.target.closest('button[data-v]');if(!b)return;obj[key]=b.getAttribute('data-v');setPills(id,obj[key]);cb()})}
+function setPills(id,v){Array.prototype.forEach.call($(id).querySelectorAll('button[data-v]'),function(b){b.setAttribute('aria-pressed',b.getAttribute('data-v')===v)})}
+function show(id,on){$(id).hidden=!on}
+function tile(v,l){return '<div class="tile"><b>'+v+'</b><span>'+l+'</span></div>'}
+function svgOpen(w,h,label){return '<svg viewBox="0 0 '+w+' '+h+'" role="img" aria-label="'+esc(label)+'">'}
+
+/* =====================  shared charts  ===================== */
+var uid=0;
+function lineSVG(W,H,series,o){
+  o=o||{};var m={l:o.ml||54,r:12,t:o.legend?22:10,b:o.xlab?36:22},pw=W-m.l-m.r,ph=H-m.t-m.b,i,s;
+  var xlo=Infinity,xhi=-Infinity,ylo=o.ylo!==undefined?o.ylo:Infinity,yhi=o.yhi!==undefined?o.yhi:-Infinity;
+  series.forEach(function(se){se.ys.forEach(function(v,j){var xv=se.xs?se.xs[j]:j;xlo=Math.min(xlo,xv);xhi=Math.max(xhi,xv);if(o.ylo===undefined)ylo=Math.min(ylo,v);if(o.yhi===undefined)yhi=Math.max(yhi,v)})});
+  if(xhi===xlo)xhi=xlo+1;if(yhi===ylo){yhi+=1;ylo-=1}
+  var yp=(yhi-ylo)*0.06;if(o.ylo===undefined)ylo-=yp;if(o.yhi===undefined)yhi+=yp;
+  var x=lin(xlo,xhi,m.l,m.l+pw),y=lin(ylo,yhi,m.t+ph,m.t),out=svgOpen(W,H,o.label||'Line chart');
+  niceTicks(ylo,yhi,4).forEach(function(t){out+='<line class="gr" x1="'+m.l+'" x2="'+(m.l+pw)+'" y1="'+y(t)+'" y2="'+y(t)+'"/><text x="'+(m.l-6)+'" y="'+(y(t)+4)+'" text-anchor="end">'+(o.yfmt?o.yfmt(t):tl(t))+'</text>'});
+  niceTicks(xlo,xhi,o.xt||6).forEach(function(t){out+='<line class="ax" x1="'+x(t)+'" x2="'+x(t)+'" y1="'+(m.t+ph)+'" y2="'+(m.t+ph+4)+'"/><text x="'+x(t)+'" y="'+(m.t+ph+16)+'" text-anchor="middle">'+tl(t)+'</text>'});
+  out+='<line class="ax" x1="'+m.l+'" x2="'+(m.l+pw)+'" y1="'+(m.t+ph)+'" y2="'+(m.t+ph)+'"/>';
+  if(o.xlab)out+='<text x="'+(m.l+pw/2)+'" y="'+(H-4)+'" text-anchor="middle">'+o.xlab+'</text>';
+  if(o.ylab)out+='<text transform="rotate(-90)" x="'+(-(m.t+ph/2))+'" y="12" text-anchor="middle">'+o.ylab+'</text>';
+  series.forEach(function(se,si){
+    var pts=se.ys.map(function(v,j){return x(se.xs?se.xs[j]:j).toFixed(1)+','+y(v).toFixed(1)}).join(' ');
+    out+='<polyline fill="none" stroke="'+se.col+'" stroke-width="'+(se.w||1.8)+'" stroke-linejoin="round" points="'+pts+'"/>';
+    if(o.markers)se.ys.forEach(function(v,j){out+='<circle cx="'+x(se.xs?se.xs[j]:j).toFixed(1)+'" cy="'+y(v).toFixed(1)+'" r="3" fill="'+se.col+'"/>'});
+    if(o.legend)out+='<rect x="'+(m.l+si*110)+'" y="4" width="10" height="10" rx="2" fill="'+se.col+'"/><text x="'+(m.l+si*110+14)+'" y="13">'+se.name+'</text>';
+  });
+  return out+'</svg>';
+}
+function shapePath(x,y,lab,r){
+  if(lab%4===0)return '<circle cx="'+x+'" cy="'+y+'" r="'+r+'"';
+  if(lab%4===1)return '<rect x="'+(x-r)+'" y="'+(y-r)+'" width="'+2*r+'" height="'+2*r+'"';
+  if(lab%4===2)return '<polygon points="'+x+','+(y-r*1.25)+' '+(x+r*1.15)+','+(y+r*0.85)+' '+(x-r*1.15)+','+(y+r*0.85)+'"';
+  return '<polygon points="'+x+','+(y-r*1.3)+' '+(x+r*1.3)+','+y+' '+x+','+(y+r*1.3)+' '+(x-r*1.3)+','+y+'"';
+}
+function ellipsePts(mu,cov,px,py,rad){
+  var a=cov[0],b=cov[1],c=cov[2],tr=(a+c)/2,df=Math.sqrt(Math.max(0,((a-c)/2)*((a-c)/2)+b*b)),l1=tr+df,l2=Math.max(tr-df,1e-12),th=0.5*Math.atan2(2*b,a-c),pts=[],t;
+  for(t=0;t<=64;t++){var u=2*Math.PI*t/64,ex=rad*(Math.sqrt(l1)*Math.cos(u)*Math.cos(th)-Math.sqrt(l2)*Math.sin(u)*Math.sin(th)),ey=rad*(Math.sqrt(l1)*Math.cos(u)*Math.sin(th)+Math.sqrt(l2)*Math.sin(u)*Math.cos(th));pts.push(px(mu[0]+ex).toFixed(1)+','+py(mu[1]+ey).toFixed(1))}
+  return pts.join(' ');
+}
+/* equal-aspect scatter. o: {W,H,fills,labs(shapes),ell:[{mu,cov,col}],axes:'frame'|'cross',dom:[xlo,xhi,ylo,yhi],r,lines:[{x1,y1,x2,y2,col,dash,w}],xl,yl} */
+function scatterSVG(X,o){
+  var W=o.W||620,H=o.H||430,m={l:o.xl?38:30,r:10,t:10,b:o.xl?32:22},pw=W-m.l-m.r,ph=H-m.t-m.b,i,n=X.length;
+  var dom=o.dom;if(!dom){var x0=Infinity,x1=-Infinity,y0=Infinity,y1=-Infinity;for(i=0;i<n;i++){x0=Math.min(x0,X[i][0]);x1=Math.max(x1,X[i][0]);y0=Math.min(y0,X[i][1]);y1=Math.max(y1,X[i][1])}dom=[x0,x1,y0,y1]}
+  var dx=(dom[1]-dom[0])||1,dy=(dom[3]-dom[2])||1,sc=Math.min(pw/(dx*1.14),ph/(dy*1.14)),cx=(dom[0]+dom[1])/2,cy=(dom[2]+dom[3])/2;
+  var px=function(v){return m.l+pw/2+(v-cx)*sc},py=function(v){return m.t+ph/2-(v-cy)*sc},id='cl'+(uid++);
+  var xlo=cx-pw/2/sc,xhi=cx+pw/2/sc,ylo=cy-ph/2/sc,yhi=cy+ph/2/sc;
+  var out=svgOpen(W,H,o.label||'Scatter plot')+'<clipPath id="'+id+'"><rect x="'+m.l+'" y="'+m.t+'" width="'+pw+'" height="'+ph+'"/></clipPath>';
+  niceTicks(xlo,xhi,6).forEach(function(t){out+='<line class="gr" x1="'+px(t)+'" x2="'+px(t)+'" y1="'+m.t+'" y2="'+(m.t+ph)+'"/><text x="'+px(t)+'" y="'+(m.t+ph+14)+'" text-anchor="middle">'+tl(t)+'</text>'});
+  niceTicks(ylo,yhi,5).forEach(function(t){out+='<line class="gr" x1="'+m.l+'" x2="'+(m.l+pw)+'" y1="'+py(t)+'" y2="'+py(t)+'"/><text x="'+(m.l-5)+'" y="'+(py(t)+4)+'" text-anchor="end">'+tl(t)+'</text>'});
+  out+='<rect x="'+m.l+'" y="'+m.t+'" width="'+pw+'" height="'+ph+'" fill="none" class="ax"/>';
+  if(o.xl)out+='<text x="'+(m.l+pw/2)+'" y="'+(H-3)+'" text-anchor="middle">'+esc(o.xl)+'</text>';
+  if(o.yl)out+='<text transform="rotate(-90)" x="'+(-(m.t+ph/2))+'" y="11" text-anchor="middle">'+esc(o.yl)+'</text>';
+  out+='<g clip-path="url(#'+id+')">';
+  if(o.cross)out+='<line class="ax" x1="'+px(0)+'" x2="'+px(0)+'" y1="'+m.t+'" y2="'+(m.t+ph)+'" style="stroke-opacity:1"/><line class="ax" x1="'+m.l+'" x2="'+(m.l+pw)+'" y1="'+py(0)+'" y2="'+py(0)+'" style="stroke-opacity:1"/>';
+  (o.ell||[]).forEach(function(e){out+='<polygon points="'+ellipsePts(e.mu,e.cov,px,py,2.4477)+'" fill="'+e.col+'" fill-opacity=".10" stroke="'+e.col+'" stroke-width="2"/>'});
+  (o.lines||[]).forEach(function(l){out+='<line x1="'+px(l.x1)+'" y1="'+py(l.y1)+'" x2="'+px(l.x2)+'" y2="'+py(l.y2)+'" stroke="'+l.col+'" stroke-width="'+(l.w||1.5)+'"'+(l.dash?' stroke-dasharray="'+l.dash+'"':'')+(l.op?' stroke-opacity="'+l.op+'"':'')+'/>'});
+  var r=o.r||3.6;
+  for(i=0;i<n;i++)out+=shapePath(px(X[i][0]).toFixed(1),py(X[i][1]).toFixed(1),o.labs?o.labs[i]:0,r)+' fill="'+o.fills[i]+'" fill-opacity=".88" stroke="var(--panel)" stroke-width=".7"/>';
+  (o.ell||[]).forEach(function(e){var x=px(e.mu[0]),y=py(e.mu[1]);out+='<path d="M'+(x-6)+','+y+'H'+(x+6)+'M'+x+','+(y-6)+'V'+(y+6)+'" stroke="var(--ink)" stroke-width="3.5"/><path d="M'+(x-6)+','+y+'H'+(x+6)+'M'+x+','+(y-6)+'V'+(y+6)+'" stroke="'+e.col+'" stroke-width="2"/>'});
+  return out+'</g></svg>';
+}
+var CATRGB=CAT.map(hex2rgb);
+function blendFill(R,i,K,soft){
+  if(!soft){var b=0,k;for(k=1;k<K;k++)if(R[i*K+k]>R[i*K+b])b=k;return catc(b)}
+  var r=0,g=0,bl=0,k2;for(k2=0;k2<K;k2++){var w=R[i*K+k2],c=CATRGB[k2%CATRGB.length];r+=w*c[0];g+=w*c[1];bl+=w*c[2]}
+  return rgb2hex([r,g,bl]);
+}
+
+/* =====================  TAB 2: clustering  ===================== */
+var S2={data:'blobs3',n:150,spread:1,seed:1,method:'hier',link:'ward',hk:3,emK:3,emInit:'kpp',emSeed:1,showEll:true,soft:true,truth:false,mbMax:7,mbOn:{EII:true,VII:true,EEE:true,VVV:true},mbSel:null};
+var DS2=[['blobs3','Three round blobs'],['aniso','Three stretched (elliptical) clusters'],['varied','Different sizes and densities'],['moons','Two moons (curved)'],['rings','Two rings (nested)'],['uniform','No clusters (uniform scatter)']];
+var D2={key:''},H2={key:''},EM=null,MB={key:'',busy:null,fits:null},emTimer=null;
+var MODELS=[['EII','EII: equal circles'],['VII','VII: circles, varying size'],['EEE','EEE: identical ellipses'],['VVV','VVV: free ellipses']];
+var MCOL={EII:'#3b73d9',VII:'#2a9d6a',EEE:'#e07b1a',VVV:'#c2479b'};
+
+function build2(){
+  $('c-clus').innerHTML='<h3>Data</h3>'+selH('c2-data','Data set',DS2,S2.data)+sliderH('c2-n','Points',60,300,10,S2.n)+sliderH('c2-sp','Spread / noise',0.5,2,0.05,S2.spread)
+   +'<div class="row"><button type="button" class="pill" id="c2-new">New random sample</button></div>'+chkH('c2-truth','Mark the true groups with shapes',S2.truth)
+   +'<h3>Method</h3>'+pillsH('c2-m',[['hier','Hierarchical Clustering'],['em','Expectation-Maximization'],['mb','Model-Based Clustering']],S2.method)
+   +'<h3>Settings</h3>'
+   +'<div id="c2-hb">'+selH('c2-link','Linkage',[['ward','Ward'],['average','Average'],['complete','Complete'],['single','Single']],S2.link)+sliderH('c2-hk','Clusters to cut the tree into (K)',1,9,1,S2.hk)+'</div>'
+   +'<div id="c2-eb" hidden>'+sliderH('c2-ek','Components (K)',1,8,1,S2.emK)+selH('c2-ei','Starting means',[['kpp','Spread-out (k-means++)'],['random','Random data points']],S2.emInit)
+   +'<div class="row" style="margin:8px 0"><button type="button" class="pill" id="c2-eE">E-step</button><button type="button" class="pill" id="c2-eM">M-step</button><button type="button" class="pill" id="c2-eF">Full iteration</button><button type="button" class="pill" id="c2-eR">Run ▶</button><button type="button" class="pill" id="c2-eN">Restart (new start)</button></div>'
+   +chkH('c2-ell','Show component ellipses (95%)',S2.showEll)+chkH('c2-soft','Blend point colours by responsibility',S2.soft)+'</div>'
+   +'<div id="c2-mb" hidden>'+sliderH('c2-mk','Largest number of clusters to show',3,9,1,S2.mbMax)+'<div class="opt"><label>Covariance models to compare</label>'+MODELS.map(function(m){return chkH('c2-mo-'+m[0],m[1],S2.mbOn[m[0]])}).join('')+'</div></div>'+'<div class="row" style="margin-top:14px"><button type="button" class="pill" id="c2-rs">Reset settings</button></div>';
+  var go=function(){sched('r2',render2)};
+  bindS('c2-data',S2,'data',function(){S2.mbSel=null;go()});bindR('c2-n',S2,'n',function(){S2.mbSel=null;go()});
+  bindR('c2-sp',S2,'spread',function(){S2.mbSel=null;go()},function(v){return v.toFixed(2)});
+  $('c2-new').addEventListener('click',function(){S2.seed++;S2.mbSel=null;go()});
+  bindC('c2-truth',S2,'truth',go);bindP('c2-m',S2,'method',go);
+  bindS('c2-link',S2,'link',go);bindR('c2-hk',S2,'hk',go);
+  bindR('c2-ek',S2,'emK',go);bindS('c2-ei',S2,'emInit',go);bindC('c2-ell',S2,'showEll',go);bindC('c2-soft',S2,'soft',go);
+  $('c2-eE').addEventListener('click',function(){emStop();emE();go()});$('c2-eM').addEventListener('click',function(){emStop();emM();go()});
+  $('c2-eF').addEventListener('click',function(){emStop();emFull();go()});$('c2-eN').addEventListener('click',function(){emStop();S2.emSeed++;EM=null;go()});
+  $('c2-eR').addEventListener('click',function(){if(emTimer){emStop();return}$('c2-eR').textContent='Pause ⏸';emTimer=setInterval(function(){emFull();render2();if(EM.done||EM.iter>=300)emStop()},220)});
+  bindR('c2-mk',S2,'mbMax',function(){S2.mbSel=null;go()});
+  MODELS.forEach(function(m){$('c2-mo-'+m[0]).addEventListener('change',function(){S2.mbOn[m[0]]=this.checked;if(!MODELS.some(function(q){return S2.mbOn[q[0]]})){S2.mbOn[m[0]]=true;this.checked=true}S2.mbSel=null;go()})});
+  $('p-k2').addEventListener('click',function(e){var t=e.target.closest('[data-mk]');if(!t)return;var p=t.getAttribute('data-mk').split('-');S2.mbSel={m:p[0],k:+p[1]};render2()});
+}
+function emStop(){if(emTimer){clearInterval(emTimer);emTimer=null}var b=$('c2-eR');if(b)b.textContent='Run ▶'}
+function getD2(){
+  var s=S2,key=[s.data,s.n,s.spread,s.seed].join('|');
+  if(D2.key!==key){var g=genCluster(s.data,s.n,s.spread,s.seed);D2={key:key,X:g.X,lab:g.lab,trueK:Math.max.apply(null,g.lab)+1,floor:gmmFloor(g.X)}}
+  return D2;
+}
+function labShapes(d){return S2.truth?d.lab:null}
+/* ---- EM state machine ---- */
+function emInit(d){
+  var K=S2.emK,key=[d.key,K,S2.emInit,S2.emSeed].join('|');
+  if(EM&&EM.key===key)return;
+  var g=globalCov(d.X),th={pi:rep(K,function(){return 1/K}),mu:initMeans(d.X,K,S2.emInit,S2.emSeed),cov:rep(K,function(){return g.slice()})},e=gmmE(d.X,th);
+  EM={key:key,K:K,theta:th,R:e.R,ll:e.ll,trace:[e.ll],iter:0,phase:'E',done:false};
+}
+function emE(){var d=getD2(),e=gmmE(d.X,EM.theta);EM.R=e.R;EM.ll=e.ll;EM.phase='E'}
+function emM(){var d=getD2();EM.theta=gmmM(d.X,EM.R,EM.K,'VVV',d.floor,EM.theta);var e=gmmE(d.X,EM.theta),prev=EM.trace[EM.trace.length-1];EM.ll=e.ll;EM.trace.push(e.ll);EM.iter++;EM.phase='M';EM.done=Math.abs(e.ll-prev)<1e-6*Math.abs(e.ll)}
+function emFull(){if(EM.phase==='M')emE();emM();emE()}
+
+function labelsToFills(lab){return lab.map(function(l){return catc(l)})}
+function qualityTiles(d,lab,extra){
+  var K=Math.max.apply(null,lab)+1,a=ari(d.lab,lab),s=silhouette(d.X,lab);
+  return '<div class="tiles">'+(extra||'')+tile(K,'Clusters found')+tile(d.trueK,'True groups')+tile(a.toFixed(2),'ARI vs truth (1 = perfect)')+tile(isNaN(s)?'–':s.toFixed(2),'Mean silhouette')+'</div>';
+}
+var LINKTIP={single:'Single linkage joins clusters by their <b>closest</b> pair of points, so it can follow curved chains (moons, rings) but is easily pulled together by a few stray points.',complete:'Complete linkage uses the <b>farthest</b> pair of points, which favours compact clusters of similar diameter and can split elongated ones.',average:'Average linkage uses the <b>mean</b> of all pairwise distances, a compromise between single and complete.',ward:'Ward linkage merges the pair that adds the <b>least within-cluster variance</b>, which tends to give round, similar-sized clusters.'};
+
+function dendroSVG(M,n,K,lab){
+  var W=760,H=300,m={l:48,r:10,t:10,b:22},pw=W-m.l-m.r,ph=H-m.t-m.b,i,j;
+  var top=M[n-2].h,cutH=K<=1?top*1.03:(M[n-K-1].h+M[n-K].h)/2,ymax=Math.max(top,cutH)*1.06,y=lin(0,ymax,m.t+ph,m.t);
+  var L=new Array(2*n-1),Rr=new Array(2*n-1);M.forEach(function(g,q){L[n+q]=g.a;Rr[n+q]=g.b});
+  var order=[],st=[2*n-2];
+  while(st.length){var v=st.pop();if(v<n)order.push(v);else{st.push(Rr[v]);st.push(L[v])}}
+  var xs=new Array(2*n-1),hs=new Array(2*n-1).fill(0),nl=new Array(2*n-1).fill(-1);
+  order.forEach(function(p,q){xs[p]=m.l+(q+0.5)/n*pw;nl[p]=lab[p]});
+  var paths={};function add(c,d){paths[c]=(paths[c]||'')+d}
+  M.forEach(function(g,q){var id=n+q;xs[id]=(xs[g.a]+xs[g.b])/2;hs[id]=g.h;nl[id]=q<n-K?nl[g.a]:-1;
+    var cA=nl[g.a]>=0?catc(nl[g.a]):'g',cB=nl[g.b]>=0?catc(nl[g.b]):'g',cH=nl[id]>=0?catc(nl[id]):'g';
+    add(cA,'M'+xs[g.a].toFixed(1)+','+y(hs[g.a]).toFixed(1)+'V'+y(g.h).toFixed(1));
+    add(cB,'M'+xs[g.b].toFixed(1)+','+y(hs[g.b]).toFixed(1)+'V'+y(g.h).toFixed(1));
+    add(cH,'M'+xs[g.a].toFixed(1)+','+y(g.h).toFixed(1)+'H'+xs[g.b].toFixed(1))});
+  var o=svgOpen(W,H,'Dendrogram of merges with a dashed cut line');
+  niceTicks(0,ymax,4).forEach(function(t){o+='<line class="gr" x1="'+m.l+'" x2="'+(W-m.r)+'" y1="'+y(t)+'" y2="'+y(t)+'"/><text x="'+(m.l-6)+'" y="'+(y(t)+4)+'" text-anchor="end">'+tl(t)+'</text>'});
+  o+='<text transform="rotate(-90)" x="'+(-(m.t+ph/2))+'" y="12" text-anchor="middle">Merge height (distance)</text>';
+  Object.keys(paths).forEach(function(c){o+='<path d="'+paths[c]+'" fill="none" stroke="'+(c==='g'?'var(--muted)':c)+'" stroke-width="'+(c==='g'?1.4:1.8)+'" stroke-opacity="'+(c==='g'?.8:1)+'"/>'});
+  o+='<line class="bd" x1="'+m.l+'" x2="'+(W-m.r)+'" y1="'+y(cutH)+'" y2="'+y(cutH)+'"/><text class="strong" x="'+(W-m.r)+'" y="'+(y(cutH)-5)+'" text-anchor="end">cut: K = '+K+'</text>';
+  o+='<text x="'+(m.l+pw/2)+'" y="'+(H-5)+'" text-anchor="middle">Each leaf is one point (ordered by the tree)</text></svg>';
+  return o;
+}
+function jumpSVG(M,n,K){
+  var W=380,H=220,m={l:46,r:10,t:10,b:34},pw=W-m.l-m.r,ph=H-m.t-m.b,js=[],j;
+  for(j=2;j<=10&&j<=n;j++)js.push([j,M[n-j].h]);
+  var ymax=Math.max.apply(null,js.map(function(a){return a[1]}))*1.08,y=lin(0,ymax,m.t+ph,m.t),bw=pw/js.length,o=svgOpen(W,H,'Bar chart of the height needed to merge j clusters into j minus 1');
+  niceTicks(0,ymax,4).forEach(function(t){o+='<line class="gr" x1="'+m.l+'" x2="'+(m.l+pw)+'" y1="'+y(t)+'" y2="'+y(t)+'"/><text x="'+(m.l-6)+'" y="'+(y(t)+4)+'" text-anchor="end">'+tl(t)+'</text>'});
+  js.forEach(function(a,i){o+='<rect x="'+(m.l+i*bw+3)+'" y="'+y(a[1])+'" width="'+(bw-6)+'" height="'+(m.t+ph-y(a[1]))+'" rx="2" fill="'+(a[0]===K?'var(--b)':'var(--a)')+'" fill-opacity="'+(a[0]===K?1:.55)+'"/><text x="'+(m.l+i*bw+bw/2)+'" y="'+(m.t+ph+14)+'" text-anchor="middle">'+a[0]+'</text>'});
+  return o+'<text x="'+(m.l+pw/2)+'" y="'+(H-4)+'" text-anchor="middle">j = clusters before the merge</text></svg>';
+}
+function renderHier(d){
+  var key=d.key+'|'+S2.link;if(H2.key!==key)H2={key:key,M:hclust(d.X,S2.link)};
+  var n=d.X.length,K=Math.min(S2.hk,n),lab=cutTree(H2.M,n,K);
+  $('p-k1').innerHTML='<h2><span class="n">1</span>Hierarchical clustering: '+S2.link+' linkage, cut at K = '+K+'</h2>'+scatterSVG(d.X,{fills:labelsToFills(lab),labs:labShapes(d),label:'Scatter plot of points coloured by cluster'})+qualityTiles(d,lab)
+   +'<div class="msg">'+LINKTIP[S2.link]+' '+(d.trueK===1?'These data have no real groups.':'The data were generated from <b>'+d.trueK+'</b> groups.')+'</div>';
+  $('p-k2').innerHTML='<h2><span class="n">2</span>Dendrogram</h2>'+dendroSVG(H2.M,n,K,lab)+'<div class="two" style="margin-top:12px"><div><p class="cap">Where to cut?</p>'+jumpSVG(H2.M,n,K)+'</div><div class="msg" style="margin:0;align-self:center">Reading the tree: a tall bar at j followed by a much shorter bar at j + 1 means the tree stays stable until it is forced to merge j groups, so j clusters is a natural choice. The orange bar marks your current cut (K = '+K+'). The dashed line in the dendrogram is that cut.</div></div>';
+}
+function renderEM(d){
+  emInit(d);var th=EM.theta,K=EM.K,n=d.X.length,i,k;
+  var fills=[];for(i=0;i<n;i++)fills.push(blendFill(EM.R,i,K,S2.soft));
+  var ell=S2.showEll?th.mu.map(function(mu,q){return {mu:mu,cov:th.cov[q],col:catc(q)}}):[];
+  if(!S2.showEll)ell=[];
+  var lab=hardLabels(EM.R,n,K),prev=EM.trace.length>1?EM.trace[EM.trace.length-2]:null,dl=prev===null?null:EM.ll-prev;
+  $('p-k1').innerHTML='<h2><span class="n">1</span>Expectation-Maximization: Gaussian mixture, K = '+K+'</h2>'+scatterSVG(d.X,{fills:fills,labs:labShapes(d),ell:ell,label:'Scatter plot with Gaussian components found by EM'})
+   +qualityTiles(d,lab,tile(EM.iter,'Iterations')+tile(EM.ll.toFixed(1),'Log-likelihood'))
+   +'<div class="msg'+(EM.phase==='M'?' warn':'')+'">'+(EM.phase==='M'?'<b>M-step done:</b> weights, means and covariances were re-estimated, so the ellipses moved. Point colours still show the old responsibilities until the next E-step.':'<b>E-step done:</b> each point has a probability of belonging to every component (shown by colour blending). Press M-step to re-fit the components to those probabilities.')
+   +(EM.done?' <b>Converged:</b> the log-likelihood has stopped changing, so more iterations will not change the solution. It is a local maximum; Restart tries another starting point.':'')+'</div>';
+  var rows='';for(k=0;k<K;k++){var c=th.cov[k],sx=Math.sqrt(c[0]),sy=Math.sqrt(c[2]);rows+='<tr><td><span class="sw" style="background:'+catc(k)+'"></span>'+(k+1)+'</td><td>'+th.pi[k].toFixed(3)+'</td><td>'+nf(th.mu[k][0])+', '+nf(th.mu[k][1])+'</td><td>'+nf(sx)+'</td><td>'+nf(sy)+'</td><td>'+(c[1]/(sx*sy)).toFixed(2)+'</td></tr>'}
+  $('p-k2').innerHTML='<h2><span class="n">2</span>Log-likelihood and components</h2><div class="two"><div><p class="cap">Log-likelihood after each M-step</p>'+lineSVG(420,230,[{ys:EM.trace,col:'var(--a)'}],{markers:true,xlab:'Iteration',label:'Log-likelihood by iteration',ml:62,yfmt:function(v){return Math.round(v)}})+'</div><div><p class="cap">Components</p><div class="twrap"><table><thead><tr><th>#</th><th>Weight &pi;</th><th>Mean (x, y)</th><th>&sigma;x</th><th>&sigma;y</th><th>&rho;</th></tr></thead><tbody>'+rows+'</tbody></table></div><p class="note">EM maximises the log-likelihood: it can only go up. Try K = 1, 2, 4 or a different start to see why K must be chosen (and why Model-Based Clustering exists).</p></div></div>';
+}
+function mbCompute(d){
+  var key=d.key;if(MB.key===key||MB.busy===key)return;
+  MB.busy=key;
+  setTimeout(function(){
+    if(MB.busy!==key)return;
+    var fits={};
+    MODELS.forEach(function(m){fits[m[0]]=[null];for(var K=1;K<=9;K++){var f=fitGMM(d.X,K,m[0],1,2,120);f.bic=gmmBIC(f.ll,m[0],K,d.X.length);f.np=gmmParams(m[0],K);fits[m[0]].push(f)}});
+    if(MB.busy!==key)return;MB={key:key,busy:null,fits:fits};render2();
+  },30);
+}
+function renderMB(d){
+  if(MB.key!==d.key){
+    $('p-k1').innerHTML='<h2><span class="n">1</span>Model-Based Clustering</h2><div class="msg">Fitting 36 Gaussian mixture models (4 covariance structures × 1–9 clusters)…</div>';
+    $('p-k2').innerHTML='';mbCompute(d);return;
+  }
+  var all=[],Kmax=S2.mbMax,n=d.X.length;
+  MODELS.forEach(function(m){if(!S2.mbOn[m[0]])return;for(var K=1;K<=Kmax;K++){var f=MB.fits[m[0]][K];all.push({m:m[0],k:K,bic:f.bic,ll:f.ll,np:f.np,f:f})}});
+  all.sort(function(a,b){return b.bic-a.bic});
+  var best=all[0],sel=S2.mbSel&&MB.fits[S2.mbSel.m]&&S2.mbSel.k<=Kmax&&S2.mbOn[S2.mbSel.m]?all.filter(function(a){return a.m===S2.mbSel.m&&a.k===S2.mbSel.k})[0]:best;
+  var fit=sel.f,lab=hardLabels(fit.R,n,sel.k),ell=fit.th.mu.map(function(mu,q){return {mu:mu,cov:fit.th.cov[q],col:catc(q)}});
+  $('p-k1').innerHTML='<h2><span class="n">1</span>Model-Based Clustering: '+sel.m+' with '+sel.k+' cluster'+(sel.k>1?'s':'')+(sel===best?' (best BIC)':' (your choice)')+'</h2>'
+   +scatterSVG(d.X,{fills:labelsToFills(lab),labs:labShapes(d),ell:ell,label:'Scatter plot with the selected mixture model'})
+   +qualityTiles(d,lab,tile(Math.round(sel.bic),'BIC (higher = better)')+tile(sel.np,'Parameters'))
+   +'<div class="msg">BIC picks <b>'+best.m+'</b> with <b>'+best.k+'</b> cluster'+(best.k>1?'s':'')+'. '+(d.trueK===1?'These data have no real groups.':'The data were generated from <b>'+d.trueK+'</b> groups.')+' '+({EII:'EII fits equal-sized circles.',VII:'VII fits circles whose sizes may differ.',EEE:'EEE fits ellipses that share one size, shape and tilt.',VVV:'VVV lets every cluster have its own size, shape and tilt.'}[sel.m])+' BIC rewards fit but charges for every parameter, so it stops adding clusters once they no longer pay for themselves.'+((best.m!==sel.m||best.k!==sel.k)?'':'')+'</div>';
+  var yb=best.bic,yw=Math.min.apply(null,all.map(function(a){return a.bic})),yl=Math.max(yw,yb-Math.max(60,0.22*(yb-yw))),yh=yb+0.04*(yb-yl);
+  var W=640,H=300,m={l:64,r:14,t:26,b:36},pw=W-m.l-m.r,ph=H-m.t-m.b,x=lin(1,Math.max(2,Kmax),m.l+14,m.l+pw-14),y=lin(yl,yh,m.t+ph,m.t),o=svgOpen(W,H,'BIC for each covariance model and number of clusters');
+  niceTicks(yl,yh,5).forEach(function(t){o+='<line class="gr" x1="'+m.l+'" x2="'+(m.l+pw)+'" y1="'+y(t)+'" y2="'+y(t)+'"/><text x="'+(m.l-6)+'" y="'+(y(t)+4)+'" text-anchor="end">'+Math.round(t)+'</text>'});
+  for(var K=1;K<=Kmax;K++)o+='<text x="'+x(K)+'" y="'+(m.t+ph+15)+'" text-anchor="middle">'+K+'</text>';
+  o+='<line class="ax" x1="'+m.l+'" x2="'+(m.l+pw)+'" y1="'+(m.t+ph)+'" y2="'+(m.t+ph)+'"/><text x="'+(m.l+pw/2)+'" y="'+(H-4)+'" text-anchor="middle">Number of clusters</text><text transform="rotate(-90)" x="'+(-(m.t+ph/2))+'" y="13" text-anchor="middle">BIC</text>';
+  var li=0;
+  MODELS.forEach(function(md){
+    if(!S2.mbOn[md[0]])return;var col=MCOL[md[0]],pts=[];
+    for(var K=1;K<=Kmax;K++)pts.push(x(K).toFixed(1)+','+y(Math.max(yl,MB.fits[md[0]][K].bic)).toFixed(1));
+    o+='<polyline fill="none" stroke="'+col+'" stroke-width="2" points="'+pts.join(' ')+'"/>';
+    o+='<rect x="'+(m.l+li*92)+'" y="5" width="10" height="10" rx="2" fill="'+col+'"/><text x="'+(m.l+li*92+14)+'" y="14">'+md[0]+'</text>';li++;
+    for(var K2=1;K2<=Kmax;K2++){var f=MB.fits[md[0]][K2],isSel=sel.m===md[0]&&sel.k===K2,clip=f.bic<yl;
+      o+='<circle class="hit" data-mk="'+md[0]+'-'+K2+'" cx="'+x(K2)+'" cy="'+y(Math.max(yl,f.bic))+'" r="'+(isSel?7:4.5)+'" fill="'+(clip?'var(--panel)':col)+'" stroke="'+(isSel?'var(--ink)':col)+'" stroke-width="'+(isSel?2.5:1.5)+'"><title>'+md[0]+', '+K2+' clusters: BIC '+Math.round(f.bic)+'</title></circle>'}
+  });
+  o+='<text x="'+x(best.k)+'" y="'+(y(best.bic)-12)+'" text-anchor="middle" class="strong" style="font-weight:700">best</text></svg>';
+  var rows='';all.slice(0,6).forEach(function(a,i){rows+='<tr><td>'+(i+1)+'</td><td class="l"><span class="sw" style="background:'+MCOL[a.m]+'"></span>'+a.m+'</td><td>'+a.k+'</td><td>'+Math.round(a.bic)+'</td><td>'+(i?'−'+(best.bic-a.bic).toFixed(1):'–')+'</td><td>'+a.np+'</td><td><button type="button" class="pill" data-mk="'+a.m+'-'+a.k+'">View</button></td></tr>'});
+  $('p-k2').innerHTML='<h2><span class="n">2</span>BIC across models and cluster counts</h2><p class="note">Click any point to see that model above. Hollow points are below the plotted range and pinned to the bottom edge.</p>'+o
+   +'<div class="twrap" style="margin-top:10px"><table><thead><tr><th>Rank</th><th class="l">Model</th><th>Clusters</th><th>BIC</th><th>&Delta; BIC</th><th>Params</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div><p class="note">A BIC difference above about 10 is strong evidence for the higher model. Models within a few points of each other are hard to tell apart.</p>';
+}
+function render2(){
+  var s=S2,d=getD2();
+  show('c2-hb',s.method==='hier');show('c2-eb',s.method==='em');show('c2-mb',s.method==='mb');
+  if(s.method!=='em')emStop();
+  setPills('c2-m',s.method);
+  if(s.method==='hier')renderHier(d);else if(s.method==='em')renderEM(d);else renderMB(d);
+}
+
+
+/* =====================  start-up  ===================== */
+(function(){
+  var DEF={k:{link:S2.link,hk:S2.hk,emK:S2.emK,emInit:S2.emInit,emSeed:S2.emSeed,showEll:S2.showEll,soft:S2.soft,mbMax:S2.mbMax}};
+  build2();
+  function setC(id,v){var e=$(id);if(!e)return;if(e.type==='checkbox')e.checked=v;else e.value=v;var o=$(id+'-o');if(o)o.textContent=id==='c2-sp'?(+v).toFixed(2):v}
+  $('c2-rs').addEventListener('click',function(){emStop();Object.assign(S2,DEF.k);S2.mbOn={EII:true,VII:true,EEE:true,VVV:true};S2.mbSel=null;EM=null;setC('c2-link',S2.link);setC('c2-hk',S2.hk);setC('c2-ek',S2.emK);setC('c2-ei',S2.emInit);setC('c2-ell',S2.showEll);setC('c2-soft',S2.soft);setC('c2-mk',S2.mbMax);MODELS.forEach(function(m){setC('c2-mo-'+m[0],true)});sched('r2',render2)});
+  $('keybtn').addEventListener('change',function(){$('key').hidden=!this.checked});
+  render2();
+})();
+</script>
+</body>
+</html>
