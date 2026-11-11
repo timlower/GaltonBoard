@@ -142,6 +142,9 @@ button.crumb:hover{color:var(--accent)}button.crumb b{color:var(--ink)}
 .dlist li{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;margin:7px 0}
 .dlist li span{color:var(--muted);font-size:.88rem;flex:1 1 220px}
 .glance th,.glance td{vertical-align:top}
+.ownerr{color:var(--rej);font-weight:600;font-size:.85rem;margin:8px 0 0}
+input[readonly]{background:var(--soft);cursor:default}
+@media(max-width:600px){dl.key{grid-template-columns:1fr;gap:2px 0}dl.key dd{margin:0 0 8px;overflow-wrap:anywhere}}
 </style>
 </head>
 <body>
@@ -163,9 +166,15 @@ button.crumb:hover{color:var(--accent)}button.crumb b{color:var(--ink)}
 <main>
   <aside class="panel controls" aria-label="Controls">
     <h2>Setup</h2>
-    <div class="row" id="presets"></div>
+    <div class="row sim" id="presets"></div>
 
-    <div data-tabs="gof">
+    <h3>Data source</h3>
+    <div class="seg" role="radiogroup" aria-label="Data source">
+      <label><input type="radio" name="src" value="sim" checked><span>Simulated</span></label>
+      <label><input type="radio" name="src" value="own"><span>My own data</span></label>
+    </div>
+
+    <div data-tabs="gof" class="sim">
       <h3>Sample</h3>
       <div class="sl"><label for="sl_k"><span>Categories</span><output id="o_sl_k"></output></label><input type="range" id="sl_k" min="2" max="8" step="1"></div>
       <div class="sl"><label for="sl_gn"><span>Sample size (n)</span><output id="o_sl_gn"></output></label><input type="range" id="sl_gn" min="20" max="1000" step="10"></div>
@@ -175,28 +184,59 @@ button.crumb:hover{color:var(--accent)}button.crumb b{color:var(--ink)}
 
     <div data-tabs="binom">
       <h3>Trials and H₀</h3>
-      <div class="sl"><label for="sl_bn"><span>Trials (n)</span><output id="o_sl_bn"></output></label><input type="range" id="sl_bn" min="5" max="300" step="1"></div>
-      <div class="sl"><label for="sl_bx"><span>Successes (x)</span><output id="o_sl_bx"></output></label><input type="range" id="sl_bx" min="0" max="20" step="1"></div>
+      <div class="sl sim"><label for="sl_bn"><span>Trials (n)</span><output id="o_sl_bn"></output></label><input type="range" id="sl_bn" min="5" max="300" step="1"></div>
+      <div class="sl sim"><label for="sl_bx"><span>Successes (x)</span><output id="o_sl_bx"></output></label><input type="range" id="sl_bx" min="0" max="20" step="1"></div>
       <div class="sl"><label for="sl_bp0"><span>Hypothesised proportion p₀</span><output id="o_sl_bp0"></output></label><input type="range" id="sl_bp0" min="5" max="95" step="1"></div>
       <div class="sl"><label for="sl_bt"><span>True proportion</span><output id="o_sl_bt"></output></label><input type="range" id="sl_bt" min="1" max="99" step="1"></div>
-      <div class="row"><button class="pill" id="bNew" type="button">Draw a random sample</button></div>
+      <div class="row sim"><button class="pill" id="bNew" type="button">Draw a random sample</button></div>
     </div>
 
     <div data-tabs="ind or fisher assoc cmp">
-      <h3>Table and sample</h3>
-      <div data-tabs="ind fisher assoc cmp">
+      <h3 class="sim">Table and sample</h3>
+      <div data-tabs="ind fisher assoc cmp" class="sim">
       <div class="sl"><label for="sl_R"><span>Rows</span><output id="o_sl_R"></output></label><input type="range" id="sl_R" min="2" max="4" step="1"></div>
       <div class="sl"><label for="sl_C"><span>Columns</span><output id="o_sl_C"></output></label><input type="range" id="sl_C" min="2" max="4" step="1"></div>
       </div>
-      <div class="sl"><label for="sl_in"><span>Sample size (n)</span><output id="o_sl_in"></output></label><input type="range" id="sl_in" min="20" max="1000" step="10"></div>
-      <div class="sl"><label for="sl_id"><span>True association</span><output id="o_sl_id"></output></label><input type="range" id="sl_id" min="0" max="80" step="1"></div>
+      <div class="sl sim"><label for="sl_in"><span>Sample size (n)</span><output id="o_sl_in"></output></label><input type="range" id="sl_in" min="20" max="1000" step="10"></div>
+      <div class="sl sim"><label for="sl_id"><span>True association</span><output id="o_sl_id"></output></label><input type="range" id="sl_id" min="0" max="80" step="1"></div>
       <div class="row">
-        <button class="pill" id="iNew">New random sample</button>
+        <button class="pill sim" id="iNew">New random sample</button>
         <button class="pill" id="yatesBtn" aria-pressed="false" data-tabs="ind" hidden>Yates correction: off</button>
       </div>
     </div>
 
-    <div class="truth" id="truth" hidden></div>
+    <div data-tabs="gof" class="own">
+      <h3>Your data</h3>
+      <div class="opt"><label for="own_gof_fmt">Format</label>
+        <select id="own_gof_fmt"><option value="counts">Category counts</option><option value="raw">Raw cases (one category per case)</option></select></div>
+      <div class="opt"><label for="own_gof_txt">Data</label><textarea id="own_gof_txt" spellcheck="false"></textarea></div>
+      <button class="pill loadSim" type="button">Load current simulated data into box</button>
+      <p class="ownerr" id="own_gof_err" hidden></p>
+      <p class="cap" id="own_gof_cap"></p>
+    </div>
+
+    <div data-tabs="binom" class="own">
+      <h3>Your data</h3>
+      <div class="opt"><label for="own_binom_fmt">Format</label>
+        <select id="own_binom_fmt"><option value="counts">Counts: successes and trials</option><option value="raw">Raw outcomes (one per trial)</option></select></div>
+      <div class="opt"><label for="own_binom_txt">Data</label><textarea id="own_binom_txt" spellcheck="false"></textarea></div>
+      <div class="opt" id="own_binom_succ_box" hidden><label for="own_binom_succ">Count as a success</label><select id="own_binom_succ"></select></div>
+      <button class="pill loadSim" type="button">Load current simulated data into box</button>
+      <p class="ownerr" id="own_binom_err" hidden></p>
+      <p class="cap" id="own_binom_cap"></p>
+    </div>
+
+    <div data-tabs="ind or fisher assoc cmp" class="own">
+      <h3>Your data</h3>
+      <div class="opt"><label for="own_tab_fmt">Format</label>
+        <select id="own_tab_fmt"><option value="counts">Table of counts</option><option value="raw">Raw cases (row value, column value)</option></select></div>
+      <div class="opt"><label for="own_tab_txt">Data</label><textarea id="own_tab_txt" spellcheck="false" style="min-height:120px"></textarea></div>
+      <button class="pill loadSim" type="button">Load current simulated data into box</button>
+      <p class="ownerr" id="own_tab_err" hidden></p>
+      <p class="cap" id="own_tab_cap"></p>
+    </div>
+
+    <div class="truth sim" id="truth" hidden></div>
 
     <div data-tabs="gof binom ind or fisher assoc cmp">
       <h3>Test options</h3>
@@ -416,6 +456,7 @@ button.crumb:hover{color:var(--accent)}button.crumb b{color:var(--ink)}
       <dt>True departure / association</dt><dd>How far the population being sampled is from H₀ (0 = H₀ exactly true). The population's own w, φ or V is shown under the sliders.</dd>
       <dt>Margins</dt><dd>The row and column totals of a table.</dd>
       <dt>Effect size</dt><dd>How large an effect is, independent of whether it is statistically significant.</dd>
+      <dt>Data source</dt><dd>Simulated data come from the sliders and presets. With My own data you paste counts, or raw cases that are tallied for you, and every table, chart and result is computed from them. The H₀ weights on the goodness-of-fit tab stay editable.</dd>
       <dt>Simulation</dt><dd>1,000 random samples drawn assuming H₀ is true. Their χ² histogram should hug the curve; the share beyond your χ² approximates p.</dd>
     </dl>
   </div>
@@ -582,15 +623,181 @@ const FONT='11px system-ui,sans-serif';
 /* ============ State ============ */
 const TABS=['gof','binom','ind','or','fisher','assoc','cmp'];
 const letters=k=>Array.from({length:k},(_,i)=>String.fromCharCode(65+i));
-const S={tab:'gof',alpha:.05,yates:false,seed:7,sim:null,drag:-1,ylock:0,ycur:10,c:null,truthG:'',truthI:'',
+const S={tab:'gof',source:'sim',snap:null,ownErr:'',ownKey:'',ownSucc:'',alpha:.05,yates:false,seed:7,sim:null,drag:-1,ylock:0,ycur:10,c:null,truthG:'',truthI:'',
   k:6,gn:120,gd:30,obs:[],w:[],gl:[],
   R:2,C:2,iN:100,iA:30,t:[],rl:[],cl:[],tails:'two',fmeth:'exact',simSeed:1,bn:20,bx:14,bp0:50,bt:50};
 const isGof=()=>S.tab==='gof';
 const yatesOn=()=>S.tab==='ind'&&S.R===2&&S.C===2&&S.yates;
 
 /* ============ Statistics ============ */
+/* ============ Own data ("Data source") ============ */
+const OWNFAM=()=>S.tab==='gof'?'gof':S.tab==='binom'?'binom':'tab';
+const isNum=s=>s!==''&&isFinite(+s);
+const splitLines=t=>t.split(/\r?\n/).map(l=>l.trim()).filter(l=>l!=='');
+const splitFields=l=>(/[,;\t]/.test(l)?l.split(/[,;\t]/):l.split(/\s+/)).map(x=>x.trim());
+const wholeNum=v=>Number.isInteger(v)&&v>=0;
+const NOTCOUNT='Counts must be whole numbers of 0 or more.';
+function numTail(tk){let i=tk.length;while(i>0&&isNum(tk[i-1]))i--;return i;}
+function sortLabs(a){return a.every(isNum)?a.slice().sort((x,y)=>x-y):a;}
+function parseGofCounts(txt){
+  const L=splitLines(txt),T=L.map(splitFields);
+  const allNum=T.every(tk=>tk.every(isNum));
+  let gl=[],obs=[],w=[];
+  if(allNum&&(L.length===1||T.every(tk=>tk.length===1))){
+    const nums=T.flat().map(Number);
+    gl=letters(nums.length);obs=nums;w=null;
+  }else{
+    let first=true;
+    for(const tk of T){
+      const k0=numTail(tk);
+      if(k0===tk.length){if(first){first=false;continue;}return{err:'I could not find a count on the line “'+tk.join(' ')+'”.'};}
+      first=false;
+      let lab=tk.slice(0,k0).join(' ').trim(),nums=tk.slice(k0).map(Number);
+      if(!lab){lab=String(nums[0]);nums=nums.slice(1);}
+      if(!nums.length)return{err:'The line “'+tk.join(' ')+'” has a label but no count.'};
+      if(nums.length>2)return{err:'Each line should be a label, a count and (optionally) an H₀ weight.'};
+      gl.push(lab);obs.push(nums[0]);w.push(nums.length===2?nums[1]:null);
+    }
+    const nw=w.filter(v=>v!=null).length;
+    if(nw===0)w=null;
+    else if(nw!==w.length)return{err:'Give an H₀ weight on every line, or on none of them.'};
+    else if(w.some(v=>!(v>0)))return{err:'H₀ weights must be positive numbers.'};
+  }
+  if(!obs.length)return{err:'I could not find any counts. Use one line per category: a label followed by its count.'};
+  if(obs.some(v=>!wholeNum(v)))return{err:NOTCOUNT};
+  if(obs.length<2||obs.length>8)return{err:'Found '+obs.length+' categor'+(obs.length===1?'y':'ies')+'. This tab handles 2 to 8.'};
+  return{gl,obs,w};
+}
+function parseGofRaw(txt){
+  let tk=txt.split(/[\n,;\t]+/).map(s=>s.trim()).filter(s=>s!=='');
+  if(tk.length===1)tk=tk[0].split(/\s+/);
+  if(tk.length>20000)return{err:'Please keep the data to 20,000 cases or fewer.'};
+  const m=new Map();tk.forEach(v=>m.set(v,(m.get(v)||0)+1));
+  const gl=sortLabs([...m.keys()]);
+  if(gl.length<2||gl.length>8)return{err:'Found '+gl.length+' different categor'+(gl.length===1?'y':'ies')+' among '+tk.length+' cases. This tab handles 2 to 8.'};
+  return{gl,obs:gl.map(k=>m.get(k)),w:null};
+}
+function parseMatrix(txt){
+  const L=splitLines(txt);let hdr=null;const rows=[],labs=[];
+  for(const l of L){
+    const tk=splitFields(l),k0=numTail(tk);
+    if(k0===tk.length){
+      if(hdr||rows.length)return{err:'I could not find counts on the line “'+l+'”. Each row is an optional label followed by counts.'};
+      hdr=tk.filter((x,i)=>!(i===0&&x===''));continue;
+    }
+    labs.push(tk.slice(0,k0).join(' ').trim());rows.push(tk.slice(k0).map(Number));
+  }
+  const R=rows.length,C=R?rows[0].length:0;
+  if(!R)return{err:'No counts found.'};
+  if(rows.some(r=>r.length!==C))return{err:'Every row needs the same number of counts (found '+[...new Set(rows.map(r=>r.length))].join(' and ')+').'};
+  if(rows.some(r=>r.some(v=>!wholeNum(v))))return{err:NOTCOUNT};
+  if(R>4||C>4)return{err:'This explorer handles tables up to 4 × 4 (yours is '+R+' × '+C+').'};
+  const rl=labs.map((s,i)=>s||'Row '+(i+1));
+  const cl=C===1?['Count']:(hdr&&hdr.length===C?hdr.map((s,j)=>s||'Col '+String.fromCharCode(65+j)):Array.from({length:C},(_,j)=>'Col '+String.fromCharCode(65+j)));
+  return{R,C,rl,cl,t:rows.flat()};
+}
+function parseRawTable(txt){
+  const L=splitLines(txt);
+  if(L.length>20000)return{err:'Please keep the data to 20,000 cases or fewer.'};
+  const T=L.map(splitFields);
+  const one=T.every(tk=>tk.length===1),two=T.every(tk=>tk.length===2);
+  if(!one&&!two)return{err:'Each line needs a row value and a column value (separated by a comma, tab or space), or a single value per line for one column.'};
+  const rv=[],cv=[];T.forEach(tk=>{rv.push(tk[0]);cv.push(two?tk[1]:'Count');});
+  const rl=sortLabs([...new Set(rv)]),cl=two?sortLabs([...new Set(cv)]):['Count'];
+  if(rl.length<2||cl.length<1)return{err:'Found only '+rl.length+' row value'+(rl.length===1?'':'s')+'; you need at least 2.'};
+  if(rl.length>4||cl.length>4)return{err:'This explorer handles tables up to 4 × 4 (found '+rl.length+' row values and '+cl.length+' column values).'};
+  const t=Array(rl.length*cl.length).fill(0);
+  rv.forEach((r,i)=>t[rl.indexOf(r)*cl.length+cl.indexOf(cv[i])]++);
+  return{R:rl.length,C:cl.length,rl,cl,t};
+}
+function parseBinom(txt,fmt){
+  if(fmt==='counts'){
+    const m=txt.match(/\d+(?:\.\d+)?/g)||[];
+    if(m.length!==2)return{err:'Enter the number of successes and the number of trials, for example “14 of 20”.'};
+    const x=+m[0],n=+m[1];
+    if(!wholeNum(x)||!wholeNum(n))return{err:NOTCOUNT};
+    if(n<1)return{err:'The number of trials must be at least 1.'};
+    if(n>1000)return{err:'Please keep the number of trials to 1,000 or fewer.'};
+    if(x>n)return{err:'Successes ('+x+') cannot exceed trials ('+n+').'};
+    return{x,n};
+  }
+  const tk=txt.split(/[\s,;]+/).filter(s=>s!=='');
+  if(tk.length>1000)return{err:'Please keep the data to 1,000 trials or fewer.'};
+  const labs=[...new Set(tk)];
+  if(labs.length>2)return{err:'Found '+labs.length+' different outcomes. The binomial test needs exactly two (success and failure).'};
+  const pref=/^(1|y|yes|true|t|success|s|h|heads|hit|positive|pos|win|w)$/i;
+  const OTHER='(the other outcome)';
+  let suc=labs.includes(S.ownSucc)||(labs.length===1&&S.ownSucc===OTHER)?S.ownSucc:(labs.find(l=>pref.test(l))||labs[0]);
+  return{x:tk.filter(v=>v===suc).length,n:tk.length,labs,suc};
+}
+function syncSucc(r){
+  const box=$('own_binom_succ_box'),sel=$('own_binom_succ');
+  const show=$('own_binom_fmt').value==='raw'&&r&&r.labs;box.hidden=!show;
+  if(!show)return;
+  const opts=r.labs.length===1?[r.labs[0],'(the other outcome)']:r.labs,sig=opts.join('\u0001');
+  if(sel.dataset.sig!==sig){sel.innerHTML=opts.map(o=>`<option>${o.replace(/&/g,'&amp;').replace(/</g,'&lt;')}</option>`).join('');sel.dataset.sig=sig;}
+  sel.value=r.suc;S.ownSucc=r.suc;
+}
+const OWNHELP={
+  gof:{counts:['Red 18\nBlue 22\nGreen 30\nYellow 30','One category per line: a label, its count, and optionally an H₀ weight (for example “Round yellow, 315, 9”). A single line of numbers such as 18 22 30 is also accepted. Use 2 to 8 categories.'],
+       raw:['Red\nBlue\nBlue\nGreen\nRed …','One category per case, separated by new lines or commas (spaces also work when labels have no spaces). Counts are tallied for you. Use 2 to 8 categories.']},
+  binom:{counts:['14 of 20','The number of successes, then the number of trials, for example “14 of 20” or “14, 20” (up to 1,000 trials).'],
+       raw:['S F S S F S …','One outcome per trial, separated by spaces, commas or new lines. Use exactly two different outcomes, then choose which one counts as a success.']},
+  tab:{counts:[',Improved,No change\nTreatment,26,24\nPlacebo,22,28','Paste a table of counts, one row per line. An optional first line gives the column labels and an optional first column gives the row labels. Up to 4 × 4. One column of counts is allowed on the Compare tab.'],
+       raw:['Treatment,Improved\nPlacebo,No change\nTreatment,No change …','One case per line: its row value, then its column value, separated by a comma or tab (or a space when the values have no spaces). A single value per line gives a one-column table. Counts are tallied for you.']}
+};
+function syncOwnHelp(){
+  ['gof','binom','tab'].forEach(f=>{const fmt=$('own_'+f+'_fmt').value,h=OWNHELP[f][fmt];$('own_'+f+'_txt').placeholder=h[0];$('own_'+f+'_cap').textContent=h[1];});
+}
+function snapshot(){return JSON.parse(JSON.stringify({k:S.k,gl:S.gl,w:S.w,obs:S.obs,R:S.R,C:S.C,rl:S.rl,cl:S.cl,t:S.t,bn:S.bn,bx:S.bx,yates:S.yates,truthG:S.truthG,truthI:S.truthI}));}
+function fixSimShape(){
+  if(S.tab!=='cmp'&&S.C<2){S.C=2;defaultsInd();drawInd();syncSliders();}
+  if(S.tab==='or'&&!(S.R===2&&S.C===2)){S.R=2;S.C=2;S.yates=false;defaultsInd();drawInd();syncSliders();}
+}
+function loadSim(){
+  const f=OWNFAM(),fmt=$('own_'+f+'_fmt').value,q=S.snap||snapshot();let s='';
+  if(f==='gof'){
+    if(fmt==='raw')s=q.obs.map((o,i)=>Array(o).fill(q.gl[i]).join('\n')).filter(Boolean).join('\n');
+    else{const hasW=q.w.some(v=>v!==1);s=q.gl.map((g,i)=>g+', '+q.obs[i]+(hasW?', '+q.w[i]:'')).join('\n');}
+  }else if(f==='binom'){
+    s=fmt==='raw'?[...Array(q.bx).fill('Success'),...Array(q.bn-q.bx).fill('Failure')].join(' '):q.bx+' of '+q.bn;
+  }else if(fmt==='raw'){
+    const out=[];for(let i=0;i<q.R;i++)for(let j=0;j<q.C;j++)for(let k=0;k<q.t[i*q.C+j];k++)out.push(q.C===1?q.rl[i]:q.rl[i]+', '+q.cl[j]);s=out.join('\n');
+  }else{
+    const h=q.C===1?[]:[','+q.cl.join(',')];
+    for(let i=0;i<q.R;i++)h.push(q.rl[i]+','+q.t.slice(i*q.C,(i+1)*q.C).join(','));s=h.join('\n');
+  }
+  $('own_'+f+'_txt').value=s;
+}
+function ensureOwn(){if(!$('own_'+OWNFAM()+'_txt').value.trim())loadSim();}
+function applyOwn(){
+  S.ownErr='';
+  if(S.source!=='own')return;
+  const f=OWNFAM(),fmt=$('own_'+f+'_fmt').value,txt=$('own_'+f+'_txt').value,box=$('own_'+f+'_err');
+  let r;
+  if(!txt.trim())r={err:'Paste your data into the box on the left, or load the current simulated data and edit it.'};
+  else{try{r=f==='gof'?(fmt==='raw'?parseGofRaw(txt):parseGofCounts(txt)):f==='binom'?parseBinom(txt,fmt):(fmt==='raw'?parseRawTable(txt):parseMatrix(txt));}catch(e){r={err:'I could not read these data.'};}}
+  S.truthG='';S.truthI='';
+  if(f==='binom')syncSucc(r.err?null:r);
+  if(r.err){S.ownErr=r.err;S.ownKey='';box.textContent=r.err;box.hidden=false;return;}
+  const key=f+'|'+fmt+'|'+JSON.stringify(r);
+  if(key!==S.ownKey){
+    S.ownKey=key;
+    if(f==='gof'){const same=r.gl.join('|')===S.gl.join('|');S.k=r.gl.length;S.gl=r.gl;S.obs=r.obs;S.w=r.w||(same&&S.w.length===S.k?S.w:Array(S.k).fill(1));buildTable();$('hyp').innerHTML=hypText();}
+    else if(f==='binom'){S.bn=r.n;S.bx=r.x;}
+    else{S.R=r.R;S.C=r.C;S.rl=r.rl;S.cl=r.cl;S.t=r.t;if(!(r.R===2&&r.C===2))S.yates=false;buildTable();$('hyp').innerHTML=hypText();}
+  }
+  let e='';
+  if(f==='tab'){
+    if(S.tab==='or'&&!(S.R===2&&S.C===2))e='The odds ratio needs a 2 × 2 table, and this one is '+S.R+' × '+S.C+'.';
+    else if(S.tab!=='cmp'&&S.C<2)e='This tab needs at least 2 columns. A single column works on the Compare tab.';
+  }
+  S.ownErr=e;box.textContent=e;box.hidden=!e;
+}
+
 function term(o,e){let d=Math.abs(o-e);if(yatesOn())d=Math.max(0,d-0.5);return d*d/e;}
 function compute(){
+  if(S.source==='own'&&S.ownErr)return{err:S.ownErr};
   const c={};
   if(isGof()){
     const n=sum(S.obs);
@@ -684,7 +891,7 @@ function buildTable(){
     const body=mk('tbody');
     for(let i=0;i<S.k;i++){
       const r=mk('tr');r.appendChild(mk('td',S.gl[i],'lab'));
-      let td=mk('td');td.appendChild(numInput(['data-o',i],S.obs[i],'Observed count for '+S.gl[i]));r.appendChild(td);
+      let td=mk('td');td.appendChild(numInput(['data-o',i],S.obs[i],'Observed count for '+S.gl[i]));if(S.source==='own')td.firstChild.readOnly=true;r.appendChild(td);
       td=mk('td');td.appendChild(numInput(['data-w',i],S.w[i],'Hypothesised weight for '+S.gl[i],'any'));r.appendChild(td);
       td=mk('td','–','num');td.id='e'+i;r.appendChild(td);
       td=mk('td','–','num');td.id='q'+i;r.appendChild(td);
@@ -702,7 +909,7 @@ function buildTable(){
       const rr=mk('tr');rr.appendChild(mk('th',S.rl[i],'lab'));
       for(let j=0;j<S.C;j++){
         const k=i*S.C+j,c=mk('td');
-        c.appendChild(numInput(['data-c',k],S.t[k],'Count for '+S.rl[i]+', '+S.cl[j]));
+        c.appendChild(numInput(['data-c',k],S.t[k],'Count for '+S.rl[i]+', '+S.cl[j]));if(S.source==='own')c.firstChild.readOnly=true;
         const sm=mk('small','');sm.id='x'+k;c.appendChild(sm);rr.appendChild(c);
       }
       const tt=mk('th','–');tt.id='rt'+i;rr.appendChild(tt);bd.appendChild(rr);
@@ -1359,8 +1566,9 @@ renderDecide();
 
 /* ============ Update cycle ============ */
 function render(){
-  syncUI();
+  applyOwn();syncUI();
   if(S.tab==='binom'){
+    if(S.source==='own'&&S.ownErr){['pRes','p2binom','p2bc','p2bsim','pHow'].forEach(id=>$(id).hidden=true);$('truth').hidden=true;return;}
     renderBinom();$('truth').hidden=true;
     let m=0;document.querySelectorAll('.stack>.panel').forEach(p=>{if(!p.hidden){const s=p.querySelector('h2 .n');if(s)s.textContent=++m;}});
     return;
@@ -1487,22 +1695,43 @@ function setFromY(i,m){
   const g=geom1();let v=Math.round((g.y1-m.y)/(g.y1-g.y0)*S.ycur);v=Math.max(0,Math.min(S.ycur,v));S.obs[i]=v;S.truthG='';
   const inp=$('tw').querySelector(`[data-o="${i}"]`);if(inp)inp.value=v;changed();
 }
-cv1.addEventListener('pointerdown',e=>{if(!isGof())return;const m=pos(e),i=bandAt(m);if(i>=0){S.drag=i;S.ylock=S.ycur;cv1.setPointerCapture(e.pointerId);setFromY(i,m);}});
+cv1.addEventListener('pointerdown',e=>{if(!isGof()||S.source==='own')return;const m=pos(e),i=bandAt(m);if(i>=0){S.drag=i;S.ylock=S.ycur;cv1.setPointerCapture(e.pointerId);setFromY(i,m);}});
 cv1.addEventListener('pointermove',e=>{if(S.drag<0)return;setFromY(S.drag,pos(e));});
 function up(){if(S.drag>=0){S.drag=-1;S.ylock=0;render();}}
 cv1.addEventListener('pointerup',up);cv1.addEventListener('pointercancel',up);
 
+/* data source */
+document.querySelectorAll('input[name=src]').forEach(el=>el.addEventListener('change',e=>{
+  const v=e.target.value;if(v===S.source)return;
+  if(v==='own'){S.snap=snapshot();S.source='own';S.ownKey='';ensureOwn();}
+  else{
+    S.source='sim';S.ownKey='';S.ownErr='';
+    if(S.snap){Object.assign(S,JSON.parse(JSON.stringify(S.snap)));}
+    fixSimShape();syncSliders();$('sl_bx').max=S.bn;
+  }
+  S.sim=null;rebuild();
+}));
+['gof','binom','tab'].forEach(f=>{
+  $('own_'+f+'_txt').addEventListener('input',()=>{S.sim=null;render();});
+  $('own_'+f+'_fmt').addEventListener('change',()=>{syncOwnHelp();S.ownKey='';if(!$('own_'+f+'_txt').value.trim())loadSim();render();});
+});
+$('own_binom_succ').addEventListener('change',function(){S.ownSucc=this.value;S.ownKey='';render();});
+document.querySelectorAll('.loadSim').forEach(b=>b.onclick=()=>{loadSim();S.sim=null;render();});
+syncOwnHelp();
+
 /* tabs, layout */
 function setTab(k){
   S.tab=k;S.sim=null;
-  if(k!=='cmp'&&S.C<2){S.C=2;defaultsInd();drawInd();syncSliders();}
-  if(k==='or'&&!(S.R===2&&S.C===2)){S.R=2;S.C=2;S.yates=false;defaultsInd();drawInd();syncSliders();}
+  if(S.source==='sim')fixSimShape();else ensureOwn();
   renderPresets();rebuild();
 }
 TABS.forEach(k=>$('tab-'+k).onclick=()=>{if(S.tab!==k)setTab(k);});
 function syncUI(){
   TABS.forEach(k=>$('tab-'+k).setAttribute('aria-selected',S.tab===k));
-  document.querySelectorAll('[data-tabs]').forEach(el=>{if(el.id==='yatesBtn')return;el.hidden=!el.dataset.tabs.split(' ').includes(S.tab);});
+  document.querySelector('input[name=src][value='+S.source+']').checked=true;
+  document.querySelectorAll('[data-tabs],.sim,.own').forEach(el=>{if(el.id==='yatesBtn')return;
+    let h=false;if(el.dataset.tabs&&!el.dataset.tabs.split(' ').includes(S.tab))h=true;
+    if(el.classList.contains('sim')&&S.source==='own')h=true;if(el.classList.contains('own')&&S.source==='sim')h=true;el.hidden=h;});
   $('sl_C').min=S.tab==='cmp'?1:2;$('sl_bx').max=S.bn;$('btails').value=S.tails;$('tails').value=S.tails;$('bmeth').value=S.fmeth;$('fmeth').value=S.fmeth;if(S.tab==='binom')$('truth').hidden=true;
   const two=S.R===2&&S.C===2;$('tailsBox').hidden=!(S.tab==='or'||S.tab==='fisher')||!two;$('fmethBox').hidden=S.tab!=='fisher'||!two;
   const yb=$('yatesBtn');yb.hidden=!(S.tab==='ind'&&S.R===2&&S.C===2);
@@ -1512,9 +1741,12 @@ function syncUI(){
   $('dataCap').innerHTML=S.C===1&&S.tab==='cmp'?'One column: each row is a category, so the table is a goodness-of-fit problem with equal expected counts. Type counts in the table, or use the sliders for a random sample. Orange shading = more than expected, blue = fewer.':S.tab==='or'?'Type counts in the table, or use the sliders for a random sample. Rows are the two groups; the first column is the outcome of interest, so the odds ratio compares its odds between the rows. Bars show how each row splits across the outcomes.':isGof()
     ?'Click or drag a bar to change its observed count, or type counts and weights in the table. Orange shading in the last column = more than expected, blue = fewer.'
     :'Type counts in the table, or use the sliders for a random sample. If the variables were independent every bar would line up with the dashed overall split. Cell shading: orange = more than expected, blue = fewer.';
+  if(S.source==='own')$('dataCap').innerHTML=isGof()?'Your own counts. Edit the data in the box on the left, or change the H₀ weights in the table. Orange shading in the last column = more than expected, blue = fewer.'
+    :S.C===1&&S.tab==='cmp'?'Your own one-column table: each row is a category, so this is a goodness-of-fit problem with equal expected counts. Edit the data in the box on the left. Orange = more than expected, blue = fewer.'
+    :'Your own table, built from the box on the left. If the variables were independent every bar would line up with the dashed overall split. Cell shading: orange = more than expected, blue = fewer.';
   const tr=isGof()?S.truthG:S.truthI;$('truth').hidden=!tr;$('truth').innerHTML=tr;
-  cv1.style.cursor=isGof()?'ns-resize':'default';cv1.classList.toggle('drag',isGof());
-  cv1.setAttribute('aria-label',isGof()?'Bar chart of observed counts with expected counts marked. Bars can be dragged.':'Stacked bars showing how each row splits across columns, with the overall split dashed.');
+  const dragOK=isGof()&&S.source==='sim';cv1.style.cursor=dragOK?'ns-resize':'default';cv1.classList.toggle('drag',dragOK);
+  cv1.setAttribute('aria-label',isGof()?'Bar chart of observed counts with expected counts marked.'+(S.source==='sim'?' Bars can be dragged.':''):'Stacked bars showing how each row splits across columns, with the overall split dashed.');
 }
 
 /* theme */
