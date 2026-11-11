@@ -1,0 +1,1198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Non-Parametric Tests of Two Groups Explorer</title>
+<meta name="description" content="Interactive explorer for non-parametric tests of two groups: Mann-Whitney U, the median test, the Tukey-Duckworth quick test, the sign test and the Wilcoxon signed-rank test, with side-by-side comparisons on the same data.">
+<script>try{var t=localStorage.getItem("ttest-theme");if(t==="light"||t==="dark")document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
+<style>
+
+:root{
+  --bg:#f5f4ef;--panel:#ffffff;--ink:#1b1e25;--muted:#5b6370;--line:#dedbd1;--soft:#efede6;
+  --a:#2468d6;--b:#d9730d;--rej:#c8372d;--ok:#1b8a5a;--accent:#2468d6;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){--bg:#13151a;--panel:#1c1f26;--ink:#e8e9ed;--muted:#9aa1ae;--line:#323744;--soft:#252932;
+    --a:#6ba4ff;--b:#ffa24f;--rej:#ff7064;--ok:#4cc58c;--accent:#6ba4ff;}
+}
+:root[data-theme="dark"]{--bg:#13151a;--panel:#1c1f26;--ink:#e8e9ed;--muted:#9aa1ae;--line:#323744;--soft:#252932;
+    --a:#6ba4ff;--b:#ffa24f;--rej:#ff7064;--ok:#4cc58c;--accent:#6ba4ff;}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{padding:26px 22px 8px;max-width:1280px;margin:0 auto;position:relative}
+.theme-btn{position:absolute;top:26px;right:22px;border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:7px 14px;border-radius:999px;font:inherit;font-size:.85rem;font-weight:600;cursor:pointer}
+.theme-btn:hover{border-color:var(--accent)}
+@media(max-width:600px){.theme-btn{position:static;display:block;margin:0 0 10px auto}}
+h1{margin:0 0 4px;font-size:1.65rem;letter-spacing:-.01em}
+header p{margin:0;color:var(--muted);max-width:760px}
+.tabs{display:flex;gap:6px;margin-top:16px;flex-wrap:wrap}
+.tab{border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:9px 16px;border-radius:999px;font:inherit;font-weight:600;cursor:pointer}
+.tab[aria-selected="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.tab:focus-visible,.theme-btn:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,summary:focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 55%,transparent);outline-offset:2px}
+main{max-width:1280px;margin:0 auto;padding:14px 22px 30px;display:grid;grid-template-columns:330px minmax(0,1fr);gap:18px;align-items:start}
+@media(max-width:940px){main{grid-template-columns:1fr}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 18px}
+.controls{position:sticky;top:10px}
+@media(max-width:940px){.controls{position:static}}
+.stack{display:flex;flex-direction:column;gap:18px;min-width:0}
+h2{margin:0 0 10px;font-size:1.02rem}
+h2 .n{display:inline-block;background:var(--soft);border-radius:6px;padding:0 7px;margin-right:6px;color:var(--muted);font-variant-numeric:tabular-nums}
+h3{margin:14px 0 6px;font-size:.78rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+button.pill{border:1px solid var(--line);background:var(--soft);color:var(--ink);padding:5px 11px;border-radius:8px;font:inherit;font-size:.85rem;cursor:pointer}
+button.pill:hover{border-color:var(--accent)}
+.sl{margin:9px 0}
+.sl label{display:flex;justify-content:space-between;font-size:.88rem}
+.sl output{font-family:var(--mono);font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--accent)}
+fieldset{border:0;padding:0;margin:0}
+select,textarea,input[type=number]{font:inherit;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:6px 8px;width:100%}
+textarea{font-family:var(--mono);font-size:.85rem;min-height:84px;resize:vertical}
+.opt{margin:8px 0}.opt>label{display:block;font-size:.85rem;color:var(--muted);margin-bottom:3px}
+.seg{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg label{flex:1;text-align:center;padding:6px 4px;font-size:.85rem;cursor:pointer;color:var(--ink);margin:0}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg input:checked+span{background:var(--accent);color:#fff}
+.seg span{display:block;padding:6px 4px;margin:-6px -4px}
+.seg input:focus-visible+span{outline:3px solid color-mix(in srgb,var(--accent) 55%,transparent);outline-offset:-3px}
+.truth{font-size:.85rem;background:var(--soft);border-radius:8px;padding:7px 10px;margin-top:10px;color:var(--muted)}
+.truth b{color:var(--ink);font-family:var(--mono)}
+.charts{display:grid;grid-template-columns:minmax(0,2.1fr) minmax(0,1fr);gap:14px}
+@media(max-width:700px){.charts{grid-template-columns:1fr}}
+svg{width:100%;height:auto;display:block;overflow:visible}
+svg text{fill:var(--muted);font:11px system-ui,sans-serif}
+svg .ax{stroke:var(--line)}
+svg .strong{fill:var(--ink)}
+.cap{font-size:.82rem;color:var(--muted);margin:6px 0 0}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:.82rem;color:var(--muted);margin-top:6px}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.stat{background:var(--soft);border-radius:10px;padding:9px 12px}
+.stat small{display:block;color:var(--muted);font-size:.75rem}
+.stat b{font:600 1.15rem var(--mono);font-variant-numeric:tabular-nums}
+.badge{display:inline-block;padding:3px 10px;border-radius:999px;font-weight:700;font-size:.82rem;color:#fff}
+.badge.sig{background:var(--ok)}.badge.ns{background:#7b8392}
+.interp{margin:12px 0 0}
+.apa{font-family:var(--mono);font-size:.88rem;background:var(--soft);padding:8px 10px;border-radius:8px;display:flex;justify-content:space-between;gap:10px;align-items:center;margin-top:10px}
+table{border-collapse:collapse;width:100%;font-size:.88rem}
+th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line)}
+th{font-weight:600;color:var(--muted);font-size:.78rem}
+td.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+tr.sel td{background:color-mix(in srgb,var(--accent) 10%,transparent)}
+.bar{height:14px;border-radius:4px;background:var(--a)}
+.err{color:var(--rej);font-weight:600}
+details{max-width:1280px;margin:0 auto 10px;padding:0 22px}
+details .panel{margin-top:8px}
+details summary{cursor:pointer;font-weight:600}
+code,.f{font-family:var(--mono);font-size:.88rem}
+footer{max-width:1280px;margin:0 auto;padding:6px 22px 30px;color:var(--muted);font-size:.82rem}
+dl.key{display:grid;grid-template-columns:max-content 1fr;gap:6px 16px;margin:0}dl.key dt{font-family:var(--mono);font-size:.88rem;font-weight:600}dl.key dd{margin:0;color:var(--muted)}
+.tabrow{display:flex;align-items:center;gap:12px;margin-top:14px;flex-wrap:wrap}
+.tabrow-lab{font-size:.75rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);width:56px;flex:none}
+.tabrow .tabs{margin-top:0}
+.tabrow.sub .tab{padding:6px 14px;font-size:.88rem;font-weight:500}
+.pair{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+@media(max-width:700px){.pair{grid-template-columns:1fr}}
+.chartcap{font-size:.8rem;color:var(--muted);margin:0 0 5px;font-weight:600}
+.scroll{overflow-x:auto}
+th.num,td.num{text-align:right}
+td.num{white-space:nowrap}
+.badge{white-space:nowrap}
+[hidden]{display:none!important}
+
+.gtab{margin-top:12px}
+.gtab caption{caption-side:top;text-align:left;font-size:.78rem;font-weight:600;color:var(--muted);padding:0 0 4px}
+.gtab th,.gtab td{text-align:center}
+.gtab th:first-child,.gtab td:first-child{text-align:left}
+.gtab td.on{background:var(--accent);color:#fff;font-weight:700}
+.cmpt td.name{font-weight:600}
+.cmpt td.note{color:var(--muted);font-size:.82rem}
+.tabrow.sub[hidden]{display:none}
+.rel{margin:0;padding-left:20px}.rel li{margin:5px 0}
+.warn{background:color-mix(in srgb,var(--b) 14%,transparent);border-left:3px solid var(--b);border-radius:6px;padding:7px 10px;font-size:.88rem;margin:10px 0 0}
+.mini{width:100%;margin-top:10px}
+.mini caption{caption-side:top;text-align:left;font-size:.78rem;font-weight:600;color:var(--muted);padding:0 0 4px}
+.mini th,.mini td{text-align:right}.mini th:first-child,.mini td:first-child{text-align:left}
+
+.wz .dq{font-weight:600;margin:0 0 8px}
+.dopts{display:flex;flex-direction:column;gap:6px}
+button.dopt{text-align:left;border:1px solid var(--line);background:var(--soft);color:var(--ink);padding:9px 12px;border-radius:10px;font:inherit;font-size:.9rem;cursor:pointer}
+button.dopt:hover{border-color:var(--accent)}
+.crumbs{display:flex;flex-direction:column;gap:4px;margin-bottom:12px}
+button.crumb{text-align:left;border:0;background:transparent;color:var(--muted);font:inherit;font-size:.82rem;padding:2px 0;cursor:pointer}
+button.crumb:hover{color:var(--accent)}button.crumb b{color:var(--ink)}
+.dres{border-left:3px solid var(--accent);padding:2px 0 2px 14px}
+.dtitle{font-size:1.05rem;font-weight:700;margin:0 0 6px}
+.dlist{list-style:none;padding:0;margin:10px 0}
+.dlist li{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;margin:7px 0}
+.dlist li span{color:var(--muted);font-size:.88rem;flex:1 1 220px}
+.rel{margin:0;padding-left:20px}.rel li{margin:5px 0}
+.glance th,.glance td{vertical-align:top}
+</style>
+</head>
+<body>
+<header>
+  <button class="theme-btn" id="themeBtn" type="button" aria-label="Switch between light and dark theme"></button>
+  <h1>Non-Parametric Tests of Two Groups Explorer</h1>
+  <p>Explore the classic rank-based and count-based alternatives to the t test: <b>Mann–Whitney U</b>, the <b>median test</b> and the <b>Tukey–Duckworth</b> quick test for two independent groups, and the <b>sign test</b> and <b>Wilcoxon signed-rank test</b> for two repeated measures on the same people. Change the sample sizes, the population shape and the true difference, or paste your own data, then watch each statistic, p-value, effect size and null distribution respond, and compare the tests on exactly the same data.</p>
+  <div class="tabrow"><span class="tabrow-lab">Test</span>
+    <div class="tabs" role="tablist" aria-label="Test">
+      <button class="tab" role="tab" id="tab-mwu" aria-selected="true">Mann–Whitney U</button>
+      <button class="tab" role="tab" id="tab-median" aria-selected="false">Median test</button>
+      <button class="tab" role="tab" id="tab-td" aria-selected="false">Tukey–Duckworth</button>
+      <button class="tab" role="tab" id="tab-sign" aria-selected="false">Sign test</button>
+      <button class="tab" role="tab" id="tab-wilcox" aria-selected="false">Wilcoxon signed-rank</button>
+      <button class="tab" role="tab" id="tab-compare" aria-selected="false">Compare all</button>
+    </div></div>
+  <div class="tabrow sub" id="cmpRow" hidden><span class="tabrow-lab">Design</span>
+    <div class="tabs" role="tablist" aria-label="Design for the comparison">
+      <button class="tab" role="tab" id="tab-cind" aria-selected="true">Independent groups</button>
+      <button class="tab" role="tab" id="tab-cpair" aria-selected="false">Repeated measures (paired)</button>
+    </div></div>
+  <p class="cap" id="designNote" style="margin-top:10px"></p>
+</header>
+
+<main>
+  <aside class="panel controls" aria-label="Controls">
+    <h2>Setup</h2>
+    <div class="row" id="presets"></div>
+
+    <h3>Data source</h3>
+    <div class="seg" role="radiogroup" aria-label="Data source">
+      <label><input type="radio" name="src" value="sim" checked><span>Simulated</span></label>
+      <label><input type="radio" name="src" value="own"><span>My own data</span></label>
+    </div>
+    <div id="simBox">
+      <fieldset id="params"></fieldset>
+      <div class="opt"><label for="shape">Population shape</label><select id="shape"><option value="normal">Normal</option><option value="heavy">Heavy-tailed (t, df = 3)</option><option value="contam">Contaminated (10% outliers)</option><option value="skew">Skewed (lognormal)</option></select></div>
+      <div class="opt"><label><input type="checkbox" id="round"> Round scores to whole numbers (creates ties)</label></div>
+      <div class="opt"><label><input type="checkbox" id="exact"> Make the sample match the settings exactly</label></div>
+      <div class="row">
+        <button class="pill" id="resample">New random sample</button>
+        <span class="cap" id="seedTxt" style="align-self:center;margin:0"></span>
+      </div>
+      <div class="truth" id="truth"></div>
+    </div>
+
+    <div id="ownBox" hidden>
+      <div class="opt"><label id="lblOwnA" for="ownA">Group A</label><textarea id="ownA" placeholder="e.g. 12.1, 14.3, 9.8 …"></textarea></div>
+      <div class="opt"><label id="lblOwnB" for="ownB">Group B</label><textarea id="ownB"></textarea></div>
+      <button class="pill" id="loadSim">Load current simulated data into boxes</button>
+      <p class="cap" id="ownCap">Separate values with spaces, commas or new lines. Paired data needs the same number of values in the same order.</p>
+    </div>
+
+    <h3>Test options</h3>
+    <div class="opt"><label for="tails">Alternative hypothesis</label><select id="tails"></select></div>
+    <div class="opt"><label for="alpha">Significance level α</label>
+      <select id="alpha"><option value="0.05" selected>.05</option><option value="0.01">.01</option><option value="0.001">.001</option></select></div>
+    <div class="opt" id="pmOpt1" hidden><label for="pm1" id="pmLab1"></label><select id="pm1"></select></div>
+    <div class="opt" id="pmOpt2" hidden><label for="pm2" id="pmLab2"></label><select id="pm2"></select></div>
+    <p class="cap" id="tdNote" hidden>The Tukey–Duckworth test is two-sided only, so the alternative hypothesis setting does not change it. Its α is limited to the tabulated .05, .01 and .001.</p>
+  </aside>
+
+  <section class="stack">
+    <div class="panel" id="pData">
+      <h2><span class="n">1</span>The data</h2>
+      <div id="msg" class="err" hidden></div>
+      <div class="charts"><div id="chartMain"></div><div id="chartSecond"></div></div>
+      <div class="legend" id="dataLegend"></div>
+      <p class="cap" id="dataCap"></p>
+    </div>
+
+    <div class="panel" id="pDist">
+      <h2><span class="n">2</span><span id="distTitle">If H₀ were true, where would the statistic fall?</span></h2>
+      <div id="chartNull"></div>
+      <div class="legend">
+        <span><i style="background:var(--rej);opacity:.5"></i>Rejection region (outcomes with p ≤ α)</span>
+        <span><i style="background:repeating-linear-gradient(45deg,var(--ink) 0 2px,transparent 2px 5px)"></i>p-value region (as extreme as, or more than, observed)</span>
+        <span><i style="background:var(--ink);height:3px;vertical-align:3px"></i>Observed value</span>
+      </div>
+      <p class="cap" id="nullCap"></p>
+    </div>
+
+    <div class="panel" id="pRes" aria-live="polite">
+      <h2><span class="n">3</span>Result <span id="badge"></span></h2>
+      <div class="stats" id="stats"></div>
+      <p class="interp" id="interp"></p>
+      <div id="warn" class="warn" hidden></div>
+      <div class="scroll"><table class="mini" id="detail"></table></div>
+      <div class="scroll" id="guideWrap"><table class="gtab" id="guideTable"></table></div>
+      <div class="apa"><span id="apa"></span><button class="pill" id="copy">Copy</button></div>
+      <h3>The same data under the other tests</h3>
+      <div class="scroll"><table class="cmpt" id="cmp"></table></div>
+    </div>
+
+    <div class="panel" id="pHow">
+      <h2><span class="n">4</span><span id="howTitle">How the test works</span></h2>
+      <div id="howBody"></div>
+    </div>
+
+    <div class="panel" id="pLadder" hidden>
+      <h2><span class="n">2</span>Every test on the same data</h2>
+      <div id="chartLadder"></div>
+      <div class="legend">
+        <span><i style="background:var(--ok)"></i>Significant at α</span>
+        <span><i style="background:#7b8392"></i>Not significant</span>
+        <span><i style="background:var(--rej);opacity:.18"></i>p ≤ α region</span>
+      </div>
+      <div class="scroll"><table class="cmpt" id="cmpAll"></table></div>
+      <p class="cap" id="cmpCap"></p>
+    </div>
+
+    <div class="panel" id="pRel" hidden>
+      <h2><span class="n">3</span>How the tests relate</h2>
+      <div id="relBody"></div>
+    </div>
+
+    <div class="panel" id="pSim">
+      <h2><span class="n">★</span>Repeat the experiment</h2>
+      <div class="row" style="align-items:center;margin-bottom:8px">
+        <label for="simN" style="font-size:.88rem">Experiments</label>
+        <select id="simN" style="width:auto"><option>500</option><option selected>1000</option><option>2000</option><option>5000</option></select>
+        <button class="pill" id="simAgain">Run again</button>
+      </div>
+      <div id="chartSim"></div>
+      <p class="interp" id="simTxt"></p>
+      <div class="scroll"><table class="cmpt" id="simRates"></table></div>
+      <p class="cap" id="simNote"></p>
+    </div>
+  </section>
+</main>
+
+<details><summary>Formulas used</summary>
+<div class="panel"><div id="formulas"></div></div></details>
+<details><summary>Key: symbols and terms</summary>
+<div class="panel"><dl class="key" id="keyList"></dl></div></details>
+<details id="decideBox">
+  <summary>Deciding which to use</summary>
+  <div class="panel wz">
+    <p class="cap" style="margin-top:0">Rank and count-based tests suit ordinal scores, small samples that look non-normal, and data with outliers or heavy skew. When the scores are interval-level, roughly normal and free of outliers, the t test is more powerful; the efficiencies quoted below show what is given up. Answer a few questions to choose among the tests on this page.</p>
+    <div id="decideBody"></div>
+    <h3>At a glance</h3>
+    <div class="scroll"><table class="glance">
+      <thead><tr><th>Your situation</th><th>Use</th><th>Effect size</th></tr></thead>
+      <tbody><tr><td>Independent groups, ranks available, want power and effect size</td><td>Mann–Whitney U</td><td>Rank-biserial r, P(A &gt; B), Hodges–Lehmann</td></tr><tr><td>Independent groups, censored or above-below data, or a medians question</td><td>Median test</td><td>φ, odds ratio</td></tr><tr><td>Independent groups, a quick hand check</td><td>Tukey–Duckworth</td><td>End count C</td></tr><tr><td>Repeated measures, size of change meaningful, differences symmetric</td><td>Wilcoxon signed-rank</td><td>Rank-biserial r, Hodges–Lehmann</td></tr><tr><td>Repeated measures, direction only, or skewed differences</td><td>Sign test</td><td>Cohen’s g</td></tr><tr><td>Not sure</td><td>Compare all tab</td><td>Side-by-side results</td></tr></tbody></table></div>
+  </div>
+</details>
+<footer>Single-file, dependency-free demo. Simulated data are drawn from the chosen population shape with a seeded random generator, so a given seed is reproducible. Exact p-values come from the full null distribution of each statistic, computed in your browser; larger samples and tied data use the normal approximation with tie and continuity corrections.</footer>
+<script>
+/* ============ Special functions (shared with the t-test explorer) ============ */
+function lgamma(x){
+  const c=[76.18009172947146,-86.50532032941677,24.01409824083091,-1.231739572450155,0.1208650973866179e-2,-0.5395239384953e-5];
+  let y=x,t=x+5.5; t-=(x+0.5)*Math.log(t); let s=1.000000000190015;
+  for(let j=0;j<6;j++){y+=1;s+=c[j]/y;}
+  return -t+Math.log(2.5066282746310005*s/x);
+}
+function betacf(a,b,x){
+  const FP=1e-300,EPS=3e-14,qab=a+b,qap=a+1,qam=a-1;
+  let c=1,d=1-qab*x/qap; if(Math.abs(d)<FP)d=FP; d=1/d; let h=d;
+  for(let m=1;m<=300;m++){
+    const m2=2*m; let aa=m*(b-m)*x/((qam+m2)*(a+m2));
+    d=1+aa*d; if(Math.abs(d)<FP)d=FP; c=1+aa/c; if(Math.abs(c)<FP)c=FP; d=1/d; h*=d*c;
+    aa=-(a+m)*(qab+m)*x/((a+m2)*(qap+m2));
+    d=1+aa*d; if(Math.abs(d)<FP)d=FP; c=1+aa/c; if(Math.abs(c)<FP)c=FP; d=1/d;
+    const del=d*c; h*=del; if(Math.abs(del-1)<EPS)break;
+  }
+  return h;
+}
+function ibeta(x,a,b){
+  if(x<=0)return 0; if(x>=1)return 1;
+  const bt=Math.exp(lgamma(a+b)-lgamma(a)-lgamma(b)+a*Math.log(x)+b*Math.log(1-x));
+  return x<(a+1)/(a+b+2)?bt*betacf(a,b,x)/a:1-bt*betacf(b,a,1-x)/b;
+}
+function pTwo(t,df){ return isFinite(t)?ibeta(df/(df+t*t),df/2,0.5):0; }
+function npdf(x){ return Math.exp(-x*x/2)/Math.sqrt(2*Math.PI); }
+function erfc(x){const z=Math.abs(x),t=1/(1+0.5*z);const r=t*Math.exp(-z*z-1.26551223+t*(1.00002368+t*(0.37409196+t*(0.09678418+t*(-0.18628806+t*(0.27886807+t*(-1.13520398+t*(1.48851587+t*(-0.82215223+t*0.17087277)))))))));return x>=0?r:2-r;}
+function pNormTwo(z){return erfc(Math.abs(z)/Math.SQRT2);}
+function Phi(z){return 0.5*erfc(-z/Math.SQRT2);}
+function zCrit(tailProb){let lo=0,hi=40;for(let i=0;i<80;i++){const mid=(lo+hi)/2;if(pNormTwo(mid)>2*tailProb)lo=mid;else hi=mid;}return (lo+hi)/2;}
+const mean=a=>a.reduce((s,v)=>s+v,0)/a.length;
+function vari(a){const m=mean(a);return a.reduce((s,v)=>s+(v-m)*(v-m),0)/(a.length-1);}
+function median(a){const s=a.slice().sort((x,y)=>x-y),n=s.length;return n%2?s[(n-1)/2]:(s[n/2-1]+s[n/2])/2;}
+function quantile(a,q){const s=a.slice().sort((x,y)=>x-y),h=(s.length-1)*q,lo=Math.floor(h),hi=Math.ceil(h);return s[lo]+(s[hi]-s[lo])*(h-lo);}
+function qbeta(p,a,b){let lo=0,hi=1;for(let i=0;i<70;i++){const mid=(lo+hi)/2;if(ibeta(mid,a,b)<p)lo=mid;else hi=mid;}return (lo+hi)/2;}
+
+/* ============ Non-parametric building blocks ============ */
+const LF=[0];for(let i=1;i<=400;i++)LF.push(LF[i-1]+Math.log(i));
+const lchoose=(n,k)=>LF[n]-LF[k]-LF[n-k];
+
+function rankData(v){ // average ranks and tie-group sizes
+  const n=v.length,idx=Array.from({length:n},(_,i)=>i).sort((i,j)=>v[i]-v[j]),r=new Array(n),ties=[];
+  let i=0;
+  while(i<n){let j=i;while(j+1<n&&v[idx[j+1]]===v[idx[i]])j++;const avg=(i+j)/2+1;for(let k=i;k<=j;k++)r[idx[k]]=avg;if(j>i)ties.push(j-i+1);i=j+1;}
+  return{r,ties};
+}
+const tieSum=t=>t.reduce((s,x)=>s+x*x*x-x,0);
+
+/* exact null distribution of the Mann–Whitney U (no ties): probabilities of U = 0..nm */
+const MWU_CACHE=new Map();
+function mwuDist(n,m){
+  const key=n+','+m;if(MWU_CACHE.has(key))return MWU_CACHE.get(key);
+  const N=n+m,M=n*m,dp=[];for(let k=0;k<=n;k++)dp.push(new Float64Array(M+1));dp[0][0]=1;
+  for(let r=1;r<=N;r++){
+    for(let k=Math.min(n-1,r-1);k>=0;k--){const sh=r-k-1,src=dp[k],dst=dp[k+1];if(sh>M)continue;
+      for(let u=0;u+sh<=M;u++){const c=src[u];if(c)dst[u+sh]+=c;}}
+  }
+  const out=dp[n];let tot=0;for(let u=0;u<=M;u++)tot+=out[u];
+  const p=new Float64Array(M+1);for(let u=0;u<=M;u++)p[u]=out[u]/tot;
+  MWU_CACHE.set(key,p);return p;
+}
+/* exact null distribution of Wilcoxon W+ (no ties/zeros): probabilities of W = 0..n(n+1)/2 */
+const WIL_CACHE=new Map();
+function wilDist(n){
+  if(WIL_CACHE.has(n))return WIL_CACHE.get(n);
+  const M=n*(n+1)/2,c=new Float64Array(M+1);c[0]=1;
+  for(let r=1;r<=n;r++)for(let s=M;s>=r;s--)c[s]+=c[s-r];
+  const p=new Float64Array(M+1);for(let s=0;s<=M;s++)p[s]=c[s]/Math.pow(2,n);
+  WIL_CACHE.set(n,p);return p;
+}
+function binomDist(n,p=0.5){const out=new Float64Array(n+1);for(let k=0;k<=n;k++)out[k]=Math.exp(lchoose(n,k)+k*Math.log(p)+(n-k)*Math.log(1-p));return out;}
+function hyperDist(N,K,n){ // support x = lo..hi; returns {lo,hi,p[]}
+  const lo=Math.max(0,n-(N-K)),hi=Math.min(n,K),p=[];
+  for(let x=lo;x<=hi;x++)p.push(Math.exp(lchoose(K,x)+lchoose(N-K,n-x)-lchoose(N,n)));
+  return{lo,hi,p};
+}
+/* p from a distribution with probability array p[i] for statistic = off+i */
+function pFromDist(p,obs,tails,sym){
+  let lower=0,upper=0;for(let i=0;i<p.length;i++){if(i<=obs)lower+=p[i];if(i>=obs)upper+=p[i];}
+  if(tails==='greater')return Math.min(1,upper);
+  if(tails==='less')return Math.min(1,lower);
+  return Math.min(1,2*Math.min(lower,upper));
+}
+/* smallest/largest statistic values whose tail mass stays within a (lo: P(X<=lo)<=a, hi: P(X>=hi)<=a) */
+function tailCrit(p,a){
+  let c=0,lo=-1;for(let i=0;i<p.length;i++){c+=p[i];if(c<=a+1e-12)lo=i;else break;}
+  c=0;let hi=p.length;for(let i=p.length-1;i>=0;i--){c+=p[i];if(c<=a+1e-12)hi=i;else break;}
+  return{lo,hi};
+}
+function qdist(p,prob){let c=0;for(let i=0;i<p.length;i++){c+=p[i];if(c>=prob-1e-12)return i;}return p.length-1;}
+
+/* ============ The tests ============ */
+const clean=x=>+x.toFixed(9);
+const normP=(z,tails,cc)=>{ // z already continuity-adjusted by caller for two-sided; one-sided given raw z
+  return 0;};
+function normalP(stat,mu,sd,tails){ // continuity-corrected normal p for a symmetric discrete statistic
+  if(!(sd>0))return 1;
+  if(tails==='two'){const z=Math.max(0,(Math.abs(stat-mu)-0.5)/sd);return Math.min(1,pNormTwo(z));}
+  if(tails==='greater')return Math.min(1,1-Phi((stat-mu-0.5)/sd));
+  return Math.min(1,Phi((stat-mu+0.5)/sd));
+}
+function mwuTest(A,B,tails,method,alpha,lite){
+  const nA=A.length,nB=B.length,N=nA+nB,nm=nA*nB,{r,ties}=rankData(A.concat(B));
+  let RA=0;for(let i=0;i<nA;i++)RA+=r[i];
+  const RB=N*(N+1)/2-RA,UA=RA-nA*(nA+1)/2,UB=nm-UA,mu=nm/2,tied=ties.length>0;
+  const sigma=Math.sqrt(Math.max(0,nm/12*((N+1)-tieSum(ties)/(N*(N-1)))));
+  const canExact=!tied&&nA<=30&&nB<=30;
+  const exact=(method==='exact'||method==='auto')&&canExact;
+  const fellBack=method==='exact'&&!canExact;
+  let p,dist=null;
+  if(exact){dist=mwuDist(nA,nB);p=pFromDist(dist,Math.round(UA),tails);}
+  else p=normalP(UA,mu,sigma,tails);
+  const res={kind:'mwu',nA,nB,N,RA,RB,UA,UB,U:Math.min(UA,UB),mu,sigma,tied,ties,exact,fellBack,p,dist,tails,alpha,
+    rbc:(UA-UB)/nm,ps:UA/nm,medA:median(A),medB:median(B),ranks:r,sig:p<=alpha};
+  res.z=sigma>0?(UA-mu)/sigma:0;
+  if(!lite){
+    const D=[];for(let i=0;i<nA;i++)for(let j=0;j<nB;j++)D.push(A[i]-B[j]);D.sort((x,y)=>x-y);
+    res.hl=(nm%2)?D[(nm-1)/2]:(D[nm/2-1]+D[nm/2])/2;
+    let qu=exact?qdist(dist,alpha/2):Math.round(mu-zCrit(alpha/2)*sigma);if(qu<1)qu=1;if(qu>nm)qu=nm;
+    res.hlLo=D[qu-1];res.hlHi=D[nm-qu];res.hlExact=exact;
+  }
+  return res;
+}
+function medP(a1,b1,nA,nB,pm,tails){ // p-value for one 2x2 table (rows A,B; columns above / at-or-below the grand median)
+  const N=nA+nB,K=a1+b1,a0=nA-a1,b0=nB-b1,E=[nA*K/N,nA*(N-K)/N,nB*K/N,nB*(N-K)/N],O=[a1,a0,b1,b0];
+  const chi=cc=>O.reduce((s,o,i)=>s+Math.pow(Math.max(Math.abs(o-E[i])-cc,0),2)/E[i],0);
+  const dir=a1/nA>b1/nB?1:a1/nA<b1/nB?-1:0;
+  if(pm==='fisher'){
+    const hd=hyperDist(N,K,nA),pr=hd.p,po=pr[a1-hd.lo];let s=0;
+    if(tails==='two'){for(const q of pr)if(q<=po*(1+1e-7))s+=q;}
+    else if(tails==='greater'){for(let x=a1;x<=hd.hi;x++)s+=pr[x-hd.lo];}
+    else{for(let x=hd.lo;x<=a1;x++)s+=pr[x-hd.lo];}
+    return{p:Math.min(1,s),stat:a1};
+  }
+  const c=pm==='yates'?chi(0.5):chi(0),p2=pNormTwo(Math.sqrt(c));
+  if(tails==='two')return{p:p2,stat:c};
+  const match=(tails==='greater'&&dir>0)||(tails==='less'&&dir<0);
+  return{p:match?p2/2:1-p2/2,stat:c};
+}
+function medianTest(A,B,tails,pm,alpha){
+  const nA=A.length,nB=B.length,N=nA+nB,M=median(A.concat(B));
+  const a1=A.filter(v=>v>M).length,b1=B.filter(v=>v>M).length,a0=nA-a1,b0=nB-b1,K=a1+b1;
+  const res={kind:'median',nA,nB,N,M,a1,a0,b1,b0,K,pm,tails,alpha,propA:a1/nA,propB:b1/nB,medA:median(A),medB:median(B)};
+  if(K===0||K===N){res.degenerate=true;res.p=1;res.sig=false;return res;}
+  res.hd=hyperDist(N,K,nA);
+  const E=[nA*K/N,nA*(N-K)/N,nB*K/N,nB*(N-K)/N],O=[a1,a0,b1,b0];res.E=E;res.minE=Math.min(...E);
+  const chi=cc=>O.reduce((s,o,i)=>s+Math.pow(Math.max(Math.abs(o-E[i])-cc,0),2)/E[i],0);
+  res.chi=chi(0);res.chiY=chi(0.5);
+  const dir=res.propA>res.propB?1:res.propA<res.propB?-1:0;
+  res.phi=dir*Math.sqrt(res.chi/N);
+  res.orAdj=(a1===0||a0===0||b1===0||b0===0);
+  res.or=res.orAdj?((a1+.5)*(b0+.5))/((a0+.5)*(b1+.5)):(a1*b0)/(a0*b1);
+  const q=medP(a1,b1,nA,nB,pm,tails);res.p=q.p;res.stat=q.stat;res.statName=pm==='fisher'?'a':'χ²';
+  res.sig=res.p<=alpha;
+  return res;
+}
+const TD_CRIT={0.05:7,0.01:10,0.001:13};
+function tdCount(A,B){
+  const maxA=Math.max(...A),maxB=Math.max(...B),minA=Math.min(...A),minB=Math.min(...B);
+  if(maxA>maxB&&minB<minA){let a=0,b=0;for(const v of A)if(v>maxB)a++;for(const v of B)if(v<minA)b++;return{a,b,C:a+b,hi:'A'};}
+  if(maxB>maxA&&minA<minB){let a=0,b=0;for(const v of B)if(v>maxA)a++;for(const v of A)if(v<minB)b++;return{a,b,C:a+b,hi:'B'};}
+  return{a:0,b:0,C:0,hi:null};
+}
+function tdTest(A,B,alpha,lite){
+  const nA=A.length,nB=B.length,c=tdCount(A,B),crit=TD_CRIT[alpha]||7;
+  const ratio=Math.max(nA,nB)/Math.min(nA,nB);
+  const res={kind:'td',nA,nB,a:c.a,b:c.b,C:c.C,hi:c.hi,crit,alpha,ratio,big:Math.max(nA,nB)>30,uneven:ratio>4/3+1e-9,
+    sig:c.C>=crit&&c.a>0&&c.b>0,medA:median(A),medB:median(B),maxA:Math.max(...A),maxB:Math.max(...B),minA:Math.min(...A),minB:Math.min(...B)};
+  res.band=c.C>=13?'< .001':c.C>=10?'< .01':c.C>=7?'< .05':'> .05';
+  if(!lite){
+    const R=4000,rng=mulberry32(20240229),all=A.concat(B),N=all.length,h=new Float64Array(N+1);let ge=0;
+    const x=all.slice();
+    for(let t=0;t<R;t++){
+      for(let i=N-1;i>0;i--){const j=Math.floor(rng()*(i+1)),tmp=x[i];x[i]=x[j];x[j]=tmp;}
+      const cc=tdCount(x.slice(0,nA),x.slice(nA)).C;h[cc]++;if(cc>=c.C)ge++;
+    }
+    res.perm=h.map(v=>v/R);res.pPerm=(ge+1)/(R+1);res.R=R;
+  }
+  return res;
+}
+function signTest(A,B,tails,alpha){
+  const n0=A.length,d=A.map((v,i)=>clean(v-B[i]));
+  const pos=d.filter(v=>v>0).length,neg=d.filter(v=>v<0).length,zero=n0-pos-neg,n=pos+neg;
+  const res={kind:'sign',n0,pos,neg,zero,n,tails,alpha,d,medD:median(d)};
+  if(n===0){res.invalid=true;return res;}
+  res.dist=binomDist(n);res.p=pFromDist(res.dist,pos,tails);res.sig=res.p<=alpha;
+  res.prop=pos/n;
+  res.ciLo=pos===0?0:qbeta(alpha/2,pos,n-pos+1);res.ciHi=pos===n?1:qbeta(1-alpha/2,pos+1,n-pos);
+  return res;
+}
+function wilcoxTest(A,B,tails,method,alpha,lite){
+  const n0=A.length,dAll=A.map((v,i)=>clean(v-B[i])),d=dAll.filter(v=>v!==0),n=d.length,zero=n0-n;
+  const res={kind:'wil',n0,n,zero,tails,alpha,d:dAll,dnz:d,medD:median(dAll),method};
+  if(n===0){res.invalid=true;return res;}
+  const{r,ties}=rankData(d.map(Math.abs));let Wp=0;for(let i=0;i<n;i++)if(d[i]>0)Wp+=r[i];
+  const tot=n*(n+1)/2,Wm=tot-Wp,mn=n*(n+1)/4,tied=ties.length>0;
+  const se=Math.sqrt(Math.max(0,(n*(n+1)*(2*n+1)-0.5*ties.reduce((s,t)=>s+t*(t*t-1),0))/24));
+  const canExact=!tied&&n<=50,exact=(method==='exact'||method==='auto')&&canExact;
+  let p,dist=null;
+  if(exact){dist=wilDist(n);p=pFromDist(dist,Math.round(Wp),tails);}else p=normalP(Wp,mn,se,tails);
+  Object.assign(res,{Wp,Wm,mn,se,tied,ties,exact,fellBack:method==='exact'&&!canExact,dist,p,sig:p<=alpha,ranks:r,rbc:(Wp-Wm)/tot,tot,z:se>0?(Wp-mn)/se:0});
+  if(!lite){
+    const W=[];for(let i=0;i<n;i++)for(let j=i;j<n;j++)W.push((d[i]+d[j])/2);W.sort((x,y)=>x-y);
+    const M=W.length;res.hl=(M%2)?W[(M-1)/2]:(W[M/2-1]+W[M/2])/2;
+    let qu=exact?qdist(dist,alpha/2):Math.round(mn-zCrit(alpha/2)*se);if(qu<1)qu=1;if(qu>M)qu=M;
+    res.hlLo=W[qu-1];res.hlHi=W[M-qu];
+  }
+  return res;
+}
+function pOneFromTwo(t,p2,tails){if(tails==='two')return p2;const pos=t>0;return (tails==='greater')===pos?p2/2:1-p2/2;}
+function welchRef(A,B,tails,alpha){
+  const nA=A.length,nB=B.length,vA=vari(A)/nA,vB=vari(B)/nB,se=Math.sqrt(vA+vB),t=(mean(A)-mean(B))/se,df=(vA+vB)**2/(vA*vA/(nA-1)+vB*vB/(nB-1));
+  const p=pOneFromTwo(t,pTwo(t,df),tails);return{t,df,p,sig:p<=alpha};
+}
+function pairedRef(A,B,tails,alpha){
+  const d=A.map((v,i)=>v-B[i]),n=d.length,se=Math.sqrt(vari(d)/n),t=mean(d)/se,df=n-1;
+  const p=se>0?pOneFromTwo(t,pTwo(t,df),tails):1;return{t,df,p,sig:p<=alpha};
+}
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+
+/* ============ Random numbers and population shapes ============ */
+function normalGen(rng){let spare=null;return function(){if(spare!==null){const s=spare;spare=null;return s;}let u=0,v=0;while(u===0)u=rng();v=rng();const m=Math.sqrt(-2*Math.log(u));spare=m*Math.sin(2*Math.PI*v);return m*Math.cos(2*Math.PI*v);};}
+function shapeDraw(shape,g,rng){
+  if(shape==='heavy'){const z=g(),a=g(),b=g(),c=g();return z/Math.sqrt(a*a+b*b+c*c);}
+  if(shape==='contam'){const u=rng(),z=g();return(u<0.1?4*z:z)/Math.sqrt(2.5);}
+  if(shape==='skew'){const s=0.6,z=g(),m=Math.exp(s*s/2),sd=Math.sqrt((Math.exp(s*s)-1)*Math.exp(s*s));return(Math.exp(s*z)-m)/sd;}
+  return g();
+}
+/* ============ State ============ */
+const S={test:'mwu',cmpMode:'ind',source:'sim',muA:107.5,muB:100,sdA:15,sdB:15,nA:25,nB:25,r:0.6,alpha:0.05,tails:'two',shape:'normal',round:false,exact:false,pm:{mwu:'auto',median:'fisher',wilcox:'auto'},seed:7,simSeed:1};
+const mode=()=>S.test==='sign'||S.test==='wilcox'?'paired':S.test==='compare'?S.cmpMode:'ind';
+const MAXN=100;
+let Z1,Z2,JIT,CUR=null;
+function genBase(){
+  const rng=mulberry32(S.seed*7919+13),g=normalGen(rng);
+  Z1=[];Z2=[];JIT=[];
+  for(let i=0;i<MAXN;i++){Z1.push(shapeDraw(S.shape,g,rng));Z2.push(shapeDraw(S.shape,g,rng));JIT.push(rng()*2-1);}
+}
+function stdz(z){const m=mean(z),s=Math.sqrt(vari(z));return z.map(v=>(v-m)/s);}
+function orth(z2,z1){const m2=mean(z2);let num=0,den=0;for(let i=0;i<z1.length;i++){num+=z1[i]*(z2[i]-m2);den+=z1[i]*z1[i];}const b=num/den;return z2.map((v,i)=>v-m2-b*z1[i]);}
+function simData(){
+  const paired=mode()==='paired',nA=S.nA,nB=paired?S.nA:S.nB;
+  let z1=Z1.slice(0,nA),z2=Z2.slice(0,nB),A,B;
+  if(S.exact){z1=stdz(z1);if(paired)z2=orth(z2,z1);z2=stdz(z2);}
+  if(paired){const r=S.r,k=Math.sqrt(1-r*r);A=z1.map(z=>S.muA+S.sdA*z);B=z1.map((z,i)=>S.muB+S.sdB*(r*z+k*z2[i]));}
+  else{A=z1.map(z=>S.muA+S.sdA*z);B=z2.map(z=>S.muB+S.sdB*z);}
+  if(S.round){A=A.map(Math.round);B=B.map(Math.round);}
+  return{A,B};
+}
+function parseList(s){return s.split(/[\s,;]+/).filter(x=>x!=='').map(Number);}
+function getData(){
+  if(S.source==='sim')return simData();
+  const A=parseList($('ownA').value),B=parseList($('ownB').value),paired=mode()==='paired';
+  if(A.some(v=>!isFinite(v))||B.some(v=>!isFinite(v)))return{err:'Some entries are not numbers. Use numbers separated by spaces, commas or new lines.'};
+  if(A.length<3)return{err:'Enter at least 3 values for '+L().A+'.'};
+  if(B.length<3)return{err:'Enter at least 3 values for '+L().B+'.'};
+  if(paired&&A.length!==B.length)return{err:'Paired data needs the same number of values in each box ('+A.length+' vs '+B.length+').'};
+  if(A.length>400||B.length>400)return{err:'Please keep each sample to 400 values or fewer.'};
+  return{A,B};
+}
+/* ============ Formatting ============ */
+const $=id=>document.getElementById(id);
+const f=(x,d=2)=>isFinite(x)?x.toFixed(d).replace('-','−'):(x>0?'∞':x<0?'−∞':'–');
+const fp=p=>p<0.001?'< .001':p.toFixed(3).replace(/^0/,'');
+const apaP=p=>p<0.001?'< .001':'= '+fp(p);
+const fr=(x,d=2)=>(x<0?'−':'')+Math.abs(x).toFixed(d).replace(/^0(?=\.)/,'');
+const fu=x=>Number.isInteger(x)?x.toLocaleString('en-US'):x.toFixed(1);
+const tk=v=>(+v.toFixed(6)).toString().replace('-','−');
+const px=v=>(+v.toFixed(2));
+const pc1=x=>(100*x).toFixed(1)+'%';
+const lvl=()=>(+((1-S.alpha)*100).toFixed(1))+'%';
+const L=()=>mode()==='ind'?{A:'Group A',B:'Group B',d:'A − B',s1:'A',s2:'B'}:{A:'Condition 1',B:'Condition 2',d:'1 − 2',s1:'1',s2:'2'};
+const NAMES={mwu:'Mann–Whitney U',median:'Median test',td:'Tukey–Duckworth',sign:'Sign test',wilcox:'Wilcoxon signed-rank'};
+const SHAPES={normal:'normal',heavy:'heavy-tailed (t, df = 3)',contam:'contaminated (10% outliers)',skew:'skewed (lognormal)'};
+/* ============ Controls ============ */
+const PARAMS=[
+  {k:'muA',min:50,max:150,step:0.5,dec:1,lab:m=>m==='ind'?'Mean of group A':'Mean of condition 1'},
+  {k:'muB',min:50,max:150,step:0.5,dec:1,lab:m=>m==='ind'?'Mean of group B':'Mean of condition 2'},
+  {k:'sdA',min:1,max:40,step:0.5,dec:1,lab:m=>m==='ind'?'SD of group A':'SD of condition 1'},
+  {k:'sdB',min:1,max:40,step:0.5,dec:1,lab:m=>m==='ind'?'SD of group B':'SD of condition 2'},
+  {k:'nA',min:4,max:100,step:1,dec:0,lab:m=>m==='ind'?'n in group A':'n (participants)'},
+  {k:'nB',min:4,max:100,step:1,dec:0,modes:['ind'],lab:()=>'n in group B'},
+  {k:'r',min:-0.5,max:0.95,step:0.05,dec:2,modes:['paired'],lab:()=>'Correlation r between conditions'}
+];
+const PRESETS=[
+  {name:'No true difference',mode:'ind',v:{muA:100,muB:100,sdA:15,sdB:15,nA:25,nB:25}},
+  {name:'Medium shift, normal data',mode:'ind',v:{muA:107.5,muB:100,sdA:15,sdB:15,nA:25,nB:25}},
+  {name:'Skewed data',mode:'ind',v:{muA:106,muB:100,sdA:15,sdB:15,nA:25,nB:25,shape:'skew'}},
+  {name:'Heavy tails, true shift',mode:'ind',v:{muA:110,muB:100,sdA:15,sdB:15,nA:25,nB:25,shape:'heavy'}},
+  {name:'Outliers (contaminated)',mode:'ind',v:{muA:108,muB:100,sdA:15,sdB:15,nA:25,nB:25,shape:'contam'}},
+  {name:'Tiny samples',mode:'ind',v:{muA:118,muB:100,sdA:12,sdB:12,nA:6,nB:6}},
+  {name:'Unequal group sizes',mode:'ind',v:{muA:108,muB:100,sdA:15,sdB:15,nA:15,nB:45}},
+  {name:'Many ties (whole numbers)',mode:'ind',v:{muA:102,muB:100,sdA:3,sdB:3,nA:30,nB:30},round:true},
+  {name:'Paired, r = .6',mode:'paired',v:{muA:106,muB:100,sdA:15,sdB:15,nA:20,r:0.6}},
+  {name:'Paired, skewed',mode:'paired',v:{muA:105,muB:100,sdA:15,sdB:15,nA:25,r:0.5,shape:'skew'}},
+  {name:'Paired, ties and zeros',mode:'paired',v:{muA:101,muB:100,sdA:3,sdB:3,nA:30,r:0.7},round:true},
+  {name:'Paired, tiny n',mode:'paired',v:{muA:112,muB:100,sdA:10,sdB:10,nA:7,r:0.5}}
+];
+const PM={
+  mwu:{lab:'p-value method (Mann–Whitney U)',o:[['auto','Automatic: exact if no ties and n ≤ 30 per group'],['exact','Exact (needs no ties, n ≤ 30)'],['norm','Normal approximation (tie- and continuity-corrected)']]},
+  median:{lab:'p-value method (median test)',o:[['fisher','Fisher’s exact test'],['yates','χ² with Yates’ correction'],['chi','χ² (no correction)']]},
+  wilcox:{lab:'p-value method (Wilcoxon)',o:[['auto','Automatic: exact if no ties and n ≤ 50'],['exact','Exact (needs no ties, n ≤ 50)'],['norm','Normal approximation (tie- and continuity-corrected)']]}
+};
+const pmKeys=()=>{const t=S.test;return t==='mwu'?['mwu']:t==='median'?['median']:t==='wilcox'?['wilcox']:t==='compare'?(S.cmpMode==='ind'?['mwu','median']:['wilcox']):[];};
+function buildControls(){
+  $('params').innerHTML=PARAMS.map(p=>`<div class="sl" id="w_${p.k}"><label for="p_${p.k}"><span id="l_${p.k}"></span><output id="o_${p.k}"></output></label><input type="range" id="p_${p.k}" min="${p.min}" max="${p.max}" step="${p.step}"></div>`).join('');
+  PARAMS.forEach(p=>$('p_'+p.k).addEventListener('input',e=>{S[p.k]=+e.target.value;update();}));
+  $('presets').innerHTML=PRESETS.map((p,i)=>`<button class="pill" data-i="${i}">${p.name}</button>`).join('');
+  $('presets').addEventListener('click',e=>{
+    const b=e.target.closest('button');if(!b)return;const p=PRESETS[+b.dataset.i];
+    Object.assign(S,p.v);S.shape=p.v.shape||'normal';S.round=!!p.round;
+    if(mode()!==p.mode){if(S.test==='compare')S.cmpMode=p.mode;else S.test=p.mode==='ind'?'mwu':'wilcox';}
+    S.source='sim';genBase();document.querySelector('input[name=src][value=sim]').checked=true;update();});
+}
+function tailOpts(){const l=L();return mode()==='ind'
+  ?[['two','Two-sided: A and B differ'],['greater','One-sided: A tends to be larger'],['less','One-sided: A tends to be smaller']]
+  :[['two','Two-sided: the conditions differ'],['greater','One-sided: condition 1 tends to be larger'],['less','One-sided: condition 1 tends to be smaller']];}
+function syncUI(){
+  const m=mode(),lab=L(),t=S.test;
+  ['mwu','median','td','sign','wilcox','compare'].forEach(k=>$('tab-'+k).setAttribute('aria-selected',t===k));
+  $('cmpRow').hidden=t!=='compare';
+  $('tab-cind').setAttribute('aria-selected',S.cmpMode==='ind');$('tab-cpair').setAttribute('aria-selected',S.cmpMode==='paired');
+  $('designNote').textContent=m==='ind'
+    ?(t==='compare'?'Comparing the three tests for two independent groups on the same data.':'Two independent groups. Group A and group B contain different people.')
+    :(t==='compare'?'Comparing the two tests for repeated measures on the same data.':'Repeated measures: each person provides one score in each condition, and the tests work on the pairwise differences.');
+  PARAMS.forEach(p=>{
+    const w=$('w_'+p.k),show=!p.modes||p.modes.includes(m);w.hidden=!show;
+    $('l_'+p.k).textContent=p.lab(m);$('p_'+p.k).value=S[p.k];$('o_'+p.k).textContent=S[p.k].toFixed(p.dec);
+  });
+  $('lblOwnA').textContent=lab.A;$('lblOwnB').textContent=lab.B;
+  $('simBox').hidden=S.source!=='sim';$('ownBox').hidden=S.source!=='own';
+  const to=tailOpts();$('tails').innerHTML=to.map(([v,l])=>`<option value="${v}">${l}</option>`).join('');$('tails').value=S.tails;
+  $('alpha').value=String(S.alpha);
+  const keys=pmKeys();
+  [1,2].forEach(i=>{const k=keys[i-1];$('pmOpt'+i).hidden=!k;if(k){$('pmLab'+i).textContent=PM[k].lab;$('pm'+i).innerHTML=PM[k].o.map(([v,l])=>`<option value="${v}">${l}</option>`).join('');$('pm'+i).value=S.pm[k];}});
+  $('tdNote').hidden=!(t==='td'||(t==='compare'&&S.cmpMode==='ind'));
+  $('shape').value=S.shape;$('round').checked=S.round;$('exact').checked=S.exact;
+  $('seedTxt').textContent='Seed '+S.seed;
+  const dm=S.muA-S.muB,pooled=Math.sqrt((S.sdA*S.sdA+S.sdB*S.sdB)/2);
+  $('truth').innerHTML=(m==='ind'?'True mean difference <b>':'True mean difference <b>')+f(dm,1)+'</b> (d = <b>'+f(dm/pooled,2)+'</b>)'+(m==='paired'?', correlation <b>'+f(S.r,2)+'</b>':'')+'.'+(dm===0?' H₀ is true in the population.':'');
+}
+
+/* ============ Chart helpers ============ */
+function ticks(lo,hi,n=6){const raw=(hi-lo)/n,mag=Math.pow(10,Math.floor(Math.log10(raw))),nm=raw/mag,step=(nm<1.5?1:nm<3?2:nm<7?5:10)*mag,out=[];for(let v=Math.ceil(lo/step-1e-9)*step;v<=hi+1e-9;v+=step)out.push(+v.toPrecision(12));return out;}
+function yAxis(m,W,y,lo,hi,intOnly){let s='';for(const v of ticks(lo,hi,6)){if(intOnly&&v%1!==0)continue;s+=`<line class="ax" x1="${m.l}" x2="${W-m.r}" y1="${y(v)}" y2="${y(v)}"/><text x="${m.l-6}" y="${y(v)+4}" text-anchor="end">${tk(v)}</text>`;}return s;}
+const dot=(cx,cy,c,hollow,r=4)=>hollow?`<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" style="stroke:${c}" stroke-width="1.5" stroke-opacity=".85"/>`:`<circle cx="${cx}" cy="${cy}" r="${r}" style="fill:${c}" fill-opacity=".72"/>`;
+const ring=(cx,cy)=>`<circle cx="${cx}" cy="${cy}" r="8" fill="none" style="stroke:var(--ink)" stroke-width="1.6"/>`;
+const rot=(x,y,t)=>`<text transform="rotate(-90)" x="${-x}" y="${y}" text-anchor="middle">${t}</text>`;
+const medBar=(x,y,w=30)=>`<line x1="${x-w}" x2="${x+w}" y1="${y}" y2="${y}" style="stroke:var(--ink)" stroke-width="3.5"/>`;
+const SGN={pos:'var(--ok)',neg:'var(--rej)',zero:'var(--muted)'};
+
+/* strip plot: dots, median bar and interquartile whiskers; paired scores are joined by lines */
+function chartGroups(A,B,o){
+  o=o||{};const paired=mode()==='paired',lab=L();
+  const W=560,H=340,m={l:50,r:12,t:14,b:50},pw=W-m.l-m.r,ph=H-m.t-m.b;
+  const all=A.concat(B);let lo=Math.min(...all),hi=Math.max(...all);const pad=(hi-lo)*0.06||1;lo-=pad;hi+=pad;
+  const y=v=>px(m.t+ph*(1-(v-lo)/(hi-lo))),x1=px(m.l+pw*0.27),x2=px(m.l+pw*0.73),jw=36;
+  let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Scores for ${lab.A} and ${lab.B}">`+yAxis(m,W,y,lo,hi)+rot(m.t+ph/2,12,'Score');
+  (o.hlines||[]).forEach(h=>{s+=`<line x1="${m.l}" x2="${W-m.r}" y1="${y(h.y)}" y2="${y(h.y)}" style="stroke:${h.c||'var(--ink)'}" stroke-width="1.4" stroke-dasharray="5 4"/><text x="${W-m.r-2}" y="${y(h.y)-4}" text-anchor="end">${h.t}</text>`;});
+  if(paired)for(let i=0;i<A.length;i++){const dd=A[i]-B[i],c=!o.signLines?'var(--muted)':dd>0?SGN.pos:dd<0?SGN.neg:SGN.zero;s+=`<line x1="${x1}" x2="${x2}" y1="${y(A[i])}" y2="${y(B[i])}" style="stroke:${c}" stroke-opacity="${o.signLines?.55:.4}"/>`;}
+  A.forEach((v,i)=>{const dx=paired?0:JIT[i%MAXN]*jw,cx=px(x1+dx),cy=y(v);if(o.ring&&o.ring('A',i,v))s+=ring(cx,cy);s+=dot(cx,cy,'var(--a)',o.hollow&&o.hollow('A',i,v));});
+  B.forEach((v,i)=>{const dx=paired?0:JIT[(i+37)%MAXN]*jw,cx=px(x2+dx),cy=y(v);if(o.ring&&o.ring('B',i,v))s+=ring(cx,cy);s+=dot(cx,cy,'var(--b)',o.hollow&&o.hollow('B',i,v));});
+  [[x1,A],[x2,B]].forEach(([x,arr])=>{
+    const md=median(arr),q1=quantile(arr,.25),q3=quantile(arr,.75);
+    s+=`<line x1="${x}" x2="${x}" y1="${y(q1)}" y2="${y(q3)}" style="stroke:var(--ink)" stroke-width="2.5"/><line x1="${x-8}" x2="${x+8}" y1="${y(q1)}" y2="${y(q1)}" style="stroke:var(--ink)" stroke-width="2.5"/><line x1="${x-8}" x2="${x+8}" y1="${y(q3)}" y2="${y(q3)}" style="stroke:var(--ink)" stroke-width="2.5"/>`+medBar(x,y(md));});
+  s+=`<text style="fill:var(--ink);font-weight:600" x="${x1}" y="${H-m.b+20}" text-anchor="middle">${lab.A}</text><text x="${x1}" y="${H-m.b+35}" text-anchor="middle">n = ${A.length} · Mdn = ${f(median(A))}</text>`;
+  s+=`<text style="fill:var(--ink);font-weight:600" x="${x2}" y="${H-m.b+20}" text-anchor="middle">${lab.B}</text><text x="${x2}" y="${H-m.b+35}" text-anchor="middle">n = ${B.length} · Mdn = ${f(median(B))}</text>`;
+  return s+'</svg>';
+}
+/* Mann–Whitney: ranks of all scores */
+function chartRanks(res){
+  const lab=L(),nA=res.nA,N=res.N,W=300,H=340,m={l:40,r:10,t:14,b:50},pw=W-m.l-m.r,ph=H-m.t-m.b;
+  const y=v=>px(m.t+ph*(1-(v-0.5)/N)),x1=px(m.l+pw*0.28),x2=px(m.l+pw*0.74);
+  let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Ranks of all scores, by group"><text class="chartcap" x="${m.l}" y="9" style="font-weight:600">Ranks of all ${N} scores</text>`;
+  for(const v of ticks(1,N,6)){s+=`<line class="ax" x1="${m.l}" x2="${W-m.r}" y1="${y(v)}" y2="${y(v)}"/><text x="${m.l-6}" y="${y(v)+4}" text-anchor="end">${tk(v)}</text>`;}
+  s+=`<line x1="${m.l}" x2="${W-m.r}" y1="${y((N+1)/2)}" y2="${y((N+1)/2)}" style="stroke:var(--muted)" stroke-dasharray="4 4"/>`;
+  res.ranks.forEach((r,i)=>{const inA=i<nA,x=(inA?x1:x2)+(JIT[(inA?i:i-nA+37)%MAXN])*20;s+=dot(px(x),y(r),inA?'var(--a)':'var(--b)',false,3.4);});
+  const mA=res.RA/nA,mB=res.RB/res.nB;
+  [[x1,mA],[x2,mB]].forEach(([x,v])=>{s+=medBar(x,y(v),26)+`<text style="fill:var(--ink);font-weight:600" x="${x+30}" y="${y(v)+4}">${f(v,1)}</text>`;});
+  s+=`<text style="fill:var(--ink);font-weight:600" x="${x1}" y="${H-m.b+20}" text-anchor="middle">${lab.A}</text><text x="${x1}" y="${H-m.b+35}" text-anchor="middle">mean rank</text>`;
+  s+=`<text style="fill:var(--ink);font-weight:600" x="${x2}" y="${H-m.b+20}" text-anchor="middle">${lab.B}</text><text x="${x2}" y="${H-m.b+35}" text-anchor="middle">mean rank</text>`;
+  return s+'</svg>';
+}
+/* Median test: counts above / at-or-below the grand median */
+function chartMedianBars(res){
+  const lab=L(),W=300,H=340,m={l:40,r:10,t:22,b:50},pw=W-m.l-m.r,ph=H-m.t-m.b,mx=Math.max(res.nA,res.nB),y=v=>px(m.t+ph*(1-v/mx)),bw=62;
+  let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Counts above and at or below the grand median"><text x="${m.l}" y="11" style="font-weight:600">Above vs at/below the median</text>`+yAxis(m,W,y,0,mx,true);
+  [[res.nA,res.a1,'var(--a)',lab.A,m.l+pw*0.27],[res.nB,res.b1,'var(--b)',lab.B,m.l+pw*0.73]].forEach(([n,a,c,nm,x])=>{
+    const ya=y(a),y0=y(0),yt=y(n);
+    s+=`<rect x="${px(x-bw/2)}" y="${y0-(y0-y(n-a))}" width="${bw}" height="${px(y0-y(n-a))}" style="fill:var(--muted)" fill-opacity=".3"/>`;
+    s+=`<rect x="${px(x-bw/2)}" y="${yt}" width="${bw}" height="${px(y(n-a)-yt)}" style="fill:${c}" fill-opacity=".75"/>`;
+    s+=`<text x="${x}" y="${(yt+y(n-a))/2+4}" text-anchor="middle" style="fill:#fff;font-weight:700">${a}</text>`;
+    s+=`<text x="${x}" y="${(y(n-a)+y0)/2+4}" text-anchor="middle" style="fill:var(--ink);font-weight:700">${n-a}</text>`;
+    s+=`<text style="fill:var(--ink);font-weight:600" x="${x}" y="${H-m.b+20}" text-anchor="middle">${nm}</text><text x="${x}" y="${H-m.b+35}" text-anchor="middle">${pc1(a/n)} above</text>`;});
+  return s+'</svg>';
+}
+/* Tukey–Duckworth: end counts against the critical values */
+function chartTD(res){
+  const lab=L(),W=300,H=340,m={l:40,r:10,t:22,b:50},pw=W-m.l-m.r,ph=H-m.t-m.b,mx=Math.max(14,res.C+2),y=v=>px(m.t+ph*(1-v/mx)),bw=80,x=m.l+pw*0.42;
+  let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Tukey–Duckworth end count against critical values"><text x="${m.l}" y="11" style="font-weight:600">End count C = a + b</text>`+yAxis(m,W,y,0,mx,true);
+  [[7,'.05'],[10,'.01'],[13,'.001']].forEach(([v,t])=>{s+=`<line x1="${m.l}" x2="${W-m.r}" y1="${y(v)}" y2="${y(v)}" style="stroke:var(--rej)" stroke-width="1.4" stroke-dasharray="5 4"/><text x="${W-m.r}" y="${y(v)-4}" text-anchor="end" style="fill:var(--rej)">p &lt; ${t}</text>`;});
+  if(res.hi){const ca=res.hi==='A'?'var(--a)':'var(--b)',cb=res.hi==='A'?'var(--b)':'var(--a)';
+    s+=`<rect x="${px(x-bw/2)}" y="${y(res.a)}" width="${bw}" height="${px(y(0)-y(res.a))}" style="fill:${ca}" fill-opacity=".75"/>`;
+    s+=`<rect x="${px(x-bw/2)}" y="${y(res.C)}" width="${bw}" height="${px(y(res.a)-y(res.C))}" style="fill:${cb}" fill-opacity=".75"/>`;
+    if(res.a>0)s+=`<text x="${x}" y="${(y(res.a)+y(0))/2+4}" text-anchor="middle" style="fill:#fff;font-weight:700">a = ${res.a}</text>`;
+    if(res.b>0)s+=`<text x="${x}" y="${(y(res.C)+y(res.a))/2+4}" text-anchor="middle" style="fill:#fff;font-weight:700">b = ${res.b}</text>`;
+  }else s+=`<text x="${x}" y="${y(0)-8}" text-anchor="middle">C = 0</text>`;
+  s+=`<text style="fill:var(--ink);font-weight:600" x="${x}" y="${H-m.b+20}" text-anchor="middle">C = ${res.C}</text><text x="${x}" y="${H-m.b+35}" text-anchor="middle">p ${res.band}</text>`;
+  return s+'</svg>';
+}
+/* Sign test: counts of positive, negative and zero differences */
+function chartSigns(res){
+  const W=300,H=340,m={l:40,r:10,t:22,b:50},pw=W-m.l-m.r,ph=H-m.t-m.b,mx=res.n0,y=v=>px(m.t+ph*(1-v/mx)),bw=52;
+  let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Number of positive, negative and zero differences"><text x="${m.l}" y="11" style="font-weight:600">Signs of the differences</text>`+yAxis(m,W,y,0,mx,true);
+  const cols=[[res.pos,SGN.pos,'A &gt; B',m.l+pw*0.2],[res.neg,SGN.neg,'A &lt; B',m.l+pw*0.5],[res.zero,SGN.zero,'tied',m.l+pw*0.8]];
+  cols.forEach(([n,c,t,x],i)=>{const tt=mode()==='paired'?t.replace('A','1').replace('B','2'):t;
+    s+=`<rect x="${px(x-bw/2)}" y="${y(n)}" width="${bw}" height="${px(y(0)-y(n))}" style="fill:${c}" fill-opacity="${i===2?.35:.75}"/><text x="${x}" y="${y(n)-5}" text-anchor="middle" style="fill:var(--ink);font-weight:700">${n}</text><text style="fill:var(--ink);font-weight:600" x="${x}" y="${H-m.b+20}" text-anchor="middle">${tt}</text>`;});
+  if(res.n>0){const e=res.n/2;s+=`<line x1="${m.l+pw*0.2-bw/2-6}" x2="${m.l+pw*0.5+bw/2+6}" y1="${y(e)}" y2="${y(e)}" style="stroke:var(--ink)" stroke-width="1.4" stroke-dasharray="4 4"/><text x="${m.l+pw*0.35}" y="${y(e)-6}" text-anchor="middle" style="fill:var(--ink)">n/2 if H₀</text>`;}
+  s+=`<text x="${m.l+pw*0.8}" y="${H-m.b+35}" text-anchor="middle">(dropped)</text>`;
+  return s+'</svg>';
+}
+/* Wilcoxon: differences laid out by the rank of their absolute size */
+function chartSignedRanks(res){
+  const W=300,H=340,m={l:46,r:10,t:22,b:50},pw=W-m.l-m.r,ph=H-m.t-m.b,d=res.dnz,n=d.length;
+  let lo=Math.min(0,...d),hi=Math.max(0,...d);const pad=(hi-lo)*0.08||1;lo-=pad;hi+=pad;
+  const y=v=>px(m.t+ph*(1-(v-lo)/(hi-lo))),x=r=>px(m.l+pw*(r-0.5)/n);
+  let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Differences ordered by the rank of their absolute size"><text x="${m.l}" y="11" style="font-weight:600">Differences by rank of |d|</text>`+yAxis(m,W,y,lo,hi)+rot(m.t+ph/2,12,'Difference (1 − 2)');
+  s+=`<line x1="${m.l}" x2="${W-m.r}" y1="${y(0)}" y2="${y(0)}" style="stroke:var(--ink)" stroke-width="1.4"/>`;
+  d.forEach((v,i)=>{const c=v>0?SGN.pos:SGN.neg,cx=x(res.ranks[i]);s+=`<line x1="${cx}" x2="${cx}" y1="${y(0)}" y2="${y(v)}" style="stroke:${c}" stroke-width="${n>40?1.2:2}" stroke-opacity=".6"/>`+dot(cx,y(v),c,false,n>40?2.4:3.4);});
+  s+=`<text x="${m.l+pw/2}" y="${H-m.b+22}" text-anchor="middle">Rank of |difference| (1 = smallest)</text>`;
+  s+=`<text x="${m.l+pw/2}" y="${H-m.b+38}" text-anchor="middle" style="fill:var(--ok)">W⁺ = ${fu(res.Wp)}</text>`;
+  return s+'</svg>';
+}
+/* ============ Null-distribution chart ============ */
+function paArray(p,tails){
+  const L2=p.length,lower=new Float64Array(L2),upper=new Float64Array(L2);let c=0;
+  for(let i=0;i<L2;i++){c+=p[i];lower[i]=c;}c=0;for(let i=L2-1;i>=0;i--){c+=p[i];upper[i]=c;}
+  return Array.from({length:L2},(_,i)=>tails==='greater'?Math.min(1,upper[i]):tails==='less'?Math.min(1,lower[i]):Math.min(1,2*Math.min(lower[i],upper[i])));
+}
+function barsFromDist(p,off,rejFn,prFn,maxBars=160){
+  const n=p.length,k=Math.max(1,Math.ceil(n/maxBars)),bars=[];
+  for(let i=0;i<n;i+=k){const j=Math.min(n-1,i+k-1);let s=0;for(let t=i;t<=j;t++)s+=p[t];const c=Math.round((i+j)/2);
+    bars.push({x0:off+i-.5,x1:off+j+.5,p:s,rej:rejFn(c),pr:prFn(c)});}
+  return bars;
+}
+function barsNormal(mu,sd,pFn,pobs,alpha){
+  const nb=96,lo=mu-4*sd,w=8*sd/nb,bars=[];
+  for(let i=0;i<nb;i++){const x0=lo+i*w,x1=x0+w,cx=(x0+x1)/2,pa=pFn(cx);bars.push({x0,x1,p:Phi((x1-mu)/sd)-Phi((x0-mu)/sd),rej:pa<=alpha+1e-12,pr:pa<=pobs+1e-12});}
+  return bars;
+}
+function chartNull(o){
+  if(!o.bars||!o.bars.length)return '<p class="cap">There is no null distribution to draw for these data.</p>';
+  const W=700,H=250,m={l:56,r:14,t:24,b:40},pw=W-m.l-m.r,ph=H-m.t-m.b,bars=o.bars;
+  const xmin=bars[0].x0,xmax=bars[bars.length-1].x1,X=v=>px(m.l+pw*(v-xmin)/(xmax-xmin));
+  const dens=bars.map(b=>b.p/(b.x1-b.x0)),ymax=(Math.max(...dens)*1.18)||1,Y=v=>px(m.t+ph*(1-v/ymax));
+  let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${o.aria||'Null distribution'}"><defs><pattern id="hatchNP" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="5" style="stroke:var(--ink)" stroke-width="1.6" stroke-opacity=".55"/></pattern></defs>`;
+  for(const v of ticks(0,ymax,4))s+=`<line class="ax" x1="${m.l}" x2="${W-m.r}" y1="${Y(v)}" y2="${Y(v)}"/><text x="${m.l-6}" y="${Y(v)+4}" text-anchor="end">${tk(v)}</text>`;
+  s+=rot(m.t+ph/2,12,o.ylab||'Probability');
+  bars.forEach((b,i)=>{const x0=X(b.x0),w=Math.max(px(X(b.x1)-x0-(bars.length>90?0.3:1)),0.6),h=px(Y(0)-Y(dens[i]));
+    s+=`<rect x="${x0}" y="${Y(dens[i])}" width="${w}" height="${h}" style="fill:${b.rej?'var(--rej)':'var(--a)'}" fill-opacity="${b.rej?.5:.3}"/>`;
+    if(b.pr)s+=`<rect x="${x0}" y="${Y(dens[i])}" width="${w}" height="${h}" fill="url(#hatchNP)"/>`;});
+  const xs=X(o.obs);
+  s+=`<line x1="${xs}" x2="${xs}" y1="${m.t-4}" y2="${Y(0)}" style="stroke:var(--ink)" stroke-width="2.5"/><text style="fill:var(--ink);font-weight:600" x="${Math.min(Math.max(xs,m.l+40),W-m.r-40)}" y="${m.t-8}" text-anchor="middle">${o.obsLabel}</text>`;
+  let tx=ticks(xmin,xmax,8);if(o.intTicks)tx=tx.filter(v=>v%1===0);
+  tx.forEach(v=>{s+=`<text x="${X(v)}" y="${H-m.b+16}" text-anchor="middle">${tk(v)}</text>`;});
+  s+=`<text x="${m.l+pw/2}" y="${H-4}" text-anchor="middle">${o.xlab}</text>`;
+  return s+'</svg>';
+}
+/* ============ Ladder (all p-values on one log axis) and simulation bars ============ */
+function chartLadder(rows,alpha){
+  const W=700,rh=38,m={l:190,r:70,t:14,b:36},H=m.t+m.b+rh*rows.length,pw=W-m.l-m.r,X=p=>px(m.l+pw*(Math.log10(Math.max(p,1e-4))+4)/4);
+  let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="p-values of each test on a logarithmic axis"><rect x="${m.l}" y="${m.t}" width="${px(X(alpha)-m.l)}" height="${rh*rows.length}" style="fill:var(--rej)" fill-opacity=".14"/>`;
+  [[1e-4,'.0001'],[1e-3,'.001'],[1e-2,'.01'],[1e-1,'.1'],[1,'1']].forEach(([v,t])=>{s+=`<line class="ax" x1="${X(v)}" x2="${X(v)}" y1="${m.t}" y2="${H-m.b}"/><text x="${X(v)}" y="${H-m.b+16}" text-anchor="middle">${t}</text>`;});
+  s+=`<line x1="${X(alpha)}" x2="${X(alpha)}" y1="${m.t}" y2="${H-m.b}" style="stroke:var(--rej)" stroke-width="1.6" stroke-dasharray="5 4"/><text x="${X(alpha)}" y="${H-m.b+31}" text-anchor="middle" style="fill:var(--rej)">α = ${fp(alpha)}</text>`;
+  s+=`<text x="${m.l+pw/2}" y="${H-2}" text-anchor="middle" style="opacity:0">p</text>`;
+  rows.forEach((r,i)=>{const cy=m.t+rh*i+rh/2,c=r.sig?'var(--ok)':'#7b8392';
+    s+=`<line x1="${m.l}" x2="${W-m.r}" y1="${cy}" y2="${cy}" class="ax" stroke-opacity=".5"/><text x="${m.l-10}" y="${cy+4}" text-anchor="end" style="fill:var(--ink);font-weight:${r.ref?400:600}">${r.name}</text>`;
+    s+=`<circle cx="${X(r.p)}" cy="${cy}" r="7" style="fill:${c}" ${r.ref?'fill-opacity=".45" stroke-dasharray="2 2" stroke="var(--ink)"':''}/><text x="${W-m.r+8}" y="${cy+4}">${r.pTxt}</text>`;});
+  return s+'</svg>';
+}
+function chartSimBars(rows,alpha,h0,selKey){
+  const W=700,rh=34,m={l:190,r:60,t:10,b:30},H=m.t+m.b+rh*rows.length,pw=W-m.l-m.r,X=v=>px(m.l+pw*v);
+  let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Share of simulated experiments that were significant">`;
+  [0,.25,.5,.75,1].forEach(v=>{s+=`<line class="ax" x1="${X(v)}" x2="${X(v)}" y1="${m.t}" y2="${H-m.b}"/><text x="${X(v)}" y="${H-m.b+16}" text-anchor="middle">${Math.round(v*100)}%</text>`;});
+  if(h0)s+=`<line x1="${X(alpha)}" x2="${X(alpha)}" y1="${m.t}" y2="${H-m.b}" style="stroke:var(--rej)" stroke-width="1.6" stroke-dasharray="5 4"/>`;
+  rows.forEach((r,i)=>{const y0=m.t+rh*i+6,sel=r.key===selKey;
+    s+=`<text x="${m.l-10}" y="${y0+rh/2-2}" text-anchor="end" style="fill:var(--ink);font-weight:${sel?700:500}">${r.name}</text><rect x="${m.l}" y="${y0}" width="${px(pw*r.rate)}" height="${rh-12}" rx="3" style="fill:${r.ref?'var(--muted)':'var(--a)'}" fill-opacity="${sel?.9:.5}"/><text x="${px(m.l+pw*r.rate+6)}" y="${y0+rh/2-2}">${pc1(r.rate)}</text>`;});
+  return s+'</svg>';
+}
+
+/* ============ Compute ============ */
+function computeAll(A,B){
+  const m=mode(),t=S.tails,a=S.alpha;
+  if(m==='ind')return{mode:m,mwu:mwuTest(A,B,t,S.pm.mwu,a),median:medianTest(A,B,t,S.pm.median,a),td:tdTest(A,B,a),ref:welchRef(A,B,t,a)};
+  return{mode:m,sign:signTest(A,B,t,a),wilcox:wilcoxTest(A,B,t,S.pm.wilcox,a),ref:pairedRef(A,B,t,a)};
+}
+const effLabel=(v,sc=1)=>{v=Math.abs(v);const t=[.1,.3,.5].map(x=>x/sc);return v<t[0]?'negligible':v<t[1]?'small':v<t[2]?'medium':'large';};
+const tailTxt=()=>S.tails==='two'?'two-sided':'one-sided';
+const big=x=>{const v=Math.exp(x);if(v<1e6)return Math.round(v).toLocaleString('en-US');const e=Math.floor(Math.log10(v));return (v/Math.pow(10,e)).toFixed(2)+' × 10<sup>'+e+'</sup>';};
+function decision(sig,p){return `<b>${sig?'Significant':'Not significant'}</b> (${tailTxt()} p ${apaP(p)} ${sig?'≤':'>'} α = ${fp(S.alpha)}): ${sig?'reject':'do not reject'} H₀.`;}
+function badgeHTML(sig){return `<span class="badge ${sig?'sig':'ns'}">${sig?'Significant':'Not significant'}</span>`;}
+
+/* ============ Rows shared by the comparison tables ============ */
+function rowsFor(all){
+  if(all.mode==='ind'){
+    const a=all.mwu,b=all.median,c=all.td,w=all.ref;
+    return[
+      {key:'mwu',name:'Mann–Whitney U',stat:'U = '+fu(a.U),p:a.p,pTxt:fp(a.p),sig:a.sig,uses:'Ranks of every score',eff:'r_rb = '+fr(a.rbc)},
+      {key:'median',name:'Median test',stat:b.degenerate?'–':(S.pm.median==='fisher'?'a = '+b.a1:'χ² = '+f(b.stat,2)),p:b.p,pTxt:b.degenerate?'n/a':fp(b.p),sig:b.sig,uses:'Only above / below the grand median',eff:b.degenerate?'–':'φ = '+fr(b.phi)},
+      {key:'td',name:'Tukey–Duckworth',stat:'C = '+c.C,p:c.pPerm,pTxt:c.band,sig:c.sig,uses:'Only the scores beyond the other group’s extremes',eff:'–',ptip:'table; permutation p = '+fp(c.pPerm)},
+      {key:'ref',name:'Welch’s t (reference)',stat:'t('+f(w.df,1)+') = '+f(w.t,2),p:w.p,pTxt:fp(w.p),sig:w.sig,uses:'Means and SDs (parametric)',eff:'–',ref:true}];
+  }
+  const a=all.sign,b=all.wilcox,w=all.ref;
+  return[
+    {key:'sign',name:'Sign test',stat:a.pos+' of '+a.n+' positive',p:a.p,pTxt:fp(a.p),sig:a.sig,uses:'Only the sign of each difference',eff:'p̂ = '+fr(a.prop)},
+    {key:'wilcox',name:'Wilcoxon signed-rank',stat:'W⁺ = '+fu(b.Wp),p:b.p,pTxt:fp(b.p),sig:b.sig,uses:'Signs and ranks of |difference|',eff:'r_rb = '+fr(b.rbc)},
+    {key:'ref',name:'Paired t (reference)',stat:'t('+w.df+') = '+f(w.t,2),p:w.p,pTxt:fp(w.p),sig:w.sig,uses:'Mean and SD of differences (parametric)',eff:'–',ref:true}];
+}
+function cmpTable(el,rows,selKey,full){
+  el.innerHTML='<thead><tr><th>Test</th><th class="num">Statistic</th><th class="num">p</th><th>Decision at α</th>'+(full?'<th class="num">Effect size</th><th>Information used</th>':'')+'</tr></thead><tbody>'+
+    rows.map(r=>`<tr class="${r.key===selKey?'sel':''}"><td class="name">${r.name}</td><td class="num">${r.stat}</td><td class="num">${r.pTxt}${full&&r.ptip?'<br><span class="cap" style="margin:0;font-family:system-ui">'+r.ptip+'</span>':''}</td><td>${badgeHTML(r.sig)}</td>${full?`<td class="num">${r.eff}</td><td class="note">${r.uses}</td>`:''}</tr>`).join('')+'</tbody>';
+}
+
+/* ============ Data panel ============ */
+const lg=(c,t,st)=>`<span><i style="background:${c};${st||''}"></i>${t}</span>`;
+function renderData(A,B,all){
+  const t=S.test,paired=mode()==='paired',lab=L();
+  let o={},second='',legend=[lg('var(--a)',lab.A),lg('var(--b)',lab.B),'<span>Thick bar = median; whiskers = interquartile range</span>'],cap='';
+  if(t==='mwu'||(t==='compare'&&!paired)){
+    second=chartRanks(all.mwu);
+    legend.push('<span>Right panel: rank of every score when pooled (1 = lowest); dashed line = mean rank if H₀</span>');
+    cap=`Mann–Whitney compares where the two groups’ scores sit in the pooled ranking. Mean ranks of ${f(all.mwu.RA/all.mwu.nA,1)} (${lab.A}) and ${f(all.mwu.RB/all.mwu.nB,1)} (${lab.B}) would both be ${f((all.mwu.N+1)/2,1)} if H₀ were true.`;
+  }else if(t==='median'){
+    const r=all.median;o.hlines=[{y:r.M,t:'grand median '+f(r.M)}];o.hollow=(g,i,v)=>v<=r.M;second=chartMedianBars(r);
+    legend.push('<span>Hollow dots are at or below the grand median; the dashed line is the grand median</span>');
+    cap='The median test discards everything except which side of the grand median each score falls on, then compares the two proportions above it.';
+  }else if(t==='td'){
+    const r=all.td;let ringFn=()=>false;
+    if(r.hi==='A'){o.hlines=[{y:r.maxB,t:'highest in B'},{y:r.minA,t:'lowest in A'}];ringFn=(g,i,v)=>g==='A'?v>r.maxB:v<r.minA;}
+    else if(r.hi==='B'){o.hlines=[{y:r.maxA,t:'highest in A'},{y:r.minB,t:'lowest in B'}];ringFn=(g,i,v)=>g==='B'?v>r.maxA:v<r.minB;}
+    else ringFn=(g,i,v)=>{const mx=Math.max(r.maxA,r.maxB),mn=Math.min(r.minA,r.minB);return v===mx||v===mn;};
+    o.ring=ringFn;second=chartTD(r);
+    legend.push('<span>Ringed dots are the end values that are counted; dashed lines mark the other group’s extremes</span>');
+    cap='Only the scores that stick out beyond the other group count. If both extremes sit in the same group, or the groups overlap everywhere, C is 0.';
+  }else if(t==='sign'){
+    o.signLines=true;second=chartSigns(all.sign);
+    legend.push(lg('var(--ok)',`${lab.s1} &gt; ${lab.s2}`),lg('var(--rej)',`${lab.s1} &lt; ${lab.s2}`));
+    cap='Each line joins one person’s two scores. The sign test counts only how many lines slope up and how many slope down.';
+  }else if(t==='wilcox'||(t==='compare'&&paired)){
+    o.signLines=true;second=chartSignedRanks(all.wilcox);
+    legend.push(lg('var(--ok)',`${lab.s1} &gt; ${lab.s2}`),lg('var(--rej)',`${lab.s1} &lt; ${lab.s2}`));
+    cap='The right panel orders the non-zero differences by absolute size, then keeps their signs: W⁺ is the sum of the ranks of the positive ones.';
+  }
+  $('chartMain').innerHTML=chartGroups(A,B,o);$('chartSecond').innerHTML=second;
+  $('dataLegend').innerHTML=legend.join('');$('dataCap').textContent=cap;
+}
+
+/* ============ Null distribution panel ============ */
+function renderNull(all){
+  const t=S.test,al=S.alpha;let o,title,cap='';
+  if(t==='mwu'){
+    const r=all.mwu;title='Where does the observed U fall if H₀ were true?';
+    if(r.exact){const pa=paArray(r.dist,r.tails);o={bars:barsFromDist(r.dist,0,i=>pa[i]<=al+1e-12,i=>pa[i]<=r.p+1e-12),obs:r.UA,obsLabel:'U_A = '+fu(r.UA),xlab:'U for '+L().A+' (number of pairs in which A wins)',aria:'Exact null distribution of U',intTicks:true};
+      cap=`Exact distribution: all ${big(lchoose(r.N,r.nA))} equally likely ways to split the ${r.N} ranks into groups of ${r.nA} and ${r.nB}. It is symmetric about ${f(r.mu,1)}.`;}
+    else if(r.sigma>0){o={bars:barsNormal(r.mu,r.sigma,x=>normalP(x,r.mu,r.sigma,r.tails),r.p,al),obs:r.UA,obsLabel:'U_A = '+fu(r.UA),xlab:'U for '+L().A,aria:'Normal approximation to the null distribution of U',ylab:'Density'};
+      cap=`Normal approximation: mean ${f(r.mu,1)}, SD ${f(r.sigma,2)}${r.tied?' (reduced for ties)':''}, with continuity correction. Used because ${r.tied?'there are tied scores':'a group has more than 30 scores'}${r.fellBack?' (exact was requested but is not available)':''}${S.pm.mwu==='norm'?' and you chose it':''}.`;}
+  }else if(t==='median'){
+    const r=all.median;title='Where does the count above the median fall if H₀ were true?';
+    if(!r.degenerate){const hd=r.hd,pa=hd.p.map((_,i)=>medP(hd.lo+i,r.K-hd.lo-i,r.nA,r.nB,r.pm,r.tails).p);
+      o={bars:barsFromDist(hd.p,hd.lo,i=>pa[i]<=al+1e-12,i=>pa[i]<=r.p+1e-12),obs:r.a1,obsLabel:'observed a = '+r.a1,xlab:'Number of '+L().A+' scores above the grand median',aria:'Hypergeometric null distribution',intTicks:true};
+      cap=`With ${r.K} scores above the median in total and ${r.nA} in ${L().A}, the count above it in ${L().A} follows a hypergeometric distribution if H₀ is true (expected ${f(r.nA*r.K/r.N,1)}). Shading follows the p-value method you chose.`;}
+  }else if(t==='td'){
+    const r=all.td;title='Where would C fall if the group labels were arbitrary?';
+    const last=Math.min(r.perm.length-1,Math.max(14,r.C+2,(()=>{let j=r.perm.length-1;while(j>0&&r.perm[j]<1e-5)j--;return j+1;})())),p=Array.from(r.perm).slice(0,last+1);
+    o={bars:barsFromDist(p,0,i=>i>=r.crit,i=>i>=r.C),obs:r.C,obsLabel:'C = '+r.C,xlab:'End count C',aria:'Permutation distribution of the end count',intTicks:true};
+    cap=`Re-assigning the ${r.nA+r.nB} scores to groups of ${r.nA} and ${r.nB} at random ${r.R.toLocaleString('en-US')} times gives this distribution of C. The red region is C ≥ ${r.crit}, Tukey’s critical value for α = ${fp(S.alpha)}; the permutation p-value for the observed C is ${fp(r.pPerm)}.`;
+  }else if(t==='sign'){
+    const r=all.sign;title='Where does the number of positive differences fall if H₀ were true?';
+    const pa=paArray(r.dist,r.tails);o={bars:barsFromDist(r.dist,0,i=>pa[i]<=al+1e-12,i=>pa[i]<=r.p+1e-12),obs:r.pos,obsLabel:r.pos+' positive of '+r.n,xlab:'Number of pairs with '+L().s1+' &gt; '+L().s2,aria:'Binomial null distribution',intTicks:true};
+    cap=`If H₀ is true each non-zero difference is equally likely to be positive or negative, so the number of positives follows a binomial distribution with n = ${r.n} and probability ½.`;
+  }else if(t==='wilcox'){
+    const r=all.wilcox;title='Where does the observed W⁺ fall if H₀ were true?';
+    if(r.exact){const pa=paArray(r.dist,r.tails);o={bars:barsFromDist(r.dist,0,i=>pa[i]<=al+1e-12,i=>pa[i]<=r.p+1e-12),obs:r.Wp,obsLabel:'W⁺ = '+fu(r.Wp),xlab:'W⁺ (sum of the ranks of the positive differences)',aria:'Exact null distribution of W+',intTicks:true};
+      cap=`Exact distribution: each of the ${r.n} ranks 1…${r.n} is independently positive or negative with probability ½, giving ${big(r.n*Math.LN2)} equally likely sign patterns. It is symmetric about ${f(r.mn,2)}.`;}
+    else if(r.se>0){o={bars:barsNormal(r.mn,r.se,x=>normalP(x,r.mn,r.se,r.tails),r.p,al),obs:r.Wp,obsLabel:'W⁺ = '+fu(r.Wp),xlab:'W⁺',aria:'Normal approximation to the null distribution of W+',ylab:'Density'};
+      cap=`Normal approximation: mean ${f(r.mn,2)}, SD ${f(r.se,2)}${r.tied?' (reduced for tied |d|)':''}, with continuity correction. Used because ${r.tied?'some absolute differences are tied':'n exceeds 50'}${r.fellBack?' (exact was requested but is not available)':''}${S.pm.wilcox==='norm'?' and you chose it':''}.`;}
+  }
+  $('distTitle').textContent=title;$('chartNull').innerHTML=o?chartNull(o):'<p class="cap">There is no null distribution to draw for these data.</p>';$('nullCap').innerHTML=cap;
+  if(o&&t!=='td')$('nullCap').innerHTML=cap+(S.tails==='two'?'':' Because the alternative is one-sided, only one tail is shaded.');
+}
+
+/* ============ Result panel ============ */
+function guideRows(rows){
+  const hd='<caption>Effect-size guidelines: your result is highlighted</caption><thead><tr><th>Measure</th><th class="num">Value</th><th>Negligible</th><th>Small</th><th>Medium</th><th>Large</th></tr></thead><tbody>';
+  const body=rows.map(([lab,v,sc=1])=>{
+    const t=[.1,.3,.5].map(x=>x/sc),cur=v<t[0]?0:v<t[1]?1:v<t[2]?2:3;
+    const T=['&lt; '+fr(t[0]),fr(t[0])+' to &lt; '+fr(t[1]),fr(t[1])+' to &lt; '+fr(t[2]),'≥ '+fr(t[2])];
+    return `<tr><td>${lab}</td><td class="num">${fr(v)}</td>${T.map((x,i)=>`<td class="${i===cur?'on':''}">${x}</td>`).join('')}</tr>`;}).join('');
+  $('guideTable').innerHTML=hd+body+'</tbody>';
+}
+const card=([l,v,sub])=>`<div class="stat"><small>${l}</small><b>${v}</b>${sub?`<small style="margin-top:2px">${sub}</small>`:''}</div>`;
+function showResult(o){
+  $('badge').innerHTML=o.badge||'';
+  $('stats').innerHTML=o.stats.map(card).join('');
+  $('interp').innerHTML=o.interp;
+  $('warn').hidden=!o.warn;$('warn').innerHTML=o.warn||'';
+  $('detail').innerHTML=o.detail||'';
+  $('guideWrap').hidden=!o.guides;if(o.guides)guideRows(o.guides);
+  $('apa').textContent=o.apa;
+}
+function renderResult(all){
+  const t=S.test,lab=L();let o;
+  if(t==='mwu'){
+    const r=all.mwu,A=lab.A,B=lab.B;
+    const warn=r.fellBack?'Exact p-values need untied scores and at most 30 per group, so the normal approximation was used instead.':(r.tied&&S.pm.mwu==='auto'?'Tied scores are present, so the p-value comes from the normal approximation with a tie correction (an exact p-value assumes no ties).':'');
+    o={badge:badgeHTML(r.sig),
+      stats:[['U<sub>A</sub>',fu(r.UA)],['U<sub>B</sub>',fu(r.UB)],r.exact?['Method','exact']:['z (continuity-corrected)',f(Math.sign(r.z)*Math.max(0,Math.abs(r.UA-r.mu)-0.5)/r.sigma,2)],['p-value ('+tailTxt()+')',fp(r.p)],['Rank-biserial r',fr(r.rbc)],['P(A &gt; B)',fr(r.ps)],['Hodges–Lehmann shift',f(r.hl),lvl()+' CI ['+f(r.hlLo)+', '+f(r.hlHi)+']']],
+      interp:`${decision(r.sig,r.p)} Ranking all ${r.N} scores together, ${A} has a mean rank of ${f(r.RA/r.nA,1)} and ${B} ${f(r.RB/r.nB,1)} (both would be ${f((r.N+1)/2,1)} under H₀). In ${pc1(r.ps)} of the ${(r.nA*r.nB).toLocaleString('en-US')} cross-group pairs the ${A} score is larger (ties count half): a rank-biserial correlation of ${fr(r.rbc)}, a <b>${effLabel(r.rbc)}</b> effect. The Hodges–Lehmann estimate puts the typical ${A} − ${B} difference at ${f(r.hl)} (${lvl()} CI [${f(r.hlLo)}, ${f(r.hlHi)}]). If the two distributions have the same shape this is a shift in location; if not, it is a difference in P(A &gt; B).`,
+      warn,guides:[['Rank-biserial r',Math.abs(r.rbc)]],
+      detail:`<thead><tr><th>Group</th><th>n</th><th>Median</th><th>Rank sum</th><th>Mean rank</th><th>U</th></tr></thead><tbody><tr><td>${A}</td><td class="num">${r.nA}</td><td class="num">${f(r.medA)}</td><td class="num">${fu(r.RA)}</td><td class="num">${f(r.RA/r.nA,1)}</td><td class="num">${fu(r.UA)}</td></tr><tr><td>${B}</td><td class="num">${r.nB}</td><td class="num">${f(r.medB)}</td><td class="num">${fu(r.RB)}</td><td class="num">${f(r.RB/r.nB,1)}</td><td class="num">${fu(r.UB)}</td></tr></tbody>`,
+      apa:`Mann–Whitney U = ${fu(r.U)}, ${r.exact?'':'z = '+f(Math.abs(r.UA-r.mu)>0?Math.sign(r.z)*Math.max(0,Math.abs(r.UA-r.mu)-0.5)/r.sigma:0,2)+', '}p ${apaP(r.p)}, r_rb = ${fr(r.rbc)}, n₁ = ${r.nA}, n₂ = ${r.nB}`};
+  }else if(t==='median'){
+    const r=all.median,A=lab.A,B=lab.B;
+    if(r.degenerate)o={badge:'<span class="badge ns">Not computable</span>',stats:[['Grand median',f(r.M)],['Above the median',r.K+' of '+r.N]],interp:'No score lies above the grand median (or every score does), so there is no contrast to test. This happens when more than half of all scores are tied at the median; try un-rounded data.',apa:'Median test could not be computed (no scores above the grand median).'};
+    else{
+      const chiM=r.pm!=='fisher',warn=chiM&&r.minE<5?`The smallest expected count is ${f(r.minE,2)} (< 5), so the χ² approximation is unreliable; Fisher’s exact test is safer here.`:'';
+      o={badge:badgeHTML(r.sig),
+        stats:[['Grand median',f(r.M)],['Above the median',pc1(r.propA)+' vs '+pc1(r.propB),A+' vs '+B],r.pm==='fisher'?['a (A above median)',String(r.a1)]:['χ²(1)'+(r.pm==='yates'?' Yates':''),f(r.stat,2)],['p-value ('+tailTxt()+')',fp(r.p)],['φ',fr(r.phi)],['Odds ratio',f(r.or,2),r.orAdj?'0.5 added to each cell':'above vs at/below']],
+        interp:`${decision(r.sig,r.p)} The grand median of all ${r.N} scores is ${f(r.M)}. ${pc1(r.propA)} of ${A} (${r.a1} of ${r.nA}) but ${pc1(r.propB)} of ${B} (${r.b1} of ${r.nB}) lie above it. The association between group and being above the median is φ = ${fr(r.phi)}, a <b>${effLabel(r.phi)}</b> effect. The test ignores how far each score is from the median, which is why it is usually less powerful than Mann–Whitney.`,
+        warn,guides:[['φ',Math.abs(r.phi)]],
+        detail:`<thead><tr><th>Group</th><th>Above M</th><th>At or below M</th><th>n</th><th>Expected above</th></tr></thead><tbody><tr><td>${A}</td><td class="num">${r.a1}</td><td class="num">${r.a0}</td><td class="num">${r.nA}</td><td class="num">${f(r.E[0],2)}</td></tr><tr><td>${B}</td><td class="num">${r.b1}</td><td class="num">${r.b0}</td><td class="num">${r.nB}</td><td class="num">${f(r.E[2],2)}</td></tr></tbody>`,
+        apa:(r.pm==='fisher'?`Median test (Fisher’s exact), p ${apaP(r.p)}`:`Median test, χ²(1, N = ${r.N}) = ${f(r.stat,2)}, p ${apaP(r.p)}`)+`, φ = ${fr(Math.abs(r.phi))}, ${pc1(r.propA)} vs ${pc1(r.propB)} above the grand median`};
+    }
+  }else if(t==='td'){
+    const r=all.td,A=lab.A,B=lab.B,hiN=r.hi==='A'?A:B,loN=r.hi==='A'?B:A;
+    const w=[];if(r.uneven)w.push(`The group sizes (${r.nA} and ${r.nB}) differ by more than 4:3, so the critical values are only rough; Tukey’s paper gives adjustments.`);if(r.big)w.push('A group has more than 30 scores, where the quick-test critical values lose accuracy.');
+    o={badge:badgeHTML(r.sig),
+      stats:[['a (counted in '+(r.hi?hiN:'–')+')',String(r.a)],['b (counted in '+(r.hi?loN:'–')+')',String(r.b)],['C = a + b',String(r.C)],['Critical value (α = '+fp(r.alpha)+')','≥ '+r.crit],['p (Tukey table)',r.band],['Permutation p',fp(r.pPerm),'Monte Carlo reference']],
+      interp:r.hi?`${r.sig?'<b>Significant</b>':'<b>Not significant</b>'}: ${hiN} holds the highest score (${f(r.hi==='A'?r.maxA:r.maxB)}) and ${loN} the lowest (${f(r.hi==='A'?r.minB:r.minA)}). ${r.a} score${r.a===1?'':'s'} in ${hiN} exceed${r.a===1?'s':''} every score in ${loN}, and ${r.b} in ${loN} fall${r.b===1?'s':''} below every score in ${hiN}, so C = ${r.a} + ${r.b} = ${r.C}. Tukey’s two-sided critical values are 7, 10 and 13 for p &lt; .05, .01 and .001, so ${r.C>=r.crit?`C ≥ ${r.crit} rejects H₀ at α = ${fp(r.alpha)}`:`C &lt; ${r.crit} does not reject H₀ at α = ${fp(r.alpha)}`} (p ${r.band}). ${hiN} tends to produce the higher scores.`
+        :`<b>Not significant</b>: the highest and lowest scores are not in different groups (or tie across groups), so no scores stick out beyond the other group at both ends. C = 0 and H₀ cannot be rejected.`,
+      warn:w.join(' '),
+      detail:`<thead><tr><th>Group</th><th>n</th><th>Lowest</th><th>Highest</th><th>Counted</th></tr></thead><tbody><tr><td>${A}</td><td class="num">${r.nA}</td><td class="num">${f(r.minA)}</td><td class="num">${f(r.maxA)}</td><td class="num">${r.hi==='A'?r.a:r.hi==='B'?r.b:0}</td></tr><tr><td>${B}</td><td class="num">${r.nB}</td><td class="num">${f(r.minB)}</td><td class="num">${f(r.maxB)}</td><td class="num">${r.hi==='B'?r.a:r.hi==='A'?r.b:0}</td></tr></tbody>`,
+      apa:`Tukey–Duckworth test, C = ${r.C} (a = ${r.a}, b = ${r.b}), p ${r.band}, n₁ = ${r.nA}, n₂ = ${r.nB}`};
+  }else if(t==='sign'){
+    const r=all.sign,c1=lab.s1,c2=lab.s2;
+    o={badge:badgeHTML(r.sig),
+      stats:[['Positive / negative',r.pos+' / '+r.neg],['Tied (dropped)',String(r.zero)],['n used',String(r.n)],['p-value ('+tailTxt()+')',fp(r.p)],['Proportion positive',fr(r.prop),lvl()+' CI ['+fr(r.ciLo)+', '+fr(r.ciHi)+']'],['Cohen’s g',fr(r.prop-0.5)],['Median difference',f(r.medD)]],
+      interp:`${decision(r.sig,r.p)} Of the ${r.n} pairs with a non-zero difference, ${r.pos} (${pc1(r.prop)}) have ${c1} &gt; ${c2} and ${r.neg} have ${c1} &lt; ${c2}${r.zero?`; ${r.zero} tied pair${r.zero===1?' was':'s were'} dropped`:''}. If H₀ were true each pair would be positive with probability ½. The proportion positive is ${fr(r.prop)} (${lvl()} Clopper–Pearson CI [${fr(r.ciLo)}, ${fr(r.ciHi)}]), a Cohen’s g of ${fr(r.prop-0.5)} (<b>${effLabel(r.prop-0.5,2)}</b>). Only the signs are used, so the size of each difference does not matter.`,
+      guides:[['Cohen’s g',Math.abs(r.prop-0.5),2]],
+      detail:`<thead><tr><th>Sign of ${c1} − ${c2}</th><th>Pairs</th><th>Share of used pairs</th></tr></thead><tbody><tr><td>Positive</td><td class="num">${r.pos}</td><td class="num">${pc1(r.pos/r.n)}</td></tr><tr><td>Negative</td><td class="num">${r.neg}</td><td class="num">${pc1(r.neg/r.n)}</td></tr><tr><td>Zero (dropped)</td><td class="num">${r.zero}</td><td class="num">–</td></tr></tbody>`,
+      apa:`Sign test: ${r.pos} of ${r.n} differences positive, p ${apaP(r.p)}, proportion = ${fr(r.prop)}, ${lvl()} CI [${fr(r.ciLo)}, ${fr(r.ciHi)}]`};
+  }else if(t==='wilcox'){
+    const r=all.wilcox,c1=lab.s1,c2=lab.s2,zc=r.se>0?Math.sign(r.Wp-r.mn)*Math.max(0,Math.abs(r.Wp-r.mn)-0.5)/r.se:0;
+    const warn=r.fellBack?'Exact p-values need untied absolute differences and n ≤ 50, so the normal approximation was used instead.':(r.tied&&S.pm.wilcox==='auto'?'Some absolute differences are tied, so the p-value comes from the normal approximation with a tie correction.':'');
+    o={badge:badgeHTML(r.sig),
+      stats:[['W⁺ (positive ranks)',fu(r.Wp)],['W⁻ (negative ranks)',fu(r.Wm)],r.exact?['Method','exact']:['z (continuity-corrected)',f(zc,2)],['p-value ('+tailTxt()+')',fp(r.p)],['Matched-pairs r_rb',fr(r.rbc)],['Hodges–Lehmann',f(r.hl),lvl()+' CI ['+f(r.hlLo)+', '+f(r.hlHi)+']'],['n used',String(r.n),r.zero?r.zero+' zero'+(r.zero===1?'':'s')+' dropped':'']],
+      interp:`${decision(r.sig,r.p)} After dropping ${r.zero} zero difference${r.zero===1?'':'s'}, the ${r.n} remaining differences are ranked by absolute size. The positive differences (${c1} &gt; ${c2}) carry a rank sum of W⁺ = ${fu(r.Wp)} and the negative ones W⁻ = ${fu(r.Wm)}; under H₀ each would be about ${f(r.mn,1)}. The matched-pairs rank-biserial correlation is ${fr(r.rbc)} (<b>${effLabel(r.rbc)}</b>), and the Hodges–Lehmann estimate of the typical ${c1} − ${c2} difference is ${f(r.hl)} (${lvl()} CI [${f(r.hlLo)}, ${f(r.hlHi)}]). The test assumes the differences are distributed symmetrically about their centre.`,
+      warn,guides:[['Rank-biserial r',Math.abs(r.rbc)]],
+      detail:`<thead><tr><th>Differences</th><th>Count</th><th>Rank sum</th></tr></thead><tbody><tr><td>Positive</td><td class="num">${r.dnz.filter(v=>v>0).length}</td><td class="num">${fu(r.Wp)}</td></tr><tr><td>Negative</td><td class="num">${r.dnz.filter(v=>v<0).length}</td><td class="num">${fu(r.Wm)}</td></tr><tr><td>Zero (dropped)</td><td class="num">${r.zero}</td><td class="num">–</td></tr></tbody>`,
+      apa:`Wilcoxon signed-rank W⁺ = ${fu(r.Wp)}, ${r.exact?'':'z = '+f(zc,2)+', '}p ${apaP(r.p)}, r_rb = ${fr(r.rbc)}, n = ${r.n}`};
+  }
+  showResult(o);
+  cmpTable($('cmp'),rowsFor(all),t);
+}
+
+/* ============ "How the test works" ============ */
+function renderHow(all){
+  const t=S.test,lab=L();let title,h='';
+  if(t==='mwu'){
+    const r=all.mwu;title='How the Mann–Whitney U test works';
+    h=`<p><b>H₀:</b> both populations are the same, so a random ${lab.A} score is as likely to beat a random ${lab.B} score as to lose to it. <b>H₁:</b> one group tends to give larger scores, P(A &gt; B) ≠ ½.</p>
+    <ol class="rel"><li>Pool all <b>${r.N}</b> scores and rank them from 1 (smallest) to ${r.N}. Tied scores share the average of their ranks${r.tied?` (${r.ties.length} tie group${r.ties.length===1?'':'s'} here)`:''}.</li>
+    <li>Add up the ranks in ${lab.A}: R<sub>A</sub> = <b>${fu(r.RA)}</b>. Under H₀ its expected value is n<sub>A</sub>(N + 1)/2 = ${fu(r.nA*(r.N+1)/2)}.</li>
+    <li>Convert to U<sub>A</sub> = R<sub>A</sub> − n<sub>A</sub>(n<sub>A</sub> + 1)/2 = <b>${fu(r.UA)}</b>, the number of ${lab.A}–${lab.B} pairs in which the ${lab.A} score is larger (ties count ½). U<sub>A</sub> + U<sub>B</sub> = n<sub>A</sub>n<sub>B</sub> = ${(r.nA*r.nB).toLocaleString('en-US')}.</li>
+    <li>Compare U<sub>A</sub> with its null distribution, which is centred on n<sub>A</sub>n<sub>B</sub>/2 = ${f(r.mu,1)}. ${r.exact?'Here the exact distribution is used.':`Here a normal curve with SD ${f(r.sigma,2)} is used.`}</li></ol>
+    <p class="cap">Because only ranks enter, outliers and skew barely matter, but the test is not a test of means or medians as such: it detects a location shift when the two shapes match, and a difference in P(A &gt; B) otherwise. Try the <i>Skewed</i> and <i>Outliers</i> presets and compare with the Welch row below.</p>`;
+  }else if(t==='median'){
+    const r=all.median;title='How the median test works';
+    h=`<p><b>H₀:</b> both groups come from populations with the same median, so each group has the same chance of a score landing above the combined median. <b>H₁:</b> the chances differ.</p>
+    <ol class="rel"><li>Find the grand median <b>M = ${f(r.M)}</b> of all ${r.N} scores.</li>
+    <li>Label each score <i>above M</i> (strictly greater) or <i>at or below M</i>. Scores equal to M count as “at or below”, so ties at the median do not matter much.</li>
+    <li>Build the 2 × 2 table of group by above / at-or-below${r.degenerate?'.':` (${r.a1} / ${r.a0} for ${lab.A}, ${r.b1} / ${r.b0} for ${lab.B}).`}</li>
+    <li>Test the table with Fisher’s exact test (the hypergeometric distribution of the count above M in ${lab.A}, given the margins) or with a χ² test, with or without Yates’ continuity correction. The effect size is φ = √(χ²/N), signed by which group has more scores above M.</li></ol>
+    <p class="cap">Throwing away everything but the side of the median costs power (about 64% of the efficiency of the t test for normal data, versus about 95% for Mann–Whitney), but it also makes the test usable when you can only classify scores as above or below a cut-off, and no outlier can matter more than one count.</p>`;
+  }else if(t==='td'){
+    const r=all.td;title='How the Tukey–Duckworth test works';
+    h=`<p><b>H₀:</b> both groups come from the same population. <b>H₁:</b> one group tends to give larger scores. It was designed to be remembered and used in the field without tables or a computer.</p>
+    <ol class="rel"><li>Take two groups of roughly the same size, one holding the highest score overall and the other the lowest. (If one group holds both extremes, or they tie, C = 0.)</li>
+    <li><b>a</b> = the number of scores in the group with the highest value that exceed <i>every</i> score in the other group: <b>${r.a}</b>.</li>
+    <li><b>b</b> = the number of scores in the other group that fall below <i>every</i> score in the first group: <b>${r.b}</b>.</li>
+    <li>The statistic is <b>C = a + b = ${r.C}</b>. Compare with the two-sided critical values <b>7</b> (p &lt; .05), <b>10</b> (p &lt; .01) and <b>13</b> (p &lt; .001).</li></ol>
+    <table class="mini"><caption>Critical values of C (two-sided)</caption><thead><tr><th>p</th><th>&lt; .05</th><th>&lt; .01</th><th>&lt; .001</th></tr></thead><tbody><tr><td>C at least</td><td class="num${r.C>=7?'':''}">7</td><td class="num">10</td><td class="num">13</td></tr></tbody></table>
+    <p class="cap">The critical values are approximate. They work best when each group has at most about 30 scores and the group sizes differ by no more than 4:3; Tukey (1959) gives adjustments otherwise. It uses only the extreme scores, so it is fast but has less power than rank tests. The permutation p-value on this page is a Monte Carlo check, not part of Tukey’s procedure.</p>`;
+  }else if(t==='sign'){
+    const r=all.sign;title='How the sign test works';
+    h=`<p><b>H₀:</b> the median of the differences is 0, so each non-zero difference is equally likely to be positive or negative. <b>H₁:</b> the median difference is not 0.</p>
+    <ol class="rel"><li>Subtract the two scores for each pair and keep only the <i>sign</i> of the difference.</li>
+    <li>Drop pairs with a difference of exactly 0 (${r.zero} here), leaving n = <b>${r.n}</b>.</li>
+    <li>Count the positive differences: <b>${r.pos}</b>.</li>
+    <li>Under H₀ the count is binomial(n = ${r.n}, ½). The two-sided p-value doubles the smaller tail, p = 2 × min[P(X ≤ ${r.pos}), P(X ≥ ${r.pos})].</li></ol>
+    <p class="cap">The sign test makes almost no assumptions (not even symmetry), and it needs only “better or worse” for each pair, so it works for ordinal data. The price is power: it ignores how big each difference is (about 64% of the efficiency of the paired t test for normal data).</p>`;
+  }else if(t==='wilcox'){
+    const r=all.wilcox;title='How the Wilcoxon signed-rank test works';
+    h=`<p><b>H₀:</b> the differences are distributed symmetrically about 0. <b>H₁:</b> they are centred away from 0.</p>
+    <ol class="rel"><li>Compute each difference and drop the zeros (${r.zero} here), leaving n = <b>${r.n}</b>.</li>
+    <li>Rank the <i>absolute</i> differences from 1 (smallest) to ${r.n}; tied values share the average rank${r.tied?` (${r.ties.length} tie group${r.ties.length===1?'':'s'} here)`:''}.</li>
+    <li>Attach each difference’s sign to its rank. W⁺ = the sum of the positive ranks = <b>${fu(r.Wp)}</b>; W⁻ = the sum of the negative ranks = <b>${fu(r.Wm)}</b>; W⁺ + W⁻ = n(n + 1)/2 = ${fu(r.tot)}.</li>
+    <li>Under H₀ every rank is equally likely to be positive or negative, so W⁺ has mean n(n + 1)/4 = ${f(r.mn,2)}. ${r.exact?'The exact distribution is enumerated.':`A normal curve with SD ${f(r.se,2)} is used.`}</li></ol>
+    <p class="cap">It uses more information than the sign test (the order of the sizes), so it is usually more powerful, with about 95% of the efficiency of the paired t test for normal data. It assumes the differences are symmetric; with strongly skewed differences the sign test is the safer choice.</p>`;
+  }
+  $('howTitle').textContent=title;$('howBody').innerHTML=h;
+}
+
+/* ============ Compare tab ============ */
+function renderLadder(all){
+  const rows=rowsFor(all);
+  $('chartLadder').innerHTML=chartLadder(rows.map(r=>({name:r.name,p:Math.max(r.p,1e-4),pTxt:r.key==='td'?'p '+r.pTxt:'p = '+r.pTxt.replace(/^</,'<'),sig:r.sig,ref:r.ref})),S.alpha);
+  cmpTable($('cmpAll'),rows,null,true);
+  $('cmpCap').textContent=(all.mode==='ind'?'The Tukey–Duckworth dot is placed at its Monte Carlo permutation p-value; Tukey’s table gives only the bands shown. ':'')+'Dashed, faded dots are parametric reference tests on the same data. All tests use the alternative hypothesis and α in the sidebar (Tukey–Duckworth is two-sided only).';
+}
+function renderRel(all){
+  const rows=rowsFor(all),by=k=>rows.find(r=>r.key===k);let h='';
+  const dec=rows.filter(r=>!r.ref).map(r=>`${r.name} ${r.sig?'rejects':'does not reject'}`).join(', ');
+  if(all.mode==='ind'){
+    const sigs=rows.filter(r=>!r.ref&&r.sig).length;
+    h=`<p style="margin-top:0"><b>On these data:</b> ${dec} H₀ at α = ${fp(S.alpha)} (${sigs} of 3 significant). The three tests use progressively less of the same information:</p>
+    <ul class="rel"><li><b>Mann–Whitney U</b> uses the <i>rank</i> of every score. It is the most powerful of the three for most shapes, with about 95% of the t test’s efficiency for normal data and no less than about 86% for any shape, and it can beat the t test with heavy tails or skew.</li>
+    <li><b>Median test</b> keeps only whether each score is above or below the pooled median. It is the Mann–Whitney information collapsed to a 2 × 2 table (about 64% of the t test’s efficiency for normal data), which makes it robust to extreme scores but less sensitive, especially in small samples where Fisher’s exact test is conservative.</li>
+    <li><b>Tukey–Duckworth</b> keeps only the scores that stick out beyond the other group at each end. It is a hand-computable shortcut with approximate critical values and has the least power of the three, so it often fails to reject when the others do (and rarely the reverse).</li></ul>
+    <p>So when the tests disagree, the usual pattern is <i>Mann–Whitney ≤ median ≤ Tukey–Duckworth</i> in p-value, because less information means less evidence. Use the simulation below to see this as power. Under H₀ all valid tests reject about α of the time (the median test and Tukey–Duckworth tend to fall a little below α).</p>`;
+  }else{
+    h=`<p style="margin-top:0"><b>On these data:</b> ${dec} H₀ at α = ${fp(S.alpha)}. Both tests analyse the pairwise differences, but they use different amounts of them:</p>
+    <ul class="rel"><li><b>Sign test</b> uses only whether each difference is positive or negative. It assumes nothing about the shape of the differences and works for merely ordinal data, but ignores size (about 64% of the paired t test’s efficiency for normal data).</li>
+    <li><b>Wilcoxon signed-rank</b> uses the signs <i>and</i> the rank of each absolute difference, so a large positive difference counts for more than a small one. It is usually more powerful (about 95% efficiency for normal data) but assumes the differences are symmetric about their centre.</li></ul>
+    <p>The sign test is the Wilcoxon test with every rank replaced by 1, so it can only be as or less informative. With skewed differences the two can disagree because they target slightly different centres (the median of the differences versus the pseudomedian). Zero differences are dropped by both, which is why many ties cost power.</p>`;
+  }
+  h+=`<p class="cap" style="margin-bottom:0">Efficiencies are asymptotic relative efficiencies against the t test for normal data: the larger the number, the smaller the sample needed for the same power.</p>`;
+  $('relBody').innerHTML=h;
+}
+
+/* ============ Simulation ============ */
+function runSim(N){
+  const rng=mulberry32(S.simSeed*104729+S.nA*31+S.nB),g=normalGen(rng),dz=()=>shapeDraw(S.shape,g,rng);
+  const m=mode(),paired=m==='paired',nA=S.nA,nB=paired?S.nA:S.nB,r=S.r,k=Math.sqrt(1-r*r),rd=S.round?Math.round:(v=>v);
+  const keys=paired?['sign','wilcox','ref']:['mwu','median','td','ref'],cnt={};keys.forEach(kk=>cnt[kk]=0);let valid=0;
+  for(let it=0;it<N;it++){
+    const A=new Array(nA),B=new Array(nB);
+    if(paired){for(let i=0;i<nA;i++){const z1=dz(),z2=dz();A[i]=rd(S.muA+S.sdA*z1);B[i]=rd(S.muB+S.sdB*(r*z1+k*z2));}}
+    else{for(let i=0;i<nA;i++)A[i]=rd(S.muA+S.sdA*dz());for(let i=0;i<nB;i++)B[i]=rd(S.muB+S.sdB*dz());}
+    if(paired){const a=signTest(A,B,S.tails,S.alpha);if(a.invalid)continue;valid++;
+      if(a.sig)cnt.sign++;if(wilcoxTest(A,B,S.tails,S.pm.wilcox,S.alpha,true).sig)cnt.wilcox++;if(pairedRef(A,B,S.tails,S.alpha).sig)cnt.ref++;}
+    else{valid++;
+      if(mwuTest(A,B,S.tails,S.pm.mwu,S.alpha,true).sig)cnt.mwu++;
+      if(medianTest(A,B,S.tails,S.pm.median,S.alpha).sig)cnt.median++;
+      if(tdTest(A,B,S.alpha,true).sig)cnt.td++;
+      if(welchRef(A,B,S.tails,S.alpha).sig)cnt.ref++;}
+  }
+  return{cnt,N:valid,keys,paired};
+}
+function renderSim(){
+  if(!CUR)return;
+  const N=+$('simN').value,sim=runSim(N);
+  if(!sim.N){$('chartSim').innerHTML='';$('simTxt').textContent='';$('simRates').innerHTML='';return;}
+  const h0=S.muA===S.muB,what=h0?'false-positive rate (Type I error)':'power';
+  const nm={mwu:'Mann–Whitney U',median:'Median test',td:'Tukey–Duckworth (two-sided only)',sign:'Sign test',wilcox:'Wilcoxon signed-rank',ref:sim.paired?'Paired t (reference)':'Welch’s t (reference)'};
+  const rows=sim.keys.map(kk=>({key:kk,name:nm[kk],rate:sim.cnt[kk]/sim.N,ref:kk==='ref'}));
+  $('chartSim').innerHTML=chartSimBars(rows,S.alpha,h0,S.test==='compare'?null:S.test);
+  const sel=S.test==='compare'?null:rows.find(r=>r.key===S.test);
+  const me=p=>(1.96*Math.sqrt(Math.max(p*(1-p),1e-9)/sim.N)*100).toFixed(1);
+  $('simTxt').innerHTML=sel
+    ?`<b>${Math.round(sel.rate*sim.N).toLocaleString('en-US')}</b> of ${sim.N.toLocaleString('en-US')} simulated experiments (<b>${pc1(sel.rate)}</b>, ±${me(sel.rate)} points) were significant at α = ${fp(S.alpha)} with the ${sel.name.replace(' (two-sided only)','').toLowerCase().replace('mann–whitney u','Mann–Whitney U').replace('tukey–duckworth','Tukey–Duckworth').replace('wilcoxon','Wilcoxon')}: an estimate of the ${what}.`
+    :`Across ${sim.N.toLocaleString('en-US')} simulated experiments the share significant at α = ${fp(S.alpha)} estimates each test’s ${what}.`;
+  $('simRates').innerHTML='<thead><tr><th>Test</th><th class="num">Share significant</th><th class="num">± 95% MC error</th></tr></thead><tbody>'+rows.map(r=>`<tr class="${r.key===S.test?'sel':''}"><td class="name">${r.name}</td><td class="num">${pc1(r.rate)}</td><td class="num">${me(r.rate)}</td></tr>`).join('')+'</tbody>';
+  const sh=S.shape!=='normal'?` Data are drawn from a <b>${SHAPES[S.shape]}</b> population.`:'';
+  $('simNote').innerHTML=`Uses the population settings in the sliders (not your own data)${S.round?' with scores rounded to whole numbers':''}.${sh} ${h0?'The true difference is 0, so each valid test should reject in about α of experiments.':'There is a true difference, so the shares are estimates of power; the test using more of the information should find it more often.'}${sim.paired&&S.shape==='skew'?' With skewed data the paired differences are skewed too, which breaks the Wilcoxon symmetry assumption even when the means are equal.':''}`;
+}
+let simTimer=null;
+function scheduleSim(){clearTimeout(simTimer);simTimer=setTimeout(renderSim,40);}
+
+/* ============ Formulas and key ============ */
+const FORMULAS=`
+<h3 style="margin-top:0">Mann–Whitney U</h3>
+<p class="f">R<sub>A</sub> = Σ ranks of group A in the pooled sample &nbsp; U<sub>A</sub> = R<sub>A</sub> − n<sub>A</sub>(n<sub>A</sub> + 1)/2 &nbsp; U<sub>B</sub> = n<sub>A</sub>n<sub>B</sub> − U<sub>A</sub></p>
+<p class="f">μ<sub>U</sub> = n<sub>A</sub>n<sub>B</sub>/2 &nbsp; σ<sub>U</sub>² = (n<sub>A</sub>n<sub>B</sub>/12)[(N + 1) − Σ(t³ − t)/(N(N − 1))] &nbsp; z = (|U<sub>A</sub> − μ<sub>U</sub>| − ½)/σ<sub>U</sub></p>
+<p class="f">r<sub>rb</sub> = (U<sub>A</sub> − U<sub>B</sub>)/(n<sub>A</sub>n<sub>B</sub>) &nbsp; P(A &gt; B) = U<sub>A</sub>/(n<sub>A</sub>n<sub>B</sub>) &nbsp; Hodges–Lehmann shift = median of all n<sub>A</sub>n<sub>B</sub> differences A<sub>i</sub> − B<sub>j</sub></p>
+<p class="cap">The exact p-value sums the null distribution, built by counting the ways to choose n<sub>A</sub> of the ranks 1…N. Its CI uses the order statistics of the pairwise differences at the α/2 quantile of that distribution.</p>
+<h3>Median test</h3>
+<p class="f">M = median of all N scores &nbsp; a = number of A scores &gt; M &nbsp; K = total number above M</p>
+<p class="f">P(a) = C(K, a)·C(N − K, n<sub>A</sub> − a) / C(N, n<sub>A</sub>) &nbsp; (Fisher: two-sided p sums every table no more probable than the observed one)</p>
+<p class="f">χ² = Σ (|O − E| − c)²/E, c = 0 or ½ (Yates), df = 1 &nbsp; φ = √(χ²/N) &nbsp; OR = (a·(n<sub>B</sub> − b)) / ((n<sub>A</sub> − a)·b)</p>
+<h3>Tukey–Duckworth</h3>
+<p class="f">a = # scores in the group with the overall maximum that exceed the other group’s maximum &nbsp; b = # scores in the other group below the first group’s minimum &nbsp; C = a + b</p>
+<p class="f">Reject at two-sided p &lt; .05, .01, .001 when C ≥ 7, 10, 13 (Tukey, 1959). The permutation p on this page is (1 + #{C* ≥ C})/(1 + 4000) over random relabellings.</p>
+<h3>Sign test</h3>
+<p class="f">d<sub>i</sub> = X<sub>i1</sub> − X<sub>i2</sub>, zeros dropped, n = n⁺ + n⁻ &nbsp; X = n⁺ ~ Binomial(n, ½)</p>
+<p class="f">p (two-sided) = 2·min[P(X ≤ n⁺), P(X ≥ n⁺)] &nbsp; p̂ = n⁺/n &nbsp; g = p̂ − ½ &nbsp; Clopper–Pearson CI from beta quantiles B(α/2; n⁺, n − n⁺ + 1) and B(1 − α/2; n⁺ + 1, n − n⁺)</p>
+<h3>Wilcoxon signed-rank</h3>
+<p class="f">W⁺ = Σ ranks of |d<sub>i</sub>| over d<sub>i</sub> &gt; 0 &nbsp; W⁻ = n(n + 1)/2 − W⁺ &nbsp; μ<sub>W</sub> = n(n + 1)/4</p>
+<p class="f">σ<sub>W</sub>² = n(n + 1)(2n + 1)/24 − Σ(t³ − t)/48 &nbsp; z = (|W⁺ − μ<sub>W</sub>| − ½)/σ<sub>W</sub> &nbsp; r<sub>rb</sub> = (W⁺ − W⁻)/(W⁺ + W⁻)</p>
+<p class="f">Hodges–Lehmann = median of the n(n + 1)/2 Walsh averages (d<sub>i</sub> + d<sub>j</sub>)/2, i ≤ j</p>
+<h3>Efficiency against the t test (normal data)</h3>
+<p class="f">Mann–Whitney and Wilcoxon: 3/π ≈ 0.955 &nbsp; Median test and sign test: 2/π ≈ 0.637</p>`;
+const KEY=[
+['U, U<sub>A</sub>, U<sub>B</sub>','Mann–Whitney statistic: the number of cross-group pairs in which group A’s score is larger (U<sub>A</sub>) or smaller (U<sub>B</sub>), with ties counting ½. The conventional single U is the smaller of the two.'],
+['R<sub>A</sub>, R<sub>B</sub>','Rank sums of each group in the pooled ranking.'],
+['Rank','The position of a score when all scores are sorted from smallest (1) to largest. Tied scores share the average of the positions they occupy.'],
+['Ties','Equal scores. They rule out exact rank-test p-values and are handled by the average-rank rule plus a variance correction in the normal approximation.'],
+['Exact vs normal approximation','The exact p-value uses the complete null distribution of the statistic. The normal approximation replaces it with a normal curve (with a continuity correction) and is used for large samples or when ties are present.'],
+['P(A &gt; B)','Probability of superiority: the chance that a randomly chosen A score exceeds a randomly chosen B score (ties count ½). ½ means no difference.'],
+['r<sub>rb</sub>','Rank-biserial correlation, an effect size from −1 to 1: the proportion of favourable pairs minus the proportion of unfavourable pairs. By convention ≈ .1 is small, .3 medium, .5 large.'],
+['Hodges–Lehmann estimate','A robust estimate of the typical difference: the median of all pairwise differences (two groups) or of all Walsh averages (paired data). Its CI comes from the same ordering as the test.'],
+['M, a, b (median test)','M is the grand median. In the median test a is the number of group A scores above M and b the number of group B scores above M.'],
+['Fisher’s exact test','Computes the p-value for a 2 × 2 table directly from the hypergeometric distribution, with no large-sample approximation.'],
+['χ², Yates’ correction','The approximate test of the 2 × 2 table; Yates’ correction subtracts ½ from each |O − E| to reduce the over-rejection of small samples.'],
+['φ','Phi: the correlation between group and above / below the median. √(χ²/N).'],
+['Odds ratio','The odds of being above the median in group A divided by the odds in group B. 1 means no difference.'],
+['a, b, C (Tukey–Duckworth)','The end counts: a scores of the high group above everything in the other group, b scores of the other group below everything in the high group, and C = a + b.'],
+['Permutation p-value','The share of random re-assignments of scores to groups that give a statistic at least as extreme as the observed one. Here it is a Monte Carlo check on Tukey’s table.'],
+['n⁺, n⁻, p̂','Numbers of positive and negative differences (zeros dropped) and the proportion positive, n⁺/n.'],
+['Cohen’s g','p̂ − ½, the sign test’s effect size. Conventionally .05 is small, .15 medium and .25 large.'],
+['W⁺, W⁻','Sums of the ranks of the positive and negative differences in the Wilcoxon test.'],
+['Walsh average','(d<sub>i</sub> + d<sub>j</sub>)/2 for a pair of differences; the Hodges–Lehmann estimate is their median.'],
+['Symmetry assumption','The Wilcoxon test assumes the differences are distributed symmetrically about their centre. The sign test does not.'],
+['Asymptotic relative efficiency','How the sample size needed by one test compares with another for the same power in large samples. A value of 0.955 means 100 / 0.955 ≈ 105 scores are needed for every 100 a t test needs, under normality.'],
+['Type I error, power','Rejecting a true H₀ (a false positive), and the probability of rejecting H₀ when it is false.'],
+['Seed','The number that fixes the random generator, so the same seed reproduces the same simulated sample.']
+];
+
+/* ============ Wiring ============ */
+function showErr(msg){
+  $('msg').hidden=false;$('msg').textContent=msg;$('chartMain').innerHTML='';$('chartSecond').innerHTML='';$('dataLegend').innerHTML='';$('dataCap').textContent='';
+  ['pDist','pRes','pHow','pLadder','pRel'].forEach(id=>$(id).hidden=true);
+  CUR=null;$('chartSim').innerHTML='';$('simTxt').textContent='';$('simRates').innerHTML='';$('simNote').textContent='';
+}
+function numberPanels(){let i=1;['pData','pDist','pRes','pHow','pLadder','pRel'].forEach(id=>{const p=$(id);if(!p.hidden){p.querySelector('h2 .n').textContent=i++;}});}
+function update(){
+  syncUI();
+  const d=getData();
+  if(d.err){showErr(d.err);return;}
+  const all=computeAll(d.A,d.B);
+  if(all.mode==='paired'&&all.sign.invalid){showErr('Every pair has a difference of exactly zero, so the sign and Wilcoxon tests have nothing to work with.');return;}
+  $('msg').hidden=true;CUR={A:d.A,B:d.B,all};
+  const cmp=S.test==='compare';
+  $('pDist').hidden=cmp;$('pRes').hidden=cmp;$('pHow').hidden=cmp;$('pLadder').hidden=!cmp;$('pRel').hidden=!cmp;
+  renderData(d.A,d.B,all);
+  if(cmp){renderLadder(all);renderRel(all);}else{renderNull(all);renderResult(all);renderHow(all);}
+  numberPanels();scheduleSim();
+}
+function currentTheme(){
+  const t=document.documentElement.getAttribute('data-theme');
+  return t||(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
+}
+function syncThemeBtn(){const dark=currentTheme()==='dark',b=$('themeBtn');b.textContent=dark?'☀ Light theme':'☾ Dark theme';b.setAttribute('aria-pressed',dark);}
+function loadSim(){const d=simData(),fmt=a=>a.map(v=>v.toFixed(2)).join(', ');$('ownA').value=fmt(d.A);$('ownB').value=fmt(d.B);}
+function init(){
+  buildControls();genBase();syncThemeBtn();
+  $('formulas').innerHTML=FORMULAS;$('keyList').innerHTML=KEY.map(([t,d])=>`<dt>${t}</dt><dd>${d}</dd>`).join('');
+  $('themeBtn').onclick=()=>{const next=currentTheme()==='dark'?'light':'dark';document.documentElement.setAttribute('data-theme',next);try{localStorage.setItem('ttest-theme',next);}catch(e){}syncThemeBtn();};
+  if(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').addEventListener)matchMedia('(prefers-color-scheme: dark)').addEventListener('change',syncThemeBtn);
+  const setTest=t=>{const before=mode();S.test=t;if(S.source==='own'&&mode()!==before){/* keep own data; paired needs equal lengths */}update();};
+  ['mwu','median','td','sign','wilcox','compare'].forEach(k=>$('tab-'+k).onclick=()=>setTest(k));
+  $('tab-cind').onclick=()=>{S.cmpMode='ind';update();};$('tab-cpair').onclick=()=>{S.cmpMode='paired';update();};
+  document.querySelectorAll('input[name=src]').forEach(el=>el.addEventListener('change',e=>{S.source=e.target.value;if(S.source==='own'&&!$('ownA').value&&!$('ownB').value)loadSim();update();}));
+  $('tails').onchange=e=>{S.tails=e.target.value;update();};
+  $('alpha').onchange=e=>{S.alpha=+e.target.value;update();};
+  [1,2].forEach(i=>$('pm'+i).onchange=e=>{const k=pmKeys()[i-1];S.pm[k]=e.target.value;update();});
+  $('shape').onchange=e=>{S.shape=e.target.value;genBase();update();};
+  $('round').onchange=e=>{S.round=e.target.checked;update();};
+  $('exact').onchange=e=>{S.exact=e.target.checked;update();};
+  $('resample').onclick=()=>{S.seed=Math.floor(Math.random()*1e6);genBase();update();};
+  $('ownA').oninput=update;$('ownB').oninput=update;
+  $('loadSim').onclick=()=>{loadSim();update();};
+  $('simN').onchange=renderSim;
+  $('simAgain').onclick=()=>{S.simSeed=Math.floor(Math.random()*1e6);renderSim();};
+  $('copy').onclick=()=>{
+    const txt=$('apa').textContent,done=()=>{$('copy').textContent='Copied';setTimeout(()=>$('copy').textContent='Copy',1200);};
+    if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(txt).then(done,done);
+    else{const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');}catch(e){}ta.remove();done();}
+  };
+  update();
+}
+init();
+
+</script>
+<script>
+(function(){
+"use strict";
+const $=id=>document.getElementById(id);
+const DEC={"start": {"q": "How were the scores collected?", "o": [["Two separate groups of people (independent groups)", "i1"], ["The same people measured twice, or matched pairs (repeated measures)", "p1"]]}, "i1": {"q": "Can you rank all the scores, or do you know only whether each score is above or below a cut-point? (For example, some values are recorded only as “over 100”.)", "o": [["I can rank all of the scores", "i2"], ["Only above or below a cut-point: some values are censored or open-ended", "r_median"]]}, "i2": {"q": "What matters most to you?", "o": [["A well-powered test, an effect size and an estimate of the size of the shift", "r_mwu"], ["A test aimed at the medians that is robust when the two distributions differ in shape", "r_median"], ["A quick answer by hand, with no calculation", "r_td"], ["Not sure: I want to see the tests side by side", "r_ind_cmp"]]}, "p1": {"q": "Is the size of each difference meaningful, so that you can say one change is bigger than another? (Rather than knowing only the direction: better, worse or the same.)", "o": [["Only the direction (better, worse, same)", "r_sign"], ["Yes, the size of each change is meaningful", "p2"]]}, "p2": {"q": "Are the differences (condition 1 minus condition 2) roughly symmetric around their centre?", "o": [["Yes, roughly symmetric", "r_wilcox"], ["No, clearly skewed", "r_sign_skew"], ["Not sure", "r_pair_cmp"]]}, "r_mwu": {"t": "Mann–Whitney U", "x": "It uses the ranks of all the scores, so it keeps most of the information (about 95.5% as efficient as the t test for normal data), and it gives the rank-biserial correlation, P(A &gt; B) and a Hodges–Lehmann shift with a confidence interval.", "i": [["Open: Mann–Whitney U", ["tab-mwu"], "exact or normal-approximation p-value with effect sizes"], ["Open: Compare all (independent)", ["tab-compare", "tab-cind"], "see it beside the median and Tukey–Duckworth tests"]], "n": ["It is a test of medians only if the two distributions have the same shape; otherwise read it as “which group tends to score higher” (P(A &gt; B)).", "With many ties exact p-values are unavailable, and a tie-corrected normal approximation is used.", "For very small groups use the exact p-value."]}, "r_median": {"t": "Median test", "x": "It counts how many scores in each group fall above the grand median and tests that 2 × 2 table, so it needs only above-or-below information. It stays valid with censored values and is aimed squarely at medians, but it discards the size of the scores (efficiency 2/π ≈ 64% against the t test).", "i": [["Open: Median test", ["tab-median"], "Fisher’s exact or χ² version, with φ and an odds ratio"], ["Open: Compare all (independent)", ["tab-compare", "tab-cind"], "see what you give up compared with Mann–Whitney U"]], "n": ["Use the Fisher’s exact version for small samples, and χ² only when counts are larger.", "If you can rank every score, Mann–Whitney U has more power."]}, "r_td": {"t": "Tukey–Duckworth quick test", "x": "Count how many scores in the higher group exceed the other group’s maximum and how many in the other group fall below the higher group’s minimum. Add the two counts and compare the total with 7, 10 or 13 for p &lt; .05, .01 or .001.", "i": [["Open: Tukey–Duckworth", ["tab-td"], "end counts, Tukey’s table and a permutation p-value"], ["Open: Mann–Whitney U", ["tab-mwu"], "confirm with a reportable p-value and effect size"]], "n": ["It is a rough screening test: two-sided only, with just three tabulated levels.", "It is meant for groups of roughly similar size.", "Use Mann–Whitney U when you need an exact p-value or an effect size."]}, "r_ind_cmp": {"t": "Compare all (independent groups)", "x": "Run Mann–Whitney U, the median test and the Tukey–Duckworth test on exactly the same data. Tests that use less of the information, the median and Tukey–Duckworth tests, are expected to be less sensitive.", "i": [["Open: Compare all (independent)", ["tab-compare", "tab-cind"], "all three tests, one data set"]], "n": ["If the tests disagree, prefer Mann–Whitney U when you can rank every score."]}, "r_sign": {"t": "Sign test", "x": "It looks only at whether each person went up or down (ties are dropped) and tests whether the share going up is ½ using the exact binomial distribution. It assumes nothing about the size of the changes, so it suits ordinal or direction-only data, at the cost of efficiency (2/π ≈ 64%).", "i": [["Open: Sign test", ["tab-sign"], "exact p-value, Clopper–Pearson interval and Cohen’s g"]], "n": ["Zero differences are dropped and reduce n.", "If the size of each change is meaningful and the differences are roughly symmetric, the Wilcoxon test is more powerful."]}, "r_sign_skew": {"t": "Sign test", "x": "Wilcoxon’s test assumes the differences are symmetric about their centre; with clearly skewed differences it no longer tests the median change. The sign test needs no symmetry.", "i": [["Open: Sign test", ["tab-sign"], "no symmetry assumption"], ["Open: Wilcoxon signed-rank", ["tab-wilcox"], "for comparison, to see how much the skew matters"]], "n": ["The sign test pays for its generality with lower power."]}, "r_wilcox": {"t": "Wilcoxon signed-rank test", "x": "It uses the direction and the rank of the size of each difference, so it is much more powerful than the sign test (about 95.5% as efficient as the t test for normal data). It gives the rank-biserial correlation and a Hodges–Lehmann estimate with an interval.", "i": [["Open: Wilcoxon signed-rank", ["tab-wilcox"], "exact or normal-approximation p-value with effect sizes"], ["Open: Sign test", ["tab-sign"], "the less demanding alternative"]], "n": ["The assumption is symmetry of the differences, not of the raw scores.", "Zero differences are dropped; ties force a tie-corrected normal approximation.", "For small n use the exact p-value."]}, "r_pair_cmp": {"t": "Compare all (repeated measures)", "x": "Run the sign test and the Wilcoxon signed-rank test on the same differences. If they agree, the symmetry assumption is not an issue; if they differ, read the sign test as the safer one.", "i": [["Open: Compare all (repeated measures)", ["tab-compare", "tab-cpair"], "both tests, one data set"]], "n": ["If the two disagree, check the differences for skew."]}};
+let path=['start'];
+function clicks(ids){ids.forEach(id=>{const b=$(id);if(b)b.click();});window.scrollTo({top:0,behavior:'smooth'});}
+function render(){
+  const id=path[path.length-1],nd=DEC[id],box=$('decideBody');let h='';
+  if(path.length>1)h+='<div class="crumbs">'+path.slice(0,-1).map((p,i)=>{const q=DEC[p],lab=q.o.find(o=>o[1]===path[i+1])[0];return`<button type="button" class="crumb" data-back="${i}"><span>${q.q.split('?')[0].replace(/\s*\([^)]*\)/g,'')+'?'}</span> <b>${lab.replace(/\s*[:(].*$/,'')}</b></button>`;}).join('')+'</div>';
+  if(nd.q){
+    h+=`<p class="dq">${nd.q}</p><div class="dopts">`+nd.o.map(o=>`<button type="button" class="dopt" data-go="${o[1]}">${o[0]}</button>`).join('')+'</div>';
+  }else{
+    h+=`<div class="dres"><h3 style="margin-top:0">Suggested</h3><p class="dtitle">${nd.t}</p><p>${nd.x}</p>`;
+    if(nd.i.length)h+='<ul class="dlist">'+nd.i.map(([lab,ids,why])=>`<li><button type="button" class="pill" data-open="${ids.join(',')}">${lab}</button> <span>${why}</span></li>`).join('')+'</ul>';
+    if(nd.n.length)h+='<h3>Things to keep in mind</h3><ul class="rel">'+nd.n.map(t=>`<li>${t}</li>`).join('')+'</ul>';
+    h+='</div>';
+  }
+  if(path.length>1)h+='<div class="row" style="margin-top:12px"><button type="button" class="pill" data-reset="1">Start over</button></div>';
+  box.innerHTML=h;
+}
+$('decideBody').addEventListener('click',e=>{
+  const t=e.target.closest('button');if(!t)return;
+  if(t.dataset.go){path.push(t.dataset.go);render();}
+  else if(t.dataset.back!=null){path=path.slice(0,+t.dataset.back+1);render();}
+  else if(t.dataset.reset){path=['start'];render();}
+  else if(t.dataset.open)clicks(t.dataset.open.split(','));
+});
+window.__decide={DEC,go:p=>{path=p;render();}};
+render();
+})();
+</script>
+</body>
+</html>
