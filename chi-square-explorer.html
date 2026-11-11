@@ -2,763 +2,810 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Chi-Square Explorer</title>
-<style>body{margin:16px}</style>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chi-Square Explorer: Goodness of Fit, Independence, Phi &amp; Cramér's V</title>
+<meta name="description" content="Interactive explorer for the chi-square goodness-of-fit test and test of independence, with phi and Cramér's V as effect sizes and as independent measures of association. Edit counts, drag bars, change sliders and watch the statistics respond.">
+<script>try{var t=localStorage.getItem("ttest-theme");if(t==="light"||t==="dark")document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
+<style>
+:root{
+  --bg:#f5f4ef;--panel:#ffffff;--ink:#1b1e25;--muted:#5b6370;--line:#dedbd1;--soft:#efede6;
+  --a:#2468d6;--b:#d9730d;--rej:#c8372d;--ok:#1b8a5a;--accent:#2468d6;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){--bg:#13151a;--panel:#1c1f26;--ink:#e8e9ed;--muted:#9aa1ae;--line:#323744;--soft:#252932;
+    --a:#6ba4ff;--b:#ffa24f;--rej:#ff7064;--ok:#4cc58c;--accent:#6ba4ff;}
+}
+:root[data-theme="dark"]{--bg:#13151a;--panel:#1c1f26;--ink:#e8e9ed;--muted:#9aa1ae;--line:#323744;--soft:#252932;
+    --a:#6ba4ff;--b:#ffa24f;--rej:#ff7064;--ok:#4cc58c;--accent:#6ba4ff;}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{padding:26px 22px 8px;max-width:1280px;margin:0 auto;position:relative}
+.theme-btn{position:absolute;top:26px;right:22px;border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:7px 14px;border-radius:999px;font:inherit;font-size:.85rem;font-weight:600;cursor:pointer}
+.theme-btn:hover{border-color:var(--accent)}
+h1{margin:0 0 4px;font-size:1.65rem;letter-spacing:-.01em}
+header p{margin:0;color:var(--muted);max-width:760px}
+.tabs{display:flex;gap:6px;margin-top:16px;flex-wrap:wrap}
+.tab{border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:9px 16px;border-radius:999px;font:inherit;font-weight:600;cursor:pointer}
+.tab[aria-selected="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.tab:focus-visible,.theme-btn:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,summary:focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 55%,transparent);outline-offset:2px}
+main{max-width:1280px;margin:0 auto;padding:14px 22px 30px;display:grid;grid-template-columns:330px minmax(0,1fr);gap:18px;align-items:start}
+@media(max-width:940px){main{grid-template-columns:1fr}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 18px}
+.controls{position:sticky;top:10px}
+@media(max-width:940px){.controls{position:static}}
+.stack{display:flex;flex-direction:column;gap:18px;min-width:0}
+h2{margin:0 0 10px;font-size:1.02rem}
+h2 .n{display:inline-block;background:var(--soft);border-radius:6px;padding:0 7px;margin-right:6px;color:var(--muted);font-variant-numeric:tabular-nums}
+h3{margin:14px 0 6px;font-size:.78rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+button.pill{border:1px solid var(--line);background:var(--soft);color:var(--ink);padding:5px 11px;border-radius:8px;font:inherit;font-size:.85rem;cursor:pointer}
+button.pill:hover{border-color:var(--accent)}
+.sl{margin:9px 0}
+.sl label{display:flex;justify-content:space-between;font-size:.88rem}
+.sl output{font-family:var(--mono);font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--accent)}
+fieldset{border:0;padding:0;margin:0}
+select,textarea,input[type=number]{font:inherit;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:6px 8px;width:100%}
+textarea{font-family:var(--mono);font-size:.85rem;min-height:84px;resize:vertical}
+.opt{margin:8px 0}.opt>label{display:block;font-size:.85rem;color:var(--muted);margin-bottom:3px}
+.seg{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg label{flex:1;text-align:center;padding:6px 4px;font-size:.85rem;cursor:pointer;color:var(--ink);margin:0}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg input:checked+span{background:var(--accent);color:#fff}
+.seg span{display:block;padding:6px 4px;margin:-6px -4px}
+.seg input:focus-visible+span{outline:3px solid color-mix(in srgb,var(--accent) 55%,transparent);outline-offset:-3px}
+.truth{font-size:.85rem;background:var(--soft);border-radius:8px;padding:7px 10px;margin-top:10px;color:var(--muted)}
+.truth b{color:var(--ink);font-family:var(--mono)}
+.charts{display:grid;grid-template-columns:minmax(0,2.1fr) minmax(0,1fr);gap:14px}
+@media(max-width:700px){.charts{grid-template-columns:1fr}}
+svg{width:100%;height:auto;display:block;overflow:visible}
+svg text{fill:var(--muted);font:11px system-ui,sans-serif}
+svg .ax{stroke:var(--line)}
+svg .strong{fill:var(--ink)}
+.cap{font-size:.82rem;color:var(--muted);margin:6px 0 0}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:.82rem;color:var(--muted);margin-top:6px}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.stat{background:var(--soft);border-radius:10px;padding:9px 12px}
+.stat small{display:block;color:var(--muted);font-size:.75rem}
+.stat b{font:600 1.15rem var(--mono);font-variant-numeric:tabular-nums}
+.badge{display:inline-block;padding:3px 10px;border-radius:999px;font-weight:700;font-size:.82rem;color:#fff}
+.badge.sig{background:var(--ok)}.badge.ns{background:#7b8392}
+.interp{margin:12px 0 0}
+.apa{font-family:var(--mono);font-size:.88rem;background:var(--soft);padding:8px 10px;border-radius:8px;display:flex;justify-content:space-between;gap:10px;align-items:center;margin-top:10px}
+table{border-collapse:collapse;width:100%;font-size:.88rem}
+th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line)}
+th{font-weight:600;color:var(--muted);font-size:.78rem}
+td.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+tr.sel td{background:color-mix(in srgb,var(--accent) 10%,transparent)}
+.bar{height:14px;border-radius:4px;background:var(--a)}
+.err{color:var(--rej);font-weight:600}
+details{max-width:1280px;margin:0 auto 10px;padding:0 22px}
+details .panel{margin-top:8px}
+details summary{cursor:pointer;font-weight:600}
+code,.f{font-family:var(--mono);font-size:.88rem}
+footer{max-width:1280px;margin:0 auto;padding:6px 22px 30px;color:var(--muted);font-size:.82rem}
+dl.key{display:grid;grid-template-columns:max-content 1fr;gap:6px 16px;margin:0}dl.key dt{font-family:var(--mono);font-size:.88rem;font-weight:600}dl.key dd{margin:0;color:var(--muted)}
+[hidden]{display:none!important}
+canvas{width:100%;display:block;border:1px solid var(--line);border-radius:10px;background:var(--panel);touch-action:none}
+canvas.drag{cursor:crosshair}
+.charts{grid-template-columns:minmax(0,1fr)}
+.charts.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+@media(max-width:700px){.charts.two{grid-template-columns:1fr}}
+.chartcap{font-size:.8rem;color:var(--muted);margin:0 0 5px;font-weight:600}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 2px}
+button.pill[aria-pressed="true"]{border-color:var(--accent)}
+th.num,td.num{text-align:right}
+.scroll{overflow-x:auto}
+.sw-row{display:flex;align-items:center;gap:10px;margin:12px 0 4px;font-size:.88rem}
+.sw-row .lab{color:var(--muted);font-weight:600}
+.sw-row .lab.on{color:var(--ink)}
+button.sw{position:relative;flex:none;width:44px;height:24px;border-radius:12px;border:1px solid var(--line);background:var(--soft);padding:0;cursor:pointer;transition:background .2s,border-color .2s}
+button.sw::after{content:"";position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:var(--muted);transition:transform .2s,background .2s}
+button.sw[aria-checked="true"]{background:var(--accent);border-color:var(--accent)}
+button.sw[aria-checked="true"]::after{transform:translateX(20px);background:#fff}
+button.sw:focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 55%,transparent);outline-offset:2px}
+@media(max-width:600px){.theme-btn{position:static;display:block;margin:0 0 10px auto}}
+.gtab{margin-top:12px}
+.gtab caption{caption-side:top;text-align:left;font-size:.78rem;font-weight:600;color:var(--muted);padding:0 0 4px}
+.gtab th,.gtab td{text-align:center}
+.gtab th:first-child,.gtab td:first-child{text-align:left}
+.gtab td.on{background:var(--accent);color:#fff;font-weight:700}
+.dt{min-width:340px}
+.dt th,.dt td{text-align:right;vertical-align:middle}
+.dt th.lab,.dt td.lab{text-align:left}
+.dt input[type=number]{width:84px;padding:4px 6px;text-align:right;font-family:var(--mono)}
+.dt td small{display:block;color:var(--muted);font-size:.7rem;font-family:var(--mono);margin-top:2px;white-space:nowrap}
+.dt tfoot th,.dt tr.tot th{border-bottom:0}
+</style>
 </head>
 <body>
-<div id="cx-root" style="max-width:760px;margin:0 auto;font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;color:#1f2933;">
-<style>
-#cx-root *{box-sizing:border-box}
-#cx-root .cx-card{background:#fff;border:1px solid #d5dbe1;border-radius:10px;padding:14px;margin-bottom:12px}
-#cx-root h2{font-size:1.25rem;margin:0 0 4px}
-#cx-root p{margin:4px 0}
-#cx-root .cx-row{display:flex;flex-wrap:wrap;gap:16px}
-#cx-root .cx-ctl{flex:1 1 220px}
-#cx-root label{display:block;font-weight:600;font-size:.9rem;margin-bottom:4px}
-#cx-root input[type=range]{width:100%}
-#cx-root button{font:inherit;font-size:.85rem;padding:6px 10px;margin:3px 4px 3px 0;border:1px solid #2b6cb0;background:#fff;color:#2b6cb0;border-radius:6px;cursor:pointer}
-#cx-root button:hover,#cx-root button:focus-visible,#cx-root button.cx-on{background:#2b6cb0;color:#fff}
-#cx-root canvas{width:100%;display:block;border:1px solid #d5dbe1;border-radius:8px;background:#fbfcfd;touch-action:none}
-#cx-root .cx-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-top:10px}
-#cx-root .cx-stat{background:#f1f5f9;border-radius:8px;padding:8px;text-align:center}
-#cx-root .cx-stat b{display:block;font-size:1.25rem}
-#cx-root .cx-stat span{font-size:.75rem;color:#52606d}
-#cx-root .cx-note{font-size:.85rem;color:#52606d}
-#cx-root .cx-msg{background:#ebf4ff;border-left:4px solid #2b6cb0;padding:8px 10px;border-radius:4px;margin-top:10px;font-size:.92rem}
-#cx-root .cx-warn{background:#fffaf0;border-left-color:#dd6b20}
-#cx-root .cx-tw{overflow-x:auto;margin-bottom:10px}
-#cx-root table{border-collapse:collapse;width:100%;font-size:.88rem}
-#cx-root th,#cx-root td{border:1px solid #d5dbe1;padding:4px 6px;text-align:center}
-#cx-root th{background:#f1f5f9;font-weight:600}
-#cx-root td.cx-lab,#cx-root th.cx-lab{text-align:left}
-#cx-root input[type=number]{width:72px;font:inherit;padding:3px 4px;border:1px solid #cbd2d9;border-radius:6px;text-align:center;background:#fff}
-#cx-root td small{display:block;font-size:.72rem;color:#52606d;margin-top:2px}
-#cx-root .cx-hide{display:none}
-#cx-root label.cx-sw{display:inline-flex;align-items:center;gap:10px;margin:0;cursor:pointer;font-weight:600;font-size:.9rem}
-#cx-root .cx-sw input{position:absolute;opacity:0;width:1px;height:1px}
-#cx-root .cx-track{position:relative;flex:none;width:40px;height:22px;border-radius:11px;background:#9aa5b1;transition:background .15s}
-#cx-root .cx-track::after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.3);transition:transform .15s}
-#cx-root .cx-sw input:checked+.cx-track{background:#2b6cb0}
-#cx-root .cx-sw input:checked+.cx-track::after{transform:translateX(18px)}
-#cx-root .cx-sw input:focus-visible+.cx-track{outline:2px solid #2b6cb0;outline-offset:2px}
-#cx-root .cx-key{display:grid;grid-template-columns:minmax(120px,max-content) 1fr;gap:6px 14px;margin:10px 0 0;font-size:.88rem}
-#cx-root .cx-key.cx-hide{display:none}
-#cx-root .cx-key dt{font-weight:600;font-family:Georgia,'Times New Roman',serif;white-space:nowrap}
-#cx-root .cx-key dd{margin:0;color:#52606d}
-#cx-root .cx-key h3{grid-column:1/-1;font-size:.8rem;text-transform:uppercase;letter-spacing:.04em;color:#7b8794;margin:8px 0 0;border-bottom:1px solid #e4e9ee;padding-bottom:2px}
-#cx-root .cx-formula{font-family:Georgia,'Times New Roman',serif;font-size:1.05rem;margin:6px 0 2px}
-</style>
-
-<div class="cx-card">
-  <h2>Chi-Square Explorer</h2>
-  <p class="cx-note">Compare observed counts with the counts a hypothesis predicts. Edit counts, drag bars, or draw random samples, then watch &chi;&sup2; and its p-value respond.</p>
-  <p class="cx-formula">&chi;&sup2; = &Sigma; (O &minus; E)&sup2; / E</p>
-  <div>
-    <button id="cx-m-gof" class="cx-on" aria-pressed="true">Goodness of fit (one variable)</button>
-    <button id="cx-m-ind" aria-pressed="false">Test of independence (two variables)</button>
+<header>
+  <button class="theme-btn" id="themeBtn" type="button" aria-label="Switch between light and dark theme"></button>
+  <h1>Chi-Square Explorer</h1>
+  <p>Compare observed counts with the counts a hypothesis predicts, <span style="white-space:nowrap">χ² = Σ (O − E)² / E</span>, in a <b>goodness-of-fit</b> test or a <b>test of independence</b>. Then measure <i>how strong</i> the pattern is with <b>phi (φ)</b> and <b>Cramér's V</b>, as effect sizes alongside the test and as measures of association in their own right.</p>
+  <div class="tabs" role="tablist" aria-label="Analysis">
+    <button class="tab" role="tab" id="tab-gof" aria-selected="true">Goodness of fit</button>
+    <button class="tab" role="tab" id="tab-ind" aria-selected="false">Test of independence</button>
+    <button class="tab" role="tab" id="tab-assoc" aria-selected="false">Phi &amp; Cramér's V</button>
   </div>
-  <p class="cx-note" id="cx-hyp"></p>
-</div>
+</header>
 
-<div class="cx-card">
-  <div id="cx-pg">
-    <div class="cx-row">
-      <div class="cx-ctl">
-        <label for="cx-k">Number of categories: <span id="cx-kv">6</span></label>
-        <input type="range" id="cx-k" min="2" max="8" value="6">
-      </div>
-      <div class="cx-ctl">
-        <label for="cx-gn">Sample size: <span id="cx-gnv">120</span></label>
-        <input type="range" id="cx-gn" min="20" max="1000" step="10" value="120">
-      </div>
-      <div class="cx-ctl">
-        <label for="cx-gd">True departure from H<sub>0</sub>: <span id="cx-gdv">0.30</span></label>
-        <input type="range" id="cx-gd" min="0" max="80" value="30">
+<main>
+  <aside class="panel controls" aria-label="Controls">
+    <h2>Setup</h2>
+    <div class="row" id="presets"></div>
+
+    <div data-tabs="gof">
+      <h3>Sample</h3>
+      <div class="sl"><label for="sl_k"><span>Categories</span><output id="o_sl_k"></output></label><input type="range" id="sl_k" min="2" max="8" step="1"></div>
+      <div class="sl"><label for="sl_gn"><span>Sample size (n)</span><output id="o_sl_gn"></output></label><input type="range" id="sl_gn" min="20" max="1000" step="10"></div>
+      <div class="sl"><label for="sl_gd"><span>True departure from H₀</span><output id="o_sl_gd"></output></label><input type="range" id="sl_gd" min="0" max="80" step="1"></div>
+      <div class="row"><button class="pill" id="gNew">New random sample</button></div>
+    </div>
+
+    <div data-tabs="ind assoc">
+      <h3>Table and sample</h3>
+      <div class="sl"><label for="sl_R"><span>Rows</span><output id="o_sl_R"></output></label><input type="range" id="sl_R" min="2" max="4" step="1"></div>
+      <div class="sl"><label for="sl_C"><span>Columns</span><output id="o_sl_C"></output></label><input type="range" id="sl_C" min="2" max="4" step="1"></div>
+      <div class="sl"><label for="sl_in"><span>Sample size (n)</span><output id="o_sl_in"></output></label><input type="range" id="sl_in" min="20" max="1000" step="10"></div>
+      <div class="sl"><label for="sl_id"><span>True association</span><output id="o_sl_id"></output></label><input type="range" id="sl_id" min="0" max="80" step="1"></div>
+      <div class="row">
+        <button class="pill" id="iNew">New random sample</button>
+        <button class="pill" id="yatesBtn" aria-pressed="false" data-tabs="ind" hidden>Yates correction: off</button>
       </div>
     </div>
-    <div style="margin-top:6px">
-      <button id="cx-gnew">Draw a new sample</button>
-      <span class="cx-note">Examples: </span>
-      <button data-g="fair">Fair die</button>
-      <button data-g="loaded">Loaded die</button>
-      <button data-g="mendel">Mendel peas 9:3:3:1</button>
+
+    <div class="truth" id="truth" hidden></div>
+
+    <div data-tabs="gof ind assoc">
+      <h3>Test options</h3>
+      <div class="opt"><label for="alpha">Significance level α</label>
+        <select id="alpha"><option value="0.10">.10</option><option value="0.05" selected>.05</option><option value="0.01">.01</option><option value="0.001">.001</option></select></div>
     </div>
+
+    <div data-tabs="gof ind">
+      <h3>Simulation</h3>
+      <div class="row">
+        <button class="pill" id="simBtn">Run 1,000 simulations under H₀</button>
+        <button class="pill" id="simClr">Clear</button>
+      </div>
+      <p class="cap">Draws 1,000 random samples of the same size with H₀ true and plots their χ² values against the theoretical curve.</p>
+    </div>
+  </aside>
+
+  <section class="stack">
+    <div class="panel" id="pData">
+      <h2><span class="n">1</span><span id="dataTitle">The data</span></h2>
+      <div id="msg" class="err" hidden></div>
+      <div class="charts">
+        <div><p class="chartcap" id="capMain"></p><canvas id="cvMain" role="img"></canvas></div>
+      </div>
+      <p class="cap" id="dataCap"></p>
+      <div class="scroll" style="margin-top:12px"><div id="tw"></div></div>
+      <p class="cap" id="hyp"></p>
+    </div>
+
+    <div class="panel" id="p2dist" data-tabs="gof ind">
+      <h2><span class="n">2</span>The χ² distribution under H₀</h2>
+      <div><canvas id="cvDist" role="img" aria-label="Chi-square distribution with the observed statistic, the critical value and the p-value area"></canvas></div>
+      <div class="legend" id="distLegend"></div>
+      <p class="cap">The curve shows how χ² behaves when H₀ is true. The red region is the rejection region (area α); the shaded blue area beyond your χ² is the p-value.</p>
+    </div>
+
+    <div class="panel" id="p2assoc" data-tabs="assoc">
+      <h2><span class="n">2</span>Association versus significance</h2>
+      <div id="assocBars"></div>
+      <h3>What happens when every count is multiplied by k?</h3>
+      <div class="scroll"><table id="scaleTable"></table></div>
+      <p class="cap" id="scaleCap"></p>
+    </div>
+
+    <div class="panel" id="pRes" aria-live="polite">
+      <h2><span class="n">3</span>Result <span id="badge"></span></h2>
+      <div class="stats" id="stats"></div>
+      <p class="interp" id="interp"></p>
+      <div class="scroll"><table class="gtab" id="guideTable"></table></div>
+      <div class="apa" id="apaRow"><span id="apa"></span><button class="pill" id="copy">Copy</button></div>
+    </div>
+  </section>
+</main>
+
+<details>
+  <summary>Formulas used</summary>
+  <div class="panel">
+    <p><b>Chi-square statistic.</b> <span class="f">χ² = Σ (O − E)² / E</span>, summed over every category or cell. p-values come from the χ² distribution (regularised incomplete gamma function).</p>
+    <ul>
+      <li><b>Goodness of fit:</b> <span class="f">E = n · weight / Σweights</span>, <span class="f">df = k − 1</span>.</li>
+      <li><b>Independence:</b> <span class="f">E = (row total × column total) / n</span>, <span class="f">df = (r − 1)(c − 1)</span>.</li>
+      <li><b>Yates correction</b> (2 × 2 only): each |O − E| is reduced by 0.5 before squaring. Phi and V are always computed from the uncorrected χ².</li>
+      <li><b>Standardised residual:</b> <span class="f">(O − E) / √E</span>.</li>
+    </ul>
+    <p><b>Phi (φ).</b> For a 2 × 2 table with cells a, b (row 1) and c, d (row 2):</p>
+    <ul>
+      <li><span class="f">φ = (ad − bc) / √[(a+b)(c+d)(a+c)(b+d)]</span>, the Pearson r between the two 0/1 variables. Its sign depends on how the rows and columns are ordered; its size does not.</li>
+      <li><span class="f">φ² = χ² / n</span>, so <span class="f">χ² = n·φ²</span>. Effect size: φ² is the proportion of variance shared.</li>
+      <li>Largest possible |φ| given the margins: <span class="f">φ<sub>max</sub> = √[p<sub>lo</sub>(1 − p<sub>hi</sub>) / (p<sub>hi</sub>(1 − p<sub>lo</sub>))]</span>, where p<sub>lo</sub> and p<sub>hi</sub> are the smaller and larger of the two "second row" and "second column" proportions.</li>
+    </ul>
+    <p><b>Cramér's V.</b> <span class="f">V = √[χ² / (n · min(r − 1, c − 1))]</span>, which runs from 0 (no association) to 1 (perfect association). For a 2 × 2 table V = |φ|.</p>
+    <ul>
+      <li>V<sup>2</sup> = χ² / (n · df*), with <span class="f">df* = min(r − 1, c − 1)</span>.</li>
+      <li>Guidelines (Cohen): small ≈ .10/√df*, medium ≈ .30/√df*, large ≈ .50/√df*. For df* = 1 these are .10, .30 and .50.</li>
+    </ul>
+    <p><b>Cohen's w</b> (goodness of fit, and the general effect size): <span class="f">w = √(χ² / n)</span>. Small ≈ .10, medium ≈ .30, large ≈ .50. For a contingency table w = V·√df*, and for a 2 × 2 table w = |φ|.</p>
+    <p><b>Why both a test and an effect size?</b> χ² grows in proportion to n, so with enough data a trivial association is "significant". φ and V do not depend on n, so they describe how <i>strong</i> the association is. Everything runs in your browser; nothing is uploaded.</p>
   </div>
-  <div id="cx-pi" class="cx-hide">
-    <div class="cx-row">
-      <div class="cx-ctl">
-        <label for="cx-R">Rows: <span id="cx-Rv">2</span></label>
-        <input type="range" id="cx-R" min="2" max="4" value="2">
-      </div>
-      <div class="cx-ctl">
-        <label for="cx-C">Columns: <span id="cx-Cv">2</span></label>
-        <input type="range" id="cx-C" min="2" max="4" value="2">
-      </div>
-    </div>
-    <div class="cx-row" style="margin-top:6px">
-      <div class="cx-ctl">
-        <label for="cx-in">Sample size: <span id="cx-inv">100</span></label>
-        <input type="range" id="cx-in" min="20" max="1000" step="10" value="100">
-      </div>
-      <div class="cx-ctl">
-        <label for="cx-id">True association: <span id="cx-idv">0.30</span></label>
-        <input type="range" id="cx-id" min="0" max="80" value="30">
-      </div>
-    </div>
-    <div style="margin-top:6px">
-      <button id="cx-inew">Draw a new sample</button>
-      <button id="cx-yates" class="cx-hide" aria-pressed="false">Yates correction: off</button>
-      <span class="cx-note">Examples: </span>
-      <button data-i="indep">Independent 2&times;2</button>
-      <button data-i="assoc">Associated 2&times;2</button>
-      <button data-i="big">Study time &times; grade (3&times;3)</button>
-    </div>
+</details>
+<details id="keyBox">
+  <summary>Key: symbols and terms</summary>
+  <div class="panel">
+    <dl class="key">
+      <dt>χ²</dt><dd>Chi-square statistic: the total gap between observed and expected counts. Bigger means a worse fit to H₀.</dd>
+      <dt>Σ</dt><dd>Sum over every category (or table cell).</dd>
+      <dt>O</dt><dd>Observed count: what the data actually show.</dd>
+      <dt>E</dt><dd>Expected count: what H₀ predicts.</dd>
+      <dt>(O − E)²/E</dt><dd>One category's contribution to χ². Squaring removes the sign; dividing by E scales the gap to the size of the count.</dd>
+      <dt>Residual</dt><dd>(O − E)/√E, the signed, standardised gap. Beyond about ±2 is notable. Orange = more than expected, blue = fewer.</dd>
+      <dt>n</dt><dd>Total number of observations.</dd>
+      <dt>H₀ / H₁</dt><dd>Null hypothesis (nothing going on) and the alternative.</dd>
+      <dt>df</dt><dd>Degrees of freedom: sets the shape of the χ² curve. k − 1 for goodness of fit, (r − 1)(c − 1) for independence.</dd>
+      <dt>p-value</dt><dd>Chance of a χ² at least this large if H₀ were true. It is the shaded area beyond your statistic, not the probability that H₀ is true.</dd>
+      <dt>α</dt><dd>Significance level: the cutoff for p, and the size of the red rejection region.</dd>
+      <dt>Critical value</dt><dd>The χ² value where the rejection region begins. Reject H₀ when your χ² is beyond it (equivalently, p &lt; α).</dd>
+      <dt>H₀ weight</dt><dd>Relative size of each category under H₀ in a goodness-of-fit test.</dd>
+      <dt>Yates correction</dt><dd>2 × 2 only: subtracts 0.5 from each |O − E| to offset the approximation's tendency to overstate significance.</dd>
+      <dt>φ</dt><dd>Phi coefficient: the strength of association in a 2 × 2 table, equal to the Pearson r between two 0/1 variables. Ranges from −1 to +1.</dd>
+      <dt>φ²</dt><dd>Phi squared: proportion of variance in one 0/1 variable shared with the other, and χ²/n.</dd>
+      <dt>φ<sub>max</sub></dt><dd>The largest |φ| the table's margins allow. Unequal margins make a perfect φ = 1 impossible.</dd>
+      <dt>V</dt><dd>Cramér's V: strength of association for a table of any size, from 0 (none) to 1 (perfect). It rescales χ² by n and by df*, so it is comparable across sample sizes and table shapes.</dd>
+      <dt>df*</dt><dd>min(r − 1, c − 1): the smaller table dimension minus one. Larger tables need smaller V values to count as small, medium or large.</dd>
+      <dt>w</dt><dd>Cohen's w, √(χ²/n): effect size for goodness of fit (and a general effect size for any χ²).</dd>
+      <dt>True departure / association</dt><dd>How far the population being sampled is from H₀ (0 = H₀ exactly true). The population's own w, φ or V is shown under the sliders.</dd>
+      <dt>Margins</dt><dd>The row and column totals of a table.</dd>
+      <dt>Effect size</dt><dd>How large an effect is, independent of whether it is statistically significant.</dd>
+      <dt>Simulation</dt><dd>1,000 random samples drawn assuming H₀ is true. Their χ² histogram should hug the curve; the share beyond your χ² approximates p.</dd>
+    </dl>
   </div>
-  <div class="cx-row" style="margin-top:8px">
-    <div class="cx-ctl">
-      <label for="cx-al">Significance level &alpha;: <span id="cx-alv">0.05</span></label>
-      <input type="range" id="cx-al" min="1" max="10" value="5">
-    </div>
-    <div class="cx-ctl" style="padding-top:18px">
-      <button id="cx-sim">Run 1,000 simulations under H<sub>0</sub></button>
-      <button id="cx-simc">Clear simulations</button>
-    </div>
-  </div>
-</div>
-
-<div class="cx-card">
-  <div class="cx-tw" id="cx-tw"></div>
-  <canvas id="cx-cv1" role="img" aria-label="Chart of observed and expected counts"></canvas>
-  <p class="cx-note" id="cx-c1note" style="margin-top:6px"></p>
-</div>
-
-<div class="cx-card">
-  <canvas id="cx-cv2" role="img" aria-label="Chi-square distribution with the observed statistic, the critical value and the p-value area"></canvas>
-  <div class="cx-stats" aria-live="polite">
-    <div class="cx-stat"><b id="cx-s1">-</b><span>&chi;&sup2; statistic</span></div>
-    <div class="cx-stat"><b id="cx-s2">-</b><span>Degrees of freedom</span></div>
-    <div class="cx-stat"><b id="cx-s3">-</b><span>p-value</span></div>
-    <div class="cx-stat"><b id="cx-s4">-</b><span>Critical value</span></div>
-    <div class="cx-stat"><b id="cx-s5">-</b><span id="cx-s5l">Effect size</span></div>
-    <div class="cx-stat"><b id="cx-s6">-</b><span>n</span></div>
-  </div>
-  <div class="cx-msg" id="cx-msg"></div>
-  <p class="cx-note" style="margin-top:8px">Remember: chi-square tests use counts (not percentages), need independent observations, and work best when every expected count is at least 5. A significant result shows a pattern, not its cause.</p>
-</div>
-
-<div class="cx-card">
-  <label class="cx-sw" for="cx-keybtn">
-    <input type="checkbox" role="switch" id="cx-keybtn" aria-controls="cx-key">
-    <span class="cx-track" aria-hidden="true"></span>
-    <span>Show key: symbols &amp; terms</span>
-  </label>
-  <dl class="cx-key cx-hide" id="cx-key">
-    <h3>Test statistic</h3>
-    <dt>&chi;&sup2;</dt><dd>Chi-square statistic: the total gap between observed and expected counts. Bigger means a worse fit to H<sub>0</sub>.</dd>
-    <dt>&Sigma;</dt><dd>Sum over every category (or table cell).</dd>
-    <dt>O</dt><dd>Observed count: what the data actually show.</dd>
-    <dt>E</dt><dd>Expected count: what H<sub>0</sub> predicts.</dd>
-    <dt>(O &minus; E)&sup2; / E</dt><dd>One category's contribution to &chi;&sup2;. Squaring removes the sign; dividing by E scales the gap to the size of the count.</dd>
-    <dt>n</dt><dd>Total number of observations.</dd>
-    <dt>Residual</dt><dd>(O &minus; E) / &radic;E, the signed, standardized gap. Beyond about &plusmn;2 is notable. Orange = more than expected, blue = fewer.</dd>
-
-    <h3>Decision</h3>
-    <dt>H<sub>0</sub> / H<sub>1</sub></dt><dd>Null hypothesis (nothing going on) and the alternative.</dd>
-    <dt>df</dt><dd>Degrees of freedom: sets the shape of the &chi;&sup2; curve.</dd>
-    <dt>p-value</dt><dd>Chance of a &chi;&sup2; at least this large if H<sub>0</sub> were true. It is the blue area beyond your statistic.</dd>
-    <dt>&alpha;</dt><dd>Significance level: the cutoff for p, and the size of the red rejection region.</dd>
-    <dt>Critical value</dt><dd>The &chi;&sup2; value where the rejection region begins. Reject H<sub>0</sub> when your &chi;&sup2; is beyond it (equivalently, p &lt; &alpha;).</dd>
-
-    <h3 class="cx-kg">Goodness of fit</h3>
-    <dt class="cx-kg">H<sub>0</sub> weight</dt><dd class="cx-kg">Relative size of each category under H<sub>0</sub>. E = n &times; weight / total of weights.</dd>
-    <dt class="cx-kg">df = k &minus; 1</dt><dd class="cx-kg">k is the number of categories.</dd>
-    <dt class="cx-kg">w</dt><dd class="cx-kg">Effect size, &radic;(&chi;&sup2; / n). Rough guide: .1 small, .3 medium, .5 large.</dd>
-    <dt class="cx-kg">True departure</dt><dd class="cx-kg">How far the sampled population is tilted away from H<sub>0</sub> (0 = H<sub>0</sub> is exactly true).</dd>
-
-    <h3 class="cx-ki">Test of independence</h3>
-    <dt class="cx-ki">E = R&times;C / n</dt><dd class="cx-ki">Row total times column total, divided by n: the count expected if the variables were unrelated.</dd>
-    <dt class="cx-ki">df = (r&minus;1)(c&minus;1)</dt><dd class="cx-ki">r rows and c columns.</dd>
-    <dt class="cx-ki">Cram&eacute;r's V</dt><dd class="cx-ki">Effect size from 0 (none) to 1 (perfect association), &radic;(&chi;&sup2; / (n &middot; min(r&minus;1, c&minus;1))).</dd>
-    <dt class="cx-ki">Yates correction</dt><dd class="cx-ki">2&times;2 only: subtracts 0.5 from each |O &minus; E| to offset the approximation's tendency to overstate significance.</dd>
-    <dt class="cx-ki">True association</dt><dd class="cx-ki">How strongly the sampled population departs from independence (0 = independent).</dd>
-
-    <h3>Simulation</h3>
-    <dt>Simulations</dt><dd>1,000 random samples drawn assuming H<sub>0</sub> is true. Their &chi;&sup2; histogram should hug the curve; the share beyond your &chi;&sup2; approximates p.</dd>
-  </dl>
-</div>
+</details>
+<footer>Single-file, dependency-free demo. Random samples use a seeded generator. Chi-square tests use counts (not percentages), need independent observations, and work best when every expected count is at least 5. A significant result shows a pattern, not its cause.</footer>
 
 <script>
-(function(){
-  var $=function(id){return document.getElementById(id)};
-  var cv1=$('cx-cv1'),c1=cv1.getContext('2d'),cv2=$('cx-cv2'),c2=cv2.getContext('2d');
-  var W1=700,H1=300,W2=700,H2=260;
-  var COLS=['#2b6cb0','#dd6b20','#2f855a','#805ad5'];
-  var S={mode:'gof',alpha:.05,yates:false,seed:7,sim:null,drag:-1,ylock:0,ycur:10,c:null,
-    k:6,obs:[],w:[],gl:[],R:2,C:2,t:[],rl:[],cl:[]};
+"use strict";
+/* ============ Math ============ */
+function lgamma(x){const c=[76.18009172947146,-86.50532032941677,24.01409824083091,-1.231739572450155,0.1208650973866179e-2,-0.5395239384953e-5];let y=x,tmp=x+5.5,ser=1.000000000190015;tmp-=(x+0.5)*Math.log(tmp);for(let j=0;j<6;j++)ser+=c[j]/++y;return -tmp+Math.log(2.5066282746310005*ser/x);}
+function gammaQ(a,x){
+  if(x<=0)return 1;const gln=lgamma(a);
+  if(x<a+1){let ap=a,sum=1/a,del=sum;for(let i=0;i<1000;i++){ap++;del*=x/ap;sum+=del;if(Math.abs(del)<Math.abs(sum)*1e-15)break;}return Math.max(0,1-sum*Math.exp(-x+a*Math.log(x)-gln));}
+  let b=x+1-a,cc=1/1e-300,d=1/b,h=d;
+  for(let i=1;i<1000;i++){const an=-i*(i-a);b+=2;d=an*d+b;if(Math.abs(d)<1e-300)d=1e-300;cc=b+an/cc;if(Math.abs(cc)<1e-300)cc=1e-300;d=1/d;const del=d*cc;h*=del;if(Math.abs(del-1)<1e-15)break;}
+  return Math.exp(-x+a*Math.log(x)-gln)*h;
+}
+const pval=(x,df)=>gammaQ(df/2,x/2);
+function crit(df,al){let lo=0,hi=10;while(pval(hi,df)>al)hi*=2;for(let i=0;i<80;i++){const m=(lo+hi)/2;if(pval(m,df)>al)lo=m;else hi=m;}return(lo+hi)/2;}
+const pdf=(x,df)=>x<=0?0:Math.exp((df/2-1)*Math.log(x)-x/2-(df/2)*Math.LN2-lgamma(df/2));
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function multinom(n,probs,r){
+  const cum=[],out=[];let s=0;
+  for(const p of probs){s+=p;cum.push(s);out.push(0);}
+  for(let t=0;t<n;t++){const u=r()*s;let lo=0,hi=cum.length-1;while(lo<hi){const m=(lo+hi)>>1;if(cum[m]<u)lo=m+1;else hi=m;}out[lo]++;}
+  return out;
+}
+const sum=a=>a.reduce((s,v)=>s+v,0);
 
-  /* ---------- math ---------- */
-  function rng(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
-  function lgamma(x){
-    var c=[76.18009172947146,-86.50532032941677,24.01409824083091,-1.231739572450155,0.1208650973866179e-2,-0.5395239384953e-5];
-    var y=x,tmp=x+5.5,ser=1.000000000190015,j;
-    tmp-=(x+0.5)*Math.log(tmp);
-    for(j=0;j<6;j++)ser+=c[j]/++y;
-    return -tmp+Math.log(2.5066282746310005*ser/x);
-  }
-  function gammaQ(a,x){
-    if(x<=0)return 1;
-    var i,gln=lgamma(a);
-    if(x<a+1){
-      var ap=a,sum=1/a,del=sum;
-      for(i=0;i<500;i++){ap++;del*=x/ap;sum+=del;if(Math.abs(del)<Math.abs(sum)*1e-14)break}
-      return Math.max(0,1-sum*Math.exp(-x+a*Math.log(x)-gln));
-    }
-    var b=x+1-a,cc=1/1e-300,d=1/b,h=d,an;
-    for(i=1;i<500;i++){
-      an=-i*(i-a);b+=2;d=an*d+b;if(Math.abs(d)<1e-300)d=1e-300;
-      cc=b+an/cc;if(Math.abs(cc)<1e-300)cc=1e-300;d=1/d;
-      var del2=d*cc;h*=del2;if(Math.abs(del2-1)<1e-14)break;
-    }
-    return Math.exp(-x+a*Math.log(x)-gln)*h;
-  }
-  function pval(x,df){return gammaQ(df/2,x/2)}
-  function crit(df,al){
-    var lo=0,hi=10,i;
-    while(pval(hi,df)>al)hi*=2;
-    for(i=0;i<80;i++){var m=(lo+hi)/2;if(pval(m,df)>al)lo=m;else hi=m}
-    return(lo+hi)/2;
-  }
-  function pdf(x,df){return x<=0?0:Math.exp((df/2-1)*Math.log(x)-x/2-(df/2)*Math.LN2-lgamma(df/2))}
-  function gauss(r){var u=0,v;while(!u)u=r();v=r();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)}
-  function multinom(n,probs,r){
-    var cum=[],s=0,i,out=[];
-    for(i=0;i<probs.length;i++){s+=probs[i];cum.push(s);out.push(0)}
-    for(var t=0;t<n;t++){
-      var u=r()*s,lo=0,hi=cum.length-1;
-      while(lo<hi){var m=(lo+hi)>>1;if(cum[m]<u)lo=m+1;else hi=m}
-      out[lo]++;
-    }
-    return out;
-  }
-  function fmtP(p){return p<0.0001?'<0.0001':p.toFixed(4)}
-  function sum(a){var s=0;for(var i=0;i<a.length;i++)s+=a[i];return s}
+/* ============ Formatting ============ */
+const $=id=>document.getElementById(id);
+const f=(x,d=2)=>isFinite(x)?x.toFixed(d).replace('-','−'):(x>0?'∞':x<0?'−∞':'–');
+const fr=(x,d=2)=>isFinite(x)?x.toFixed(d).replace(/^(-?)0\./,'$1.').replace('-','−'):'–';
+const fp=p=>p<0.001?'< .001':p.toFixed(3).replace(/^0/,'');
+const apaP=p=>p<0.001?'< .001':'= '+fp(p);
+const tk=v=>(+v.toFixed(6)).toString().replace('-','−');
+const col=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const isDark=()=>currentTheme()==='dark';
+function niceMax(v){if(v<=0)return{max:5,step:1};const raw=v/5,p=Math.pow(10,Math.floor(Math.log10(raw))),fr_=raw/p,st=(fr_<=1?1:fr_<=2?2:fr_<=5?5:10)*p;return{max:Math.ceil(v/st)*st,step:st};}
+function fit(cv,ratio,mn,mx){const w=cv.parentNode.clientWidth||700,dpr=window.devicePixelRatio||1,h=Math.round(Math.max(mn,Math.min(mx,w*ratio)));cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr);cv.style.height=h+'px';const c=cv.getContext('2d');c.setTransform(dpr,0,0,dpr,0,0);return{c,W:w,H:h};}
+const FONT='11px system-ui,sans-serif';
 
-  /* ---------- statistic ---------- */
-  function yatesOn(){return S.mode==='ind'&&S.R===2&&S.C===2&&S.yates}
-  function term(o,e){
-    var d=Math.abs(o-e);if(yatesOn())d=Math.max(0,d-0.5);
-    return d*d/e;
-  }
-  function compute(){
-    var i,j,c={};
-    if(S.mode==='gof'){
-      var n=sum(S.obs);
-      if(n<=0)return{err:'Enter at least one observation to compute &chi;&sup2;.'};
-      var ws=S.w.map(function(v){return v>0?v:0.01}),wt=sum(ws);
-      c.obs=S.obs.slice();c.n=n;c.df=S.k-1;
-      c.exp=ws.map(function(v){return n*v/wt});
-      c.con=c.obs.map(function(o,k){return term(o,c.exp[k])});
-      c.res=c.obs.map(function(o,k){return(o-c.exp[k])/Math.sqrt(c.exp[k])});
-      c.eff=null;
-    }else{
-      var R=S.R,C=S.C,rt=[],ct=[];
-      for(i=0;i<R;i++){rt.push(0)}for(j=0;j<C;j++)ct.push(0);
-      for(i=0;i<R;i++)for(j=0;j<C;j++){rt[i]+=S.t[i*C+j];ct[j]+=S.t[i*C+j]}
-      var N=sum(rt);
-      if(N<=0||rt.some(function(v){return v===0})||ct.some(function(v){return v===0}))
-        return{err:'Every row and every column needs at least one observation.'};
-      c.n=N;c.rt=rt;c.ct=ct;c.df=(R-1)*(C-1);c.obs=S.t.slice();c.exp=[];c.con=[];c.res=[];
-      for(i=0;i<R;i++)for(j=0;j<C;j++){
-        var e=rt[i]*ct[j]/N,o=S.t[i*C+j];
-        c.exp.push(e);c.con.push(term(o,e));c.res.push((o-e)/Math.sqrt(e));
-      }
-    }
-    c.chi=sum(c.con);
-    c.p=pval(c.chi,c.df);
-    c.crit=crit(c.df,S.alpha);
-    c.minE=Math.min.apply(null,c.exp);
-    c.low=c.exp.filter(function(e){return e<5}).length;
-    if(S.mode==='gof')c.eff=Math.sqrt(c.chi/c.n);
-    else c.eff=Math.sqrt(c.chi/(c.n*Math.min(S.R-1,S.C-1)));
-    return c;
-  }
-  function effLabel(v){
-    var s=S.mode==='gof'?1:Math.sqrt(Math.min(S.R-1,S.C-1));
-    return v<.1/s?'negligible':v<.3/s?'small':v<.5/s?'medium':'large';
-  }
+/* ============ State ============ */
+const TABS=['gof','ind','assoc'];
+const letters=k=>Array.from({length:k},(_,i)=>String.fromCharCode(65+i));
+const S={tab:'gof',alpha:.05,yates:false,seed:7,sim:null,drag:-1,ylock:0,ycur:10,c:null,truthG:'',truthI:'',
+  k:6,gn:120,gd:30,obs:[],w:[],gl:[],
+  R:2,C:2,iN:100,iA:30,t:[],rl:[],cl:[]};
+const isGof=()=>S.tab==='gof';
+const yatesOn=()=>S.tab==='ind'&&S.R===2&&S.C===2&&S.yates;
 
-  /* ---------- data generation ---------- */
-  function drawGof(){
-    var r=rng(S.seed),d=+$('cx-gd').value/100,n=+$('cx-gn').value,k=S.k,p=[],i;
-    for(i=0;i<k;i++){var tilt=k>1?1-2*i/(k-1):0;p.push((S.w[i]>0?S.w[i]:0.01)*(1+d*tilt))}
-    S.obs=multinom(n,p,r);
-  }
-  function drawInd(){
-    var r=rng(S.seed),a=+$('cx-id').value/100,n=+$('cx-in').value,R=S.R,C=S.C,p=[],i,j;
-    for(i=0;i<R;i++)for(j=0;j<C;j++){
-      var s=1-2*i/(R-1),t=1-2*j/(C-1);p.push(1+a*s*t);
+/* ============ Statistics ============ */
+function term(o,e){let d=Math.abs(o-e);if(yatesOn())d=Math.max(0,d-0.5);return d*d/e;}
+function compute(){
+  const c={};
+  if(isGof()){
+    const n=sum(S.obs);
+    if(n<=0)return{err:'Enter at least one observation to compute χ².'};
+    const ws=S.w.map(v=>v>0?v:0.01),wt=sum(ws);
+    c.obs=S.obs.slice();c.n=n;c.df=S.k-1;
+    c.exp=ws.map(v=>n*v/wt);
+    c.con=c.obs.map((o,k)=>term(o,c.exp[k]));
+    c.res=c.obs.map((o,k)=>(o-c.exp[k])/Math.sqrt(c.exp[k]));
+    c.chiRaw=c.obs.reduce((s,o,k)=>s+(o-c.exp[k])**2/c.exp[k],0);
+  }else{
+    const R=S.R,C=S.C,rt=Array(R).fill(0),ct=Array(C).fill(0);
+    for(let i=0;i<R;i++)for(let j=0;j<C;j++){rt[i]+=S.t[i*C+j];ct[j]+=S.t[i*C+j];}
+    const N=sum(rt);
+    if(N<=0||rt.some(v=>v===0)||ct.some(v=>v===0))return{err:'Every row and every column needs at least one observation.'};
+    c.n=N;c.rt=rt;c.ct=ct;c.df=(R-1)*(C-1);c.obs=S.t.slice();c.exp=[];c.con=[];c.res=[];c.chiRaw=0;
+    for(let i=0;i<R;i++)for(let j=0;j<C;j++){
+      const e=rt[i]*ct[j]/N,o=S.t[i*C+j];
+      c.exp.push(e);c.con.push(term(o,e));c.res.push((o-e)/Math.sqrt(e));c.chiRaw+=(o-e)**2/e;
     }
-    S.t=multinom(n,p,r);
+    c.dfs=Math.min(R-1,C-1);
+    c.V=Math.sqrt(c.chiRaw/(N*c.dfs));
+    if(R===2&&C===2){
+      const [a,b,cc,d]=S.t;
+      c.phi=(a*d-b*cc)/Math.sqrt(rt[0]*rt[1]*ct[0]*ct[1]);
+      const px=rt[1]/N,py=ct[1]/N,lo=Math.min(px,py),hi=Math.max(px,py);
+      c.phimax=Math.sqrt(lo*(1-hi)/(hi*(1-lo)));
+    }
   }
-  function letters(k){var a=[];for(var i=0;i<k;i++)a.push(String.fromCharCode(65+i));return a}
-  function defaultsInd(){
-    S.rl=[];S.cl=[];
-    for(var i=0;i<S.R;i++)S.rl.push('Row '+(i+1));
-    for(var j=0;j<S.C;j++)S.cl.push('Col '+String.fromCharCode(65+j));
+  c.chi=sum(c.con);
+  c.p=pval(c.chi,c.df);
+  c.crit=crit(c.df,S.alpha);
+  c.minE=Math.min(...c.exp);
+  c.low=c.exp.filter(e=>e<5).length;
+  c.w=Math.sqrt(c.chiRaw/c.n);
+  return c;
+}
+/* effect-size label; s scales Cohen's guidelines by 1/sqrt(df*) for V */
+function effLabel(v,s=1){const u=v*s;return u<.1?'negligible':u<.3?'small':u<.5?'medium':'large';}
+function guideRows(rows){
+  const hd='<caption>Effect-size guidelines (Cohen): your result is highlighted</caption><thead><tr><th>Measure</th><th class="num">Value</th><th>Negligible</th><th>Small</th><th>Medium</th><th>Large</th></tr></thead><tbody>';
+  const body=rows.map(([lab,v,sc=1])=>{
+    const t=[.1,.3,.5].map(x=>x/sc),cur=v<t[0]?0:v<t[1]?1:v<t[2]?2:3;
+    const T=['&lt; '+fr(t[0]),fr(t[0])+' to &lt; '+fr(t[1]),fr(t[1])+' to &lt; '+fr(t[2]),'≥ '+fr(t[2])];
+    return `<tr><td>${lab}</td><td class="num">${fr(v)}</td>${T.map((x,i)=>`<td class="f${i===cur?' on':''}">${x}</td>`).join('')}</tr>`;
+  }).join('');
+  $('guideTable').innerHTML=hd+body+'</tbody>';
+}
+function thr(s){return[.1,.3,.5].map(x=>fr(x/s,2)).join(', ');}
+function popStats(gof){
+  /* population w / phi / V implied by the sliders */
+  if(gof){
+    const d=S.gd/100,k=S.k,ws=S.w.map(v=>v>0?v:0.01),wt=sum(ws);
+    const p=ws.map((v,i)=>v*(1+d*(k>1?1-2*i/(k-1):0))),pt=sum(p);
+    const w2=p.reduce((s,v,i)=>s+(v/pt-ws[i]/wt)**2/(ws[i]/wt),0);
+    return`Population w (what a large sample would estimate): <b>${fr(Math.sqrt(w2),2)}</b>`;
   }
+  const a=S.iA/100,R=S.R,C=S.C,q=[];
+  for(let i=0;i<R;i++)for(let j=0;j<C;j++)q.push(1+a*(1-2*i/(R-1))*(1-2*j/(C-1)));
+  const qt=sum(q),rp=Array(R).fill(0),cp=Array(C).fill(0);
+  q.forEach((v,k)=>{rp[Math.floor(k/C)]+=v/qt;cp[k%C]+=v/qt;});
+  let x2=0;q.forEach((v,k)=>{const e=rp[Math.floor(k/C)]*cp[k%C];x2+=(v/qt-e)**2/e;});
+  const V=Math.sqrt(x2/Math.min(R-1,C-1));
+  return`Population ${R===2&&C===2?'φ = V':'V'} (what a large sample would estimate): <b>${fr(V,2)}</b>`;
+}
 
-  /* ---------- tables ---------- */
-  function mk(tag,txt,cls){var e=document.createElement(tag);if(txt!=null)e.innerHTML=txt;if(cls)e.className=cls;return e}
-  function buildTable(){
-    var tw=$('cx-tw'),i,j;tw.innerHTML='';
-    var tb=mk('table'),thd=mk('thead'),tr=mk('tr');
-    if(S.mode==='gof'){
-      ['Category','Observed (O)','H<sub>0</sub> weight','Expected (E)','(O&minus;E)&sup2;/E'].forEach(function(h,k){tr.appendChild(mk('th',h,k===0?'cx-lab':''))});
-      thd.appendChild(tr);tb.appendChild(thd);
-      var body=mk('tbody');
-      for(i=0;i<S.k;i++){
-        var r=mk('tr');
-        r.appendChild(mk('td',S.gl[i],'cx-lab'));
-        var td=mk('td'),inp=mk('input');inp.type='number';inp.min=0;inp.step=1;inp.value=S.obs[i];inp.setAttribute('data-o',i);inp.setAttribute('aria-label','Observed count for '+S.gl[i]);td.appendChild(inp);r.appendChild(td);
-        td=mk('td');inp=mk('input');inp.type='number';inp.min=0;inp.step='any';inp.value=S.w[i];inp.setAttribute('data-w',i);inp.setAttribute('aria-label','Hypothesized weight for '+S.gl[i]);td.appendChild(inp);r.appendChild(td);
-        td=mk('td','-');td.id='cx-e'+i;r.appendChild(td);
-        td=mk('td','-');td.id='cx-q'+i;r.appendChild(td);
-        body.appendChild(r);
-      }
-      var f=mk('tr');f.appendChild(mk('th','Total','cx-lab'));
-      var t1=mk('th','-');t1.id='cx-tO';var t2=mk('th','-');t2.id='cx-tW';var t3=mk('th','-');t3.id='cx-tE';var t4=mk('th','-');t4.id='cx-tQ';
-      [t1,t2,t3,t4].forEach(function(x){f.appendChild(x)});body.appendChild(f);tb.appendChild(body);
-    }else{
-      tr.appendChild(mk('th','','cx-lab'));
-      for(j=0;j<S.C;j++)tr.appendChild(mk('th',S.cl[j]));
-      tr.appendChild(mk('th','Total'));thd.appendChild(tr);tb.appendChild(thd);
-      var bd=mk('tbody');
-      for(i=0;i<S.R;i++){
-        var rr=mk('tr');rr.appendChild(mk('th',S.rl[i],'cx-lab'));
-        for(j=0;j<S.C;j++){
-          var c=mk('td'),inp2=mk('input');inp2.type='number';inp2.min=0;inp2.step=1;inp2.value=S.t[i*S.C+j];inp2.setAttribute('data-c',i*S.C+j);
-          inp2.setAttribute('aria-label','Count for '+S.rl[i]+', '+S.cl[j]);
-          c.appendChild(inp2);var sm=mk('small','');sm.id='cx-x'+(i*S.C+j);c.appendChild(sm);rr.appendChild(c);
-        }
-        var tt=mk('th','-');tt.id='cx-rt'+i;rr.appendChild(tt);bd.appendChild(rr);
-      }
-      var fr=mk('tr');fr.appendChild(mk('th','Total','cx-lab'));
-      for(j=0;j<S.C;j++){var ft=mk('th','-');ft.id='cx-ct'+j;fr.appendChild(ft)}
-      var gt=mk('th','-');gt.id='cx-gt';fr.appendChild(gt);bd.appendChild(fr);tb.appendChild(bd);
+/* ============ Data generation ============ */
+function drawGof(){
+  const r=mulberry32(S.seed),d=S.gd/100,k=S.k,p=[];
+  for(let i=0;i<k;i++)p.push((S.w[i]>0?S.w[i]:0.01)*(1+d*(k>1?1-2*i/(k-1):0)));
+  S.obs=multinom(S.gn,p,r);S.truthG=popStats(true);
+}
+function defaultsInd(){S.rl=[];S.cl=[];for(let i=0;i<S.R;i++)S.rl.push('Row '+(i+1));for(let j=0;j<S.C;j++)S.cl.push('Col '+String.fromCharCode(65+j));}
+function drawInd(){
+  const r=mulberry32(S.seed),a=S.iA/100,R=S.R,C=S.C,p=[];
+  for(let i=0;i<R;i++)for(let j=0;j<C;j++)p.push(1+a*(1-2*i/(R-1))*(1-2*j/(C-1)));
+  S.t=multinom(S.iN,p,r);S.truthI=popStats(false);
+}
+
+/* ============ Tables ============ */
+function mk(tag,html,cls){const e=document.createElement(tag);if(html!=null)e.innerHTML=html;if(cls)e.className=cls;return e;}
+function numInput(attr,val,label,step){const i=mk('input');i.type='number';i.min=0;i.step=step||1;i.value=val;i.setAttribute(attr[0],attr[1]);i.setAttribute('aria-label',label);return i;}
+function buildTable(){
+  const tw=$('tw');tw.innerHTML='';
+  const tb=mk('table','', 'dt'),thd=mk('thead'),tr=mk('tr');
+  if(isGof()){
+    ['Category','Observed (O)','H₀ weight','Expected (E)','(O−E)²/E'].forEach((h,k)=>tr.appendChild(mk('th',h,k===0?'lab':'')));
+    thd.appendChild(tr);tb.appendChild(thd);
+    const body=mk('tbody');
+    for(let i=0;i<S.k;i++){
+      const r=mk('tr');r.appendChild(mk('td',S.gl[i],'lab'));
+      let td=mk('td');td.appendChild(numInput(['data-o',i],S.obs[i],'Observed count for '+S.gl[i]));r.appendChild(td);
+      td=mk('td');td.appendChild(numInput(['data-w',i],S.w[i],'Hypothesised weight for '+S.gl[i],'any'));r.appendChild(td);
+      td=mk('td','–','num');td.id='e'+i;r.appendChild(td);
+      td=mk('td','–','num');td.id='q'+i;r.appendChild(td);
+      body.appendChild(r);
     }
-    tw.appendChild(tb);
-  }
-  function refreshTable(c){
-    var i,j;
-    if(S.mode==='gof'){
-      for(i=0;i<S.k;i++){
-        $('cx-e'+i).textContent=c.err?'-':c.exp[i].toFixed(2);
-        var q=$('cx-q'+i);q.textContent=c.err?'-':c.con[i].toFixed(3);
-        q.style.background=c.err?'':shade(c.res[i]);
+    const fr_=mk('tr','','tot');fr_.appendChild(mk('th','Total','lab'));
+    ['tO','tW','tE','tQ'].forEach(id=>{const t=mk('th','–');t.id=id;fr_.appendChild(t);});
+    body.appendChild(fr_);tb.appendChild(body);
+  }else{
+    tr.appendChild(mk('th','','lab'));
+    for(let j=0;j<S.C;j++)tr.appendChild(mk('th',S.cl[j]));
+    tr.appendChild(mk('th','Total'));thd.appendChild(tr);tb.appendChild(thd);
+    const bd=mk('tbody');
+    for(let i=0;i<S.R;i++){
+      const rr=mk('tr');rr.appendChild(mk('th',S.rl[i],'lab'));
+      for(let j=0;j<S.C;j++){
+        const k=i*S.C+j,c=mk('td');
+        c.appendChild(numInput(['data-c',k],S.t[k],'Count for '+S.rl[i]+', '+S.cl[j]));
+        const sm=mk('small','');sm.id='x'+k;c.appendChild(sm);rr.appendChild(c);
       }
-      $('cx-tO').textContent=sum(S.obs);
-      $('cx-tW').textContent='-';
-      $('cx-tE').textContent=c.err?'-':sum(c.exp).toFixed(2);
-      $('cx-tQ').textContent=c.err?'-':c.chi.toFixed(3);
-    }else{
-      var rt=[],ct=[];for(i=0;i<S.R;i++)rt.push(0);for(j=0;j<S.C;j++)ct.push(0);
-      for(i=0;i<S.R;i++)for(j=0;j<S.C;j++){rt[i]+=S.t[i*S.C+j];ct[j]+=S.t[i*S.C+j]}
-      for(i=0;i<S.R;i++){
-        $('cx-rt'+i).textContent=rt[i];
-        for(j=0;j<S.C;j++){
-          var k=i*S.C+j,sm=$('cx-x'+k),td=sm.parentNode;
-          if(c.err){sm.textContent='';td.style.background=''}
-          else{sm.textContent='E = '+c.exp[k].toFixed(1)+' · res '+(c.res[k]>=0?'+':'')+c.res[k].toFixed(2);td.style.background=shade(c.res[k])}
-        }
-      }
-      for(j=0;j<S.C;j++)$('cx-ct'+j).textContent=ct[j];
-      $('cx-gt').textContent=sum(rt);
+      const tt=mk('th','–');tt.id='rt'+i;rr.appendChild(tt);bd.appendChild(rr);
     }
+    const fr_=mk('tr','','tot');fr_.appendChild(mk('th','Total','lab'));
+    for(let j=0;j<S.C;j++){const t=mk('th','–');t.id='ct'+j;fr_.appendChild(t);}
+    const gt=mk('th','–');gt.id='gt';fr_.appendChild(gt);bd.appendChild(fr_);tb.appendChild(bd);
   }
-  function shade(z){
-    var a=Math.min(.55,Math.abs(z)/4);
-    return z>=0?'rgba(221,107,32,'+a.toFixed(2)+')':'rgba(43,108,176,'+a.toFixed(2)+')';
+  tw.appendChild(tb);
+}
+function shade(z){const a=Math.min(.5,Math.abs(z)/4);return z>=0?`rgba(217,115,13,${a.toFixed(2)})`:`rgba(36,104,214,${a.toFixed(2)})`;}
+function refreshTable(c){
+  if(isGof()){
+    for(let i=0;i<S.k;i++){
+      $('e'+i).textContent=c.err?'–':c.exp[i].toFixed(2);
+      const q=$('q'+i);q.textContent=c.err?'–':c.con[i].toFixed(3);q.style.background=c.err?'':shade(c.res[i]);
+    }
+    $('tO').textContent=sum(S.obs);$('tW').textContent='–';
+    $('tE').textContent=c.err?'–':sum(c.exp).toFixed(2);$('tQ').textContent=c.err?'–':c.chi.toFixed(3);
+  }else{
+    const rt=Array(S.R).fill(0),ct=Array(S.C).fill(0);
+    for(let i=0;i<S.R;i++)for(let j=0;j<S.C;j++){rt[i]+=S.t[i*S.C+j];ct[j]+=S.t[i*S.C+j];}
+    for(let i=0;i<S.R;i++){
+      $('rt'+i).textContent=rt[i];
+      for(let j=0;j<S.C;j++){
+        const k=i*S.C+j,sm=$('x'+k),td=sm.parentNode;
+        if(c.err){sm.textContent='';td.style.background='';}
+        else{sm.textContent='E = '+c.exp[k].toFixed(1)+' · res '+(c.res[k]>=0?'+':'−')+Math.abs(c.res[k]).toFixed(2);td.style.background=shade(c.res[k]);}
+      }
+    }
+    for(let j=0;j<S.C;j++)$('ct'+j).textContent=ct[j];
+    $('gt').textContent=sum(rt);
   }
-  $('cx-tw').addEventListener('input',function(e){
-    var t=e.target,v;
-    if(t.hasAttribute('data-o')){v=Math.max(0,Math.round(+t.value)||0);S.obs[+t.getAttribute('data-o')]=v}
-    else if(t.hasAttribute('data-w')){v=+t.value;S.w[+t.getAttribute('data-w')]=v>0?v:0}
-    else if(t.hasAttribute('data-c')){v=Math.max(0,Math.round(+t.value)||0);S.t[+t.getAttribute('data-c')]=v}
-    else return;
-    changed();
+}
+$('tw').addEventListener('input',e=>{
+  const t=e.target;let v;
+  if(t.hasAttribute('data-o')){v=Math.max(0,Math.round(+t.value)||0);S.obs[+t.getAttribute('data-o')]=v;}
+  else if(t.hasAttribute('data-w')){v=+t.value;S.w[+t.getAttribute('data-w')]=v>0?v:0;}
+  else if(t.hasAttribute('data-c')){v=Math.max(0,Math.round(+t.value)||0);S.t[+t.getAttribute('data-c')]=v;}
+  else return;
+  if(t.hasAttribute('data-c'))S.truthI='';else S.truthG='';changed();
+});
+
+/* ============ Chart 1 ============ */
+const SERIES=()=>[col('--a'),col('--b'),col('--ok'),isDark()?'#b794f6':'#8a56d6'];
+let G1={W:700,H:300};
+function geom1(){return{x0:46,x1:G1.W-14,y0:34,y1:G1.H-34};}
+function drawChart1(c){
+  const q=fit($('cvMain'),.5,240,340);G1={W:q.W,H:q.H};q.c.font=FONT;
+  if(isGof())drawBars(q.c,c);else drawMosaic(q.c,c);
+}
+function drawBars(c1,c){
+  const g=geom1(),k=S.k,line=col('--line'),muted=col('--muted'),ink=col('--ink'),A=col('--a'),B=col('--b'),REJ=col('--rej'),panel=col('--panel');
+  const exp=c.err?S.obs.map(()=>0):c.exp;let mx=1;
+  for(let i=0;i<k;i++)mx=Math.max(mx,S.obs[i],exp[i]);
+  const nm=niceMax(mx*1.15),ym=S.ylock||nm.max,step=S.ylock?S.ylock/5:nm.step;S.ycur=ym;
+  const Y=v=>g.y1-v/ym*(g.y1-g.y0);
+  c1.textAlign='right';c1.textBaseline='middle';
+  for(let t=0;t<=ym+1e-9;t+=step){c1.strokeStyle=line;c1.lineWidth=1;c1.beginPath();c1.moveTo(g.x0,Y(t));c1.lineTo(g.x1,Y(t));c1.stroke();c1.fillStyle=muted;c1.fillText(+t.toFixed(2),g.x0-6,Y(t));}
+  c1.strokeStyle=line;c1.strokeRect(g.x0,g.y0,g.x1-g.x0,g.y1-g.y0);
+  const bw=(g.x1-g.x0)/k,w=Math.min(70,bw*.55);c1.textAlign='center';
+  for(let i=0;i<k;i++){
+    const cx=g.x0+bw*(i+.5),top=Y(Math.min(S.obs[i],ym));
+    c1.globalAlpha=.85;c1.fillStyle=i===S.drag?B:A;c1.fillRect(cx-w/2,top,w,g.y1-top);c1.globalAlpha=1;
+    c1.strokeStyle=panel;c1.lineWidth=1.2;c1.strokeRect(cx-w/2,top,w,g.y1-top);
+    c1.fillStyle=ink;c1.textBaseline='bottom';c1.fillText(S.obs[i],cx,top-3);
+    c1.fillStyle=muted;c1.textBaseline='top';c1.fillText(S.gl[i],cx,g.y1+6);
+    if(!c.err){const ey=Y(Math.min(exp[i],ym));c1.strokeStyle=REJ;c1.lineWidth=2.5;c1.setLineDash([5,3]);c1.beginPath();c1.moveTo(cx-w/2-6,ey);c1.lineTo(cx+w/2+6,ey);c1.stroke();c1.setLineDash([]);}
+  }
+  c1.textAlign='left';c1.textBaseline='middle';
+  c1.globalAlpha=.85;c1.fillStyle=A;c1.fillRect(g.x0,10,12,12);c1.globalAlpha=1;
+  c1.fillStyle=muted;c1.fillText('Observed (drag a bar top)',g.x0+17,16);
+  c1.strokeStyle=REJ;c1.lineWidth=2.5;c1.setLineDash([5,3]);c1.beginPath();c1.moveTo(g.x0+190,16);c1.lineTo(g.x0+212,16);c1.stroke();c1.setLineDash([]);
+  c1.fillStyle=muted;c1.fillText('Expected under H₀',g.x0+218,16);
+}
+function drawMosaic(c1,c){
+  const g=geom1(),R=S.R,C=S.C,gap=6,muted=col('--muted'),ink=col('--ink'),panel=col('--panel'),COLS=SERIES();
+  const rt=Array(R).fill(0),ct=Array(C).fill(0);
+  for(let i=0;i<R;i++)for(let j=0;j<C;j++){rt[i]+=S.t[i*C+j];ct[j]+=S.t[i*C+j];}
+  const N=sum(rt);
+  c1.textAlign='right';c1.textBaseline='middle';
+  for(let t=0;t<=100;t+=25){c1.fillStyle=muted;c1.fillText(t+'%',g.x0-6,g.y0+t/100*(g.y1-g.y0));}
+  if(N<=0||rt.some(v=>v===0)){c1.textAlign='center';c1.fillStyle=muted;c1.fillText('Each row needs at least one observation',(g.x0+g.x1)/2,(g.y0+g.y1)/2);return;}
+  const avail=g.x1-g.x0-gap*(R-1);let x=g.x0;
+  for(let i=0;i<R;i++){
+    const w=avail*rt[i]/N;let y=g.y0;
+    for(let j=0;j<C;j++){
+      const h=(g.y1-g.y0)*S.t[i*C+j]/rt[i];
+      c1.globalAlpha=.85;c1.fillStyle=COLS[j];c1.fillRect(x,y,w,h);c1.globalAlpha=1;
+      c1.strokeStyle=panel;c1.lineWidth=1.2;c1.strokeRect(x,y,w,h);
+      if(h>16&&w>34){c1.fillStyle='#fff';c1.textAlign='center';c1.textBaseline='middle';c1.fillText(Math.round(100*S.t[i*C+j]/rt[i])+'%',x+w/2,y+h/2);}
+      y+=h;
+    }
+    c1.fillStyle=muted;c1.textAlign='center';c1.textBaseline='top';
+    c1.fillText(S.rl[i]+' (n='+rt[i]+')',x+w/2,g.y1+6);x+=w+gap;
+  }
+  let cum=0;c1.strokeStyle=ink;c1.lineWidth=1.5;c1.setLineDash([5,3]);
+  for(let j=0;j<C-1;j++){cum+=ct[j]/N;const ly=g.y0+cum*(g.y1-g.y0);c1.beginPath();c1.moveTo(g.x0,ly);c1.lineTo(g.x1,ly);c1.stroke();}
+  c1.setLineDash([]);c1.textAlign='left';c1.textBaseline='middle';let lx=g.x0;
+  for(let j=0;j<C;j++){c1.globalAlpha=.85;c1.fillStyle=COLS[j];c1.fillRect(lx,10,12,12);c1.globalAlpha=1;c1.fillStyle=muted;c1.fillText(S.cl[j],lx+17,16);lx+=22+c1.measureText(S.cl[j]).width+12;}
+  c1.strokeStyle=ink;c1.setLineDash([5,3]);c1.beginPath();c1.moveTo(lx,16);c1.lineTo(lx+22,16);c1.stroke();c1.setLineDash([]);
+  c1.fillStyle=muted;c1.fillText('Overall split (what independence predicts)',lx+28,16);
+}
+
+/* ============ Chart 2: chi-square distribution ============ */
+function drawDist(c){
+  const q=fit($('cvDist'),.4,220,280),c2=q.c,W2=q.W,H2=q.H;c2.font=FONT;
+  const line=col('--line'),muted=col('--muted'),A=col('--a'),B=col('--b'),REJ=col('--rej');
+  const df=c.err?(isGof()?S.k-1:(S.R-1)*(S.C-1)):c.df,cr=c.err?crit(df,S.alpha):c.crit;
+  const xmax=Math.max(cr*1.7,df+5*Math.sqrt(2*df)+2,c.err?0:Math.min(c.chi*1.1,cr*6));
+  const P={l:46,r:14,t:30,b:34},pw=W2-P.l-P.r,ph=H2-P.t-P.b;
+  const X=v=>P.l+Math.min(v,xmax)/xmax*pw;
+  let ymax=0;for(let i=1;i<=240;i++)ymax=Math.max(ymax,pdf(xmax*i/240,df));
+  if(df===1)ymax=pdf(0.2,1);if(df===2)ymax=.5;
+  ymax*=1.12;
+  const Y=v=>P.t+ph-Math.min(v,ymax)/ymax*ph;
+  const nm=niceMax(xmax);
+  c2.textAlign='center';c2.textBaseline='top';
+  for(let t=0;t<=xmax+1e-9;t+=nm.step){c2.strokeStyle=line;c2.lineWidth=1;c2.beginPath();c2.moveTo(X(t),P.t);c2.lineTo(X(t),P.t+ph);c2.stroke();c2.fillStyle=muted;c2.fillText(+t.toFixed(2),X(t),P.t+ph+5);}
+  c2.strokeStyle=line;c2.strokeRect(P.l,P.t,pw,ph);
+  c2.fillStyle=muted;c2.fillText('χ² value',P.l+pw/2,H2-16);
+  c2.save();c2.translate(12,P.t+ph/2);c2.rotate(-Math.PI/2);c2.textBaseline='middle';c2.fillText('Density',0,0);c2.restore();
+  if(S.sim){
+    const nb=32,bwid=xmax/nb,cnt=Array(nb).fill(0);
+    S.sim.forEach(v=>{const b=Math.floor(v/bwid);if(b>=0&&b<nb)cnt[b]++;});
+    c2.globalAlpha=.3;c2.fillStyle=muted;
+    for(let i=0;i<nb;i++){const d=cnt[i]/(S.sim.length*bwid),x0=X(i*bwid),x1=X((i+1)*bwid);c2.fillRect(x0,Y(d),x1-x0-1,P.t+ph-Y(d));}
+    c2.globalAlpha=1;
+  }
+  function area(from,color,alpha){
+    c2.beginPath();c2.moveTo(X(from),Y(0));
+    for(let s=0;s<=160;s++){const xv=from+(xmax-from)*s/160;c2.lineTo(X(xv),Y(pdf(Math.max(xv,1e-6),df)));}
+    c2.lineTo(X(xmax),Y(0));c2.closePath();c2.globalAlpha=alpha;c2.fillStyle=color;c2.fill();c2.globalAlpha=1;
+  }
+  if(cr<xmax)area(cr,REJ,.2);
+  if(!c.err&&c.chi<xmax)area(c.chi,A,.4);
+  c2.beginPath();c2.strokeStyle=A;c2.lineWidth=2.5;let st=true;
+  for(let i=0;i<=300;i++){const xv=Math.max(xmax*i/300,df===1?0.004:1e-6),yv=pdf(xv,df);if(st){c2.moveTo(X(xv),Y(yv));st=false;}else c2.lineTo(X(xv),Y(yv));}
+  c2.stroke();
+  c2.save();c2.beginPath();c2.rect(P.l,P.t,pw,ph);c2.clip();
+  c2.strokeStyle=REJ;c2.lineWidth=2;c2.setLineDash([6,4]);c2.beginPath();c2.moveTo(X(cr),P.t);c2.lineTo(X(cr),P.t+ph);c2.stroke();c2.setLineDash([]);
+  if(!c.err){c2.strokeStyle=B;c2.lineWidth=3;c2.beginPath();c2.moveTo(X(c.chi),P.t);c2.lineTo(X(c.chi),P.t+ph);c2.stroke();}
+  c2.restore();
+  c2.textBaseline='bottom';
+  const chiRight=!c.err&&c.chi>=cr;
+  if(!c.err){
+    c2.fillStyle=B;
+    if(c.chi>xmax){c2.textAlign='right';c2.fillText('χ² = '+c.chi.toFixed(2)+' →',P.l+pw-4,P.t-2);}
+    else{c2.textAlign=chiRight?'left':'right';c2.fillText('χ² = '+c.chi.toFixed(2),X(c.chi)+(chiRight?5:-5),P.t-2);}
+  }
+  c2.fillStyle=REJ;const critLeft=chiRight&&c.chi<=xmax;
+  c2.textAlign=critLeft?'right':'left';c2.fillText('critical = '+cr.toFixed(2),X(cr)+(critLeft?-5:5),P.t-2);
+  $('distLegend').innerHTML=`<span><i style="background:${REJ};opacity:.35"></i>Rejection region (α = ${fr(S.alpha,3)})</span>`+
+    (c.err?'':`<span><i style="background:${A};opacity:.5"></i>p-value: area beyond your χ²</span><span><i style="background:${B}"></i>Your χ²</span>`)+
+    (S.sim?`<span><i style="background:${muted};opacity:.4"></i>1,000 simulated samples under H₀</span>`:'');
+}
+
+/* ============ Results ============ */
+const bar=(lab,v,mx,c,txt)=>`<div style="display:grid;grid-template-columns:minmax(120px,230px) 1fr 70px;gap:8px;align-items:center;margin:4px 0"><span class="cap" style="margin:0">${lab}</span><div class="bar" style="width:${Math.max(1,100*Math.min(v,mx)/mx)}%;background:${c}"></div><span class="f">${txt}</span></div>`;
+function showResult(o){
+  $('badge').innerHTML=o.p==null?'':`<span class="badge ${o.p<S.alpha?'sig':'ns'}">${o.p<S.alpha?'Significant':'Not significant'} at α = ${fp(S.alpha)}</span>`;
+  $('stats').innerHTML=o.cards.map(([a,b])=>`<div class="stat"><small>${a}</small><b>${b}</b></div>`).join('');
+  guideRows(o.guides);
+  $('interp').innerHTML=o.interp;
+  $('apaRow').hidden=!o.apa;$('apa').textContent=o.apa||'';
+}
+function hypText(){
+  return isGof()
+    ?'<b>H₀:</b> the population proportions match the hypothesised weights. <b>H₁:</b> at least one proportion differs. Expected count = n × weight share.'
+    :'<b>H₀:</b> the row and column variables are independent. <b>H₁:</b> they are associated. Expected count = (row total × column total) / n.';
+}
+function testSentence(c){
+  const h0=isGof()?'the counts match the hypothesised proportions':'the variables are independent',rej=c.p<S.alpha;
+  return `With α = ${fp(S.alpha)}, p ${apaP(c.p)}, so H₀ (${h0}) is ${rej?'<b>rejected</b>':'<b>not rejected</b>'}.`;
+}
+function extras(c){
+  let m='';
+  if(c.chi>0&&!(S.tab==='assoc')){
+    let mi=0;for(let i=1;i<c.con.length;i++)if(c.con[i]>c.con[mi])mi=i;
+    const nm=isGof()?`category <b>${S.gl[mi]}</b>`:`the cell <b>${S.rl[Math.floor(mi/S.C)]} × ${S.cl[mi%S.C]}</b>`;
+    m+=` Largest contributor: ${nm} (O = ${c.obs[mi]}, E = ${c.exp[mi].toFixed(1)}), ${Math.round(100*c.con[mi]/c.chi)}% of χ².`;
+  }
+  if(c.low>0)m+=`<br><i>Caution: ${c.low} expected count${c.low>1?'s are':' is'} below 5, so the chi-square approximation may be unreliable.</i>`;
+  if(yatesOn())m+='<br><i>Yates continuity correction is applied to χ² (φ and V use the uncorrected value).</i>';
+  if(S.sim){
+    let hit=0;S.sim.forEach(v=>{if(v>=c.chi-1e-9)hit++;});
+    m+=`<br><b>Simulation:</b> ${hit} of ${S.sim.length} samples drawn under H₀ gave χ² ≥ ${c.chi.toFixed(2)} (simulated p ≈ ${(hit/S.sim.length).toFixed(3)}, theory ${fp(c.p)}).`;
+  }
+  return m;
+}
+function renderResult(c){
+  if(c.err){$('msg').hidden=false;$('msg').textContent=c.err;$('pRes').hidden=true;$('p2dist').hidden=true;$('p2assoc').hidden=true;return;}
+  $('msg').hidden=true;$('pRes').hidden=false;
+  const chiLab='χ²'+(yatesOn()?' (Yates)':''),rej=c.p<S.alpha;
+  const cardsTest=[[chiLab,f(c.chi)],['df',c.df],['p-value',fp(c.p)],['Critical χ²',f(c.crit)]];
+  if(isGof()){
+    const lab=effLabel(c.w);
+    showResult({p:c.p,cards:[...cardsTest,['Cohen\'s w',fr(c.w)],['n',c.n]],guides:[['Cohen\'s w',c.w]],
+      interp:`${testSentence(c)} Effect size: Cohen's w = ${fr(c.w)}, a <b>${lab}</b> departure (guideline: ${thr(1)} for small, medium, large). ${rej?'The counts sit further from the hypothesised proportions than chance alone would usually allow.':'The gaps are within normal sampling noise.'}${!rej&&c.n<60?' With a small sample a real departure can easily go undetected.':''}${rej&&lab==='negligible'||rej&&lab==='small'?' A significant result with a small w means the departure is detectable but modest.':''}`+extras(c),
+      apa:`χ²(${c.df}, N = ${c.n}) = ${f(c.chi)}, p ${apaP(c.p)}, w = ${fr(c.w)}`});
+  }else if(S.tab==='ind'){
+    const two=S.R===2&&S.C===2,lab=effLabel(c.V,Math.sqrt(c.dfs)),sym=two?'φ':'Cramér\'s V';
+    const cards=[...cardsTest];
+    if(two)cards.push(['φ (signed)',fr(c.phi)]);
+    cards.push([two?'|φ| = V':'Cramér\'s V',fr(c.V)],['V² (shared)',fr(c.V*c.V,3)],['n',c.n]);
+    showResult({p:c.p,cards,guides:[two?['|φ| = V',c.V]:['Cramér\'s V (df* = '+c.dfs+')',c.V,Math.sqrt(c.dfs)]],
+      interp:`${testSentence(c)} ${rej?'The pattern across rows differs more than independence would predict, so the variables look associated.':'There is no convincing evidence of association; the data are consistent with independence.'} <b>Effect size:</b> ${two?`φ = ${fr(c.phi)} (|φ| = V = ${fr(c.V)})`:`V = ${fr(c.V)} with df* = ${c.dfs}`}, a <b>${lab}</b> association (guideline for df* = ${c.dfs}: ${thr(Math.sqrt(c.dfs))} for small, medium, large). ${rej&&lab!=='medium'&&lab!=='large'?'Significant but weak: χ² grows with n, so a large sample can detect even a faint association. ':''}${!rej&&(lab==='medium'||lab==='large')?'The association looks sizeable but the sample is too small to rule out chance. ':''}Open the <b>Phi &amp; Cramér's V</b> tab to see how these measures behave as n changes.`+extras(c),
+      apa:`χ²(${c.df}, N = ${c.n}) = ${f(c.chi)}, p ${apaP(c.p)}, ${two?'φ = '+fr(c.phi):'Cramér\'s V = '+fr(c.V)}`});
+  }else{
+    const two=S.R===2&&S.C===2,s=Math.sqrt(c.dfs),lab=effLabel(c.V,s);
+    const cards=[];
+    if(two)cards.push(['φ (signed)',fr(c.phi)],['|φ| = V',fr(c.V)],['φ² = V²',fr(c.V*c.V,3)],['φmax (margins)',fr(c.phimax)],['|φ| / φmax',fr(c.V/c.phimax)]);
+    else cards.push(['Cramér\'s V',fr(c.V)],['V²',fr(c.V*c.V,3)],['df*',c.dfs],['Cohen\'s w',fr(c.w)]);
+    cards.push(['χ² (for contrast)',f(c.chiRaw)],['p-value',fp(c.p)],['n',c.n]);
+    let t=two
+      ?`φ = ${fr(c.phi)} is the Pearson correlation between the two 0/1 variables. Its size, |φ| = ${fr(c.V)}, is a <b>${lab}</b> association (guideline: ${thr(1)}), and φ² = ${fr(c.V*c.V,3)}, so about ${Math.round(100*c.V*c.V)}% of the variance in one variable is shared with the other. Given these margins the largest possible |φ| is ${fr(c.phimax)}, so |φ| reaches ${Math.round(100*c.V/c.phimax)}% of its ceiling.`
+      :`V = ${fr(c.V)} with df* = ${c.dfs} is a <b>${lab}</b> association (guideline: ${thr(s)} for small, medium, large). V = 0 means no association and V = 1 means each category of one variable maps onto a single category of the other; V² = ${fr(c.V*c.V,3)} is the proportion of the maximum possible χ² that the data reach.`;
+    t+=` Unlike χ², V does not grow with n: multiplying every count by k multiplies χ² by k and leaves ${two?'φ':'V'} unchanged (panel 2). For the significance question: ${testSentence(c)}`;
+    if(c.low>0)t+=`<br><i>Caution: ${c.low} expected count${c.low>1?'s are':' is'} below 5; V is also biased upward in small samples.</i>`;
+    showResult({p:c.p,cards,interp:t,guides:two?[['|φ| = V',c.V]]:[['Cramér\'s V (df* = '+c.dfs+')',c.V,s],['Cohen\'s w',c.w]],
+      apa:`${two?'φ = '+fr(c.phi):'V = '+fr(c.V)}, χ²(${c.df}, N = ${c.n}) = ${f(c.chiRaw)}, p ${apaP(c.p)}`});
+    renderAssoc(c,two);
+  }
+}
+function renderAssoc(c,two){
+  const A=col('--a'),B=col('--b'),OK=col('--ok');
+  let h=bar(two?'|φ| (= V)':'Cramér\'s V',c.V,1,A,fr(c.V));
+  if(two)h+=bar('φmax allowed by the margins',c.phimax,1,B,fr(c.phimax));
+  h+=bar(two?'φ² (variance shared)':'V²',c.V*c.V,1,OK,fr(c.V*c.V,3));
+  h+=bar('Cohen\'s "medium" for this table',.3/Math.sqrt(c.dfs),1,col('--muted'),fr(.3/Math.sqrt(c.dfs)));
+  $('assocBars').innerHTML=h+`<p class="cap">Each bar runs from 0 to 1. ${two?'The orange bar is the ceiling on |φ| set by unequal margins; when it is below 1, even a perfectly "tidy" table cannot reach φ = 1.':''}</p>`;
+  const mult=[.5,1,2,5,10,25];
+  let t='<thead><tr><th>Counts ×</th><th class="num">n</th><th class="num">χ²</th><th class="num">p</th><th class="num">'+(two?'|φ|':'V')+'</th><th>Significant?</th></tr></thead><tbody>';
+  mult.forEach(m=>{
+    const x2=c.chiRaw*m,p=pval(x2,c.df);
+    t+=`<tr${m===1?' class="sel"':''}><td class="f">×${m}${m===1?' (yours)':''}</td><td class="num">${f(c.n*m,m<1?1:0)}</td><td class="num">${f(x2)}</td><td class="num">${fp(p)}</td><td class="num">${fr(c.V)}</td><td>${p<S.alpha?'<span class="badge sig">Yes</span>':'<span class="badge ns">No</span>'}</td></tr>`;
   });
+  $('scaleTable').innerHTML=t+'</tbody>';
+  $('scaleCap').textContent=`The pattern of proportions is identical in every row, so the strength of association (${two?'φ':'V'}) never changes, but χ² grows in step with n and eventually crosses the critical value. Significance depends on both strength and sample size; ${two?'φ':'V'} reports strength alone.`;
+}
 
-  /* ---------- drawing: chart 1 ---------- */
-  function niceMax(v){
-    if(v<=0)return{max:5,step:1};
-    var raw=v/5,p=Math.pow(10,Math.floor(Math.log10(raw))),f=raw/p;
-    var st=(f<=1?1:f<=2?2:f<=5?5:10)*p;
-    return{max:Math.ceil(v/st)*st,step:st};
-  }
-  function geom1(){return{x0:46,x1:W1-14,y0:34,y1:H1-34}}
-  function drawChart1(c){
-    c1.clearRect(0,0,W1,H1);
-    c1.font='11px system-ui,sans-serif';
-    if(S.mode==='gof')drawBars(c);else drawMosaic(c);
-  }
-  function drawBars(c){
-    var g=geom1(),k=S.k,i,mx=1;
-    var exp=c.err?S.obs.map(function(){return 0}):c.exp;
-    for(i=0;i<k;i++)mx=Math.max(mx,S.obs[i],exp[i]);
-    var nm=niceMax(mx*1.15),ym=S.ylock||nm.max,step=S.ylock?S.ylock/5:nm.step;
-    S.ycur=ym;
-    var Y=function(v){return g.y1-v/ym*(g.y1-g.y0)};
-    c1.textAlign='right';c1.textBaseline='middle';
-    for(var t=0;t<=ym+1e-9;t+=step){
-      c1.strokeStyle='#e4e9ee';c1.lineWidth=1;c1.beginPath();c1.moveTo(g.x0,Y(t));c1.lineTo(g.x1,Y(t));c1.stroke();
-      c1.fillStyle='#7b8794';c1.fillText(+t.toFixed(2),g.x0-6,Y(t));
-    }
-    c1.strokeStyle='#9aa5b1';c1.strokeRect(g.x0,g.y0,g.x1-g.x0,g.y1-g.y0);
-    var bw=(g.x1-g.x0)/k,w=Math.min(70,bw*.55);
-    c1.textAlign='center';
-    for(i=0;i<k;i++){
-      var cx=g.x0+bw*(i+.5),top=Y(Math.min(S.obs[i],ym));
-      c1.fillStyle=i===S.drag?'#dd6b20':'rgba(43,108,176,.8)';
-      c1.fillRect(cx-w/2,top,w,g.y1-top);
-      c1.strokeStyle='#fff';c1.lineWidth=1.2;c1.strokeRect(cx-w/2,top,w,g.y1-top);
-      c1.fillStyle='#1f2933';c1.textBaseline='bottom';c1.fillText(S.obs[i],cx,top-3);
-      c1.fillStyle='#52606d';c1.textBaseline='top';c1.fillText(S.gl[i],cx,g.y1+6);
-      if(!c.err){
-        var ey=Y(Math.min(exp[i],ym));
-        c1.strokeStyle='#c53030';c1.lineWidth=2.5;c1.setLineDash([5,3]);
-        c1.beginPath();c1.moveTo(cx-w/2-6,ey);c1.lineTo(cx+w/2+6,ey);c1.stroke();c1.setLineDash([]);
-      }
-    }
-    c1.textAlign='left';c1.textBaseline='middle';
-    c1.fillStyle='rgba(43,108,176,.8)';c1.fillRect(g.x0,10,12,12);
-    c1.fillStyle='#52606d';c1.fillText('Observed (drag a bar top)',g.x0+17,16);
-    c1.strokeStyle='#c53030';c1.lineWidth=2.5;c1.setLineDash([5,3]);c1.beginPath();c1.moveTo(g.x0+190,16);c1.lineTo(g.x0+212,16);c1.stroke();c1.setLineDash([]);
-    c1.fillStyle='#52606d';c1.fillText('Expected under H₀',g.x0+218,16);
-  }
-  function drawMosaic(c){
-    var g=geom1(),R=S.R,C=S.C,i,j,gap=6;
-    var rt=[],ct=[];for(i=0;i<R;i++)rt.push(0);for(j=0;j<C;j++)ct.push(0);
-    for(i=0;i<R;i++)for(j=0;j<C;j++){rt[i]+=S.t[i*C+j];ct[j]+=S.t[i*C+j]}
-    var N=sum(rt);
-    c1.textAlign='right';c1.textBaseline='middle';
-    for(var t=0;t<=100;t+=25){
-      var yy=g.y0+t/100*(g.y1-g.y0);c1.fillStyle='#7b8794';c1.fillText(t+'%',g.x0-6,yy);
-    }
-    if(N<=0||rt.some(function(v){return v===0})){
-      c1.textAlign='center';c1.fillStyle='#7b8794';c1.fillText('Each row needs at least one observation',(g.x0+g.x1)/2,(g.y0+g.y1)/2);return;
-    }
-    var avail=g.x1-g.x0-gap*(R-1),x=g.x0;
-    for(i=0;i<R;i++){
-      var w=avail*rt[i]/N,y=g.y0;
-      for(j=0;j<C;j++){
-        var h=(g.y1-g.y0)*S.t[i*C+j]/rt[i];
-        c1.fillStyle=COLS[j];c1.globalAlpha=.8;c1.fillRect(x,y,w,h);c1.globalAlpha=1;
-        c1.strokeStyle='#fff';c1.lineWidth=1.2;c1.strokeRect(x,y,w,h);
-        if(h>16&&w>34){c1.fillStyle='#fff';c1.textAlign='center';c1.textBaseline='middle';c1.fillText(Math.round(100*S.t[i*C+j]/rt[i])+'%',x+w/2,y+h/2)}
-        y+=h;
-      }
-      c1.fillStyle='#52606d';c1.textAlign='center';c1.textBaseline='top';
-      c1.fillText(S.rl[i]+' (n='+rt[i]+')',x+w/2,g.y1+6);
-      x+=w+gap;
-    }
-    var cum=0;
-    c1.strokeStyle='#1f2933';c1.lineWidth=1.5;c1.setLineDash([5,3]);
-    for(j=0;j<C-1;j++){
-      cum+=ct[j]/N;var ly=g.y0+cum*(g.y1-g.y0);
-      c1.beginPath();c1.moveTo(g.x0,ly);c1.lineTo(g.x1,ly);c1.stroke();
-    }
-    c1.setLineDash([]);
-    c1.textAlign='left';c1.textBaseline='middle';var lx=g.x0;
-    for(j=0;j<C;j++){
-      c1.fillStyle=COLS[j];c1.globalAlpha=.8;c1.fillRect(lx,10,12,12);c1.globalAlpha=1;
-      c1.fillStyle='#52606d';c1.fillText(S.cl[j],lx+17,16);lx+=22+c1.measureText(S.cl[j]).width+12;
-    }
-    c1.strokeStyle='#1f2933';c1.setLineDash([5,3]);c1.beginPath();c1.moveTo(lx,16);c1.lineTo(lx+22,16);c1.stroke();c1.setLineDash([]);
-    c1.fillStyle='#52606d';c1.fillText('Overall split (what independence predicts)',lx+28,16);
-  }
+/* ============ Update cycle ============ */
+function render(){
+  syncUI();
+  const c=compute();S.c=c;
+  refreshTable(c);drawChart1(c);
+  if(S.tab!=='assoc')drawDist(c);
+  renderResult(c);
+  if(!c.err){$('p2dist').hidden=S.tab==='assoc';$('p2assoc').hidden=S.tab!=='assoc';}
+}
+function changed(){S.sim=null;render();}
+function rebuild(){buildTable();$('hyp').innerHTML=hypText();changed();}
 
-  /* ---------- drawing: chart 2 ---------- */
-  function drawDist(c){
-    c2.clearRect(0,0,W2,H2);
-    c2.font='11px system-ui,sans-serif';
-    var df=c.err?(S.mode==='gof'?S.k-1:(S.R-1)*(S.C-1)):c.df;
-    var cr=c.err?crit(df,S.alpha):c.crit;
-    var xmax=Math.max(cr*1.7,df+5*Math.sqrt(2*df)+2);
-    var P={l:46,r:14,t:30,b:34},pw=W2-P.l-P.r,ph=H2-P.t-P.b,i;
-    var X=function(v){return P.l+Math.min(v,xmax)/xmax*pw};
-    var ymax=0;
-    for(i=1;i<=240;i++){ymax=Math.max(ymax,pdf(xmax*i/240,df))}
-    if(df<=2)ymax=Math.max(ymax,pdf(df===1?0.15:0.02,df)*(df===1?1:1));
-    if(df===1)ymax=pdf(0.2,1);
-    ymax*=1.12;
-    var Y=function(v){return P.t+ph-Math.min(v,ymax)/ymax*ph};
-    /* grid + x ticks */
-    var nm=niceMax(xmax),tick=nm.step;
-    c2.textAlign='center';c2.textBaseline='top';
-    for(var t=0;t<=xmax+1e-9;t+=tick){
-      c2.strokeStyle='#e4e9ee';c2.lineWidth=1;c2.beginPath();c2.moveTo(X(t),P.t);c2.lineTo(X(t),P.t+ph);c2.stroke();
-      c2.fillStyle='#7b8794';c2.fillText(+t.toFixed(2),X(t),P.t+ph+5);
-    }
-    c2.strokeStyle='#9aa5b1';c2.strokeRect(P.l,P.t,pw,ph);
-    c2.fillStyle='#52606d';c2.fillText('χ² value',P.l+pw/2,H2-16);
-    c2.save();c2.translate(12,P.t+ph/2);c2.rotate(-Math.PI/2);c2.textBaseline='middle';c2.fillText('Density',0,0);c2.restore();
-    /* simulation histogram */
-    if(S.sim){
-      var nb=32,bwid=xmax/nb,cnt=[];for(i=0;i<nb;i++)cnt.push(0);
-      S.sim.forEach(function(v){var b=Math.floor(v/bwid);if(b>=0&&b<nb)cnt[b]++});
-      c2.fillStyle='rgba(82,96,109,.28)';
-      for(i=0;i<nb;i++){
-        var d=cnt[i]/(S.sim.length*bwid),x0=X(i*bwid),x1=X((i+1)*bwid);
-        c2.fillRect(x0,Y(d),x1-x0-1,P.t+ph-Y(d));
-      }
-    }
-    /* area fills */
-    function area(from,fill){
-      c2.beginPath();c2.moveTo(X(from),Y(0));
-      var steps=160;
-      for(var s=0;s<=steps;s++){var xv=from+(xmax-from)*s/steps;c2.lineTo(X(xv),Y(pdf(Math.max(xv,1e-6),df)))}
-      c2.lineTo(X(xmax),Y(0));c2.closePath();c2.fillStyle=fill;c2.fill();
-    }
-    if(cr<xmax)area(cr,'rgba(197,48,48,.16)');
-    if(!c.err&&c.chi<xmax)area(c.chi,'rgba(43,108,176,.38)');
-    /* curve */
-    c2.beginPath();c2.strokeStyle='#2b6cb0';c2.lineWidth=2.5;
-    var st=true;
-    for(i=0;i<=300;i++){
-      var xv=Math.max(xmax*i/300,df===1?0.004:1e-6);
-      var yv=pdf(xv,df);
-      if(st){c2.moveTo(X(xv),Y(yv));st=false}else c2.lineTo(X(xv),Y(yv));
-    }
-    c2.stroke();
-    /* critical line */
-    c2.save();c2.beginPath();c2.rect(P.l,P.t,pw,ph);c2.clip();
-    c2.strokeStyle='#c53030';c2.lineWidth=2;c2.setLineDash([6,4]);
-    c2.beginPath();c2.moveTo(X(cr),P.t);c2.lineTo(X(cr),P.t+ph);c2.stroke();c2.setLineDash([]);
-    if(!c.err){
-      c2.strokeStyle='#dd6b20';c2.lineWidth=3;
-      c2.beginPath();c2.moveTo(X(c.chi),P.t);c2.lineTo(X(c.chi),P.t+ph);c2.stroke();
-    }
-    c2.restore();
-    c2.textBaseline='bottom';
-    var chiRight=!c.err&&c.chi>=cr;
-    if(!c.err){
-      var over=c.chi>xmax;
-      c2.fillStyle='#dd6b20';
-      if(over){c2.textAlign='right';c2.fillText('\u03c7\u00b2 = '+c.chi.toFixed(2)+' \u2192',P.l+pw-4,P.t-2)}
-      else{c2.textAlign=chiRight?'left':'right';c2.fillText('\u03c7\u00b2 = '+c.chi.toFixed(2),X(c.chi)+(chiRight?5:-5),P.t-2)}
-    }
-    c2.fillStyle='#c53030';
-    var critLeft=chiRight&&c.chi<=xmax;
-    c2.textAlign=critLeft?'right':'left';
-    c2.fillText('critical = '+cr.toFixed(2),X(cr)+(critLeft?-5:5),P.t-2);
-    /* legend */
-    var items=[['rgba(197,48,48,.25)','Rejection region (\u03b1 = '+S.alpha.toFixed(2)+')']];
-    if(!c.err)items.push(['rgba(43,108,176,.45)','p-value: area beyond your \u03c7\u00b2']);
-    if(S.sim)items.push(['rgba(82,96,109,.35)','1,000 simulated samples under H\u2080']);
-    c2.textAlign='left';c2.textBaseline='middle';
-    var lx=P.l+pw-250;if(lx<P.l+4)lx=P.l+4;
-    items.forEach(function(it,k){
-      var ly=P.t+14+k*16;
-      c2.fillStyle=it[0];c2.fillRect(lx,ly-6,12,12);c2.fillStyle='#52606d';c2.fillText(it[1],lx+17,ly);
-    });
-  }
-  /* ---------- readouts ---------- */
-  function hypText(){
-    return S.mode==='gof'
-      ?'<b>H<sub>0</sub>:</b> the population proportions match the hypothesized weights. <b>H<sub>1</sub>:</b> at least one proportion differs. Expected counts = n &times; weight share.'
-      :'<b>H<sub>0</sub>:</b> the row and column variables are independent. <b>H<sub>1</sub>:</b> they are associated. Expected count = (row total &times; column total) / n.';
-  }
-  function readout(c){
-    var ok=!c.err;
-    $('cx-s1').textContent=ok?c.chi.toFixed(2):'-';
-    $('cx-s2').textContent=ok?c.df:(S.mode==='gof'?S.k-1:(S.R-1)*(S.C-1));
-    $('cx-s3').textContent=ok?fmtP(c.p):'-';
-    $('cx-s4').textContent=ok?c.crit.toFixed(2):crit(S.mode==='gof'?S.k-1:(S.R-1)*(S.C-1),S.alpha).toFixed(2);
-    $('cx-s5l').innerHTML=S.mode==='gof'?'Effect size w':'Cram&eacute;r\'s V';
-    $('cx-s5').textContent=ok?c.eff.toFixed(3):'-';
-    $('cx-s6').textContent=ok?c.n:'-';
-    var m,warn=false;
-    if(!ok){m=c.err;warn=true}
+/* ============ Simulation ============ */
+function runSim(){
+  const c=S.c;if(!c||c.err)return;
+  const r=mulberry32(Math.floor(Math.random()*1e9)),out=[],p=c.exp.map(e=>e/c.n);
+  for(let s=0;s<1000;s++){
+    const cnt=multinom(c.n,p,r);let chi=0;
+    if(isGof())for(let i=0;i<cnt.length;i++)chi+=term(cnt[i],c.exp[i]);
     else{
-      var rej=c.p<S.alpha,mi=0,i;
-      m='<b>'+(rej?'Reject H<sub>0</sub>':'Fail to reject H<sub>0</sub>')+'</b> at &alpha; = '+S.alpha.toFixed(2)+' (p = '+fmtP(c.p)+'). ';
-      if(S.mode==='gof')m+=rej?'The counts sit further from the hypothesized proportions than chance alone would usually allow.':'The counts are consistent with the hypothesized proportions; the gaps are within normal sampling noise.';
-      else m+=rej?'The pattern across rows differs more than independence would predict, so the variables look associated.':'There is no convincing evidence of association; the data are consistent with independence.';
-      m+=' The effect is <b>'+effLabel(c.eff)+'</b> ('+(S.mode==='gof'?'w':'V')+' = '+c.eff.toFixed(2)+').';
-      for(i=1;i<c.con.length;i++)if(c.con[i]>c.con[mi])mi=i;
-      if(c.chi>0){
-        var nm=S.mode==='gof'?'category <b>'+S.gl[mi]+'</b>':'the cell <b>'+S.rl[Math.floor(mi/S.C)]+' &times; '+S.cl[mi%S.C]+'</b>';
-        m+='<br>Largest contributor: '+nm+' (O = '+c.obs[mi]+', E = '+c.exp[mi].toFixed(1)+'), '+Math.round(100*c.con[mi]/c.chi)+'% of &chi;&sup2;.';
-      }
-      if(c.low>0){m+='<br><i>Caution: '+c.low+' expected count'+(c.low>1?'s are':' is')+' below 5, so the chi-square approximation may be unreliable.</i>';warn=true}
-      if(!rej&&c.n<60)m+='<br><i>With a small sample, a real effect can easily go undetected. Try a larger n.</i>';
-      if(yatesOn())m+='<br><i>Yates continuity correction is applied.</i>';
-      if(S.sim){
-        var hit=0;S.sim.forEach(function(v){if(v>=c.chi-1e-9)hit++});
-        m+='<br><b>Simulation:</b> '+hit+' of '+S.sim.length+' samples drawn under H<sub>0</sub> gave &chi;&sup2; &ge; '+c.chi.toFixed(2)+' (simulated p &asymp; '+(hit/S.sim.length).toFixed(3)+', theory '+fmtP(c.p)+').';
-      }
+      const R=S.R,C=S.C,rt=Array(R).fill(0),ct=Array(C).fill(0);
+      for(let i=0;i<R;i++)for(let j=0;j<C;j++){rt[i]+=cnt[i*C+j];ct[j]+=cnt[i*C+j];}
+      for(let i=0;i<R;i++)for(let j=0;j<C;j++){if(rt[i]===0||ct[j]===0)continue;chi+=term(cnt[i*C+j],rt[i]*ct[j]/c.n);}
     }
-    var el=$('cx-msg');el.innerHTML=m;el.className='cx-msg'+(warn?' cx-warn':'');
+    out.push(chi);
   }
-  function note1(){
-    $('cx-c1note').innerHTML=S.mode==='gof'
-      ?'Click or drag a bar to change its observed count. Cell shading in the last table column shows the direction of each gap: orange = more than expected, blue = fewer.'
-      :'Each bar shows how that row splits across the columns. If the variables were independent, every bar would line up with the dashed overall split. Cell shading in the table: orange = more than expected, blue = fewer.';
-  }
+  S.sim=out;render();
+}
 
-  /* ---------- update cycle ---------- */
-  function refresh(){
-    var c=compute();S.c=c;
-    refreshTable(c);drawChart1(c);drawDist(c);readout(c);
-  }
-  function changed(){S.sim=null;refresh()}
-  function rebuild(){buildTable();note1();$('cx-hyp').innerHTML=hypText();changed()}
-
-  /* ---------- simulation ---------- */
-  function runSim(){
-    var c=S.c;if(!c||c.err)return;
-    var r=rng(Math.floor(Math.random()*1e9)),N=1000,out=[],i,j,p=c.exp.map(function(e){return e/c.n});
-    for(var s=0;s<N;s++){
-      var cnt=multinom(c.n,p,r),chi=0,e;
-      if(S.mode==='gof'){
-        for(i=0;i<cnt.length;i++)chi+=term(cnt[i],c.exp[i]);
-      }else{
-        var R=S.R,C=S.C,rt=[],ct=[];
-        for(i=0;i<R;i++)rt.push(0);for(j=0;j<C;j++)ct.push(0);
-        for(i=0;i<R;i++)for(j=0;j<C;j++){rt[i]+=cnt[i*C+j];ct[j]+=cnt[i*C+j]}
-        for(i=0;i<R;i++)for(j=0;j<C;j++){
-          if(rt[i]===0||ct[j]===0)continue;
-          e=rt[i]*ct[j]/c.n;chi+=term(cnt[i*C+j],e);
-        }
-      }
-      out.push(chi);
-    }
-    S.sim=out;refresh();
-  }
-
-  /* ---------- events ---------- */
-  function setMode(m){
-    S.mode=m;
-    $('cx-m-gof').className=m==='gof'?'cx-on':'';$('cx-m-gof').setAttribute('aria-pressed',m==='gof');
-    $('cx-m-ind').className=m==='ind'?'cx-on':'';$('cx-m-ind').setAttribute('aria-pressed',m==='ind');
-    $('cx-pg').className=m==='gof'?'':'cx-hide';$('cx-pi').className=m==='ind'?'':'cx-hide';
-    cv1.style.cursor=m==='gof'?'ns-resize':'default';
-    cv1.setAttribute('aria-label',m==='gof'?'Bar chart of observed counts with expected counts marked. Bars can be dragged.':'Stacked bars showing how each row splits across columns, with the overall split dashed.');
-    keyMode();rebuild();
-  }
-  $('cx-m-gof').addEventListener('click',function(){setMode('gof')});
-  $('cx-m-ind').addEventListener('click',function(){setMode('ind')});
-
-  function newGof(){S.k=+$('cx-k').value;drawGof();rebuild()}
-  $('cx-k').addEventListener('input',function(){
-    $('cx-kv').textContent=this.value;S.k=+this.value;S.gl=letters(S.k);S.w=[];
-    for(var i=0;i<S.k;i++)S.w.push(1);
-    drawGof();rebuild();
+/* ============ Presets ============ */
+const GP={
+  fair:{label:'Fair die',k:6,gl:['1','2','3','4','5','6'],w:[1,1,1,1,1,1],o:[18,22,19,21,20,20]},
+  loaded:{label:'Loaded die',k:6,gl:['1','2','3','4','5','6'],w:[1,1,1,1,1,1],o:[12,15,16,20,24,33]},
+  mendel:{label:'Mendel peas (9:3:3:1)',k:4,gl:['Round yellow','Round green','Wrinkled yellow','Wrinkled green'],w:[9,3,3,1],o:[315,101,108,32]}
+};
+const TRT=['Treatment','Placebo'],IMP=['Improved','No change'],XY=['X = 0','X = 1'],YY=['Y = 0','Y = 1'];
+const IP={
+  indep:{label:'Independent 2×2',R:2,C:2,rl:TRT,cl:IMP,t:[26,24,22,28]},
+  assoc:{label:'Associated 2×2',R:2,C:2,rl:TRT,cl:IMP,t:[30,20,18,32]},
+  big:{label:'Study time × grade (3×3)',R:3,C:3,rl:['Low study','Medium study','High study'],cl:['C or below','B','A'],t:[30,15,10,20,25,15,10,20,35]},
+  small:{label:'φ = .20, n = 50',R:2,C:2,rl:XY,cl:YY,t:[15,10,10,15]},
+  bigN:{label:'Same φ, n = 500',R:2,C:2,rl:XY,cl:YY,t:[150,100,100,150]},
+  skew:{label:'Skewed margins (φ = φmax)',R:2,C:2,rl:XY,cl:YY,t:[50,0,30,20]},
+  perfect:{label:'Perfect association',R:2,C:2,rl:XY,cl:YY,t:[50,0,0,50]}
+};
+const PRESETS={gof:['fair','loaded','mendel'],ind:['indep','assoc','big','small','bigN'],assoc:['assoc','big','small','bigN','skew','perfect','indep']};
+function renderPresets(){
+  const box=$('presets');box.innerHTML='';
+  PRESETS[S.tab].forEach(k=>{
+    const b=mk('button',(isGof()?GP:IP)[k].label,'pill');b.type='button';b.dataset.k=k;box.appendChild(b);
   });
-  $('cx-gn').addEventListener('input',function(){$('cx-gnv').textContent=this.value;drawGof();rebuild()});
-  $('cx-gd').addEventListener('input',function(){$('cx-gdv').textContent=(this.value/100).toFixed(2);drawGof();rebuild()});
-  $('cx-gnew').addEventListener('click',function(){S.seed=Math.floor(Math.random()*1e6);drawGof();rebuild()});
-
-  function setSlider(id,labId,v,fmt){$(id).value=v;$(labId).textContent=fmt?fmt(v):v}
-  var GP={
-    fair:{k:6,gl:['1','2','3','4','5','6'],w:[1,1,1,1,1,1],o:[18,22,19,21,20,20]},
-    loaded:{k:6,gl:['1','2','3','4','5','6'],w:[1,1,1,1,1,1],o:[12,15,16,20,24,33]},
-    mendel:{k:4,gl:['Round yellow','Round green','Wrinkled yellow','Wrinkled green'],w:[9,3,3,1],o:[315,101,108,32]}
-  };
-  Array.prototype.forEach.call(document.querySelectorAll('#cx-root [data-g]'),function(b){
-    b.addEventListener('click',function(){
-      var p=GP[this.getAttribute('data-g')];
-      S.k=p.k;S.gl=p.gl.slice();S.w=p.w.slice();S.obs=p.o.slice();
-      setSlider('cx-k','cx-kv',p.k);setSlider('cx-gn','cx-gnv',Math.min(1000,Math.max(20,sum(p.o))));
-      rebuild();
-    });
-  });
-
-  function resizeInd(){
-    S.R=+$('cx-R').value;S.C=+$('cx-C').value;
-    $('cx-Rv').textContent=S.R;$('cx-Cv').textContent=S.C;
-    var y=$('cx-yates');
-    if(S.R===2&&S.C===2)y.className='';else{y.className='cx-hide';S.yates=false;y.textContent='Yates correction: off';y.setAttribute('aria-pressed','false')}
-    defaultsInd();drawInd();rebuild();
+}
+$('presets').addEventListener('click',e=>{
+  const b=e.target.closest('button[data-k]');if(!b)return;
+  if(isGof()){
+    const p=GP[b.dataset.k];S.k=p.k;S.gl=p.gl.slice();S.w=p.w.slice();S.obs=p.o.slice();S.gn=Math.min(1000,Math.max(20,sum(p.o)));
+  }else{
+    const p=IP[b.dataset.k];S.R=p.R;S.C=p.C;S.rl=p.rl.slice();S.cl=p.cl.slice();S.t=p.t.slice();S.iN=Math.min(1000,Math.max(20,sum(p.t)));
+    if(!(p.R===2&&p.C===2))S.yates=false;
   }
-  $('cx-R').addEventListener('input',resizeInd);
-  $('cx-C').addEventListener('input',resizeInd);
-  $('cx-in').addEventListener('input',function(){$('cx-inv').textContent=this.value;drawInd();rebuild()});
-  $('cx-id').addEventListener('input',function(){$('cx-idv').textContent=(this.value/100).toFixed(2);drawInd();rebuild()});
-  $('cx-inew').addEventListener('click',function(){S.seed=Math.floor(Math.random()*1e6);drawInd();rebuild()});
-  $('cx-yates').addEventListener('click',function(){
-    S.yates=!S.yates;this.textContent='Yates correction: '+(S.yates?'on':'off');this.setAttribute('aria-pressed',S.yates);changed();
-  });
-  var IP={
-    indep:{R:2,C:2,rl:['Treatment','Placebo'],cl:['Improved','No change'],t:[26,24,22,28]},
-    assoc:{R:2,C:2,rl:['Treatment','Placebo'],cl:['Improved','No change'],t:[30,20,18,32]},
-    big:{R:3,C:3,rl:['Low study','Medium study','High study'],cl:['C or below','B','A'],t:[30,15,10,20,25,15,10,20,35]}
-  };
-  Array.prototype.forEach.call(document.querySelectorAll('#cx-root [data-i]'),function(b){
-    b.addEventListener('click',function(){
-      var p=IP[this.getAttribute('data-i')];
-      S.R=p.R;S.C=p.C;S.rl=p.rl.slice();S.cl=p.cl.slice();S.t=p.t.slice();
-      setSlider('cx-R','cx-Rv',p.R);setSlider('cx-C','cx-Cv',p.C);setSlider('cx-in','cx-inv',Math.min(1000,Math.max(20,sum(p.t))));
-      var y=$('cx-yates');
-      if(p.R===2&&p.C===2)y.className='';else{y.className='cx-hide';S.yates=false;y.textContent='Yates correction: off';y.setAttribute('aria-pressed','false')}
-      rebuild();
-    });
-  });
+  if(isGof())S.truthG='';else S.truthI='';syncSliders();rebuild();
+});
 
-  $('cx-al').addEventListener('input',function(){S.alpha=this.value/100;$('cx-alv').textContent=S.alpha.toFixed(2);refresh()});
-  $('cx-sim').addEventListener('click',runSim);
-  $('cx-simc').addEventListener('click',function(){S.sim=null;refresh()});
+/* ============ Controls ============ */
+const SLD={
+  sl_k:['k',v=>v],sl_gn:['gn',v=>v],sl_gd:['gd',v=>(v/100).toFixed(2)],
+  sl_R:['R',v=>v],sl_C:['C',v=>v],sl_in:['iN',v=>v],sl_id:['iA',v=>(v/100).toFixed(2)]
+};
+function syncSliders(){for(const id in SLD){$(id).value=S[SLD[id][0]];$('o_'+id).textContent=SLD[id][1](S[SLD[id][0]]);}}
+function regen(){isGof()?drawGof():drawInd();}
+['sl_gn','sl_gd'].forEach(id=>$(id).addEventListener('input',function(){S[SLD[id][0]]=+this.value;$('o_'+id).textContent=SLD[id][1](+this.value);drawGof();rebuild();}));
+$('sl_k').addEventListener('input',function(){S.k=+this.value;$('o_sl_k').textContent=this.value;S.gl=letters(S.k);S.w=Array(S.k).fill(1);drawGof();rebuild();});
+function resizeInd(){
+  S.R=+$('sl_R').value;S.C=+$('sl_C').value;$('o_sl_R').textContent=S.R;$('o_sl_C').textContent=S.C;
+  if(!(S.R===2&&S.C===2))S.yates=false;
+  defaultsInd();drawInd();rebuild();
+}
+$('sl_R').addEventListener('input',resizeInd);$('sl_C').addEventListener('input',resizeInd);
+['sl_in','sl_id'].forEach(id=>$(id).addEventListener('input',function(){S[SLD[id][0]]=+this.value;$('o_'+id).textContent=SLD[id][1](+this.value);drawInd();rebuild();}));
+$('gNew').onclick=()=>{S.seed=Math.floor(Math.random()*1e6);drawGof();rebuild();};
+$('iNew').onclick=()=>{S.seed=Math.floor(Math.random()*1e6);drawInd();rebuild();};
+$('yatesBtn').onclick=()=>{S.yates=!S.yates;changed();};
+$('alpha').onchange=function(){S.alpha=+this.value;render();};
+$('simBtn').onclick=runSim;
+$('simClr').onclick=()=>{S.sim=null;render();};
 
-  /* drag bars (goodness of fit) */
-  function pos(e){var b=cv1.getBoundingClientRect();return{x:e.clientX-b.left,y:e.clientY-b.top}}
-  function bandAt(m){
-    var g=geom1(),bw=(g.x1-g.x0)/S.k,i=Math.floor((m.x-g.x0)/bw);
-    return(i>=0&&i<S.k&&m.y>=g.y0-12&&m.y<=g.y1+4)?i:-1;
-  }
-  function setFromY(i,m){
-    var g=geom1(),v=Math.round((g.y1-m.y)/(g.y1-g.y0)*S.ycur);
-    v=Math.max(0,Math.min(S.ycur,v));S.obs[i]=v;
-    var inp=$('cx-tw').querySelector('[data-o="'+i+'"]');if(inp)inp.value=v;
-    changed();
-  }
-  cv1.addEventListener('pointerdown',function(e){
-    if(S.mode!=='gof')return;
-    var m=pos(e),i=bandAt(m);
-    if(i>=0){S.drag=i;S.ylock=S.ycur;cv1.setPointerCapture(e.pointerId);setFromY(i,m)}
-  });
-  cv1.addEventListener('pointermove',function(e){
-    if(S.drag<0)return;setFromY(S.drag,pos(e));
-  });
-  function up(){if(S.drag>=0){S.drag=-1;S.ylock=0;refresh()}}
-  cv1.addEventListener('pointerup',up);cv1.addEventListener('pointercancel',up);
+/* drag bars (goodness of fit) */
+const cv1=$('cvMain');
+const pos=e=>{const b=cv1.getBoundingClientRect();return{x:e.clientX-b.left,y:e.clientY-b.top};};
+function bandAt(m){const g=geom1(),bw=(g.x1-g.x0)/S.k,i=Math.floor((m.x-g.x0)/bw);return(i>=0&&i<S.k&&m.y>=g.y0-12&&m.y<=g.y1+4)?i:-1;}
+function setFromY(i,m){
+  const g=geom1();let v=Math.round((g.y1-m.y)/(g.y1-g.y0)*S.ycur);v=Math.max(0,Math.min(S.ycur,v));S.obs[i]=v;S.truthG='';
+  const inp=$('tw').querySelector(`[data-o="${i}"]`);if(inp)inp.value=v;changed();
+}
+cv1.addEventListener('pointerdown',e=>{if(!isGof())return;const m=pos(e),i=bandAt(m);if(i>=0){S.drag=i;S.ylock=S.ycur;cv1.setPointerCapture(e.pointerId);setFromY(i,m);}});
+cv1.addEventListener('pointermove',e=>{if(S.drag<0)return;setFromY(S.drag,pos(e));});
+function up(){if(S.drag>=0){S.drag=-1;S.ylock=0;render();}}
+cv1.addEventListener('pointerup',up);cv1.addEventListener('pointercancel',up);
 
-  function resize(){
-    var w=cv1.parentNode.clientWidth||700,dpr=window.devicePixelRatio||1;
-    W1=w;H1=Math.round(Math.max(240,Math.min(340,w*.5)));
-    cv1.width=W1*dpr;cv1.height=H1*dpr;cv1.style.height=H1+'px';c1.setTransform(dpr,0,0,dpr,0,0);
-    W2=cv2.parentNode.clientWidth||700;H2=Math.round(Math.max(220,Math.min(280,W2*.4)));
-    cv2.width=W2*dpr;cv2.height=H2*dpr;cv2.style.height=H2+'px';c2.setTransform(dpr,0,0,dpr,0,0);
-    if(S.c)refresh();
-  }
-  window.addEventListener('resize',resize);
+/* tabs, layout */
+function setTab(k){
+  S.tab=k;S.sim=null;renderPresets();rebuild();
+}
+TABS.forEach(k=>$('tab-'+k).onclick=()=>{if(S.tab!==k)setTab(k);});
+function syncUI(){
+  TABS.forEach(k=>$('tab-'+k).setAttribute('aria-selected',S.tab===k));
+  document.querySelectorAll('[data-tabs]').forEach(el=>{if(el.id==='yatesBtn'||el.id==='p2dist'||el.id==='p2assoc')return;el.hidden=!el.dataset.tabs.split(' ').includes(S.tab);});
+  const yb=$('yatesBtn');yb.hidden=!(S.tab==='ind'&&S.R===2&&S.C===2);
+  yb.textContent='Yates correction: '+(S.yates?'on':'off');yb.setAttribute('aria-pressed',S.yates);
+  $('dataTitle').textContent=isGof()?'Observed and expected counts':'The contingency table';
+  $('capMain').textContent=isGof()?'Observed counts (bars) and counts expected under H₀ (dashed)':'How each row splits across the columns';
+  $('dataCap').innerHTML=isGof()
+    ?'Click or drag a bar to change its observed count, or type counts and weights in the table. Orange shading in the last column = more than expected, blue = fewer.'
+    :'Type counts in the table, or use the sliders for a random sample. If the variables were independent every bar would line up with the dashed overall split. Cell shading: orange = more than expected, blue = fewer.';
+  const tr=isGof()?S.truthG:S.truthI;$('truth').hidden=!tr;$('truth').innerHTML=tr;
+  cv1.style.cursor=isGof()?'ns-resize':'default';cv1.classList.toggle('drag',isGof());
+  cv1.setAttribute('aria-label',isGof()?'Bar chart of observed counts with expected counts marked. Bars can be dragged.':'Stacked bars showing how each row splits across columns, with the overall split dashed.');
+}
 
-  $('cx-keybtn').addEventListener('change',function(){
-    $('cx-key').className='cx-key'+(this.checked?'':' cx-hide');
-  });
-  function keyMode(){
-    var g=S.mode==='gof';
-    Array.prototype.forEach.call(document.querySelectorAll('#cx-key .cx-kg'),function(e){e.style.display=g?'':'none'});
-    Array.prototype.forEach.call(document.querySelectorAll('#cx-key .cx-ki'),function(e){e.style.display=g?'none':''});
-  }
+/* theme */
+function currentTheme(){const t=document.documentElement.getAttribute('data-theme');return t||(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');}
+function syncThemeBtn(){const dark=currentTheme()==='dark',b=$('themeBtn');b.textContent=dark?'☀ Light theme':'☾ Dark theme';b.setAttribute('aria-pressed',dark);}
+$('themeBtn').onclick=()=>{const next=currentTheme()==='dark'?'light':'dark';document.documentElement.setAttribute('data-theme',next);try{localStorage.setItem('ttest-theme',next);}catch(e){}syncThemeBtn();render();};
+if(window.matchMedia){const mq=matchMedia('(prefers-color-scheme: dark)');if(mq.addEventListener)mq.addEventListener('change',()=>{syncThemeBtn();render();});}
+$('copy').onclick=()=>{
+  const txt=$('apa').textContent,done=()=>{$('copy').textContent='Copied';setTimeout(()=>$('copy').textContent='Copy',1200);};
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(txt).then(done,done);
+  else{const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');}catch(e){}ta.remove();done();}
+};
+window.addEventListener('resize',render);
 
-  /* init */
-  S.k=6;S.gl=letters(6);S.w=[1,1,1,1,1,1];
-  S.R=2;S.C=2;defaultsInd();S.rl=['Treatment','Placebo'];S.cl=['Improved','No change'];
-  drawGof();drawInd();
-  setMode('gof');resize();
-})();
+/* init */
+S.gl=letters(6);S.w=Array(6).fill(1);
+S.R=2;S.C=2;defaultsInd();S.rl=TRT.slice();S.cl=IMP.slice();
+drawInd();drawGof();
+syncThemeBtn();syncSliders();renderPresets();
+rebuild();
 </script>
-</div>
 </body>
 </html>
