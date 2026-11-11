@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>t-Test Explorer: Single-Sample, Independent &amp; Repeated Measures</title>
 <meta name="description" content="Interactive explorer for the single-sample, independent-samples and repeated-measures (paired) t-test. Adjust means, SDs, sample sizes, the hypothesized mean and the correlation and watch the test statistic, p-value, confidence interval, effect size and power respond.">
+<script>try{var t=localStorage.getItem("ttest-theme");if(t==="light"||t==="dark")document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
 <style>
 :root{
   --bg:#f5f4ef;--panel:#ffffff;--ink:#1b1e25;--muted:#5b6370;--line:#dedbd1;--soft:#efede6;
@@ -12,18 +13,22 @@
   --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
 }
 @media (prefers-color-scheme:dark){
-  :root{--bg:#13151a;--panel:#1c1f26;--ink:#e8e9ed;--muted:#9aa1ae;--line:#323744;--soft:#252932;
+  :root:not([data-theme="light"]){--bg:#13151a;--panel:#1c1f26;--ink:#e8e9ed;--muted:#9aa1ae;--line:#323744;--soft:#252932;
     --a:#6ba4ff;--b:#ffa24f;--rej:#ff7064;--ok:#4cc58c;--accent:#6ba4ff;}
 }
+:root[data-theme="dark"]{--bg:#13151a;--panel:#1c1f26;--ink:#e8e9ed;--muted:#9aa1ae;--line:#323744;--soft:#252932;
+    --a:#6ba4ff;--b:#ffa24f;--rej:#ff7064;--ok:#4cc58c;--accent:#6ba4ff;}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
-header{padding:26px 22px 8px;max-width:1280px;margin:0 auto}
+header{padding:26px 22px 8px;max-width:1280px;margin:0 auto;position:relative}
+.theme-btn{position:absolute;top:26px;right:22px;border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:7px 14px;border-radius:999px;font:inherit;font-size:.85rem;font-weight:600;cursor:pointer}
+.theme-btn:hover{border-color:var(--accent)}
 h1{margin:0 0 4px;font-size:1.65rem;letter-spacing:-.01em}
 header p{margin:0;color:var(--muted);max-width:760px}
 .tabs{display:flex;gap:6px;margin-top:16px;flex-wrap:wrap}
 .tab{border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:9px 16px;border-radius:999px;font:inherit;font-weight:600;cursor:pointer}
 .tab[aria-selected="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
-.tab:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,summary:focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 55%,transparent);outline-offset:2px}
+.tab:focus-visible,.theme-btn:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,summary:focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 55%,transparent);outline-offset:2px}
 main{max-width:1280px;margin:0 auto;padding:14px 22px 30px;display:grid;grid-template-columns:330px minmax(0,1fr);gap:18px;align-items:start}
 @media(max-width:940px){main{grid-template-columns:1fr}}
 .panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 18px}
@@ -87,8 +92,9 @@ dl.key{display:grid;grid-template-columns:max-content 1fr;gap:6px 16px;margin:0}
 </head>
 <body>
 <header>
+  <button class="theme-btn" id="themeBtn" type="button" aria-label="Switch between light and dark theme"></button>
   <h1>t-Test Explorer</h1>
-  <p>Compare one sample with a hypothesized value (<b>single sample</b>), two <b>independent</b> groups, or two <b>repeated measures</b> on the same people. Drag the sliders, switch tests, or paste your own data and see how the t statistic, p-value, confidence interval, effect size and power respond.</p>
+  <p>Compare two <b>independent</b> groups, two <b>repeated measures</b> on the same people, or one sample with a hypothesized value (<b>single sample</b>). Drag the sliders, switch tests, or paste your own data and see how the t statistic, p-value, confidence interval, effect size and power respond.</p>
   <div class="tabs" role="tablist" aria-label="Test type">
     <button class="tab" role="tab" id="tab-ind" aria-selected="true">Independent samples</button>
     <button class="tab" role="tab" id="tab-paired" aria-selected="false">Repeated measures (paired)</button>
@@ -641,8 +647,25 @@ function showErr(msg){
 }
 
 /* ============ Wiring ============ */
+function currentTheme(){
+  const t=document.documentElement.getAttribute('data-theme');
+  return t||(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
+}
+function syncThemeBtn(){
+  const dark=currentTheme()==='dark',b=$('themeBtn');
+  b.textContent=dark?'☀ Light theme':'☾ Dark theme';
+  b.setAttribute('aria-pressed',dark);
+}
 function init(){
   buildControls();genBase();
+  syncThemeBtn();
+  $('themeBtn').onclick=()=>{
+    const next=currentTheme()==='dark'?'light':'dark';
+    document.documentElement.setAttribute('data-theme',next);
+    try{localStorage.setItem('ttest-theme',next);}catch(e){}
+    syncThemeBtn();
+  };
+  if(window.matchMedia)matchMedia('(prefers-color-scheme: dark)').addEventListener&&matchMedia('(prefers-color-scheme: dark)').addEventListener('change',syncThemeBtn);
   const setMode=m=>{S.mode=m;if(S.source==='own'&&m!=='single'&&!$('ownB').value.trim())loadSim();update();};
   $('tab-ind').onclick=()=>setMode('ind');
   $('tab-paired').onclick=()=>setMode('paired');
