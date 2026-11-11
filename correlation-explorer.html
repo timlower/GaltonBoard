@@ -111,6 +111,27 @@ button.sw:focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 55%,tr
 .gtab th,.gtab td{text-align:center}
 .gtab th:first-child,.gtab td:first-child{text-align:left}
 .gtab td.on{background:var(--accent);color:#fff;font-weight:700}
+.tabrow{display:flex;align-items:center;gap:12px;margin-top:10px;flex-wrap:wrap}
+.tabrow-lab{font-size:.75rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);width:70px;flex:none}
+.tabrow .tabs{margin-top:0}
+.tabrow.sub .tab{padding:6px 14px;font-size:.88rem;font-weight:500}
+.tabrow.sub[hidden]{display:none}
+.cmpt td.name{font-weight:600}
+.cmpt td.note{color:var(--muted);font-size:.82rem}
+.rel{margin:0;padding-left:20px}.rel li{margin:6px 0}
+.glance th,.glance td{vertical-align:top}
+.wz .dq{font-weight:600;margin:0 0 8px}
+.dopts{display:flex;flex-direction:column;gap:6px}
+button.dopt{text-align:left;border:1px solid var(--line);background:var(--soft);color:var(--ink);padding:9px 12px;border-radius:10px;font:inherit;font-size:.9rem;cursor:pointer}
+button.dopt:hover{border-color:var(--accent)}
+.crumbs{display:flex;flex-direction:column;gap:4px;margin-bottom:12px}
+button.crumb{text-align:left;border:0;background:transparent;color:var(--muted);font:inherit;font-size:.82rem;padding:2px 0;cursor:pointer}
+button.crumb:hover{color:var(--accent)}button.crumb b{color:var(--ink)}
+.dres{border-left:3px solid var(--accent);padding:2px 0 2px 14px}
+.dtitle{font-size:1.05rem;font-weight:700;margin:0 0 6px}
+.dlist{list-style:none;padding:0;margin:10px 0}
+.dlist li{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;margin:7px 0}
+.dlist li span{color:var(--muted);font-size:.88rem;flex:1 1 220px}
 @media(max-width:600px){.theme-btn{position:static;display:block;margin:0 0 10px auto}}
 </style>
 </head>
@@ -118,22 +139,36 @@ button.sw:focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 55%,tr
 <header>
   <button class="theme-btn" id="themeBtn" type="button" aria-label="Switch between light and dark theme"></button>
   <h1>Correlation Explorer</h1>
-  <p>Explore the <b>Pearson</b>, <b>Spearman</b>, <b>point-biserial</b> and <b>phi</b> correlation coefficients, and see how well a line predicts through the <b>standard error of estimate</b>. Drag points, change the sliders, switch tabs and watch each statistic respond.</p>
+  <p>Explore the <b>Pearson</b>, <b>Spearman</b>, <b>point-biserial</b> and <b>phi</b> correlation coefficients, and see how well a line predicts through the <b>standard error of estimate</b>. Drag points, change the sliders, switch tabs and watch each statistic respond. <b>Compare all</b> runs every applicable statistic on the same data, and <b>Data source</b> lets you paste your own.</p>
   <div class="tabs" role="tablist" aria-label="Statistic">
     <button class="tab" role="tab" id="tab-pearson" aria-selected="true">Pearson r</button>
     <button class="tab" role="tab" id="tab-spearman" aria-selected="false">Spearman ρ</button>
     <button class="tab" role="tab" id="tab-pb" aria-selected="false">Point-biserial</button>
     <button class="tab" role="tab" id="tab-phi" aria-selected="false">Phi (φ)</button>
     <button class="tab" role="tab" id="tab-see" aria-selected="false">Standard error of estimate</button>
+    <button class="tab" role="tab" id="tab-compare" aria-selected="false">Compare all</button>
+  </div>
+  <div class="tabrow sub" id="cmpRow" hidden><span class="tabrow-lab">Variables</span>
+    <div class="tabs" role="tablist" aria-label="Types of variables to compare">
+      <button class="tab" role="tab" id="cmp-sc" aria-selected="true">Two numerical</button>
+      <button class="tab" role="tab" id="cmp-pb" aria-selected="false">Two-valued × numerical</button>
+      <button class="tab" role="tab" id="cmp-phi" aria-selected="false">Two two-valued</button>
+    </div>
   </div>
 </header>
 
 <main>
   <aside class="panel controls" aria-label="Controls">
     <h2>Setup</h2>
-    <div class="row" id="presets"></div>
+    <div class="row sim" id="presets"></div>
 
-    <div data-tabs="pearson spearman see">
+    <h3>Data source</h3>
+    <div class="seg" role="radiogroup" aria-label="Data source">
+      <label><input type="radio" name="src" value="sim" checked><span>Simulated</span></label>
+      <label><input type="radio" name="src" value="own"><span>My own data</span></label>
+    </div>
+
+    <div data-fam="sc" class="sim">
       <h3>Data</h3>
       <div class="sl"><label for="sc_r"><span>Target correlation</span><output id="o_sc_r"></output></label><input type="range" id="sc_r" min="-100" max="100" step="1"></div>
       <div class="sl"><label for="sc_n"><span>Number of points</span><output id="o_sc_n"></output></label><input type="range" id="sc_n" min="5" max="200" step="1"></div>
@@ -144,16 +179,43 @@ button.sw:focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 55%,tr
         <button class="pill" id="scOut">Add an outlier</button>
         <button class="pill" id="scClear">Clear all points</button>
       </div>
+      <p class="cap">Drag a point, click empty space to add one, double-click a point to remove it.</p>
+        </div>
+
+    <div data-fam="sc" class="own">
+      <h3>Your data (one X and one Y per case)</h3>
+      <div class="opt"><label for="own_sc_a">X values</label><textarea id="own_sc_a" placeholder="e.g. 12.1, 14.3, 9.8 …"></textarea></div>
+      <div class="opt"><label for="own_sc_b">Y values</label><textarea id="own_sc_b" placeholder="e.g. 3.0, 4.2, 2.9 …"></textarea></div>
+      <button class="pill loadSim" type="button">Load current simulated data into boxes</button>
+      <p class="cap">Separate values with spaces, commas or new lines. X and Y need the same number of values in matching order: the first X goes with the first Y. Use at least 3 pairs.</p>
+    </div>
+
+    <div data-fam="pb" class="own">
+      <h3>Your data (scores in each group)</h3>
+      <div class="opt"><label for="own_pb_a">Group 0 scores (X = 0)</label><textarea id="own_pb_a" placeholder="e.g. 12.1, 14.3, 9.8 …"></textarea></div>
+      <div class="opt"><label for="own_pb_b">Group 1 scores (X = 1)</label><textarea id="own_pb_b"></textarea></div>
+      <button class="pill loadSim" type="button">Load current simulated data into boxes</button>
+      <p class="cap">Separate values with spaces, commas or new lines. Each group needs at least 2 scores; the groups can differ in size.</p>
+    </div>
+
+    <div data-fam="phi" class="own">
+      <h3>Your data (0 or 1 for each case)</h3>
+      <div class="opt"><label for="own_phi_a">X (one 0 or 1 per case)</label><textarea id="own_phi_a" placeholder="e.g. 0 1 1 0 …"></textarea></div>
+      <div class="opt"><label for="own_phi_b">Y (one 0 or 1 per case)</label><textarea id="own_phi_b" placeholder="e.g. 0 1 0 0 …"></textarea></div>
+      <button class="pill loadSim" type="button">Load current simulated data into boxes</button>
+      <p class="cap">Each case contributes one value to X and one to Y, in the same order. The 2 × 2 table is built from them.</p>
+    </div>
+
+    <div data-fam="sc">
       <div class="btnrow">
         <button class="pill" id="tgLine" aria-pressed="true">Regression line: on</button>
-        <button class="pill" id="tgRes" aria-pressed="false" data-tabs="pearson see">Residuals: off</button>
+        <button class="pill" id="tgRes" aria-pressed="false" data-tabs="pearson see compare">Residuals: off</button>
         <button class="pill" id="tgBand" aria-pressed="true" data-tabs="see">±1 SEE band: on</button>
       </div>
       <div class="sl" data-tabs="see"><label for="sc_px"><span>Predict Y at X =</span><output id="o_sc_px"></output></label><input type="range" id="sc_px" min="0" max="100" step="1"></div>
-      <p class="cap">Drag a point, click empty space to add one, double-click a point to remove it.</p>
     </div>
 
-    <div data-tabs="pb">
+    <div data-fam="pb" class="sim">
       <h3>Groups (X coded 0 and 1)</h3>
       <div class="sl"><label for="pb_d"><span>Group difference (d, in SDs)</span><output id="o_pb_d"></output></label><input type="range" id="pb_d" min="-2" max="2" step="0.1"></div>
       <div class="sl"><label for="pb_sd"><span>SD within each group</span><output id="o_pb_sd"></output></label><input type="range" id="pb_sd" min="4" max="15" step="0.5"></div>
@@ -168,7 +230,7 @@ button.sw:focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 55%,tr
       <p class="cap">Drag a point up or down, or sideways to change its group. Click empty space to add a point, double-click a point to remove it.</p>
     </div>
 
-    <div data-tabs="phi">
+    <div data-fam="phi" class="sim">
       <h3>Cell counts (X and Y each coded 0 and 1)</h3>
       <div class="sl"><label for="ph_a"><span>X = 0, Y = 0 (a)</span><output id="o_ph_a"></output></label><input type="range" id="ph_a" min="0" max="300" step="1"></div>
       <div class="sl"><label for="ph_b"><span>X = 0, Y = 1 (b)</span><output id="o_ph_b"></output></label><input type="range" id="ph_b" min="0" max="300" step="1"></div>
@@ -177,7 +239,7 @@ button.sw:focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 55%,tr
       <div class="truth" id="phTruth"></div>
     </div>
 
-    <div data-tabs="pearson spearman pb phi">
+    <div data-tabs="pearson spearman pb phi compare">
       <h3>Test options</h3>
       <div class="opt"><label for="alpha">Significance level α</label>
         <select id="alpha"><option value="0.10">.10</option><option value="0.05" selected>.05</option><option value="0.01">.01</option><option value="0.001">.001</option></select></div>
@@ -238,6 +300,23 @@ button.sw:focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 55%,tr
       <div class="scroll"><table class="gtab" id="guideTable"></table></div>
       <div class="apa" id="apaRow"><span id="apa"></span><button class="pill" id="copy">Copy</button></div>
     </div>
+
+    <div class="panel" id="pLadder" hidden>
+      <h2><span class="n">2</span>Every statistic on the same data</h2>
+      <div id="chartLadder"></div>
+      <div class="legend">
+        <span><i style="background:var(--ok)"></i>Significant at α</span>
+        <span><i style="background:#7b8392"></i>Not significant</span>
+        <span><i style="background:var(--rej);opacity:.18"></i>p ≤ α region</span>
+      </div>
+      <div class="scroll"><table class="cmpt" id="cmpAll"></table></div>
+      <p class="cap" id="cmpCap"></p>
+    </div>
+
+    <div class="panel" id="pRel" hidden>
+      <h2><span class="n">3</span>How the statistics relate</h2>
+      <div id="relBody"></div>
+    </div>
   </section>
 </main>
 
@@ -269,6 +348,12 @@ button.sw:focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 55%,tr
       <li><span class="f">SEE = √(SS<sub>residual</sub> / (n − 2)) = s<sub>Y</sub>·√(1 − r²)·√((n − 1)/(n − 2))</span>.</li>
       <li>Prediction interval for a new case at X = x: <span class="f">Ŷ ± t<sub>crit</sub>·SEE·√(1 + 1/n + (x − M<sub>X</sub>)²/SS<sub>X</sub>)</span>, with df = n − 2.</li>
     </ul>
+    <p><b>Comparing the statistics (Compare all).</b></p>
+    <ul>
+      <li>Two 0/1 variables: φ, Pearson r and Spearman ρ are the same number, because ranks of a two-valued variable are a linear rescaling of its codes. φ is tested with <span class="f">χ² = nφ²</span> (df = 1); r and ρ with t (df = n − 2), so the p-values differ slightly.</li>
+      <li>One 0/1 variable and a numerical score: Pearson r is the point-biserial r, and its p-value equals that of the pooled t test. Spearman ρ correlates the ranks of the scores with the code.</li>
+      <li>Two numerical variables: r and ρ use the same t formula on raw scores and on ranks respectively.</li>
+    </ul>
     <p>p-values come from the exact t distribution (regularised incomplete beta function) and, for φ, the χ² distribution with 1 df. Everything runs in your browser; nothing is uploaded.</p>
   </div>
 </details>
@@ -296,8 +381,21 @@ button.sw:focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 55%,tr
       <dt>α</dt><dd>Significance level: the false-positive rate you accept. The result is significant when p &lt; α.</dd>
       <dt>Outlier</dt><dd>A point far from the overall pattern. One can shift r substantially, especially in small samples, while ranks (Spearman) are far less affected.</dd>
       <dt>Leverage point</dt><dd>A point with an extreme X value that can pull the line toward itself (see Anscombe IV).</dd>
+      <dt>Dichotomy</dt><dd>A variable with only two values. A true dichotomy (treatment versus control) is two categories by nature; an artificial one is made by splitting a numerical variable (high versus low), which loses information and weakens correlations.</dd>
+      <dt>Data source</dt><dd>Simulated data come from the sliders and presets. With My own data you paste values into the boxes and every result and plot is computed from them.</dd>
       <dt>Seed</dt><dd>The number that fixes the random generator, so the same seed reproduces the same simulated sample.</dd>
     </dl>
+  </div>
+</details>
+<details id="decideBox">
+  <summary>Deciding which to use</summary>
+  <div class="panel wz">
+    <p class="cap" style="margin-top:0">Answer a few questions to find the statistic that fits your variables. Each suggestion opens the matching tabs above.</p>
+    <div id="decideBody"></div>
+    <h3>At a glance</h3>
+    <div class="scroll"><table class="glance">
+      <thead><tr><th>Your situation</th><th>Use</th><th>Reported</th></tr></thead>
+      <tbody><tr><td>Two numerical variables, straight line, no extreme points</td><td>Pearson r</td><td>r, r²</td></tr><tr><td>Two numerical variables, curved but one-directional, or outliers, or ordinal ratings</td><td>Spearman ρ</td><td>ρ, ρ²</td></tr><tr><td>Predicting Y from X along a straight line</td><td>Standard error of estimate (with Pearson r)</td><td>SEE, prediction interval</td></tr><tr><td>True two-group variable and a numerical score, bell-shaped scores</td><td>Point-biserial r</td><td>r<sub>pb</sub>, r², Cohen’s d</td></tr><tr><td>True two-group variable and a numerical score, outliers or ordinal scores</td><td>Spearman ρ with the 0/1 code (Compare all)</td><td>ρ</td></tr><tr><td>Two true yes/no variables</td><td>Phi (φ)</td><td>φ, φ², largest φ for the margins</td></tr><tr><td>A numerical variable artificially split into two groups</td><td>Do not split: use Pearson r or Spearman ρ on the original scores</td><td>r or ρ</td></tr></tbody></table></div>
   </div>
 </details>
 <footer>Single-file, dependency-free demo. Simulated data are drawn from normal distributions with a seeded random generator, so a given seed is reproducible. Correlation measures association, not causation.</footer>
@@ -374,12 +472,14 @@ function ticks(lo,hi,n=6){const raw=(hi-lo)/n,mag=Math.pow(10,Math.floor(Math.lo
 const col=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 
 /* ============ State ============ */
-const S={tab:'pearson',seed:7,tr:70,n:40,showLine:true,showRes:false,showBand:true,mono:false,curv:50,px:50,alpha:0.05,alphaSee:0.05,
+const S={tab:'pearson',source:'sim',cmp:'sc',seed:7,tr:70,n:40,showLine:true,showRes:false,showBand:true,mono:false,curv:50,px:50,alpha:0.05,alphaSee:0.05,
   pb:{d:0.8,sd:10,n0:25,n1:25,seed:3,exact:true},
   ph:{a:30,b:20,c:20,d:30}};
 let pts=[],pbPts=[],label='',drag=-1;
-const TABS=['pearson','spearman','pb','phi','see'];
+const TABS=['pearson','spearman','pb','phi','see','compare'];
 const SC=t=>t==='pearson'||t==='spearman'||t==='see';
+const famOf=t=>t==='compare'?S.cmp:SC(t)?'sc':t;
+const fam=()=>famOf(S.tab);
 
 /* ============ Data generation ============ */
 function generate(){
@@ -433,6 +533,61 @@ function rounded(){
   label='Rounded ratings (7 levels): many scores are tied and share average ranks; points overlap on the plot.';
 }
 
+/* ============ Own data ("Data source") ============ */
+function parseList(s){return s.split(/[\s,;]+/).filter(x=>x!=='').map(Number);}
+const NOD={pts:[],xr:[0,100],yr:[0,100]};
+const jit=i=>((i*0.6180339887)%1)*2-1;
+function rangeOf(a){
+  let lo=Infinity,hi=-Infinity;for(const v of a){if(v<lo)lo=v;if(v>hi)hi=v;}
+  const sp=(hi-lo)||Math.abs(hi)||1,pad=sp*0.06;return[lo-pad,hi+pad];
+}
+const NOTNUM='Some entries are not numbers. Use numbers separated by spaces, commas or new lines.';
+function scData(){
+  if(S.source==='sim')return{pts,xr:[0,100],yr:[0,100]};
+  const X=parseList($('own_sc_a').value),Y=parseList($('own_sc_b').value);
+  if(!X.length&&!Y.length)return{err:'Paste your X and Y values into the boxes on the left, or load the current simulated data and edit it.'};
+  if(X.some(v=>!isFinite(v))||Y.some(v=>!isFinite(v)))return{err:NOTNUM};
+  if(X.length!==Y.length)return{err:'X and Y need the same number of values, one pair per case in matching order ('+X.length+' vs '+Y.length+').'};
+  if(X.length<3)return{err:'Enter at least 3 pairs of values.'};
+  if(X.length>400)return{err:'Please keep the data to 400 pairs or fewer.'};
+  return{pts:X.map((x,i)=>({x,y:Y[i]})),xr:rangeOf(X),yr:rangeOf(Y)};
+}
+function pbData(){
+  if(S.source==='sim')return{pts:pbPts,yr:[0,100]};
+  const A=parseList($('own_pb_a').value),B=parseList($('own_pb_b').value);
+  if(!A.length&&!B.length)return{err:'Paste the scores of group 0 and group 1 into the boxes on the left, or load the current simulated data and edit it.'};
+  if(A.some(v=>!isFinite(v))||B.some(v=>!isFinite(v)))return{err:NOTNUM};
+  if(A.length<2||B.length<2)return{err:'Each group needs at least 2 scores ('+A.length+' in group 0, '+B.length+' in group 1).'};
+  if(A.length>400||B.length>400)return{err:'Please keep each group to 400 scores or fewer.'};
+  return{pts:[...A.map((y,i)=>({g:0,y,j:jit(i)})),...B.map((y,i)=>({g:1,y,j:jit(i+7)}))],yr:rangeOf(A.concat(B))};
+}
+function phData(){
+  if(S.source==='sim')return{a:S.ph.a,b:S.ph.b,c:S.ph.c,d:S.ph.d};
+  const X=parseList($('own_phi_a').value),Y=parseList($('own_phi_b').value);
+  if(!X.length&&!Y.length)return{err:'Paste a 0 or 1 for X and for Y for every case into the boxes on the left, or load the current simulated data and edit it.'};
+  if(X.some(v=>v!==0&&v!==1)||Y.some(v=>v!==0&&v!==1))return{err:'Use only the values 0 and 1 in these boxes (one value per case).'};
+  if(X.length!==Y.length)return{err:'X and Y need the same number of values, one pair per case ('+X.length+' vs '+Y.length+').'};
+  if(X.length<2)return{err:'Enter at least 2 cases.'};
+  if(X.length>5000)return{err:'Please keep the data to 5,000 cases or fewer.'};
+  const C={a:0,b:0,c:0,d:0};
+  X.forEach((x,i)=>{const k=x?(Y[i]?'d':'c'):(Y[i]?'b':'a');C[k]++;});
+  return C;
+}
+function phiCases(C){
+  const x=[],y=[];
+  [[0,0,C.a],[0,1,C.b],[1,0,C.c],[1,1,C.d]].forEach(([u,v,k])=>{for(let i=0;i<k;i++){x.push(u);y.push(v);}});
+  return{x,y};
+}
+const fmtN=a=>a.map(v=>+v.toFixed(2)).join(', ');
+function loadSim(){
+  const f=fam();
+  if(f==='sc'){$('own_sc_a').value=fmtN(pts.map(p=>p.x));$('own_sc_b').value=fmtN(pts.map(p=>p.y));}
+  else if(f==='pb'){$('own_pb_a').value=fmtN(pbPts.filter(p=>p.g===0).map(p=>p.y));$('own_pb_b').value=fmtN(pbPts.filter(p=>p.g===1).map(p=>p.y));}
+  else{const cs=phiCases(S.ph);$('own_phi_a').value=cs.x.join(' ');$('own_phi_b').value=cs.y.join(' ');}
+}
+function ensureOwn(){const f=fam();if(!$('own_'+f+'_a').value.trim()&&!$('own_'+f+'_b').value.trim())loadSim();}
+const canEdit=()=>S.source==='sim'&&fam()!=='phi';
+
 /* ============ Canvas plots ============ */
 function mkPlot(cv){
   const P={cv,ctx:cv.getContext('2d'),W:600,H:420,l:48,r:14,t:12,b:44,o:{xr:[0,100],yr:[0,100]},dpr:1};
@@ -468,24 +623,24 @@ function mkPlot(cv){
 let PM,PR;
 const ptX=p=>p.g+p.j*0.2;
 
-function drawRaw(L){
+function drawRaw(L,D){
   const P=PM,tab=S.tab;
-  P.o={xr:[0,100],yr:[0,100],xl:'X',yl:'Y'};P.frame();
+  P.o={xr:D.xr,yr:D.yr,xl:'X',yl:'Y'};P.frame();
   const ok=L&&L.ok,acc=col('--accent'),rej=col('--rej'),inkC=col('--ink'),bC=col('--b');
   if(ok){
-    const x0=0,x1=100,y0=L.ic,y1=L.ic+L.slope*100;
+    const x0=D.xr[0],x1=D.xr[1],y0=L.ic+L.slope*x0,y1=L.ic+L.slope*x1;
     if(tab==='see'&&S.showBand&&L.n>2){
       const see=Math.sqrt(Math.max(0,L.syy-L.sxy*L.sxy/L.sxx)/(L.n-2));
       P.clip(c=>{c.globalAlpha=.14;c.fillStyle=acc;c.beginPath();c.moveTo(P.X(x0),P.Y(y0+see));c.lineTo(P.X(x1),P.Y(y1+see));c.lineTo(P.X(x1),P.Y(y1-see));c.lineTo(P.X(x0),P.Y(y0-see));c.closePath();c.fill();c.globalAlpha=1;});
       P.clip(()=>{P.line(P.X(x0),P.Y(y0+see),P.X(x1),P.Y(y1+see),acc,1.5,[5,4]);P.line(P.X(x0),P.Y(y0-see),P.X(x1),P.Y(y1-see),acc,1.5,[5,4]);});
     }
-    if(S.showRes&&tab!=='spearman')P.clip(()=>{pts.forEach(p=>{P.line(P.X(p.x),P.Y(p.y),P.X(p.x),P.Y(L.ic+L.slope*p.x),rej,1,null,.45);});});
+    if(S.showRes&&tab!=='spearman')P.clip(()=>{D.pts.forEach(p=>{P.line(P.X(p.x),P.Y(p.y),P.X(p.x),P.Y(L.ic+L.slope*p.x),rej,1,null,.45);});});
     if(S.showLine&&tab!=='spearman')P.clip(()=>{P.line(P.X(x0),P.Y(y0),P.X(x1),P.Y(y1),rej,2.5);});
   }
-  pts.forEach((p,i)=>P.dot(P.X(p.x),P.Y(p.y),i===drag?bC:acc,i===drag?7:5,i===drag?1:.8));
+  D.pts.forEach((p,i)=>P.dot(P.X(p.x),P.Y(p.y),i===drag?bC:acc,i===drag?7:5,i===drag?1:.8));
   if(tab==='see'&&ok){
-    const x=S.px,yh=L.ic+L.slope*x,c=P.ctx;
-    P.line(P.X(x),P.Y(0),P.X(x),P.Y(100),bC,1,[4,4],.7);
+    const x=D.xr[0]+S.px/100*(D.xr[1]-D.xr[0]),yh=L.ic+L.slope*x;
+    P.line(P.X(x),P.Y(D.yr[0]),P.X(x),P.Y(D.yr[1]),bC,1,[4,4],.7);
     if(L.n>2){
       const df=L.n-2,see=Math.sqrt(Math.max(0,L.syy-L.sxy*L.sxy/L.sxx)/df),tc=tCrit(S.alphaSee/2,df);
       const pi=tc*see*Math.sqrt(1+1/L.n+(x-L.mx)*(x-L.mx)/L.sxx);
@@ -506,22 +661,22 @@ function drawRanks(rx,ry,n,L){
   rx.forEach((v,i)=>P.dot(P.X(v),P.Y(ry[i]),acc,Math.max(3,Math.min(5,200/n)),.8));
 }
 
-function drawPb(){
-  const P=PM;P.o={xr:[-0.6,1.6],yr:[0,100],xt:[0,1],xf:v=>v===0?'Group 0 (X = 0)':'Group 1 (X = 1)',xl:'X (coded 0/1)',yl:'Score (Y)'};P.frame();
+function drawPb(D){
+  const P=PM;P.o={xr:[-0.6,1.6],yr:D.yr,xt:[0,1],xf:v=>v===0?'Group 0 (X = 0)':'Group 1 (X = 1)',xl:'X (coded 0/1)',yl:'Score (Y)'};P.frame();
   const c0=col('--a'),c1=col('--b'),inkC=col('--ink'),rej=col('--rej');
-  const g0=pbPts.filter(p=>p.g===0).map(p=>p.y),g1=pbPts.filter(p=>p.g===1).map(p=>p.y);
+  const g0=D.pts.filter(p=>p.g===0).map(p=>p.y),g1=D.pts.filter(p=>p.g===1).map(p=>p.y);
   if(g0.length&&g1.length){const m0=mean(g0),m1=mean(g1);
     P.clip(()=>{P.line(P.X(-0.4),P.Y(m0+(m1-m0)*(-0.4)),P.X(1.4),P.Y(m0+(m1-m0)*1.4),rej,2.2,[7,4]);});}
-  pbPts.forEach((p,i)=>P.dot(P.X(ptX(p)),P.Y(p.y),i===drag?inkC:(p.g?c1:c0),i===drag?7:4.6,i===drag?1:.75));
+  D.pts.forEach((p,i)=>P.dot(P.X(ptX(p)),P.Y(p.y),i===drag?inkC:(p.g?c1:c0),i===drag?7:4.6,i===drag?1:.75));
   [[g0,0],[g1,1]].forEach(([a,g])=>{if(!a.length)return;const m=mean(a),x=P.X(g);
     if(a.length>1){const h=tCrit(S.alpha/2,a.length-1)*Math.sqrt(vari(a)/a.length);
       P.line(x,P.Y(m-h),x,P.Y(m+h),inkC,2.5);P.line(x-8,P.Y(m-h),x+8,P.Y(m-h),inkC,2.5);P.line(x-8,P.Y(m+h),x+8,P.Y(m+h),inkC,2.5);}
     P.line(x-32,P.Y(m),x+32,P.Y(m),inkC,3.5);});
 }
 
-function drawPhi(Q){
+function drawPhi(Q,C){
   const P=PM;P.o={xr:[-0.6,1.6],yr:[-0.6,1.6],xt:[0,1],yt:[0,1],xl:'X (coded 0/1)',yl:'Y (coded 0/1)'};P.frame();
-  const {a,b,c,d}=S.ph,cells=[[0,0,a],[0,1,b],[1,0,c],[1,1,d]],mx=Math.max(a,b,c,d,1),acc=col('--accent'),inkC=col('--ink'),rej=col('--rej');
+  const {a,b,c,d}=C,cells=[[0,0,a],[0,1,b],[1,0,c],[1,1,d]],mx=Math.max(a,b,c,d,1),acc=col('--accent'),inkC=col('--ink'),rej=col('--rej');
   const rmax=Math.min((P.W-P.l-P.r)/2.2,(P.H-P.t-P.b)/2.2)*0.5*0.92,ctx=P.ctx;
   if(Q&&isFinite(Q.slope)&&isFinite(Q.ic))P.clip(()=>{P.line(P.X(-0.6),P.Y(Q.ic+Q.slope*-0.6),P.X(1.6),P.Y(Q.ic+Q.slope*1.6),rej,2.4);});
   cells.forEach(([x,y,n])=>{
@@ -546,12 +701,13 @@ function showResult(o){
   guideRows(o.guides);
   $('badge').innerHTML=o.p==null?'':`<span class="badge ${o.p<o.alpha?'sig':'ns'}">${o.p<o.alpha?'Significant':'Not significant'} at α = ${fp(o.alpha)}</span>`;
   $('stats').innerHTML=o.cards.map(([a,b])=>`<div class="stat"><small>${a}</small><b>${b}</b></div>`).join('');
-  $('interp').innerHTML=(label?`<b>${label}</b><br>`:'')+o.interp;
+  $('interp').innerHTML=(S.source==='sim'&&label?`<b>${label}</b><br>`:'')+o.interp;
   $('apaRow').hidden=!o.apa;$('apa').textContent=o.apa||'';
 }
+const fx=v=>S.source==="own"?String(+v.toPrecision(5)).replace("-","−"):f(v,1);
 function fail(msg){
   $('msg').hidden=false;$('msg').textContent=msg;
-  ['p2sp','p2pb','p2ph','p2see','pRes'].forEach(id=>$(id).hidden=true);
+  ['p2sp','p2pb','p2ph','p2see','pRes','pLadder','pRel'].forEach(id=>$(id).hidden=true);
 }
 function okLayout(p2){
   $('msg').hidden=true;$('pRes').hidden=false;
@@ -563,8 +719,9 @@ const bar=(lab,v,mx,c,txt)=>`<div style="display:grid;grid-template-columns:230p
 
 /* ---------- Pearson ---------- */
 function rPearson(){
-  const xs=pts.map(p=>p.x),ys=pts.map(p=>p.y),L=lin(xs,ys);
-  drawRaw(L);
+  const D=scData(),Dd=D.err?NOD:D,xs=Dd.pts.map(p=>p.x),ys=Dd.pts.map(p=>p.y),L=D.err?null:lin(xs,ys);
+  drawRaw(L,Dd);
+  if(D.err)return fail(D.err);
   if(!L||!L.ok)return fail('Add at least two points that vary in both X and Y.');
   okLayout(null);
   const t=rTest(L.r,L.n),a=Math.abs(L.r),pct=(L.r*L.r*100);
@@ -580,9 +737,9 @@ function rPearson(){
 
 /* ---------- Spearman ---------- */
 function rSpearman(){
-  const xs=pts.map(p=>p.x),ys=pts.map(p=>p.y),Lr=lin(xs,ys),n=pts.length;
-  drawRaw(Lr);
-  if(n<2){PR.o={xr:[0.5,1.5],yr:[0.5,1.5]};PR.frame();return fail('Add at least two points.');}
+  const D=scData(),Dd=D.err?NOD:D,xs=Dd.pts.map(p=>p.x),ys=Dd.pts.map(p=>p.y),n=xs.length,Lr=D.err?null:lin(xs,ys);
+  drawRaw(Lr,Dd);
+  if(D.err||n<2){PR.o={xr:[0.5,1.5],yr:[0.5,1.5]};PR.frame();return fail(D.err||'Add at least two points.');}
   const RX=ranks(xs),RY=ranks(ys),Ls=lin(RX.r,RY.r);
   drawRanks(RX.r,RY.r,n,Ls);
   if(!Ls.ok)return fail('Add at least two points that vary in both X and Y (not all tied).');
@@ -601,7 +758,7 @@ function rSpearman(){
   showResult({p:t?t.p:null,alpha:S.alpha,cards,guides:[['|ρ| (Spearman)',rho]],interp:m,apa:t?`r_s(${t.df}) = ${fr(rho)}, p ${apaP(t.p)}`:''});
   /* rank table */
   const rows=Math.min(n,10);let h='<tr><th>#</th><th class="num">X</th><th class="num">Y</th><th class="num">Rank X</th><th class="num">Rank Y</th><th class="num">d</th><th class="num">d²</th></tr>';
-  for(let i=0;i<rows;i++){const d=RX.r[i]-RY.r[i];h+=`<tr><td>${i+1}</td><td class="num">${f(xs[i],1)}</td><td class="num">${f(ys[i],1)}</td><td class="num">${f(RX.r[i],1)}</td><td class="num">${f(RY.r[i],1)}</td><td class="num">${f(d,1)}</td><td class="num">${f(d*d,2)}</td></tr>`;}
+  for(let i=0;i<rows;i++){const d=RX.r[i]-RY.r[i];h+=`<tr><td>${i+1}</td><td class="num">${fx(xs[i])}</td><td class="num">${fx(ys[i])}</td><td class="num">${f(RX.r[i],1)}</td><td class="num">${f(RY.r[i],1)}</td><td class="num">${f(d,1)}</td><td class="num">${f(d*d,2)}</td></tr>`;}
   $('spTable').innerHTML=h;
   let sd2=0;for(let i=0;i<n;i++)sd2+=(RX.r[i]-RY.r[i])**2;
   const shortcut=1-6*sd2/(n*(n*n-1));
@@ -609,10 +766,10 @@ function rSpearman(){
 }
 
 /* ---------- Point-biserial ---------- */
-function pbStats(){
-  const g0=pbPts.filter(p=>p.g===0).map(p=>p.y),g1=pbPts.filter(p=>p.g===1).map(p=>p.y);
+function pbStats(arr){
+  const g0=arr.filter(p=>p.g===0).map(p=>p.y),g1=arr.filter(p=>p.g===1).map(p=>p.y);
   if(g0.length<2||g1.length<2)return{err:'Each group needs at least 2 points.'};
-  const gs=pbPts.map(p=>p.g),ys=pbPts.map(p=>p.y),L=lin(gs,ys);
+  const gs=arr.map(p=>p.g),ys=arr.map(p=>p.y),L=lin(gs,ys);
   if(!L.ok)return{err:'All scores are identical, so r is undefined.'};
   const n0=g0.length,n1=g1.length,n=n0+n1,m0=mean(g0),m1=mean(g1),v0=vari(g0),v1=vari(g1);
   const sp=Math.sqrt(((n0-1)*v0+(n1-1)*v1)/(n-2)),tPool=(m1-m0)/(sp*Math.sqrt(1/n0+1/n1)),d=(m1-m0)/sp;
@@ -620,8 +777,9 @@ function pbStats(){
   return{L,n0,n1,n,m0,m1,sp,tPool,d,sY,p,q,rFormula,r:L.r};
 }
 function rPb(){
-  drawPb();
-  const B=pbStats();
+  const D=pbData();
+  drawPb(D.err?{pts:[],yr:[0,100]}:D);
+  const B=D.err?{err:D.err}:pbStats(D.pts);
   if(B.err)return fail(B.err);
   okLayout('p2pb');
   const t=rTest(B.r,B.n),a=Math.abs(B.r);
@@ -637,8 +795,8 @@ function rPb(){
 }
 
 /* ---------- Phi ---------- */
-function phiStats(){
-  const {a,b,c,d}=S.ph,n=a+b+c+d,R0=a+b,R1=c+d,C0=a+c,C1=b+d;
+function phiStats(C){
+  const {a,b,c,d}=C,n=a+b+c+d,R0=a+b,R1=c+d,C0=a+c,C1=b+d;
   if(n<2||!R0||!R1||!C0||!C1)return null;
   const phi=(a*d-b*c)/Math.sqrt(R0*R1*C0*C1),chi=n*phi*phi,p=erfc(Math.sqrt(chi/2));
   const px=R1/n,py=C1/n,lo=Math.min(px,py),hi=Math.max(px,py),phimax=Math.sqrt(lo*(1-hi)/(hi*(1-lo)));
@@ -646,8 +804,10 @@ function phiStats(){
   return{a,b,c,d,n,R0,R1,C0,C1,phi,chi,p,px,py,phimax,minE:Math.min(...E),slope,ic:py-slope*px,p0:b/R0,p1:d/R1};
 }
 function rPhi(){
-  const Q=phiStats();
-  drawPhi(Q);
+  const C=phData();
+  if(C.err){drawPhi(null,{a:0,b:0,c:0,d:0});return fail(C.err);}
+  const Q=phiStats(C);
+  drawPhi(Q,C);
   if(!Q)return fail('Every row and column of the table needs at least one observation (and N ≥ 2), otherwise φ is undefined.');
   okLayout('p2ph');
   const a=Math.abs(Q.phi);
@@ -666,15 +826,16 @@ function rPhi(){
 
 /* ---------- Standard error of estimate ---------- */
 function rSee(){
-  const xs=pts.map(p=>p.x),ys=pts.map(p=>p.y),L=lin(xs,ys);
-  drawRaw(L);
+  const D=scData(),Dd=D.err?NOD:D,xs=Dd.pts.map(p=>p.x),ys=Dd.pts.map(p=>p.y),L=D.err?null:lin(xs,ys);
+  drawRaw(L,Dd);
+  if(D.err)return fail(D.err);
   if(!L||!L.ok)return fail('Add at least two points that vary in both X and Y.');
   if(L.n<3)return fail('The standard error of estimate needs at least 3 points (df = n − 2).');
   okLayout('p2see');
   const df=L.n-2,ssres=Math.max(0,L.syy-L.sxy*L.sxy/L.sxx),see=Math.sqrt(ssres/df),sY=Math.sqrt(L.syy/(L.n-1));
-  let within=0;pts.forEach(p=>{if(Math.abs(p.y-(L.ic+L.slope*p.x))<=see+1e-9)within++;});
-  const x=S.px,yh=L.ic+L.slope*x,tc=tCrit(S.alphaSee/2,df),pi=tc*see*Math.sqrt(1+1/L.n+(x-L.mx)*(x-L.mx)/L.sxx),lev=((1-S.alphaSee)*100).toFixed(0)+'%';
-  const cards=[['Std. error of estimate',f(see,2)],['SD of Y',f(sY,2)],['r²',(L.r*L.r*100).toFixed(1)+'%'],['SS residual',f(ssres,1)],['df (n − 2)',df],['Within ±1 SEE',`${within} of ${L.n}`],['Predicted Y at X = '+x,f(yh,2)],[lev+' prediction interval',`[${f(yh-pi,1)}, ${f(yh+pi,1)}]`]];
+  let within=0;Dd.pts.forEach(p=>{if(Math.abs(p.y-(L.ic+L.slope*p.x))<=see+1e-9)within++;});
+  const x=Dd.xr[0]+S.px/100*(Dd.xr[1]-Dd.xr[0]),yh=L.ic+L.slope*x,tc=tCrit(S.alphaSee/2,df),pi=tc*see*Math.sqrt(1+1/L.n+(x-L.mx)*(x-L.mx)/L.sxx),lev=((1-S.alphaSee)*100).toFixed(0)+'%';
+  const cards=[['Std. error of estimate',f(see,2)],['SD of Y',f(sY,2)],['r²',(L.r*L.r*100).toFixed(1)+'%'],['SS residual',f(ssres,1)],['df (n − 2)',df],['Within ±1 SEE',`${within} of ${L.n}`],['Predicted Y at X = '+(+x.toFixed(2)),f(yh,2)],[lev+' prediction interval',`[${f(yh-pi,1)}, ${f(yh+pi,1)}]`]];
   const redu=100*(1-see/sY);
   let m=`Predictions from the regression line miss the actual Y by about <b>${f(see,2)}</b> units, typically. If you ignored X and always guessed the mean of Y, the typical miss would be ${f(sY,2)}, so knowing X ${redu>=0?`cuts the typical error by ${redu.toFixed(0)}%`:'does not reduce the typical error'}. For a new case at X = ${x}, the line predicts Y ≈ ${f(yh,1)}, and ${lev} of such cases should fall between ${f(yh-pi,1)} and ${f(yh+pi,1)}.`;
   m+=` About ${(100*within/L.n).toFixed(0)}% of the points lie within ±1 SEE of the line (roughly 68% is expected when the scatter around the line is normal and even).`;
@@ -685,8 +846,105 @@ function rSee(){
   $('seeCap').textContent='Raise |r| (the target-correlation slider) and SEE shrinks toward 0; at r = 0 the line is flat and SEE is about the same as the SD of Y. At r = ±1 every point sits on the line and SEE is 0.';
 }
 
+/* ---------- Compare all ---------- */
+function badgeHTML(sig){return `<span class="badge ${sig?'sig':'ns'}">${sig?'Significant':'Not significant'}</span>`;}
+function cmpTable(el,rows){
+  el.innerHTML='<thead><tr><th>Statistic</th><th class="num">Value</th><th class="num">p</th><th>Decision at α</th><th class="num">Effect size</th><th>Information used</th></tr></thead><tbody>'+
+    rows.map(r=>`<tr><td class="name">${r.name}</td><td class="num">${r.stat}</td><td class="num">${r.pTxt}</td><td>${r.sig==null?'<span class="cap" style="margin:0">Descriptive (no test)</span>':badgeHTML(r.sig)}</td><td class="num">${r.eff}</td><td class="note">${r.uses}</td></tr>`).join('')+'</tbody>';
+}
+function chartLadder(rows,alpha){
+  const W=700,rh=38,m={l:200,r:70,t:14,b:36},H=m.t+m.b+rh*rows.length,pw=W-m.l-m.r,X=p=>+(m.l+pw*(Math.log10(Math.max(p,1e-4))+4)/4).toFixed(1);
+  let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="p-values of each statistic on a logarithmic axis"><rect x="${m.l}" y="${m.t}" width="${+(X(alpha)-m.l).toFixed(1)}" height="${rh*rows.length}" style="fill:var(--rej)" fill-opacity=".14"/>`;
+  [[1e-4,'.0001'],[1e-3,'.001'],[1e-2,'.01'],[1e-1,'.1'],[1,'1']].forEach(([v,t])=>{s+=`<line class="ax" x1="${X(v)}" x2="${X(v)}" y1="${m.t}" y2="${H-m.b}"/><text x="${X(v)}" y="${H-m.b+16}" text-anchor="middle">${t}</text>`;});
+  s+=`<line x1="${X(alpha)}" x2="${X(alpha)}" y1="${m.t}" y2="${H-m.b}" style="stroke:var(--rej)" stroke-width="1.6" stroke-dasharray="5 4"/><text x="${X(alpha)}" y="${H-m.b+31}" text-anchor="middle" style="fill:var(--rej)">α = ${fp(alpha)}</text>`;
+  rows.forEach((r,i)=>{const cy=m.t+rh*i+rh/2,c=r.sig?'var(--ok)':'#7b8392';
+    s+=`<line x1="${m.l}" x2="${W-m.r}" y1="${cy}" y2="${cy}" class="ax" stroke-opacity=".5"/><text x="${m.l-10}" y="${cy+4}" text-anchor="end" style="fill:var(--ink);font-weight:${r.ref?400:600}">${r.name}</text>`;
+    s+=`<circle cx="${X(r.p)}" cy="${cy}" r="7" style="fill:${c}" ${r.ref?'fill-opacity=".45" stroke-dasharray="2 2" stroke="var(--ink)"':''}/><text x="${W-m.r+8}" y="${cy+4}">${r.pTxt}</text>`;});
+  return s+'</svg>';
+}
+const mkRow=(key,name,stat,t,uses,eff,ref)=>({key,name,stat,p:t.p,pTxt:fp(t.p),sig:t.p<S.alpha,uses,eff,ref});
+const ES=v=>'r² = '+(100*v*v).toFixed(1)+'%';
+function okCmp(){
+  $('msg').hidden=true;['p2sp','p2pb','p2ph','p2see','pRes'].forEach(id=>$(id).hidden=true);
+  $('pLadder').hidden=false;$('pRel').hidden=false;
+}
+function blankRanks(){PR.o={xr:[0.5,1.5],yr:[0.5,1.5]};PR.frame();}
+function rCompare(){
+  const des=S.cmp;let rows=[],rel='',cap='';
+  if(des==='sc'){
+    const D=scData(),Dd=D.err?NOD:D,xs=Dd.pts.map(p=>p.x),ys=Dd.pts.map(p=>p.y),n=xs.length,L=D.err?null:lin(xs,ys);
+    drawRaw(L,Dd);
+    if(D.err||n<2){blankRanks();return fail(D.err||'Add at least two points.');}
+    const RX=ranks(xs),RY=ranks(ys),Ls=lin(RX.r,RY.r);drawRanks(RX.r,RY.r,n,Ls);
+    if(!L.ok||!Ls.ok)return fail('Add at least two points that vary in both X and Y (not all tied).');
+    if(n<3)return fail('Compare all needs at least 3 points (df = n − 2).');
+    const t1=rTest(L.r,n),t2=rTest(Ls.r,n),see=Math.sqrt(Math.max(0,L.syy-L.sxy*L.sxy/L.sxx)/(n-2)),sY=Math.sqrt(L.syy/(n-1));
+    rows=[mkRow('pearson','Pearson r','r('+t1.df+') = '+fr(L.r,3),t1,'Raw scores; the straight-line fit',ES(L.r)),
+      mkRow('spearman','Spearman ρ','ρ('+t2.df+') = '+fr(Ls.r,3),t2,'Ranks of each variable',ES(Ls.r).replace('r²','ρ²')),
+      {key:'see',name:'Std. error of estimate',stat:'SEE = '+f(see,2),p:null,pTxt:'–',sig:null,uses:'Raw scores; distance from the fitted line',eff:'SD of Y = '+f(sY,2)}];
+    cap=`Pearson r and Spearman ρ are tested with the same t formula (df = ${n-2}) at the same α. The SEE is not a test: it turns r into the typical prediction miss, ${f(see,2)} here against an SD of Y of ${f(sY,2)}.`;
+    const a=Math.abs(L.r),b=Math.abs(Ls.r);
+    rel='<ul class="rel"><li><b>One test, two inputs.</b> Both statistics use t = r√(n − 2)/√(1 − r²) with df = n − 2. They differ only in what is correlated: the raw scores for r, the ranks for ρ.</li>';
+    if(b-a>0.1)rel+=`<li><b>ρ (${fr(Ls.r,2)}) exceeds r (${fr(L.r,2)}).</b> Y moves consistently in one direction but not along a straight line, or a few extreme scores are dragging r down. A single line summarises this relationship poorly, so the SEE is also optimistic about how well a line predicts. Drag a point or raise the curvature to see how r reacts and ρ does not.</li>`;
+    else if(a-b>0.1)rel+=`<li><b>r (${fr(L.r,2)}) exceeds ρ (${fr(Ls.r,2)}).</b> A few extreme scores are inflating the linear correlation. Ranking limits their pull, so ρ is the more cautious summary here.</li>`;
+    else rel+=`<li><b>r (${fr(L.r,2)}) and ρ (${fr(Ls.r,2)}) agree.</b> The raw scores and their ranks tell the same story: the relationship is close to a straight line without damaging extreme points.</li>`;
+    if(RX.ties+RY.ties>0)rel+=`<li><b>Ties.</b> ${RX.ties} X and ${RY.ties} Y values are tied, so they share average ranks; ρ is Pearson r computed on those ranks.</li>`;
+    rel+=`<li><b>Which to report.</b> Report r (and the SEE if you want to predict) when the plot is straight and free of extreme points. Report ρ when the relationship is curved but one-directional, the scores are ordinal, or outliers are present. If they disagree, say so and explain why.</li></ul>`;
+  }else if(des==='pb'){
+    const D=pbData();drawPb(D.err?{pts:[],yr:[0,100]}:D);
+    if(D.err)return fail(D.err);
+    const B=pbStats(D.pts);if(B.err)return fail(B.err);
+    const gs=D.pts.map(p=>p.g),ys=D.pts.map(p=>p.y),RY=ranks(ys),Ls=lin(gs,RY.r);
+    if(!Ls.ok)return fail('The ranked scores do not vary, so ρ is undefined.');
+    const tr=rTest(B.r,B.n),ts=rTest(Ls.r,B.n),tt={t:B.tPool,df:B.n-2,p:pTwo(B.tPool,B.n-2)};
+    rows=[mkRow('pb','Point-biserial r','r('+tr.df+') = '+fr(B.r,3),tr,'Scores and the 0/1 group code',ES(B.r)),
+      mkRow('pearson','Pearson r (0/1 code)','r('+tr.df+') = '+fr(B.r,3),tr,'The same calculation, so the same result',ES(B.r)),
+      mkRow('spearman','Spearman ρ (ranks)','ρ('+ts.df+') = '+fr(Ls.r,3),ts,'Ranks of the scores and the 0/1 code',ES(Ls.r).replace('r²','ρ²')),
+      mkRow('t','Pooled t (reference)','t('+tt.df+') = '+f(tt.t,2),tt,'Group means and pooled SD','d = '+f(B.d,2),true)];
+    cap=`The same ${B.n} scores (${B.n0} in group 0, ${B.n1} in group 1) go into every row. The pooled t test is included as a reference: it is the point-biserial test in another form.`;
+    const a=Math.abs(B.r),b=Math.abs(Ls.r);
+    rel=`<ul class="rel"><li><b>Point-biserial r is Pearson r.</b> Coding the groups 0 and 1 and correlating gives r = ${fr(B.r,3)} either way, with identical t, df and p.</li>
+      <li><b>It is also the t test.</b> r = t/√(t² + df) = ${fr(B.tPool/Math.sqrt(B.tPool*B.tPool+B.n-2),3)} from the pooled t of ${f(B.tPool,2)}, and its p-value (${fp(tt.p)}) matches the correlation’s. The correlation adds a strength measure (r², ${(100*B.r*B.r).toFixed(1)}% of variance); the t test adds the difference in means.</li>`;
+    if(b-a>0.1)rel+=`<li><b>ρ (${fr(Ls.r,2)}) exceeds r<sub>pb</sub> (${fr(B.r,2)}).</b> Extreme scores are weakening the mean-based statistic; ranking limits their influence.</li>`;
+    else if(a-b>0.1)rel+=`<li><b>r<sub>pb</sub> (${fr(B.r,2)}) exceeds ρ (${fr(Ls.r,2)}).</b> The gap in means leans on a few extreme scores that the ranks play down.</li>`;
+    else rel+=`<li><b>ρ (${fr(Ls.r,2)}) and r<sub>pb</sub> (${fr(B.r,2)}) agree.</b> Ranking the scores changes little, so outliers are not driving the result.</li>`;
+    rel+=B.n0===B.n1?`<li><b>Group sizes matter.</b> With equal groups (${B.n0} each) r<sub>pb</sub> is as large as it can be for this difference in means; unequal sizes would shrink it, so report Cohen’s d (${f(B.d,2)}) as well.</li></ul>`:`<li><b>Group sizes matter.</b> For the same difference in means, r<sub>pb</sub> is largest with equal group sizes and shrinks when they differ (here ${B.n0} versus ${B.n1}), so report Cohen’s d (${f(B.d,2)}) as well.</li></ul>`;
+  }else{
+    const C=phData();
+    if(C.err){drawPhi(null,{a:0,b:0,c:0,d:0});return fail(C.err);}
+    const Q=phiStats(C);drawPhi(Q,C);
+    if(!Q)return fail('Every row and column of the table needs at least one observation (and N ≥ 2), otherwise φ is undefined.');
+    const cs=phiCases(C),Lp=lin(cs.x,cs.y),RX=ranks(cs.x),RY=ranks(cs.y),Lr=lin(RX.r,RY.r);
+    const tp=rTest(Lp.r,Q.n),tr=rTest(Lr.r,Q.n);
+    rows=[mkRow('phi','Phi φ (χ² test)','φ = '+fr(Q.phi,3)+', χ²(1) = '+f(Q.chi,2),{p:Q.p},'Counts in the 2 × 2 table',ES(Q.phi).replace('r²','φ²')),
+      mkRow('pearson','Pearson r (0/1 codes)','r('+tp.df+') = '+fr(Lp.r,3),tp,'The 0/1 codes as numbers',ES(Lp.r)),
+      mkRow('spearman','Spearman ρ (0/1 codes)','ρ('+tr.df+') = '+fr(Lr.r,3),tr,'Ranks of the 0/1 codes',ES(Lr.r).replace('r²','ρ²')),
+      mkRow('chi','Chi-square test (reference)','χ²(1) = '+f(Q.chi,2),{p:Q.p},'Observed versus expected counts','φ = '+fr(Q.phi,2),true)];
+    cap=`The same ${Q.n} cases go into every row. The chi-square test is included as a reference: for a 2 × 2 table χ² = nφ² (${f(Q.chi,2)}).`;
+    rel=`<ul class="rel"><li><b>Three names for one number.</b> With two 0/1 variables, φ, Pearson r and Spearman ρ are identical (${fr(Q.phi,3)}). Ranking a two-valued variable only rescales its codes, so nothing changes.</li>
+      <li><b>The p-values differ slightly.</b> φ is tested with χ² (df = 1; p ${apaP(Q.p)}), while r and ρ use t with df = n − 2 (p ${apaP(tp.p)}). The two reference distributions converge as N grows, but with small tables they can disagree near α.</li>`;
+    if(Q.minE<5)rel+=`<li><b>Small expected counts.</b> The smallest expected count is ${f(Q.minE,1)}, below 5, so every p-value here is approximate. Fisher’s exact test (Contingency Table Tests explorer) is the safer choice.</li>`;
+    rel+=`<li><b>Margins cap φ.</b> With these margins |φ| cannot exceed ${f(Q.phimax,2)}, so your φ is ${(100*Math.abs(Q.phi)/Q.phimax).toFixed(0)}% of its maximum; unequal margins make φ look weaker than the association really is.</li></ul>`;
+  }
+  okCmp();
+  const ladder=rows.filter(r=>r.p!=null);
+  $('chartLadder').innerHTML=chartLadder(ladder,S.alpha);
+  cmpTable($('cmpAll'),rows);
+  $('cmpCap').textContent=cap;$('relBody').innerHTML=rel;
+}
+
 /* ============ UI sync ============ */
-const TITLES={pearson:'The data',spearman:'The data and its ranks',pb:'Scores by group',phi:'The 2 × 2 table as a plot of 0/1 codes',see:'The data, the line and the ±1 SEE band'};
+const TITLES={compare:'The data (every statistic below uses these same data)',pearson:'The data',spearman:'The data and its ranks',pb:'Scores by group',phi:'The 2 × 2 table as a plot of 0/1 codes',see:'The data, the line and the ±1 SEE band'};
+const CMPCAP={
+  sc:'Left: the raw scores, which Pearson r and the standard error of estimate use. Right: the same points as ranks, which Spearman ρ uses. Drag points (simulated data) to see which statistic reacts.',
+  pb:'The same two groups feed every statistic: the point-biserial and Pearson coefficients use the scores directly, Spearman ρ uses their ranks. Drag a point to move it.',
+  phi:'The same 2 × 2 table feeds every statistic. Bubble area is proportional to the count in each cell.'};
+const OWNCAP={
+  pearson:'Your own data. The red line is the least-squares regression line; the thin red segments (if on) are residuals.',
+  spearman:'Left: your raw scores. Right: the same points as ranks. Spearman ρ is the Pearson correlation of the right-hand plot.',
+  pb:'Your two groups of scores, jittered sideways. Black marks are the group means with their CIs; the dashed red line joins the means.',
+  phi:'Bubble area is proportional to the count in each cell, built from your 0/1 values. The red line is the regression of Y on X for the codes.',
+  see:'The shaded band is the line ±1 standard error of estimate. The orange marker is the prediction at your chosen X.'};
 const CAPS={
   pearson:'Dots are individual points; the red line is the least-squares regression line and the thin red segments (if on) are residuals. Drag points to see how r responds.',
   spearman:'Left: the raw scores. Right: the same points after ranking each variable. Spearman ρ is the Pearson correlation of the right-hand plot, so a one-directional curve that looks weak on the left can look nearly perfect on the right. Switch the shape to Monotonic and raise the curvature to bend the data without changing any ranks.',
@@ -694,31 +952,43 @@ const CAPS={
   phi:'Bubble area is proportional to the count in each cell and the number is the count. The red line is the regression of Y on X for the 0/1 codes: its tilt reflects φ.',
   see:'The shaded band is the line ±1 standard error of estimate. The orange marker is the prediction at your chosen X, with a thick ±1 SEE bar and a thinner prediction interval.'
 };
-const ARIA={pearson:'Scatterplot of X and Y with regression line. Points can be dragged.',spearman:'Scatterplot of the raw scores of X and Y. Points can be dragged.',pb:'Scores by group, coded 0 and 1. Points can be dragged.',phi:'Bubble plot of the counts in a 2 by 2 table of 0/1 codes.',see:'Scatterplot with regression line, a band of one standard error of estimate, and a prediction at a chosen X. Points can be dragged.'};
+const ARIA={compare:'Plot of the data that every statistic below uses.',pearson:'Scatterplot of X and Y with regression line. Points can be dragged.',spearman:'Scatterplot of the raw scores of X and Y. Points can be dragged.',pb:'Scores by group, coded 0 and 1. Points can be dragged.',phi:'Bubble plot of the counts in a 2 by 2 table of 0/1 codes.',see:'Scatterplot with regression line, a band of one standard error of estimate, and a prediction at a chosen X. Points can be dragged.'};
 let presetGroup='';
 function buildPresets(){
-  const grp=SC(S.tab)?'sc':S.tab,list=PRESETS[grp];
+  const grp=fam(),list=PRESETS[grp];
   if(grp===presetGroup)return; presetGroup=grp;
   $('presets').innerHTML=list.map((p,i)=>`<button class="pill" data-i="${i}">${p.name}</button>`).join('');
 }
 function syncUI(){
   const t=S.tab;
   TABS.forEach(k=>$('tab-'+k).setAttribute('aria-selected',k===t));
-  document.querySelectorAll('[data-tabs]').forEach(el=>{el.hidden=!el.dataset.tabs.split(' ').includes(t);});
+  $('cmpRow').hidden=t!=='compare';['sc','pb','phi'].forEach(k=>$('cmp-'+k).setAttribute('aria-selected',k===S.cmp));
+  document.querySelector('input[name=src][value='+S.source+']').checked=true;
+  const fm=fam();
+  document.querySelectorAll('[data-tabs],[data-fam],.sim,.own').forEach(el=>{
+    let h=false;
+    if(el.dataset.tabs&&!el.dataset.tabs.split(' ').includes(t))h=true;
+    if(el.dataset.fam&&el.dataset.fam!==fm)h=true;
+    if(el.classList.contains('sim')&&S.source==='own')h=true;
+    if(el.classList.contains('own')&&S.source==='sim')h=true;
+    el.hidden=h;
+  });
   buildPresets();
   $('dataTitle').textContent=TITLES[t];
-  $('charts').classList.toggle('two',t==='spearman');
-  $('rankBox').hidden=t!=='spearman';
-  $('capMain').hidden=t!=='spearman';$('capMain').textContent='Raw scores';
-  $('cvMain').classList.toggle('drag',t!=='phi');
+  const two=t==='spearman'||(t==='compare'&&S.cmp==='sc');
+  $('charts').classList.toggle('two',two);
+  $('rankBox').hidden=!two;
+  $('capMain').hidden=!two;$('capMain').textContent='Raw scores';
+  $('cvMain').classList.toggle('drag',canEdit());
   $('cvMain').setAttribute('aria-label',ARIA[t]);
-  $('dataCap').textContent=CAPS[t];
+  $('dataCap').textContent=t==='compare'?(S.source==='own'?'Your own data are plotted; edit the boxes on the left to update them. ':'')+(S.source==='own'?CMPCAP[S.cmp].replace(/ Drag [^.]*\./,''):CMPCAP[S.cmp]):(S.source==='own'?OWNCAP[t]:CAPS[t]);
   /* sliders */
   $('sc_r').value=S.tr;$('o_sc_r').textContent=(S.tr/100).toFixed(2).replace('-','−');
   $('sc_n').value=S.n;$('o_sc_n').textContent=S.n;
   $('shapeSw').setAttribute('aria-checked',S.mono);$('swLin').classList.toggle('on',!S.mono);$('swMono').classList.toggle('on',S.mono);
   $('curvWrap').hidden=!S.mono;$('sc_curv').value=S.curv;$('o_sc_curv').textContent=S.curv;
-  $('sc_px').value=S.px;$('o_sc_px').textContent=S.px;
+  $('sc_px').value=S.px;
+  {const D=scData();$('o_sc_px').textContent=D.err?S.px:+(D.xr[0]+S.px/100*(D.xr[1]-D.xr[0])).toFixed(2);}
   const q=S.pb;
   [['d',q.d,1],['sd',q.sd,1],['n0',q.n0,0],['n1',q.n1,0]].forEach(([k,v,dec])=>{$('pb_'+k).value=v;$('o_pb_'+k).textContent=(+v).toFixed(dec).replace('-','−');});
   $('pb_exact').checked=q.exact;
@@ -732,9 +1002,10 @@ function syncUI(){
 }
 function render(){
   syncUI();
-  if(S.tab==='spearman')PR.size();
+  if(S.tab==='spearman'||(S.tab==='compare'&&S.cmp==='sc'))PR.size();
   const t=S.tab;
-  if(t==='pearson')rPearson();else if(t==='spearman')rSpearman();else if(t==='pb')rPb();else if(t==='phi')rPhi();else rSee();
+  $('pLadder').hidden=true;$('pRel').hidden=true;
+  if(t==='compare')rCompare();else if(t==='pearson')rPearson();else if(t==='spearman')rSpearman();else if(t==='pb')rPb();else if(t==='phi')rPhi();else rSee();
 }
 
 /* ============ Presets ============ */
@@ -771,7 +1042,7 @@ function syncThemeBtn(){const dark=currentTheme()==='dark',b=$('themeBtn');b.tex
 const pos=e=>{const b=$('cvMain').getBoundingClientRect();return{x:e.clientX-b.left,y:e.clientY-b.top};};
 function nearest(m){
   let best=-1,bd=196;
-  if(S.tab==='pb')pbPts.forEach((p,i)=>{const dx=PM.X(ptX(p))-m.x,dy=PM.Y(p.y)-m.y,d=dx*dx+dy*dy;if(d<bd){bd=d;best=i;}});
+  if(fam()==='pb')pbPts.forEach((p,i)=>{const dx=PM.X(ptX(p))-m.x,dy=PM.Y(p.y)-m.y,d=dx*dx+dy*dy;if(d<bd){bd=d;best=i;}});
   else pts.forEach((p,i)=>{const dx=PM.X(p.x)-m.x,dy=PM.Y(p.y)-m.y,d=dx*dx+dy*dy;if(d<bd){bd=d;best=i;}});
   return best;
 }
@@ -785,10 +1056,14 @@ function init(){
     syncThemeBtn();render();
   };
   if(window.matchMedia){const mq=matchMedia('(prefers-color-scheme: dark)');if(mq.addEventListener)mq.addEventListener('change',()=>{syncThemeBtn();render();});}
-  TABS.forEach(k=>$('tab-'+k).onclick=()=>{if(SC(k)!==SC(S.tab)||!SC(k))label='';S.tab=k;drag=-1;render();});
+  TABS.forEach(k=>$('tab-'+k).onclick=()=>{if(famOf(k)!==fam()||famOf(k)!=='sc')label='';S.tab=k;drag=-1;if(S.source==='own')ensureOwn();render();});
+  ['sc','pb','phi'].forEach(k=>$('cmp-'+k).onclick=()=>{label='';S.cmp=k;drag=-1;if(S.source==='own')ensureOwn();render();});
+  document.querySelectorAll('input[name=src]').forEach(el=>el.addEventListener('change',e=>{S.source=e.target.value;drag=-1;if(S.source==='own')ensureOwn();render();}));
+  ['sc','pb','phi'].forEach(k=>['a','b'].forEach(s=>$('own_'+k+'_'+s).addEventListener('input',render)));
+  document.querySelectorAll('.loadSim').forEach(b=>b.onclick=()=>{loadSim();render();});
   $('presets').addEventListener('click',e=>{
     const b=e.target.closest('button');if(!b)return;
-    const grp=SC(S.tab)?'sc':S.tab;if(grp!=='sc')label='';PRESETS[grp][+b.dataset.i].fn();render();
+    const grp=fam();if(grp!=='sc')label='';PRESETS[grp][+b.dataset.i].fn();render();
   });
   /* scatter controls */
   $('sc_r').oninput=e=>{S.tr=+e.target.value;generate();render();};
@@ -818,10 +1093,10 @@ function init(){
   /* canvas interaction */
   const cv=$('cvMain');
   cv.addEventListener('pointerdown',e=>{
-    if(S.tab==='phi')return;
+    if(!canEdit())return;
     const m=pos(e),i=nearest(m);
     if(i>=0){drag=i;cv.setPointerCapture(e.pointerId);}
-    else if(S.tab==='pb'){
+    else if(fam()==='pb'){
       const gx=PM.iX(m.x),y=PM.iY(m.y);
       if(y>=0&&y<=100&&gx>-0.6&&gx<1.6){const g=gx<0.5?0:1;pbPts.push({g,y,j:Math.max(-1,Math.min(1,(gx-g)/0.2))});label='';}
     }else{
@@ -833,16 +1108,16 @@ function init(){
   cv.addEventListener('pointermove',e=>{
     if(drag<0)return;
     const m=pos(e);
-    if(S.tab==='pb'){const p=pbPts[drag];p.g=PM.iX(m.x)<0.5?0:1;p.y=clamp(PM.iY(m.y));}
+    if(fam()==='pb'){const p=pbPts[drag];p.g=PM.iX(m.x)<0.5?0:1;p.y=clamp(PM.iY(m.y));}
     else{const p=pts[drag];p.x=clamp(PM.iX(m.x));p.y=clamp(PM.iY(m.y));}
     label='';render();
   });
   const up=()=>{if(drag>=0){drag=-1;render();}};
   cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
   cv.addEventListener('dblclick',e=>{
-    if(S.tab==='phi')return;
+    if(!canEdit())return;
     const i=nearest(pos(e));
-    if(i>=0){if(S.tab==='pb')pbPts.splice(i,1);else pts.splice(i,1);drag=-1;render();}
+    if(i>=0){if(fam()==='pb')pbPts.splice(i,1);else pts.splice(i,1);drag=-1;render();}
   });
   $('copy').onclick=()=>{
     const txt=$('apa').textContent,done=()=>{$('copy').textContent='Copied';setTimeout(()=>$('copy').textContent='Copy',1200);};
@@ -853,6 +1128,38 @@ function init(){
   generate();genPb();render();
 }
 init();
+</script>
+<script>
+(function(){
+"use strict";
+const $=id=>document.getElementById(id);
+const DEC={"start": {"q": "What kinds of variables do you have?", "o": [["Two numerical variables (measurements, scores, or ratings with several levels)", "n1"], ["One two-valued variable (such as group 0/1) and one numerical score", "b1"], ["Two two-valued (yes/no) variables", "f1"], ["A categorical variable with three or more levels", "r_multi"]]}, "n1": {"q": "What do you want to do?", "o": [["Describe or test how strongly the two variables go together", "n2"], ["Predict Y from X and say how far off the predictions will typically be", "n4"]]}, "n2": {"q": "What does the scatterplot look like?", "o": [["Roughly a straight line, with similar scatter along its length", "n3"], ["Curved, but always rising or always falling (monotonic)", "r_spearman_curve"], ["It rises then falls, or falls then rises (not monotonic)", "r_nomono"], ["I am not sure", "r_cmp_sc"]]}, "n3": {"q": "Are there outliers or leverage points, or are the scores ordinal ratings with many ties? (Ranking tames extreme scores, and ordinal ratings have no true distances between levels.)", "o": [["No: interval-level scores with no extreme points", "r_pearson"], ["Yes: outliers, a leverage point, or ordinal ratings with many ties", "r_spearman_rob"], ["Not sure", "r_cmp_sc"]]}, "n4": {"q": "Is the relationship roughly a straight line, with similar scatter at low and at high X?", "o": [["Yes", "r_see"], ["No: it curves, or the scatter fans out", "r_see_no"], ["Not sure", "r_see_check"]]}, "b1": {"q": "Is the two-valued variable a true dichotomy (such as treatment versus control), or an artificial split of a numerical variable (such as high versus low at the median)?", "o": [["A true dichotomy", "b2"], ["An artificial split of a numerical variable", "r_split"]]}, "b2": {"q": "Are the scores in each group roughly bell-shaped, without outliers? (For ordinal ratings or heavy skew, ranking is safer.)", "o": [["Yes", "r_pb"], ["No: outliers, heavy skew, or ordinal ratings", "r_pb_rank"], ["Not sure", "r_cmp_pb"]]}, "f1": {"q": "Are both two-valued variables genuine categories (such as pass/fail), or were they made by splitting numerical scores?", "o": [["Genuine categories", "f2"], ["Splits of numerical variables", "r_split"]]}, "f2": {"q": "Is every expected count at least 5? (Expected count = row total × column total ÷ N; the Phi tab warns when one is below 5.)", "o": [["Yes", "r_phi"], ["No: at least one expected count is below 5", "r_phi_small"], ["I do not know", "r_phi_check"]]}, "r_pearson": {"t": "Pearson r", "x": "It measures the strength and direction of a straight-line relationship between two numerical variables, using the actual scores. With interval-level scores, a roughly linear pattern and no extreme points it is the most informative choice, and its square is the share of variation in Y that is linearly associated with X.", "i": [["Open: Pearson r", ["tab-pearson"], "r, r², the t test and the regression line"], ["Open: Standard error of estimate", ["tab-see"], "if you also want to predict Y from X"]], "n": ["Report r with its degrees of freedom and p value, and r² as the effect size.", "With few points one extreme point can change r a lot; drag a point to see.", "Correlation shows association, not causation."]}, "r_spearman_curve": {"t": "Spearman ρ", "x": "Spearman ρ replaces each score by its rank and then computes Pearson r on the ranks, so it captures any relationship that consistently rises or consistently falls, straight or not. For a curve like this one Pearson r understates the strength.", "i": [["Open: Spearman ρ", ["tab-spearman"], "the raw scores beside their ranks"], ["Open: Compare all (two numerical)", ["tab-compare", "cmp-sc"], "see r fall while ρ holds"]], "n": ["In the simulated data, switch the shape to Monotonic and raise the curvature to watch r drop while ρ holds steady.", "If the pattern is clearly straight, Pearson r is more informative."]}, "r_nomono": {"t": "Neither coefficient suits this pattern", "x": "Pearson r and Spearman ρ both describe a relationship that runs in one direction. When Y rises and then falls (or the reverse), both can be near 0 even though X strongly determines Y.", "i": [["Open: Pearson r", ["tab-pearson"], "choose the Curved (r ≈ 0) preset to see r near 0 for a strong pattern"]], "n": ["Always plot the data before trusting a coefficient.", "A curved model, or splitting X into ranges, would describe this relationship; neither is part of this explorer."]}, "r_spearman_rob": {"t": "Spearman ρ", "x": "Ranks limit the pull of outliers and leverage points, and they suit ordinal ratings because only the order of the scores matters, not the distances between levels. Tied scores share average ranks.", "i": [["Open: Spearman ρ", ["tab-spearman"], "ranks, d and d² for each point"], ["Open: Compare all (two numerical)", ["tab-compare", "cmp-sc"], "ρ beside Pearson r on the same data"]], "n": ["If ρ and r agree, the outliers are not doing the work; if they differ, trust ρ and explain why.", "The p value uses the t approximation, which is reasonable from about n = 10; many ties make it less accurate."]}, "r_cmp_sc": {"t": "Run Pearson r and Spearman ρ side by side", "x": "Compare all runs both statistics, and the standard error of estimate, on exactly the same data. If they agree, curvature and extreme points are not a problem. If ρ is clearly larger than r, the relationship is one-directional but not straight, or a few extreme scores are distorting r.", "i": [["Open: Compare all (two numerical)", ["tab-compare", "cmp-sc"], "p-value ladder and table for the same data"]], "n": ["Look at the scatterplot as well as the numbers."]}, "r_see": {"t": "Standard error of estimate (with Pearson r)", "x": "The SEE is the typical vertical distance between the actual Y values and the regression line, in the units of Y. It equals the SD of Y × √(1 − r²) (with a small df correction), so it shrinks as |r| grows. It is the right accuracy summary when the relationship is straight and the scatter is even.", "i": [["Open: Standard error of estimate", ["tab-see"], "the ±1 SEE band and a prediction interval at any X"], ["Open: Pearson r", ["tab-pearson"], "the correlation the SEE is built from"]], "n": ["Predict only within the range of X values you observed.", "A prediction interval for one new case is wider than ±1 SEE and widens away from the mean of X."]}, "r_see_no": {"t": "Be cautious with the SEE", "x": "The SEE gives one typical miss around a straight line. If the data curve, the line misses systematically at some values of X; if the scatter fans out, a single SEE is too small in some places and too large in others.", "i": [["Open: Standard error of estimate", ["tab-see"], "compare the band with the points"], ["Open: Spearman ρ", ["tab-spearman"], "describe a one-directional relationship by ranks"]], "n": ["A transformation of Y or a curved model would usually predict better; neither is part of this explorer."]}, "r_see_check": {"t": "Check the scatter first, then use the SEE", "x": "Turn on the residuals and look for a curve or a fan shape. If the points sit evenly around the line, the SEE is a fair summary.", "i": [["Open: Pearson r", ["tab-pearson"], "switch Residuals on to see the vertical misses"], ["Open: Standard error of estimate", ["tab-see"], "the band and the prediction at a chosen X"]], "n": []}, "r_split": {"t": "Use the original scores instead", "x": "Cutting a numerical variable into two groups throws information away and usually weakens the correlation (by roughly a fifth when split at the median). A point-biserial r or φ computed on a split therefore understates the relationship. Correlate the original scores with Pearson r (straight line) or Spearman ρ (one-directional).", "i": [["Open: Pearson r", ["tab-pearson"], "straight-line relationship"], ["Open: Spearman ρ", ["tab-spearman"], "monotonic relationship, or ordinal scores"]], "n": ["Dichotomise only when the split is meaningful in itself (pass/fail) or the original scores are not available.", "Biserial and tetrachoric correlations are designed for artificial splits but are not part of this explorer."]}, "r_pb": {"t": "Point-biserial r", "x": "It is Pearson r between a 0/1 group code and the scores. It is the pooled independent-measures t test in another form (same t, df and p), with the group effect expressed as a correlation. Like that t test it assumes roughly bell-shaped scores with similar spread in the two groups.", "i": [["Open: Point-biserial", ["tab-pb"], "r, r², the group means and the matching pooled t test"]], "n": ["The sign depends only on which group is coded 1.", "For the same difference in means, r is largest with equal group sizes, so report Cohen’s d as well."]}, "r_pb_rank": {"t": "Spearman ρ with the 0/1 code (rank-based)", "x": "Ranking the scores before correlating them with the group code limits the pull of outliers and skew and suits ordinal scores. This is the same idea as the Mann–Whitney test, which the Nonparametric Tests explorer covers in full.", "i": [["Open: Compare all (two-valued × numerical)", ["tab-compare", "cmp-pb"], "ρ beside r_pb on the same data"]], "n": ["Spearman ρ for a 0/1 code does not have its own tab; read it from Compare all.", "If the group difference is the point of the study, test it with Mann–Whitney U."]}, "r_cmp_pb": {"t": "Run the point-biserial and Spearman side by side", "x": "If they agree, extreme scores are not driving the result. If ρ is clearly larger or smaller than r, the mean-based result depends on a few extreme scores.", "i": [["Open: Compare all (two-valued × numerical)", ["tab-compare", "cmp-pb"], "point-biserial, Pearson, Spearman and the pooled t"]], "n": []}, "r_phi": {"t": "Phi (φ)", "x": "Phi is Pearson r between two 0/1 variables, so it measures the strength of association in a 2 × 2 table, and its test is the chi-square test with χ² = nφ² and df = 1.", "i": [["Open: Phi (φ)", ["tab-phi"], "the table, φ, χ² and the largest φ the margins allow"], ["Open: Compare all (two two-valued)", ["tab-compare", "cmp-phi"], "φ = r = ρ on the same table"]], "n": ["Unequal margins cap how large |φ| can be; the Phi tab shows that maximum.", "The same φ gives a smaller p value as N grows, so report φ (or φ²) alongside the test."]}, "r_phi_small": {"t": "Phi for strength, but be careful with its p value", "x": "φ still describes the strength of association, but the chi-square approximation is unreliable when an expected count is below 5. Fisher’s exact test (in the Contingency Table Tests explorer) gives an exact p value for a 2 × 2 table.", "i": [["Open: Phi (φ)", ["tab-phi"], "see the expected-count warning"]], "n": ["Report φ with the exact p value from Fisher’s test."]}, "r_phi_check": {"t": "Check the expected counts on the Phi tab", "x": "Enter your counts and read the note under the result: it flags an expected count below 5.", "i": [["Open: Phi (φ)", ["tab-phi"], "the table, φ and the expected-count check"]], "n": []}, "r_multi": {"t": "Outside this explorer", "x": "Pearson, Spearman, point-biserial and phi need numerical or two-valued variables. For a categorical variable with three or more levels, use Cramér’s V (Contingency Table Tests explorer) when the other variable is also categorical, or compare means across the groups (a t test or ANOVA) when the other variable is numerical.", "i": [], "n": []}};
+let path=['start'];
+function clicks(ids){ids.forEach(id=>{const b=$(id);if(b)b.click();});window.scrollTo({top:0,behavior:'smooth'});}
+function render(){
+  const id=path[path.length-1],nd=DEC[id],box=$('decideBody');let h='';
+  if(path.length>1)h+='<div class="crumbs">'+path.slice(0,-1).map((p,i)=>{const q=DEC[p],lab=q.o.find(o=>o[1]===path[i+1])[0];return`<button type="button" class="crumb" data-back="${i}"><span>${q.q.split('?')[0].replace(/\s*\([^)]*\)/g,'')+'?'}</span> <b>${lab.replace(/\s*[:(].*$/,'')}</b></button>`;}).join('')+'</div>';
+  if(nd.q){
+    h+=`<p class="dq">${nd.q}</p><div class="dopts">`+nd.o.map(o=>`<button type="button" class="dopt" data-go="${o[1]}">${o[0]}</button>`).join('')+'</div>';
+  }else{
+    h+=`<div class="dres"><h3 style="margin-top:0">Suggested</h3><p class="dtitle">${nd.t}</p><p>${nd.x}</p>`;
+    if(nd.i.length)h+='<ul class="dlist">'+nd.i.map(([lab,ids,why])=>`<li><button type="button" class="pill" data-open="${ids.join(',')}">${lab}</button> <span>${why}</span></li>`).join('')+'</ul>';
+    if(nd.n.length)h+='<h3>Things to keep in mind</h3><ul class="rel">'+nd.n.map(t=>`<li>${t}</li>`).join('')+'</ul>';
+    h+='</div>';
+  }
+  if(path.length>1)h+='<div class="row" style="margin-top:12px"><button type="button" class="pill" data-reset="1">Start over</button></div>';
+  box.innerHTML=h;
+}
+$('decideBody').addEventListener('click',e=>{
+  const t=e.target.closest('button');if(!t)return;
+  if(t.dataset.go){path.push(t.dataset.go);render();}
+  else if(t.dataset.back!=null){path=path.slice(0,+t.dataset.back+1);render();}
+  else if(t.dataset.reset){path=['start'];render();}
+  else if(t.dataset.open)clicks(t.dataset.open.split(','));
+});
+window.__decide={DEC,go:p=>{path=p;render();}};
+render();
+})();
 </script>
 </body>
 </html>
