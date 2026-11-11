@@ -1,299 +1,841 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<title>Correlation Explorer</title>
-</head>
-<div id="ce-root" style="max-width:760px;margin:0 auto;font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;color:#1f2933;">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Correlation Explorer: Pearson, Spearman, Point-Biserial, Phi &amp; Standard Error of Estimate</title>
+<meta name="description" content="Interactive explorer for the Pearson, Spearman, point-biserial and phi correlation coefficients and the standard error of estimate. Drag points, adjust sliders and watch the coefficient, significance test and prediction error respond.">
+<script>try{var t=localStorage.getItem("ttest-theme");if(t==="light"||t==="dark")document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
 <style>
-#ce-root *{box-sizing:border-box}
-#ce-root .ce-card{background:#fff;border:1px solid #d5dbe1;border-radius:10px;padding:14px;margin-bottom:12px}
-#ce-root h2{font-size:1.25rem;margin:0 0 4px}
-#ce-root p{margin:4px 0}
-#ce-root .ce-row{display:flex;flex-wrap:wrap;gap:16px}
-#ce-root .ce-ctl{flex:1 1 220px}
-#ce-root label{display:block;font-weight:600;font-size:.9rem;margin-bottom:4px}
-#ce-root input[type=range]{width:100%}
-#ce-root button{font:inherit;font-size:.85rem;padding:6px 10px;margin:3px 4px 3px 0;border:1px solid #2b6cb0;background:#fff;color:#2b6cb0;border-radius:6px;cursor:pointer}
-#ce-root button:hover,#ce-root button:focus-visible{background:#2b6cb0;color:#fff}
-#ce-root canvas{width:100%;display:block;border:1px solid #d5dbe1;border-radius:8px;background:#fbfcfd;touch-action:none;cursor:crosshair}
-#ce-root .ce-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-top:10px}
-#ce-root .ce-stat{background:#f1f5f9;border-radius:8px;padding:8px;text-align:center}
-#ce-root .ce-stat b{display:block;font-size:1.25rem}
-#ce-root .ce-stat span{font-size:.75rem;color:#52606d}
-#ce-root .ce-note{font-size:.85rem;color:#52606d}
-#ce-root button.ce-sw{display:inline-flex;align-items:center;gap:10px;border:none;background:none;color:#1f2933;padding:4px 0;margin:6px 0 0;font-weight:600}
-#ce-root button.ce-sw:hover,#ce-root button.ce-sw:focus-visible{background:none;color:#1f2933}
-#ce-root button.ce-sw:focus-visible .ce-track{outline:2px solid #2b6cb0;outline-offset:2px}
-#ce-root .ce-track{position:relative;flex:none;width:42px;height:24px;border-radius:12px;background:#9aa5b1;transition:background .2s}
-#ce-root .ce-track::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:transform .2s}
-#ce-root button.ce-sw[aria-checked="true"] .ce-track{background:#2b6cb0}
-#ce-root button.ce-sw[aria-checked="true"] .ce-track::after{transform:translateX(18px)}
-#ce-root [hidden]{display:none !important}
-#ce-root .ce-key{margin-top:10px;background:#f8fafc;border:1px solid #d5dbe1;border-radius:8px;padding:10px 12px;font-size:.88rem}
-#ce-root .ce-key dl{margin:0}
-#ce-root .ce-key dt{font-weight:700;margin-top:8px}
-#ce-root .ce-key dt:first-child{margin-top:0}
-#ce-root .ce-key dd{margin:2px 0 0 0;color:#3e4c59}
-#ce-root .ce-msg{background:#ebf4ff;border-left:4px solid #2b6cb0;padding:8px 10px;border-radius:4px;margin-top:10px;font-size:.92rem}
+:root{
+  --bg:#f5f4ef;--panel:#ffffff;--ink:#1b1e25;--muted:#5b6370;--line:#dedbd1;--soft:#efede6;
+  --a:#2468d6;--b:#d9730d;--rej:#c8372d;--ok:#1b8a5a;--accent:#2468d6;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){--bg:#13151a;--panel:#1c1f26;--ink:#e8e9ed;--muted:#9aa1ae;--line:#323744;--soft:#252932;
+    --a:#6ba4ff;--b:#ffa24f;--rej:#ff7064;--ok:#4cc58c;--accent:#6ba4ff;}
+}
+:root[data-theme="dark"]{--bg:#13151a;--panel:#1c1f26;--ink:#e8e9ed;--muted:#9aa1ae;--line:#323744;--soft:#252932;
+    --a:#6ba4ff;--b:#ffa24f;--rej:#ff7064;--ok:#4cc58c;--accent:#6ba4ff;}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{padding:26px 22px 8px;max-width:1280px;margin:0 auto;position:relative}
+.theme-btn{position:absolute;top:26px;right:22px;border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:7px 14px;border-radius:999px;font:inherit;font-size:.85rem;font-weight:600;cursor:pointer}
+.theme-btn:hover{border-color:var(--accent)}
+h1{margin:0 0 4px;font-size:1.65rem;letter-spacing:-.01em}
+header p{margin:0;color:var(--muted);max-width:760px}
+.tabs{display:flex;gap:6px;margin-top:16px;flex-wrap:wrap}
+.tab{border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:9px 16px;border-radius:999px;font:inherit;font-weight:600;cursor:pointer}
+.tab[aria-selected="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.tab:focus-visible,.theme-btn:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,summary:focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 55%,transparent);outline-offset:2px}
+main{max-width:1280px;margin:0 auto;padding:14px 22px 30px;display:grid;grid-template-columns:330px minmax(0,1fr);gap:18px;align-items:start}
+@media(max-width:940px){main{grid-template-columns:1fr}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 18px}
+.controls{position:sticky;top:10px}
+@media(max-width:940px){.controls{position:static}}
+.stack{display:flex;flex-direction:column;gap:18px;min-width:0}
+h2{margin:0 0 10px;font-size:1.02rem}
+h2 .n{display:inline-block;background:var(--soft);border-radius:6px;padding:0 7px;margin-right:6px;color:var(--muted);font-variant-numeric:tabular-nums}
+h3{margin:14px 0 6px;font-size:.78rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+button.pill{border:1px solid var(--line);background:var(--soft);color:var(--ink);padding:5px 11px;border-radius:8px;font:inherit;font-size:.85rem;cursor:pointer}
+button.pill:hover{border-color:var(--accent)}
+.sl{margin:9px 0}
+.sl label{display:flex;justify-content:space-between;font-size:.88rem}
+.sl output{font-family:var(--mono);font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--accent)}
+fieldset{border:0;padding:0;margin:0}
+select,textarea,input[type=number]{font:inherit;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:6px 8px;width:100%}
+textarea{font-family:var(--mono);font-size:.85rem;min-height:84px;resize:vertical}
+.opt{margin:8px 0}.opt>label{display:block;font-size:.85rem;color:var(--muted);margin-bottom:3px}
+.seg{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg label{flex:1;text-align:center;padding:6px 4px;font-size:.85rem;cursor:pointer;color:var(--ink);margin:0}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg input:checked+span{background:var(--accent);color:#fff}
+.seg span{display:block;padding:6px 4px;margin:-6px -4px}
+.seg input:focus-visible+span{outline:3px solid color-mix(in srgb,var(--accent) 55%,transparent);outline-offset:-3px}
+.truth{font-size:.85rem;background:var(--soft);border-radius:8px;padding:7px 10px;margin-top:10px;color:var(--muted)}
+.truth b{color:var(--ink);font-family:var(--mono)}
+.charts{display:grid;grid-template-columns:minmax(0,2.1fr) minmax(0,1fr);gap:14px}
+@media(max-width:700px){.charts{grid-template-columns:1fr}}
+svg{width:100%;height:auto;display:block;overflow:visible}
+svg text{fill:var(--muted);font:11px system-ui,sans-serif}
+svg .ax{stroke:var(--line)}
+svg .strong{fill:var(--ink)}
+.cap{font-size:.82rem;color:var(--muted);margin:6px 0 0}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:.82rem;color:var(--muted);margin-top:6px}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.stat{background:var(--soft);border-radius:10px;padding:9px 12px}
+.stat small{display:block;color:var(--muted);font-size:.75rem}
+.stat b{font:600 1.15rem var(--mono);font-variant-numeric:tabular-nums}
+.badge{display:inline-block;padding:3px 10px;border-radius:999px;font-weight:700;font-size:.82rem;color:#fff}
+.badge.sig{background:var(--ok)}.badge.ns{background:#7b8392}
+.interp{margin:12px 0 0}
+.apa{font-family:var(--mono);font-size:.88rem;background:var(--soft);padding:8px 10px;border-radius:8px;display:flex;justify-content:space-between;gap:10px;align-items:center;margin-top:10px}
+table{border-collapse:collapse;width:100%;font-size:.88rem}
+th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line)}
+th{font-weight:600;color:var(--muted);font-size:.78rem}
+td.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+tr.sel td{background:color-mix(in srgb,var(--accent) 10%,transparent)}
+.bar{height:14px;border-radius:4px;background:var(--a)}
+.err{color:var(--rej);font-weight:600}
+details{max-width:1280px;margin:0 auto 10px;padding:0 22px}
+details .panel{margin-top:8px}
+details summary{cursor:pointer;font-weight:600}
+code,.f{font-family:var(--mono);font-size:.88rem}
+footer{max-width:1280px;margin:0 auto;padding:6px 22px 30px;color:var(--muted);font-size:.82rem}
+dl.key{display:grid;grid-template-columns:max-content 1fr;gap:6px 16px;margin:0}dl.key dt{font-family:var(--mono);font-size:.88rem;font-weight:600}dl.key dd{margin:0;color:var(--muted)}
+[hidden]{display:none!important}
+canvas{width:100%;display:block;border:1px solid var(--line);border-radius:10px;background:var(--panel);touch-action:none}
+canvas.drag{cursor:crosshair}
+.charts{grid-template-columns:minmax(0,1fr)}
+.charts.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+@media(max-width:700px){.charts.two{grid-template-columns:1fr}}
+.chartcap{font-size:.8rem;color:var(--muted);margin:0 0 5px;font-weight:600}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 2px}
+button.pill[aria-pressed="true"]{border-color:var(--accent)}
+th.num,td.num{text-align:right}
+.scroll{overflow-x:auto}
+.sw-row{display:flex;align-items:center;gap:10px;margin:12px 0 4px;font-size:.88rem}
+.sw-row .lab{color:var(--muted);font-weight:600}
+.sw-row .lab.on{color:var(--ink)}
+button.sw{position:relative;flex:none;width:44px;height:24px;border-radius:12px;border:1px solid var(--line);background:var(--soft);padding:0;cursor:pointer;transition:background .2s,border-color .2s}
+button.sw::after{content:"";position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:var(--muted);transition:transform .2s,background .2s}
+button.sw[aria-checked="true"]{background:var(--accent);border-color:var(--accent)}
+button.sw[aria-checked="true"]::after{transform:translateX(20px);background:#fff}
+button.sw:focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 55%,transparent);outline-offset:2px}
+@media(max-width:600px){.theme-btn{position:static;display:block;margin:0 0 10px auto}}
 </style>
+</head>
+<body>
+<header>
+  <button class="theme-btn" id="themeBtn" type="button" aria-label="Switch between light and dark theme"></button>
+  <h1>Correlation Explorer</h1>
+  <p>Explore the <b>Pearson</b>, <b>Spearman</b>, <b>point-biserial</b> and <b>phi</b> correlation coefficients, and see how well a line predicts through the <b>standard error of estimate</b>. Drag points, change the sliders, switch tabs and watch each statistic respond.</p>
+  <div class="tabs" role="tablist" aria-label="Statistic">
+    <button class="tab" role="tab" id="tab-pearson" aria-selected="true">Pearson r</button>
+    <button class="tab" role="tab" id="tab-spearman" aria-selected="false">Spearman ρ</button>
+    <button class="tab" role="tab" id="tab-pb" aria-selected="false">Point-biserial</button>
+    <button class="tab" role="tab" id="tab-phi" aria-selected="false">Phi (φ)</button>
+    <button class="tab" role="tab" id="tab-see" aria-selected="false">Standard error of estimate</button>
+  </div>
+</header>
 
-<div class="ce-card">
-  <h2>Correlation Explorer</h2>
-  <p class="ce-note">Set a target correlation, drag points, click empty space to add a point, double-click a point to remove it. Watch how r changes.</p>
-</div>
+<main>
+  <aside class="panel controls" aria-label="Controls">
+    <h2>Setup</h2>
+    <div class="row" id="presets"></div>
 
-<div class="ce-card">
-  <div class="ce-row">
-    <div class="ce-ctl">
-      <label for="ce-r">Target correlation: <span id="ce-rv">0.70</span></label>
-      <input type="range" id="ce-r" min="-100" max="100" value="70">
+    <div data-tabs="pearson spearman see">
+      <h3>Data</h3>
+      <div class="sl"><label for="sc_r"><span>Target correlation</span><output id="o_sc_r"></output></label><input type="range" id="sc_r" min="-100" max="100" step="1"></div>
+      <div class="sl"><label for="sc_n"><span>Number of points</span><output id="o_sc_n"></output></label><input type="range" id="sc_n" min="5" max="200" step="1"></div>
+      <div class="sw-row"><span class="lab" id="swLin">Linear</span><button class="sw" id="shapeSw" type="button" role="switch" aria-checked="false" aria-label="Relationship shape: off is linear, on is monotonic"></button><span class="lab" id="swMono">Monotonic</span></div>
+      <div class="sl" id="curvWrap" hidden><label for="sc_curv"><span>Curvature</span><output id="o_sc_curv"></output></label><input type="range" id="sc_curv" min="0" max="100" step="1"></div>
+      <div class="row">
+        <button class="pill" id="scNew">New random sample</button>
+        <button class="pill" id="scOut">Add an outlier</button>
+        <button class="pill" id="scClear">Clear all points</button>
+      </div>
+      <div class="btnrow">
+        <button class="pill" id="tgLine" aria-pressed="true">Regression line: on</button>
+        <button class="pill" id="tgRes" aria-pressed="false" data-tabs="pearson see">Residuals: off</button>
+        <button class="pill" id="tgBand" aria-pressed="true" data-tabs="see">±1 SEE band: on</button>
+      </div>
+      <div class="sl" data-tabs="see"><label for="sc_px"><span>Predict Y at X =</span><output id="o_sc_px"></output></label><input type="range" id="sc_px" min="0" max="100" step="1"></div>
+      <p class="cap">Drag a point, click empty space to add one, double-click a point to remove it.</p>
     </div>
-    <div class="ce-ctl">
-      <label for="ce-n">Number of points: <span id="ce-nv">40</span></label>
-      <input type="range" id="ce-n" min="5" max="200" value="40">
-    </div>
-  </div>
-  <div style="margin-top:6px">
-    <button id="ce-new">New random sample</button>
-    <button id="ce-out">Add an outlier</button>
-    <button id="ce-line" aria-pressed="true">Regression line: on</button>
-    <button id="ce-res" aria-pressed="false">Residuals: off</button>
-    <button id="ce-clear">Clear all points</button>
-  </div>
-  <div>
-    <span class="ce-note">Anscombe's classic quartet (same r, very different pictures): </span>
-    <button data-pre="a1">Anscombe I</button>
-    <button data-pre="a2">II</button>
-    <button data-pre="a3">III</button>
-    <button data-pre="a4">IV</button>
-    <button data-pre="curve">Curved (r &asymp; 0)</button>
-  </div>
-</div>
 
-<div class="ce-card">
-  <canvas id="ce-cv" role="img" aria-label="Scatterplot of x and y with regression line. Points can be dragged."></canvas>
-  <div class="ce-stats" aria-live="polite">
-    <div class="ce-stat"><b id="ce-sr">-</b><span>Pearson r</span></div>
-    <div class="ce-stat"><b id="ce-sr2">-</b><span>r&sup2; (variance explained)</span></div>
-    <div class="ce-stat"><b id="ce-ssl">-</b><span>Slope</span></div>
-    <div class="ce-stat"><b id="ce-sic">-</b><span>Intercept</span></div>
-    <div class="ce-stat"><b id="ce-sn">-</b><span>n</span></div>
+    <div data-tabs="pb">
+      <h3>Groups (X coded 0 and 1)</h3>
+      <div class="sl"><label for="pb_d"><span>Group difference (d, in SDs)</span><output id="o_pb_d"></output></label><input type="range" id="pb_d" min="-2" max="2" step="0.1"></div>
+      <div class="sl"><label for="pb_sd"><span>SD within each group</span><output id="o_pb_sd"></output></label><input type="range" id="pb_sd" min="4" max="15" step="0.5"></div>
+      <div class="sl"><label for="pb_n0"><span>n in group 0</span><output id="o_pb_n0"></output></label><input type="range" id="pb_n0" min="3" max="100" step="1"></div>
+      <div class="sl"><label for="pb_n1"><span>n in group 1</span><output id="o_pb_n1"></output></label><input type="range" id="pb_n1" min="3" max="100" step="1"></div>
+      <div class="opt"><label><input type="checkbox" id="pb_exact"> Make the samples match the settings exactly</label></div>
+      <div class="row">
+        <button class="pill" id="pbNew">New random sample</button>
+        <button class="pill" id="pbClear">Clear all points</button>
+      </div>
+      <div class="truth" id="pbTruth"></div>
+      <p class="cap">Drag a point up or down, or sideways to change its group. Click empty space to add a point, double-click a point to remove it.</p>
+    </div>
+
+    <div data-tabs="phi">
+      <h3>Cell counts (X and Y each coded 0 and 1)</h3>
+      <div class="sl"><label for="ph_a"><span>X = 0, Y = 0 (a)</span><output id="o_ph_a"></output></label><input type="range" id="ph_a" min="0" max="300" step="1"></div>
+      <div class="sl"><label for="ph_b"><span>X = 0, Y = 1 (b)</span><output id="o_ph_b"></output></label><input type="range" id="ph_b" min="0" max="300" step="1"></div>
+      <div class="sl"><label for="ph_c"><span>X = 1, Y = 0 (c)</span><output id="o_ph_c"></output></label><input type="range" id="ph_c" min="0" max="300" step="1"></div>
+      <div class="sl"><label for="ph_d"><span>X = 1, Y = 1 (d)</span><output id="o_ph_d"></output></label><input type="range" id="ph_d" min="0" max="300" step="1"></div>
+      <div class="truth" id="phTruth"></div>
+    </div>
+
+    <div data-tabs="pearson spearman pb phi">
+      <h3>Test options</h3>
+      <div class="opt"><label for="alpha">Significance level α</label>
+        <select id="alpha"><option value="0.10">.10</option><option value="0.05" selected>.05</option><option value="0.01">.01</option><option value="0.001">.001</option></select></div>
+    </div>
+    <div data-tabs="see">
+      <h3>Interval options</h3>
+      <div class="opt"><label for="alphaSee">Prediction interval level</label>
+        <select id="alphaSee"><option value="0.10">90%</option><option value="0.05" selected>95%</option><option value="0.01">99%</option></select></div>
+    </div>
+  </aside>
+
+  <section class="stack">
+    <div class="panel" id="pData">
+      <h2><span class="n">1</span><span id="dataTitle">The data</span></h2>
+      <div id="msg" class="err" hidden></div>
+      <div class="charts" id="charts">
+        <div><p class="chartcap" id="capMain" hidden></p><canvas id="cvMain" class="drag" role="img"></canvas></div>
+        <div id="rankBox" hidden><p class="chartcap">Ranks (1 = lowest score)</p><canvas id="cvRank" role="img" aria-label="Scatterplot of the ranks of X against the ranks of Y"></canvas></div>
+      </div>
+      <p class="cap" id="dataCap"></p>
+    </div>
+
+    <div class="panel" id="p2sp" hidden>
+      <h2><span class="n">2</span>From scores to ranks</h2>
+      <div class="scroll"><table id="spTable"></table></div>
+      <p class="f" id="spFormula" style="margin:10px 0 0"></p>
+      <p class="cap">Each score is replaced by its rank within its own variable (tied scores share the average of their ranks). Spearman ρ is then simply Pearson r computed on the ranks.</p>
+    </div>
+
+    <div class="panel" id="p2pb" hidden>
+      <h2><span class="n">2</span>Same test, two names</h2>
+      <table id="pbTable"></table>
+      <p class="f" id="pbFormula" style="margin:10px 0 0"></p>
+      <p class="cap">Coding group membership 0/1 and correlating it with the scores gives exactly the same t and p as the pooled independent-measures t test. The correlation reports the <i>strength</i> of the group effect as a share of the variance; the t test reports its significance in standard-error units.</p>
+    </div>
+
+    <div class="panel" id="p2ph" hidden>
+      <h2><span class="n">2</span>The 2 × 2 table</h2>
+      <div class="scroll"><table id="phTable"></table></div>
+      <p class="f" id="phFormula" style="margin:10px 0 0"></p>
+      <h3>Proportion with Y = 1 in each group of X</h3>
+      <div id="phBars"></div>
+      <p class="cap">Phi is the Pearson correlation of two 0/1 variables. It reaches ±1 only when the two margins match; skewed margins cap how large it can be.</p>
+    </div>
+
+    <div class="panel" id="p2see" hidden>
+      <h2><span class="n">2</span>How much does the line help?</h2>
+      <p style="margin:0 0 8px">Without X, the best guess for every Y is the mean, and the typical miss is the SD of Y. With the regression line, the typical miss is the standard error of estimate:</p>
+      <p class="f" id="seeFormula" style="margin:0 0 10px"></p>
+      <div id="seeBars"></div>
+      <p class="cap" id="seeCap"></p>
+    </div>
+
+    <div class="panel" id="pRes" aria-live="polite">
+      <h2><span class="n">3</span>Result <span id="badge"></span></h2>
+      <div class="stats" id="stats"></div>
+      <p class="interp" id="interp"></p>
+      <div class="apa" id="apaRow"><span id="apa"></span><button class="pill" id="copy">Copy</button></div>
+    </div>
+  </section>
+</main>
+
+<details>
+  <summary>Formulas used</summary>
+  <div class="panel">
+    <p><b>Pearson r.</b> <span class="f">r = SP / √(SS<sub>X</sub>·SS<sub>Y</sub>)</span>, where <span class="f">SP = Σ(X − M<sub>X</sub>)(Y − M<sub>Y</sub>)</span>. Slope <span class="f">b = SP/SS<sub>X</sub></span>, intercept <span class="f">a = M<sub>Y</sub> − b·M<sub>X</sub></span>.</p>
+    <ul>
+      <li>Test of H₀: ρ = 0: <span class="f">t = r·√(n − 2) / √(1 − r²)</span>, <span class="f">df = n − 2</span>. Effect size: <span class="f">r²</span>.</li>
+    </ul>
+    <p><b>Spearman ρ.</b> Rank X and Y separately (ties get the mean of their ranks), then compute Pearson r on the ranks.</p>
+    <ul>
+      <li>Without ties, <span class="f">ρ = 1 − 6·Σd² / (n(n² − 1))</span>, where d is the difference between a point's two ranks.</li>
+      <li>The same t statistic with df = n − 2 gives the usual approximate p-value (reasonable for roughly n ≥ 10).</li>
+    </ul>
+    <p><b>Point-biserial r.</b> Code the two groups 0 and 1 and compute Pearson r with the numerical scores.</p>
+    <ul>
+      <li><span class="f">r<sub>pb</sub> = (M₁ − M₀)/s<sub>Y</sub> · √(p·q)</span>, with p and q the proportions in each group and s<sub>Y</sub> the SD of all scores (divisor n).</li>
+      <li><span class="f">t = r·√(n − 2)/√(1 − r²)</span> equals the pooled independent-measures t, and <span class="f">r = t/√(t² + df)</span>.</li>
+    </ul>
+    <p><b>Phi (φ).</b> For a 2 × 2 table with cells a, b (row X = 0) and c, d (row X = 1):</p>
+    <ul>
+      <li><span class="f">φ = (ad − bc) / √[(a+b)(c+d)(a+c)(b+d)]</span>, which is Pearson r on the 0/1 codes.</li>
+      <li><span class="f">χ² = n·φ²</span> with df = 1; <span class="f">p = erfc(√(χ²/2))</span>.</li>
+      <li>Largest possible |φ| given the margins: <span class="f">√[p<sub>lo</sub>(1 − p<sub>hi</sub>) / (p<sub>hi</sub>(1 − p<sub>lo</sub>))]</span>, where p<sub>lo</sub> and p<sub>hi</sub> are the smaller and larger of P(X = 1) and P(Y = 1).</li>
+    </ul>
+    <p><b>Standard error of estimate.</b> <span class="f">SS<sub>residual</sub> = Σ(Y − Ŷ)² = SS<sub>Y</sub>(1 − r²)</span>, and</p>
+    <ul>
+      <li><span class="f">SEE = √(SS<sub>residual</sub> / (n − 2)) = s<sub>Y</sub>·√(1 − r²)·√((n − 1)/(n − 2))</span>.</li>
+      <li>Prediction interval for a new case at X = x: <span class="f">Ŷ ± t<sub>crit</sub>·SEE·√(1 + 1/n + (x − M<sub>X</sub>)²/SS<sub>X</sub>)</span>, with df = n − 2.</li>
+    </ul>
+    <p>p-values come from the exact t distribution (regularised incomplete beta function) and, for φ, the χ² distribution with 1 df. Everything runs in your browser; nothing is uploaded.</p>
   </div>
-  <div class="ce-msg" id="ce-msg"></div>
-  <p class="ce-note" style="margin-top:8px">Remember: correlation measures <i>linear</i> association only, and it does not show causation.</p>
-  <button id="ce-keybtn" class="ce-sw" role="switch" aria-checked="false" aria-controls="ce-key"><span class="ce-track" aria-hidden="true"></span><span>Show key</span></button>
-  <div class="ce-key" id="ce-key" hidden>
-    <dl>
-      <dt>r (Pearson correlation)</dt>
-      <dd>Strength and direction of the straight-line relationship, from &minus;1 (perfect negative) through 0 (none) to +1 (perfect positive).</dd>
-      <dt>r&sup2;</dt>
-      <dd>The share of variation in Y that is linearly associated with X (r multiplied by itself).</dd>
-      <dt>Slope</dt>
-      <dd>How much Y is predicted to change for each 1-unit increase in X.</dd>
-      <dt>Intercept</dt>
-      <dd>The predicted value of Y when X equals 0.</dd>
-      <dt>n</dt>
-      <dd>The number of points (observations) in the plot.</dd>
-      <dt>Target correlation</dt>
-      <dd>The r the random sample is generated to match. Dragging or adding points changes the actual r.</dd>
-      <dt>Regression line (red)</dt>
-      <dd>The best-fit straight line, which minimizes the squared vertical distances to the points.</dd>
-      <dt>Residual</dt>
-      <dd>The vertical gap between a point and the regression line, shown as thin red segments.</dd>
-      <dt>Outlier</dt>
-      <dd>A point far from the overall pattern. One can shift r substantially, especially in small samples.</dd>
-      <dt>Leverage point</dt>
-      <dd>A point with an extreme X value that can pull the line toward itself (see Anscombe IV).</dd>
-      <dt>Linear association</dt>
-      <dd>A relationship that follows a straight line. Curved patterns can be strong yet still produce r near 0.</dd>
+</details>
+<details id="keyBox">
+  <summary>Key: symbols and terms</summary>
+  <div class="panel">
+    <dl class="key">
+      <dt>r</dt><dd>Pearson correlation: the strength and direction of the straight-line relationship, from −1 (perfect negative) through 0 (none) to +1 (perfect positive).</dd>
+      <dt>r²</dt><dd>The share of variation in Y that is linearly associated with X (r multiplied by itself).</dd>
+      <dt>ρ, r<sub>s</sub></dt><dd>Spearman correlation: Pearson r computed on ranks. It measures how consistently Y moves in one direction as X increases, straight line or not (a monotonic relationship).</dd>
+      <dt>r<sub>pb</sub></dt><dd>Point-biserial correlation: Pearson r between a numerical score and a two-valued (0/1) variable such as group membership.</dd>
+      <dt>φ</dt><dd>Phi coefficient: Pearson r between two 0/1 variables, i.e. the strength of association in a 2 × 2 table.</dd>
+      <dt>χ²</dt><dd>Chi-square statistic. For a 2 × 2 table, χ² = n·φ², evaluated with df = 1.</dd>
+      <dt>SEE</dt><dd>Standard error of estimate: the typical size of the vertical miss between actual Y values and the regression line, in Y units. Smaller SEE means better predictions.</dd>
+      <dt>Residual</dt><dd>The vertical gap between a point and the regression line (Y − Ŷ), shown as thin red segments.</dd>
+      <dt>Ŷ</dt><dd>The value of Y predicted from X by the regression line.</dd>
+      <dt>Prediction interval</dt><dd>The range likely to contain the Y of a single new case at a given X. It is wider than ±1 SEE and widens away from the mean of X.</dd>
+      <dt>Slope, intercept</dt><dd>How much Y is predicted to change per 1-unit increase in X, and the predicted Y when X is 0.</dd>
+      <dt>Rank</dt><dd>A score's position when the scores are ordered from lowest (1) to highest (n). Tied scores share the average rank.</dd>
+      <dt>Monotonic</dt><dd>A relationship that goes in one direction only (always rising or always falling) but need not be a straight line.</dd>
+      <dt>Coding (0/1)</dt><dd>Labelling the two categories of a variable 0 and 1 so that it can be correlated. Swapping the codes flips the sign of r<sub>pb</sub> and φ but not their size.</dd>
+      <dt>Margins</dt><dd>The row and column totals of a 2 × 2 table. Unequal margins limit how large φ can be.</dd>
+      <dt>n, df</dt><dd>Number of observations, and degrees of freedom (n − 2 for r, ρ, r<sub>pb</sub> and SEE; 1 for the χ² test of φ).</dd>
+      <dt>t, p</dt><dd>Test statistic for H₀: the population correlation is 0, and the probability of a result at least this extreme if H₀ were true. It is not the probability that H₀ is true.</dd>
+      <dt>α</dt><dd>Significance level: the false-positive rate you accept. The result is significant when p &lt; α.</dd>
+      <dt>Outlier</dt><dd>A point far from the overall pattern. One can shift r substantially, especially in small samples, while ranks (Spearman) are far less affected.</dd>
+      <dt>Leverage point</dt><dd>A point with an extreme X value that can pull the line toward itself (see Anscombe IV).</dd>
+      <dt>Seed</dt><dd>The number that fixes the random generator, so the same seed reproduces the same simulated sample.</dd>
     </dl>
   </div>
-</div>
+</details>
+<footer>Single-file, dependency-free demo. Simulated data are drawn from normal distributions with a seeded random generator, so a given seed is reproducible. Correlation measures association, not causation.</footer>
 
 <script>
-(function(){
-  var $=function(id){return document.getElementById(id)};
-  var cv=$('ce-cv'),ctx=cv.getContext('2d');
-  var pts=[],showLine=true,showRes=false,drag=-1,seed=7,W=700,H=480,PAD=42,label='';
+"use strict";
+/* ============ Statistics core ============ */
+function lgamma(x){
+  const c=[76.18009172947146,-86.50532032941677,24.01409824083091,-1.231739572450155,0.1208650973866179e-2,-0.5395239384953e-5];
+  let y=x,t=x+5.5; t-=(x+0.5)*Math.log(t); let s=1.000000000190015;
+  for(let j=0;j<6;j++){y+=1;s+=c[j]/y;}
+  return -t+Math.log(2.5066282746310005*s/x);
+}
+function betacf(a,b,x){
+  const FP=1e-300,EPS=3e-14,qab=a+b,qap=a+1,qam=a-1;
+  let c=1,d=1-qab*x/qap; if(Math.abs(d)<FP)d=FP; d=1/d; let h=d;
+  for(let m=1;m<=300;m++){
+    const m2=2*m; let aa=m*(b-m)*x/((qam+m2)*(a+m2));
+    d=1+aa*d; if(Math.abs(d)<FP)d=FP; c=1+aa/c; if(Math.abs(c)<FP)c=FP; d=1/d; h*=d*c;
+    aa=-(a+m)*(qab+m)*x/((a+m2)*(qap+m2));
+    d=1+aa*d; if(Math.abs(d)<FP)d=FP; c=1+aa/c; if(Math.abs(c)<FP)c=FP; d=1/d;
+    const del=d*c; h*=del; if(Math.abs(del-1)<EPS)break;
+  }
+  return h;
+}
+function ibeta(x,a,b){
+  if(x<=0)return 0; if(x>=1)return 1;
+  const bt=Math.exp(lgamma(a+b)-lgamma(a)-lgamma(b)+a*Math.log(x)+b*Math.log(1-x));
+  return x<(a+1)/(a+b+2)?bt*betacf(a,b,x)/a:1-bt*betacf(b,a,1-x)/b;
+}
+function pTwo(t,df){ return isFinite(t)?ibeta(df/(df+t*t),df/2,0.5):0; }
+function tCrit(tailProb,df){
+  let lo=0,hi=1e5; for(let i=0;i<90;i++){const mid=(lo+hi)/2; if(pTwo(mid,df)>2*tailProb)lo=mid;else hi=mid;} return (lo+hi)/2;
+}
+function erfc(x){const z=Math.abs(x),t=1/(1+0.5*z);const r=t*Math.exp(-z*z-1.26551223+t*(1.00002368+t*(0.37409196+t*(0.09678418+t*(-0.18628806+t*(0.27886807+t*(-1.13520398+t*(1.48851587+t*(-0.82215223+t*0.17087277)))))))));return x>=0?r:2-r;}
+const mean=a=>a.reduce((s,v)=>s+v,0)/a.length;
+function vari(a){const m=mean(a);return a.reduce((s,v)=>s+(v-m)*(v-m),0)/(a.length-1);}
 
-  function rng(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
-  function gauss(r){var u=0,v;while(!u)u=r();v=r();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)}
-  function mean(a){var s=0;for(var i=0;i<a.length;i++)s+=a[i];return s/a.length}
-  function zs(a){var m=mean(a),s=0,i;for(i=0;i<a.length;i++)s+=(a[i]-m)*(a[i]-m);s=Math.sqrt(s/a.length)||1;return a.map(function(v){return(v-m)/s})}
-  function clamp(v){return Math.max(0,Math.min(100,v))}
+/* linear fit and correlation of two numeric arrays */
+function lin(xs,ys){
+  const n=xs.length; if(n<2)return null;
+  const mx=mean(xs),my=mean(ys); let sxx=0,syy=0,sxy=0;
+  for(let i=0;i<n;i++){const dx=xs[i]-mx,dy=ys[i]-my;sxx+=dx*dx;syy+=dy*dy;sxy+=dx*dy;}
+  const ok=sxx>1e-12&&syy>1e-12;
+  return{n,mx,my,sxx,syy,sxy,ok,r:ok?sxy/Math.sqrt(sxx*syy):NaN,slope:sxx>1e-12?sxy/sxx:NaN,ic:sxx>1e-12?my-sxy/sxx*mx:NaN};
+}
+/* t test of a correlation: H0 rho = 0 */
+function rTest(r,n){
+  const df=n-2; if(df<1||!isFinite(r))return null;
+  if(Math.abs(r)>=1)return{t:r>0?Infinity:-Infinity,df,p:0};
+  const t=r*Math.sqrt(df/(1-r*r)); return{t,df,p:pTwo(t,df)};
+}
+/* ranks with ties averaged; ties = number of values involved in a tie */
+function ranks(a){
+  const idx=a.map((v,i)=>i).sort((i,j)=>a[i]-a[j]),r=new Array(a.length);let i=0,ties=0;
+  while(i<idx.length){let j=i;while(j+1<idx.length&&a[idx[j+1]]===a[idx[i]])j++;
+    const rk=(i+j)/2+1;for(let k=i;k<=j;k++)r[idx[k]]=rk;if(j>i)ties+=j-i+1;i=j+1;}
+  return{r,ties};
+}
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function normalGen(rng){let spare=null;return function(){if(spare!==null){const s=spare;spare=null;return s;}let u=0,v=0;while(u===0)u=rng();v=rng();const m=Math.sqrt(-2*Math.log(u));spare=m*Math.sin(2*Math.PI*v);return m*Math.cos(2*Math.PI*v);};}
+function stdz(z){const m=mean(z),s=Math.sqrt(vari(z));return z.map(v=>(v-m)/s);}
+function stdzPop(z){const m=mean(z);let s=0;for(const v of z)s+=(v-m)*(v-m);s=Math.sqrt(s/z.length)||1;return z.map(v=>(v-m)/s);}
+const clamp=v=>Math.max(0,Math.min(100,v));
 
-  function generate(){
-    var r=rng(seed),n=+$('ce-n').value,tr=+$('ce-r').value/100,x=[],e=[],i;
-    for(i=0;i<n;i++){x.push(gauss(r));e.push(gauss(r))}
-    x=zs(x);e=zs(e);
-    var d=0;for(i=0;i<n;i++)d+=x[i]*e[i];d/=n;
-    e=zs(e.map(function(v,k){return v-d*x[k]}));
-    pts=[];
+/* ============ Formatting ============ */
+const $=id=>document.getElementById(id);
+const f=(x,d=2)=>isFinite(x)?x.toFixed(d).replace('-','−'):(x>0?'∞':x<0?'−∞':'–');
+const fr=(x,d=2)=>isFinite(x)?x.toFixed(d).replace(/^(-?)0\./,'$1.').replace('-','−'):'–';
+const fp=p=>p<0.001?'< .001':p.toFixed(3).replace(/^0/,'');
+const tk=v=>(+v.toFixed(6)).toString().replace('-','−');
+function strength(a){return a<0.1?'negligible':a<0.3?'weak':a<0.5?'moderate':a<0.7?'fairly strong':a<0.9?'strong':'very strong';}
+function ticks(lo,hi,n=6){const raw=(hi-lo)/n,mag=Math.pow(10,Math.floor(Math.log10(raw))),nm=raw/mag,step=(nm<1.5?1:nm<3?2:nm<7?5:10)*mag,out=[];for(let v=Math.ceil(lo/step-1e-9)*step;v<=hi+1e-9;v+=step)out.push(+v.toPrecision(12));return out;}
+const col=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+/* ============ State ============ */
+const S={tab:'pearson',seed:7,tr:70,n:40,showLine:true,showRes:false,showBand:true,mono:false,curv:50,px:50,alpha:0.05,alphaSee:0.05,
+  pb:{d:0.8,sd:10,n0:25,n1:25,seed:3,exact:true},
+  ph:{a:30,b:20,c:20,d:30}};
+let pts=[],pbPts=[],label='',drag=-1;
+const TABS=['pearson','spearman','pb','phi','see'];
+const SC=t=>t==='pearson'||t==='spearman'||t==='see';
+
+/* ============ Data generation ============ */
+function generate(){
+  const r=mulberry32(S.seed*7919+13),g=normalGen(r),n=S.n,tr=S.tr/100;
+  let x=[],e=[],i;
+  for(i=0;i<n;i++){x.push(g());e.push(g());}
+  x=stdzPop(x);e=stdzPop(e);
+  let d=0;for(i=0;i<n;i++)d+=x[i]*e[i];d/=n;
+  e=stdzPop(e.map((v,k)=>v-d*x[k]));
+  const yy=[];
+  for(i=0;i<n;i++)yy.push(tr*x[i]+Math.sqrt(1-tr*tr)*e[i]);
+  pts=[];
+  if(S.mono){
+    /* bend Y with an increasing curve: ranks are unchanged, so rho holds while r falls */
+    const lo=Math.min(...yy),hi=Math.max(...yy),k=S.curv*0.055;
     for(i=0;i<n;i++){
-      var y=tr*x[i]+Math.sqrt(1-tr*tr)*e[i];
-      pts.push({x:clamp(50+15*x[i]),y:clamp(50+15*y)});
+      const u=(yy[i]-lo)/((hi-lo)||1),gu=k<1e-6?u:(Math.exp(k*u)-1)/(Math.exp(k)-1);
+      pts.push({x:clamp(50+15*x[i]),y:clamp(4+92*gu)});
     }
+    label='Monotonic curve: Y always moves in one direction as X increases, but not along a straight line. Raise the curvature and watch r fall while ρ holds steady.';
+  }else{
+    for(i=0;i<n;i++)pts.push({x:clamp(50+15*x[i]),y:clamp(50+15*yy[i])});
     label='';
   }
+}
+function genPb(){
+  const q=S.pb,rng=mulberry32(q.seed*7919+11),g=normalGen(rng);
+  const z0=[],z1=[];for(let i=0;i<q.n0;i++)z0.push(g());for(let i=0;i<q.n1;i++)z1.push(g());
+  const a=q.exact?stdz(z0):z0,b=q.exact?stdz(z1):z1,delta=q.d*q.sd,m0=50-delta/2,m1=50+delta/2;
+  pbPts=[];
+  a.forEach(z=>pbPts.push({g:0,y:clamp(m0+q.sd*z),j:rng()*2-1}));
+  b.forEach(z=>pbPts.push({g:1,y:clamp(m1+q.sd*z),j:rng()*2-1}));
+  label='';
+}
+const AX=[10,8,13,9,11,14,6,4,12,7,5];
+const ANS={
+  a1:{x:AX,y:[8.04,6.95,7.58,8.81,8.33,9.96,7.24,4.26,10.84,4.82,5.68],t:'Anscombe I: a typical linear relationship.'},
+  a2:{x:AX,y:[9.14,8.14,8.74,8.77,9.26,8.10,6.13,3.10,9.13,7.26,4.74],t:'Anscombe II: a clear curve, yet r is about the same as in I.'},
+  a3:{x:AX,y:[7.46,6.77,12.74,7.11,7.81,8.84,6.08,5.39,8.15,6.42,5.73],t:'Anscombe III: a perfect line plus one outlier, which pulls r down (ranks are less affected).'},
+  a4:{x:[8,8,8,8,8,8,8,19,8,8,8],y:[6.58,5.76,7.71,8.84,8.47,7.04,5.25,12.5,5.56,7.91,6.89],t:'Anscombe IV: a single leverage point creates the entire correlation.'}
+};
+function anscombe(k){const p=ANS[k];pts=p.x.map((v,i)=>({x:v*5,y:p.y[i]*7}));label=p.t;}
+function curved(){
+  const r=mulberry32(S.seed*31+5),g=normalGen(r);pts=[];
+  for(let i=0;i<40;i++){const x=5+r()*90,y=clamp(92-(x-50)*(x-50)/28+g()*4);pts.push({x,y});}
+  label='Curved: a strong relationship exists, but r (and ρ) are near zero because it is not monotonic.';
+}
+function rounded(){
+  generate();
+  pts=pts.map(p=>({x:Math.round(p.x/100*6)/6*100,y:Math.round(p.y/100*6)/6*100}));
+  label='Rounded ratings (7 levels): many scores are tied and share average ranks; points overlap on the plot.';
+}
 
-  function stats(){
-    var n=pts.length;if(n<2)return null;
-    var mx=mean(pts.map(function(p){return p.x})),my=mean(pts.map(function(p){return p.y}));
-    var sxx=0,syy=0,sxy=0;
-    pts.forEach(function(p){sxx+=(p.x-mx)*(p.x-mx);syy+=(p.y-my)*(p.y-my);sxy+=(p.x-mx)*(p.y-my)});
-    if(sxx===0||syy===0)return{n:n,r:NaN,slope:NaN,ic:NaN};
-    var r=sxy/Math.sqrt(sxx*syy),sl=sxy/sxx;
-    return{n:n,r:r,slope:sl,ic:my-sl*mx};
-  }
-
-  function tx(v){return PAD+v/100*(W-PAD-14)}
-  function ty(v){return H-PAD-v/100*(H-PAD-14)}
-  function fx(px){return(px-PAD)/(W-PAD-14)*100}
-  function fy(py){return(H-PAD-py)/(H-PAD-14)*100}
-
-  function resize(){
-    var w=cv.parentNode.clientWidth||700,dpr=window.devicePixelRatio||1;
-    W=w;H=Math.round(Math.min(480,w*0.72));
-    cv.width=W*dpr;cv.height=H*dpr;cv.style.height=H+'px';
-    ctx.setTransform(dpr,0,0,dpr,0,0);draw();
-  }
-
-  function draw(){
-    ctx.clearRect(0,0,W,H);
-    ctx.font='11px system-ui,sans-serif';ctx.textAlign='center';ctx.textBaseline='top';
-    var t;
-    for(t=0;t<=100;t+=20){
-      ctx.strokeStyle='#e4e9ee';ctx.lineWidth=1;
-      ctx.beginPath();ctx.moveTo(tx(t),ty(0));ctx.lineTo(tx(t),ty(100));ctx.stroke();
-      ctx.beginPath();ctx.moveTo(tx(0),ty(t));ctx.lineTo(tx(100),ty(t));ctx.stroke();
-      ctx.fillStyle='#7b8794';ctx.fillText(t,tx(t),ty(0)+5);
-      ctx.textAlign='right';ctx.textBaseline='middle';ctx.fillText(t,tx(0)-6,ty(t));
-      ctx.textAlign='center';ctx.textBaseline='top';
-    }
-    ctx.strokeStyle='#9aa5b1';ctx.strokeRect(tx(0),ty(100),tx(100)-tx(0),ty(0)-ty(100));
-    ctx.fillStyle='#52606d';ctx.fillText('X',tx(50),H-16);
-    ctx.save();ctx.translate(12,ty(50));ctx.rotate(-Math.PI/2);ctx.fillText('Y',0,0);ctx.restore();
-
-    var s=stats();
-    if(s&&isFinite(s.r)){
-      if(showRes){
-        ctx.strokeStyle='rgba(197,48,48,.45)';ctx.lineWidth=1;
-        pts.forEach(function(p){
-          var yh=s.ic+s.slope*p.x;
-          ctx.beginPath();ctx.moveTo(tx(p.x),ty(p.y));ctx.lineTo(tx(p.x),ty(clamp(yh)));ctx.stroke();
-        });
-      }
-      if(showLine){
-        var x0=0,x1=100,y0=s.ic,y1=s.ic+s.slope*100;
-        ctx.save();ctx.beginPath();ctx.rect(tx(0),ty(100),tx(100)-tx(0),ty(0)-ty(100));ctx.clip();
-        ctx.strokeStyle='#c53030';ctx.lineWidth=2.5;
-        ctx.beginPath();ctx.moveTo(tx(x0),ty(y0));ctx.lineTo(tx(x1),ty(y1));ctx.stroke();ctx.restore();
-      }
-    }
-    pts.forEach(function(p,i){
-      ctx.beginPath();ctx.arc(tx(p.x),ty(p.y),i===drag?7:5,0,6.2832);
-      ctx.fillStyle=i===drag?'#dd6b20':'rgba(43,108,176,.8)';ctx.fill();
-      ctx.strokeStyle='#fff';ctx.lineWidth=1.2;ctx.stroke();
-    });
-    readout(s);
-  }
-
-  function strength(a){
-    return a<0.1?'negligible':a<0.3?'weak':a<0.5?'moderate':a<0.7?'fairly strong':a<0.9?'strong':'very strong';
-  }
-
-  function readout(s){
-    var ok=s&&isFinite(s.r);
-    $('ce-sr').textContent=ok?s.r.toFixed(3):'-';
-    $('ce-sr2').textContent=ok?(s.r*s.r*100).toFixed(1)+'%':'-';
-    $('ce-ssl').textContent=ok?s.slope.toFixed(3):'-';
-    $('ce-sic').textContent=ok?s.ic.toFixed(2):'-';
-    $('ce-sn').textContent=pts.length;
-    var m;
-    if(!ok){m='Add at least two points that vary in both X and Y.'}
-    else{
-      var a=Math.abs(s.r);
-      m='This is a <b>'+strength(a)+' '+(a<0.1?'':s.r>0?'positive ':'negative ')+'linear relationship</b>. '+
-        (a<0.1?'X tells you almost nothing about Y in a straight-line sense. ':
-        (s.r>0?'As X increases, Y tends to increase. ':'As X increases, Y tends to decrease. '))+
-        'About '+(s.r*s.r*100).toFixed(0)+'% of the variation in Y is linearly associated with X.';
-      if(pts.length<15)m+=' <i>With so few points, r can swing a lot from a single point, so try dragging one.</i>';
-    }
-    if(label)m='<b>'+label+'</b><br>'+m;
-    $('ce-msg').innerHTML=m;
-  }
-
-  function pos(e){var b=cv.getBoundingClientRect();return{x:e.clientX-b.left,y:e.clientY-b.top}}
-  function nearest(m){
-    var best=-1,bd=14*14;
-    pts.forEach(function(p,i){var dx=tx(p.x)-m.x,dy=ty(p.y)-m.y,d=dx*dx+dy*dy;if(d<bd){bd=d;best=i}});
-    return best;
-  }
-
-  cv.addEventListener('pointerdown',function(e){
-    var m=pos(e),i=nearest(m);
-    if(i>=0){drag=i;cv.setPointerCapture(e.pointerId)}
-    else{
-      var x=fx(m.x),y=fy(m.y);
-      if(x>=0&&x<=100&&y>=0&&y<=100){pts.push({x:x,y:y});label=''}
-    }
-    draw();
-  });
-  cv.addEventListener('pointermove',function(e){
-    if(drag<0)return;
-    var m=pos(e);pts[drag].x=clamp(fx(m.x));pts[drag].y=clamp(fy(m.y));label='';draw();
-  });
-  function up(){if(drag>=0){drag=-1;draw()}}
-  cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
-  cv.addEventListener('dblclick',function(e){
-    var i=nearest(pos(e));
-    if(i>=0){pts.splice(i,1);drag=-1;draw()}
-  });
-
-  $('ce-r').addEventListener('input',function(){$('ce-rv').textContent=(this.value/100).toFixed(2);generate();draw()});
-  $('ce-n').addEventListener('input',function(){$('ce-nv').textContent=this.value;generate();draw()});
-  $('ce-new').addEventListener('click',function(){seed=Math.floor(Math.random()*1e6);generate();draw()});
-  $('ce-out').addEventListener('click',function(){
-    var s=stats(),tr=s&&isFinite(s.r)?s.r:0;
-    pts.push(tr>=0?{x:92,y:6}:{x:92,y:94});
-    label='Outlier added: notice how much one point moves r.';draw();
-  });
-  $('ce-line').addEventListener('click',function(){
-    showLine=!showLine;this.textContent='Regression line: '+(showLine?'on':'off');this.setAttribute('aria-pressed',showLine);draw();
-  });
-  $('ce-res').addEventListener('click',function(){
-    showRes=!showRes;this.textContent='Residuals: '+(showRes?'on':'off');this.setAttribute('aria-pressed',showRes);draw();
-  });
-  $('ce-keybtn').addEventListener('click',function(){
-    var k=$('ce-key'),open=k.hasAttribute('hidden');
-    if(open){k.removeAttribute('hidden')}else{k.setAttribute('hidden','')}
-    this.setAttribute('aria-checked',open);
-  });
-  $('ce-clear').addEventListener('click',function(){pts=[];label='';draw()});
-
-  var AX=[10,8,13,9,11,14,6,4,12,7,5];
-  var PRE={
-    a1:{x:AX,y:[8.04,6.95,7.58,8.81,8.33,9.96,7.24,4.26,10.84,4.82,5.68],t:'Anscombe I: a typical linear relationship.'},
-    a2:{x:AX,y:[9.14,8.14,8.74,8.77,9.26,8.10,6.13,3.10,9.13,7.26,4.74],t:'Anscombe II: a clear curve, yet r is about the same as in I.'},
-    a3:{x:AX,y:[7.46,6.77,12.74,7.11,7.81,8.84,6.08,5.39,8.15,6.42,5.73],t:'Anscombe III: a perfect line plus one outlier, which pulls r down.'},
-    a4:{x:[8,8,8,8,8,8,8,19,8,8,8],y:[6.58,5.76,7.71,8.84,8.47,7.04,5.25,12.5,5.56,7.91,6.89],t:'Anscombe IV: a single leverage point creates the entire correlation.'}
+/* ============ Canvas plots ============ */
+function mkPlot(cv){
+  const P={cv,ctx:cv.getContext('2d'),W:600,H:420,l:48,r:14,t:12,b:44,o:{xr:[0,100],yr:[0,100]},dpr:1};
+  P.X=v=>P.l+(v-P.o.xr[0])/(P.o.xr[1]-P.o.xr[0])*(P.W-P.l-P.r);
+  P.Y=v=>P.H-P.b-(v-P.o.yr[0])/(P.o.yr[1]-P.o.yr[0])*(P.H-P.b-P.t);
+  P.iX=px=>P.o.xr[0]+(px-P.l)/(P.W-P.l-P.r)*(P.o.xr[1]-P.o.xr[0]);
+  P.iY=py=>P.o.yr[0]+(P.H-P.b-py)/(P.H-P.b-P.t)*(P.o.yr[1]-P.o.yr[0]);
+  P.size=function(){
+    const w=Math.round(cv.getBoundingClientRect().width); if(!w)return;
+    const dpr=window.devicePixelRatio||1,h=Math.round(Math.min(440,Math.max(260,w*0.72)));
+    if(w===P.W&&h===P.H&&dpr===P.dpr&&cv.width)return;
+    P.W=w;P.H=h;P.dpr=dpr;cv.width=w*dpr;cv.height=h*dpr;cv.style.height=h+'px';P.ctx.setTransform(dpr,0,0,dpr,0,0);
   };
-  Array.prototype.forEach.call(document.querySelectorAll('#ce-root [data-pre]'),function(b){
-    b.addEventListener('click',function(){
-      var k=this.getAttribute('data-pre');
-      if(k==='curve'){
-        var r=rng(seed),i;pts=[];
-        for(i=0;i<40;i++){var x=5+r()*90,y=clamp(92-(x-50)*(x-50)/28+gauss(r)*4);pts.push({x:x,y:y})}
-        label='Curved: a strong relationship exists, but r is near zero because it is not linear.';
-      }else{
-        var p=PRE[k];pts=p.x.map(function(v,i){return{x:v*5,y:p.y[i]*7}});label=p.t;
-      }
-      draw();
-    });
-  });
+  P.frame=function(){
+    P.size();
+    const c=P.ctx,o=P.o,lineC=col('--line'),mut=col('--muted');
+    c.setTransform(P.dpr,0,0,P.dpr,0,0);c.clearRect(0,0,P.W,P.H);
+    c.font='11px system-ui,sans-serif';c.lineWidth=1;
+    const xt=o.xt||ticks(o.xr[0],o.xr[1],5),yt=o.yt||ticks(o.yr[0],o.yr[1],5);
+    xt.forEach(v=>{c.strokeStyle=lineC;c.beginPath();c.moveTo(P.X(v),P.Y(o.yr[0]));c.lineTo(P.X(v),P.Y(o.yr[1]));c.stroke();
+      c.fillStyle=mut;c.textAlign='center';c.textBaseline='top';c.fillText(o.xf?o.xf(v):tk(v),P.X(v),P.Y(o.yr[0])+6);});
+    yt.forEach(v=>{c.strokeStyle=lineC;c.beginPath();c.moveTo(P.X(o.xr[0]),P.Y(v));c.lineTo(P.X(o.xr[1]),P.Y(v));c.stroke();
+      c.fillStyle=mut;c.textAlign='right';c.textBaseline='middle';c.fillText(o.yf?o.yf(v):tk(v),P.l-7,P.Y(v));});
+    c.strokeStyle=mut;c.strokeRect(P.X(o.xr[0]),P.Y(o.yr[1]),P.X(o.xr[1])-P.X(o.xr[0]),P.Y(o.yr[0])-P.Y(o.yr[1]));
+    c.fillStyle=mut;c.textAlign='center';c.textBaseline='bottom';c.fillText(o.xl||'X',P.l+(P.W-P.l-P.r)/2,P.H-4);
+    c.save();c.translate(12,P.t+(P.H-P.t-P.b)/2);c.rotate(-Math.PI/2);c.textBaseline='top';c.fillText(o.yl||'Y',0,-4);c.restore();
+  };
+  P.clip=function(fn){const c=P.ctx;c.save();c.beginPath();c.rect(P.X(P.o.xr[0]),P.Y(P.o.yr[1]),P.X(P.o.xr[1])-P.X(P.o.xr[0]),P.Y(P.o.yr[0])-P.Y(P.o.yr[1]));c.clip();fn(c);c.restore();};
+  P.dot=function(x,y,color,rad,alpha){const c=P.ctx;c.globalAlpha=alpha==null?.8:alpha;c.beginPath();c.arc(x,y,rad,0,6.2832);c.fillStyle=color;c.fill();c.globalAlpha=1;c.strokeStyle=col('--panel');c.lineWidth=1.2;c.stroke();};
+  P.line=function(x0,y0,x1,y1,color,w,dash,alpha){const c=P.ctx;c.save();c.globalAlpha=alpha==null?1:alpha;c.strokeStyle=color;c.lineWidth=w;if(dash)c.setLineDash(dash);c.beginPath();c.moveTo(x0,y0);c.lineTo(x1,y1);c.stroke();c.restore();};
+  return P;
+}
+let PM,PR;
+const ptX=p=>p.g+p.j*0.2;
 
-  window.addEventListener('resize',resize);
-  generate();resize();
-})();
+function drawRaw(L){
+  const P=PM,tab=S.tab;
+  P.o={xr:[0,100],yr:[0,100],xl:'X',yl:'Y'};P.frame();
+  const ok=L&&L.ok,acc=col('--accent'),rej=col('--rej'),inkC=col('--ink'),bC=col('--b');
+  if(ok){
+    const x0=0,x1=100,y0=L.ic,y1=L.ic+L.slope*100;
+    if(tab==='see'&&S.showBand&&L.n>2){
+      const see=Math.sqrt(Math.max(0,L.syy-L.sxy*L.sxy/L.sxx)/(L.n-2));
+      P.clip(c=>{c.globalAlpha=.14;c.fillStyle=acc;c.beginPath();c.moveTo(P.X(x0),P.Y(y0+see));c.lineTo(P.X(x1),P.Y(y1+see));c.lineTo(P.X(x1),P.Y(y1-see));c.lineTo(P.X(x0),P.Y(y0-see));c.closePath();c.fill();c.globalAlpha=1;});
+      P.clip(()=>{P.line(P.X(x0),P.Y(y0+see),P.X(x1),P.Y(y1+see),acc,1.5,[5,4]);P.line(P.X(x0),P.Y(y0-see),P.X(x1),P.Y(y1-see),acc,1.5,[5,4]);});
+    }
+    if(S.showRes&&tab!=='spearman')P.clip(()=>{pts.forEach(p=>{P.line(P.X(p.x),P.Y(p.y),P.X(p.x),P.Y(L.ic+L.slope*p.x),rej,1,null,.45);});});
+    if(S.showLine&&tab!=='spearman')P.clip(()=>{P.line(P.X(x0),P.Y(y0),P.X(x1),P.Y(y1),rej,2.5);});
+  }
+  pts.forEach((p,i)=>P.dot(P.X(p.x),P.Y(p.y),i===drag?bC:acc,i===drag?7:5,i===drag?1:.8));
+  if(tab==='see'&&ok){
+    const x=S.px,yh=L.ic+L.slope*x,c=P.ctx;
+    P.line(P.X(x),P.Y(0),P.X(x),P.Y(100),bC,1,[4,4],.7);
+    if(L.n>2){
+      const df=L.n-2,see=Math.sqrt(Math.max(0,L.syy-L.sxy*L.sxy/L.sxx)/df),tc=tCrit(S.alphaSee/2,df);
+      const pi=tc*see*Math.sqrt(1+1/L.n+(x-L.mx)*(x-L.mx)/L.sxx);
+      P.clip(()=>{
+        P.line(P.X(x),P.Y(yh-pi),P.X(x),P.Y(yh+pi),bC,2,null,.45);
+        P.line(P.X(x)-7,P.Y(yh-pi),P.X(x)+7,P.Y(yh-pi),bC,2,null,.6);P.line(P.X(x)-7,P.Y(yh+pi),P.X(x)+7,P.Y(yh+pi),bC,2,null,.6);
+        P.line(P.X(x),P.Y(yh-see),P.X(x),P.Y(yh+see),bC,4.5);
+      });
+    }
+    P.dot(P.X(x),P.Y(yh),bC,6.5,1);
+  }
+}
+
+function drawRanks(rx,ry,n,L){
+  const P=PR;P.o={xr:[0.5,n+0.5],yr:[0.5,n+0.5],xl:'Rank of X',yl:'Rank of Y',xt:ticks(1,n,5),yt:ticks(1,n,5)};P.frame();
+  const acc=col('--accent'),rej=col('--rej');
+  if(L&&L.ok&&S.showLine)P.clip(()=>{P.line(P.X(0.5),P.Y(L.ic+L.slope*0.5),P.X(n+0.5),P.Y(L.ic+L.slope*(n+0.5)),rej,2.5);});
+  rx.forEach((v,i)=>P.dot(P.X(v),P.Y(ry[i]),acc,Math.max(3,Math.min(5,200/n)),.8));
+}
+
+function drawPb(){
+  const P=PM;P.o={xr:[-0.6,1.6],yr:[0,100],xt:[0,1],xf:v=>v===0?'Group 0 (X = 0)':'Group 1 (X = 1)',xl:'X (coded 0/1)',yl:'Score (Y)'};P.frame();
+  const c0=col('--a'),c1=col('--b'),inkC=col('--ink'),rej=col('--rej');
+  const g0=pbPts.filter(p=>p.g===0).map(p=>p.y),g1=pbPts.filter(p=>p.g===1).map(p=>p.y);
+  if(g0.length&&g1.length){const m0=mean(g0),m1=mean(g1);
+    P.clip(()=>{P.line(P.X(-0.4),P.Y(m0+(m1-m0)*(-0.4)),P.X(1.4),P.Y(m0+(m1-m0)*1.4),rej,2.2,[7,4]);});}
+  pbPts.forEach((p,i)=>P.dot(P.X(ptX(p)),P.Y(p.y),i===drag?inkC:(p.g?c1:c0),i===drag?7:4.6,i===drag?1:.75));
+  [[g0,0],[g1,1]].forEach(([a,g])=>{if(!a.length)return;const m=mean(a),x=P.X(g);
+    if(a.length>1){const h=tCrit(S.alpha/2,a.length-1)*Math.sqrt(vari(a)/a.length);
+      P.line(x,P.Y(m-h),x,P.Y(m+h),inkC,2.5);P.line(x-8,P.Y(m-h),x+8,P.Y(m-h),inkC,2.5);P.line(x-8,P.Y(m+h),x+8,P.Y(m+h),inkC,2.5);}
+    P.line(x-32,P.Y(m),x+32,P.Y(m),inkC,3.5);});
+}
+
+function drawPhi(Q){
+  const P=PM;P.o={xr:[-0.6,1.6],yr:[-0.6,1.6],xt:[0,1],yt:[0,1],xl:'X (coded 0/1)',yl:'Y (coded 0/1)'};P.frame();
+  const {a,b,c,d}=S.ph,cells=[[0,0,a],[0,1,b],[1,0,c],[1,1,d]],mx=Math.max(a,b,c,d,1),acc=col('--accent'),inkC=col('--ink'),rej=col('--rej');
+  const rmax=Math.min((P.W-P.l-P.r)/2.2,(P.H-P.t-P.b)/2.2)*0.5*0.92,ctx=P.ctx;
+  if(Q&&isFinite(Q.slope)&&isFinite(Q.ic))P.clip(()=>{P.line(P.X(-0.6),P.Y(Q.ic+Q.slope*-0.6),P.X(1.6),P.Y(Q.ic+Q.slope*1.6),rej,2.4);});
+  cells.forEach(([x,y,n])=>{
+    const rad=n>0?Math.max(5,rmax*Math.sqrt(n/mx)):0;
+    if(rad){ctx.globalAlpha=.5;ctx.beginPath();ctx.arc(P.X(x),P.Y(y),rad,0,6.2832);ctx.fillStyle=acc;ctx.fill();ctx.globalAlpha=1;ctx.strokeStyle=acc;ctx.lineWidth=1.5;ctx.stroke();}
+    ctx.fillStyle=inkC;ctx.font='600 13px system-ui,sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(n,P.X(x),P.Y(y));
+  });
+}
+
+/* ============ Rendering helpers ============ */
+function showResult(o){
+  $('badge').innerHTML=o.p==null?'':`<span class="badge ${o.p<o.alpha?'sig':'ns'}">${o.p<o.alpha?'Significant':'Not significant'} at α = ${fp(o.alpha)}</span>`;
+  $('stats').innerHTML=o.cards.map(([a,b])=>`<div class="stat"><small>${a}</small><b>${b}</b></div>`).join('');
+  $('interp').innerHTML=(label?`<b>${label}</b><br>`:'')+o.interp;
+  $('apaRow').hidden=!o.apa;$('apa').textContent=o.apa||'';
+}
+function fail(msg){
+  $('msg').hidden=false;$('msg').textContent=msg;
+  ['p2sp','p2pb','p2ph','p2see','pRes'].forEach(id=>$(id).hidden=true);
+}
+function okLayout(p2){
+  $('msg').hidden=true;$('pRes').hidden=false;
+  ['p2sp','p2pb','p2ph','p2see'].forEach(id=>$(id).hidden=id!==p2);
+}
+const apaP=p=>p<0.001?'< .001':'= '+fp(p);
+const testSentence=(t,h0)=>` With a two-sided test at α = ${fp(S.alpha)}, p ${apaP(t.p)}, so H₀ (${h0}) is ${t.p<S.alpha?'<b>rejected</b>':'<b>not rejected</b>'}.`;
+const bar=(lab,v,mx,c,txt)=>`<div style="display:grid;grid-template-columns:230px 1fr 70px;gap:8px;align-items:center;margin:4px 0"><span class="cap" style="margin:0">${lab}</span><div class="bar" style="width:${Math.max(2,100*v/mx)}%;background:${c}"></div><span class="f">${txt}</span></div>`;
+
+/* ---------- Pearson ---------- */
+function rPearson(){
+  const xs=pts.map(p=>p.x),ys=pts.map(p=>p.y),L=lin(xs,ys);
+  drawRaw(L);
+  if(!L||!L.ok)return fail('Add at least two points that vary in both X and Y.');
+  okLayout(null);
+  const t=rTest(L.r,L.n),a=Math.abs(L.r),pct=(L.r*L.r*100);
+  const cards=[['Pearson r',f(L.r,3)],['r² (variance explained)',pct.toFixed(1)+'%'],['Slope',f(L.slope,3)],['Intercept',f(L.ic,2)],['n',L.n],['t',t?f(t.t,3):'–'],['df',t?t.df:'–'],['p',t?fp(t.p):'–']];
+  let m=`This is a <b>${strength(a)} ${a<0.1?'':L.r>0?'positive ':'negative '}linear relationship</b>. `+
+    (a<0.1?'X tells you almost nothing about Y in a straight-line sense. ':L.r>0?'As X increases, Y tends to increase. ':'As X increases, Y tends to decrease. ')+
+    `About ${pct.toFixed(0)}% of the variation in Y is linearly associated with X.`;
+  if(t)m+=testSentence(t,'ρ = 0');
+  if(L.n<15)m+=' <i>With so few points, r can swing a lot from a single point, so try dragging one.</i>';
+  m+=' <i>Correlation measures linear association only, and it does not show causation.</i>';
+  showResult({p:t?t.p:null,alpha:S.alpha,cards,interp:m,apa:t?`r(${t.df}) = ${fr(L.r)}, p ${apaP(t.p)}`:''});
+}
+
+/* ---------- Spearman ---------- */
+function rSpearman(){
+  const xs=pts.map(p=>p.x),ys=pts.map(p=>p.y),Lr=lin(xs,ys),n=pts.length;
+  drawRaw(Lr);
+  if(n<2){PR.o={xr:[0.5,1.5],yr:[0.5,1.5]};PR.frame();return fail('Add at least two points.');}
+  const RX=ranks(xs),RY=ranks(ys),Ls=lin(RX.r,RY.r);
+  drawRanks(RX.r,RY.r,n,Ls);
+  if(!Ls.ok)return fail('Add at least two points that vary in both X and Y (not all tied).');
+  okLayout('p2sp');
+  const rho=Ls.r,t=rTest(rho,n),a=Math.abs(rho),r=Lr&&Lr.ok?Lr.r:NaN;
+  const cards=[['Spearman ρ',f(rho,3)],['ρ² (shared rank variance)',(rho*rho*100).toFixed(1)+'%'],['Pearson r (same data)',f(r,3)],['n',n],['t',t?f(t.t,3):'–'],['df',t?t.df:'–'],['p',t?fp(t.p):'–'],['Tied values (X / Y)',RX.ties+' / '+RY.ties]];
+  let m=`This is a <b>${strength(a)} ${a<0.1?'':rho>0?'positive ':'negative '}monotonic relationship</b> (ρ = ${f(rho,2)}): `+
+    (a<0.1?'the ranks of Y show no consistent direction as X increases.':rho>0?'higher ranks of X tend to go with higher ranks of Y.':'higher ranks of X tend to go with lower ranks of Y.');
+  if(isFinite(r)){
+    if(a-Math.abs(r)>0.1)m+=` ρ (${f(rho,2)}) exceeds r (${f(r,2)}): Y moves consistently in one direction but not along a straight line.`;
+    else if(Math.abs(r)-a>0.1)m+=` r (${f(r,2)}) exceeds ρ (${f(rho,2)}): a few extreme scores are inflating the linear correlation, which ranking tames.`;
+    else m+=` ρ and r agree (${f(rho,2)} vs ${f(r,2)}): the ranks and the raw scores tell the same story.`;
+  }
+  if(t)m+=testSentence(t,'no monotonic association in the population');
+  if(RX.ties+RY.ties>0)m+=' Tied scores share average ranks, so ρ is computed as Pearson r on those ranks.';
+  showResult({p:t?t.p:null,alpha:S.alpha,cards,interp:m,apa:t?`r_s(${t.df}) = ${fr(rho)}, p ${apaP(t.p)}`:''});
+  /* rank table */
+  const rows=Math.min(n,10);let h='<tr><th>#</th><th class="num">X</th><th class="num">Y</th><th class="num">Rank X</th><th class="num">Rank Y</th><th class="num">d</th><th class="num">d²</th></tr>';
+  for(let i=0;i<rows;i++){const d=RX.r[i]-RY.r[i];h+=`<tr><td>${i+1}</td><td class="num">${f(xs[i],1)}</td><td class="num">${f(ys[i],1)}</td><td class="num">${f(RX.r[i],1)}</td><td class="num">${f(RY.r[i],1)}</td><td class="num">${f(d,1)}</td><td class="num">${f(d*d,2)}</td></tr>`;}
+  $('spTable').innerHTML=h;
+  let sd2=0;for(let i=0;i<n;i++)sd2+=(RX.r[i]-RY.r[i])**2;
+  const shortcut=1-6*sd2/(n*(n*n-1));
+  $('spFormula').innerHTML=`${n>rows?`(first ${rows} of ${n} points shown) · `:''}Σd² = <b>${f(sd2,1)}</b> · ρ = 1 − 6Σd²/(n(n² − 1)) = <b>${f(shortcut,3)}</b>${RX.ties+RY.ties>0?' (approximate: ties are present)':''} · Pearson r on the ranks = <b>${f(rho,3)}</b>`;
+}
+
+/* ---------- Point-biserial ---------- */
+function pbStats(){
+  const g0=pbPts.filter(p=>p.g===0).map(p=>p.y),g1=pbPts.filter(p=>p.g===1).map(p=>p.y);
+  if(g0.length<2||g1.length<2)return{err:'Each group needs at least 2 points.'};
+  const gs=pbPts.map(p=>p.g),ys=pbPts.map(p=>p.y),L=lin(gs,ys);
+  if(!L.ok)return{err:'All scores are identical, so r is undefined.'};
+  const n0=g0.length,n1=g1.length,n=n0+n1,m0=mean(g0),m1=mean(g1),v0=vari(g0),v1=vari(g1);
+  const sp=Math.sqrt(((n0-1)*v0+(n1-1)*v1)/(n-2)),tPool=(m1-m0)/(sp*Math.sqrt(1/n0+1/n1)),d=(m1-m0)/sp;
+  const sY=Math.sqrt(L.syy/n),p=n1/n,q=n0/n,rFormula=(m1-m0)/sY*Math.sqrt(p*q);
+  return{L,n0,n1,n,m0,m1,sp,tPool,d,sY,p,q,rFormula,r:L.r};
+}
+function rPb(){
+  drawPb();
+  const B=pbStats();
+  if(B.err)return fail(B.err);
+  okLayout('p2pb');
+  const t=rTest(B.r,B.n),a=Math.abs(B.r);
+  const cards=[['Point-biserial r',f(B.r,3)],['r² (variance explained)',(B.r*B.r*100).toFixed(1)+'%'],['Mean, group 0 (M₀)',f(B.m0,2)],['Mean, group 1 (M₁)',f(B.m1,2)],['M₁ − M₀',f(B.m1-B.m0,2)],['Cohen’s d (pooled)',f(B.d,2)],['n₀ / n₁',B.n0+' / '+B.n1],['t',f(t.t,3)],['df',t.df],['p',fp(t.p)]];
+  let m=`Group 1 (M = ${f(B.m1)}) scored ${B.m1>=B.m0?'higher':'lower'} than group 0 (M = ${f(B.m0)}) by ${f(Math.abs(B.m1-B.m0))} points. This is a <b>${strength(a)} ${a<0.1?'':B.r>0?'positive ':'negative '}relationship</b> between group membership and score (r<sub>pb</sub> = ${f(B.r,2)}): group membership is associated with ${(B.r*B.r*100).toFixed(0)}% of the variation in scores.`;
+  m+=testSentence(t,'ρ<sub>pb</sub> = 0, equivalently no difference between the population means');
+  m+=' <i>The sign depends only on which group is coded 1.</i>';
+  showResult({p:t.p,alpha:S.alpha,cards,interp:m,apa:`r_pb(${t.df}) = ${fr(B.r)}, p ${apaP(t.p)}`});
+  $('pbTable').innerHTML='<tr><th>Test</th><th class="num">Statistic</th><th class="num">t</th><th class="num">df</th><th class="num">p</th></tr>'+
+    `<tr class="sel"><td>Point-biserial correlation</td><td class="num">r<sub>pb</sub> = ${f(B.r,3)}</td><td class="num">${f(t.t,3)}</td><td class="num">${t.df}</td><td class="num">${fp(t.p)}</td></tr>`+
+    `<tr><td>Independent-measures t test (pooled)</td><td class="num">d = ${f(B.d,3)}</td><td class="num">${f(B.tPool,3)}</td><td class="num">${B.n-2}</td><td class="num">${fp(pTwo(B.tPool,B.n-2))}</td></tr>`;
+  $('pbFormula').innerHTML=`r<sub>pb</sub> = (M₁ − M₀)/s<sub>Y</sub> · √(pq) = (${f(B.m1,2)} − ${f(B.m0,2)})/${f(B.sY,2)} · √(${f(B.p,2)} · ${f(B.q,2)}) = <b>${f(B.rFormula,3)}</b> &nbsp;·&nbsp; r = t/√(t² + df) = <b>${f(B.tPool/Math.sqrt(B.tPool*B.tPool+B.n-2),3)}</b>`;
+}
+
+/* ---------- Phi ---------- */
+function phiStats(){
+  const {a,b,c,d}=S.ph,n=a+b+c+d,R0=a+b,R1=c+d,C0=a+c,C1=b+d;
+  if(n<2||!R0||!R1||!C0||!C1)return null;
+  const phi=(a*d-b*c)/Math.sqrt(R0*R1*C0*C1),chi=n*phi*phi,p=erfc(Math.sqrt(chi/2));
+  const px=R1/n,py=C1/n,lo=Math.min(px,py),hi=Math.max(px,py),phimax=Math.sqrt(lo*(1-hi)/(hi*(1-lo)));
+  const E=[R0*C0/n,R0*C1/n,R1*C0/n,R1*C1/n],sxx=n*px*(1-px),sxy=n*(d/n-px*py),slope=sxy/sxx;
+  return{a,b,c,d,n,R0,R1,C0,C1,phi,chi,p,px,py,phimax,minE:Math.min(...E),slope,ic:py-slope*px,p0:b/R0,p1:d/R1};
+}
+function rPhi(){
+  const Q=phiStats();
+  drawPhi(Q);
+  if(!Q)return fail('Every row and column of the table needs at least one observation (and N ≥ 2), otherwise φ is undefined.');
+  okLayout('p2ph');
+  const a=Math.abs(Q.phi);
+  const cards=[['Phi (φ)',f(Q.phi,3)],['φ² (variance explained)',(Q.phi*Q.phi*100).toFixed(1)+'%'],['χ² (df = 1)',f(Q.chi,2)],['p',fp(Q.p)],['N',Q.n],['Max |φ| for these margins',f(Q.phimax,2)],['|φ| as share of its max',(100*a/Q.phimax).toFixed(0)+'%'],['P(Y = 1 | X = 0)',(100*Q.p0).toFixed(0)+'%'],['P(Y = 1 | X = 1)',(100*Q.p1).toFixed(0)+'%']];
+  let m=`This is a <b>${strength(a)} ${a<0.1?'':Q.phi>0?'positive ':'negative '}association</b> (φ = ${f(Q.phi,2)}): Y = 1 occurs in ${(100*Q.p1).toFixed(0)}% of the X = 1 group versus ${(100*Q.p0).toFixed(0)}% of the X = 0 group. With χ²(1, N = ${Q.n}) = ${f(Q.chi,2)}, p ${apaP(Q.p)}, H₀ (no association between X and Y) is ${Q.p<S.alpha?'<b>rejected</b>':'<b>not rejected</b>'} at α = ${fp(S.alpha)}.`;
+  m+=` With these margins φ cannot exceed ${f(Q.phimax,2)}.`;
+  if(Q.minE<5)m+=' <b>Note:</b> an expected count is below 5, so the chi-square approximation is unreliable here.';
+  showResult({p:Q.p,alpha:S.alpha,cards,interp:m,apa:`φ = ${fr(Q.phi)}, χ²(1, N = ${Q.n}) = ${f(Q.chi,2)}, p ${apaP(Q.p)}`});
+  $('phTable').innerHTML='<tr><th></th><th class="num">Y = 0</th><th class="num">Y = 1</th><th class="num">Row total</th></tr>'+
+    `<tr><td><b>X = 0</b></td><td class="num">${Q.a}</td><td class="num">${Q.b}</td><td class="num">${Q.R0}</td></tr>`+
+    `<tr><td><b>X = 1</b></td><td class="num">${Q.c}</td><td class="num">${Q.d}</td><td class="num">${Q.R1}</td></tr>`+
+    `<tr><td><b>Column total</b></td><td class="num">${Q.C0}</td><td class="num">${Q.C1}</td><td class="num">${Q.n}</td></tr>`;
+  $('phFormula').innerHTML=`φ = (ad − bc)/√[(a+b)(c+d)(a+c)(b+d)] = (${Q.a}·${Q.d} − ${Q.b}·${Q.c})/√(${Q.R0}·${Q.R1}·${Q.C0}·${Q.C1}) = <b>${f(Q.phi,3)}</b> &nbsp;·&nbsp; χ² = nφ² = <b>${f(Q.chi,2)}</b>`;
+  $('phBars').innerHTML=bar('X = 0 (n = '+Q.R0+')',Q.p0,1,'var(--a)',(100*Q.p0).toFixed(0)+'%')+bar('X = 1 (n = '+Q.R1+')',Q.p1,1,'var(--b)',(100*Q.p1).toFixed(0)+'%');
+}
+
+/* ---------- Standard error of estimate ---------- */
+function rSee(){
+  const xs=pts.map(p=>p.x),ys=pts.map(p=>p.y),L=lin(xs,ys);
+  drawRaw(L);
+  if(!L||!L.ok)return fail('Add at least two points that vary in both X and Y.');
+  if(L.n<3)return fail('The standard error of estimate needs at least 3 points (df = n − 2).');
+  okLayout('p2see');
+  const df=L.n-2,ssres=Math.max(0,L.syy-L.sxy*L.sxy/L.sxx),see=Math.sqrt(ssres/df),sY=Math.sqrt(L.syy/(L.n-1));
+  let within=0;pts.forEach(p=>{if(Math.abs(p.y-(L.ic+L.slope*p.x))<=see+1e-9)within++;});
+  const x=S.px,yh=L.ic+L.slope*x,tc=tCrit(S.alphaSee/2,df),pi=tc*see*Math.sqrt(1+1/L.n+(x-L.mx)*(x-L.mx)/L.sxx),lev=((1-S.alphaSee)*100).toFixed(0)+'%';
+  const cards=[['Std. error of estimate',f(see,2)],['SD of Y',f(sY,2)],['r²',(L.r*L.r*100).toFixed(1)+'%'],['SS residual',f(ssres,1)],['df (n − 2)',df],['Within ±1 SEE',`${within} of ${L.n}`],['Predicted Y at X = '+x,f(yh,2)],[lev+' prediction interval',`[${f(yh-pi,1)}, ${f(yh+pi,1)}]`]];
+  const redu=100*(1-see/sY);
+  let m=`Predictions from the regression line miss the actual Y by about <b>${f(see,2)}</b> units, typically. If you ignored X and always guessed the mean of Y, the typical miss would be ${f(sY,2)}, so knowing X ${redu>=0?`cuts the typical error by ${redu.toFixed(0)}%`:'does not reduce the typical error'}. For a new case at X = ${x}, the line predicts Y ≈ ${f(yh,1)}, and ${lev} of such cases should fall between ${f(yh-pi,1)} and ${f(yh+pi,1)}.`;
+  m+=` About ${(100*within/L.n).toFixed(0)}% of the points lie within ±1 SEE of the line (roughly 68% is expected when the scatter around the line is normal and even).`;
+  showResult({p:null,alpha:S.alphaSee,cards,interp:m,apa:''});
+  $('seeFormula').innerHTML=`SEE = √(SS<sub>residual</sub>/(n − 2)) = √(${f(ssres,1)}/${df}) = <b>${f(see,2)}</b> &nbsp;·&nbsp; s<sub>Y</sub>√(1 − r²)√((n − 1)/(n − 2)) = ${f(sY,2)}·${f(Math.sqrt(Math.max(0,1-L.r*L.r)),3)}·${f(Math.sqrt((L.n-1)/df),3)} = <b>${f(sY*Math.sqrt(Math.max(0,1-L.r*L.r))*Math.sqrt((L.n-1)/df),2)}</b>`;
+  const mx=Math.max(sY,see);
+  $('seeBars').innerHTML=bar('Typical miss using only the mean (SD of Y)',sY,mx,'var(--muted)',f(sY,2))+bar('Typical miss using the line (SEE)',see,mx,'var(--accent)',f(see,2));
+  $('seeCap').textContent='Raise |r| (the target-correlation slider) and SEE shrinks toward 0; at r = 0 the line is flat and SEE is about the same as the SD of Y. At r = ±1 every point sits on the line and SEE is 0.';
+}
+
+/* ============ UI sync ============ */
+const TITLES={pearson:'The data',spearman:'The data and its ranks',pb:'Scores by group',phi:'The 2 × 2 table as a plot of 0/1 codes',see:'The data, the line and the ±1 SEE band'};
+const CAPS={
+  pearson:'Dots are individual points; the red line is the least-squares regression line and the thin red segments (if on) are residuals. Drag points to see how r responds.',
+  spearman:'Left: the raw scores. Right: the same points after ranking each variable. Spearman ρ is the Pearson correlation of the right-hand plot, so a one-directional curve that looks weak on the left can look nearly perfect on the right. Switch the shape to Monotonic and raise the curvature to bend the data without changing any ranks.',
+  pb:'Each dot is one person, jittered sideways within its group. Black marks are the group means with their CIs; the dashed red line joins the means and is the regression line of score on the 0/1 code, so its slope is the mean difference.',
+  phi:'Bubble area is proportional to the count in each cell and the number is the count. The red line is the regression of Y on X for the 0/1 codes: its tilt reflects φ.',
+  see:'The shaded band is the line ±1 standard error of estimate. The orange marker is the prediction at your chosen X, with a thick ±1 SEE bar and a thinner prediction interval.'
+};
+const ARIA={pearson:'Scatterplot of X and Y with regression line. Points can be dragged.',spearman:'Scatterplot of the raw scores of X and Y. Points can be dragged.',pb:'Scores by group, coded 0 and 1. Points can be dragged.',phi:'Bubble plot of the counts in a 2 by 2 table of 0/1 codes.',see:'Scatterplot with regression line, a band of one standard error of estimate, and a prediction at a chosen X. Points can be dragged.'};
+let presetGroup='';
+function buildPresets(){
+  const grp=SC(S.tab)?'sc':S.tab,list=PRESETS[grp];
+  if(grp===presetGroup)return; presetGroup=grp;
+  $('presets').innerHTML=list.map((p,i)=>`<button class="pill" data-i="${i}">${p.name}</button>`).join('');
+}
+function syncUI(){
+  const t=S.tab;
+  TABS.forEach(k=>$('tab-'+k).setAttribute('aria-selected',k===t));
+  document.querySelectorAll('[data-tabs]').forEach(el=>{el.hidden=!el.dataset.tabs.split(' ').includes(t);});
+  buildPresets();
+  $('dataTitle').textContent=TITLES[t];
+  $('charts').classList.toggle('two',t==='spearman');
+  $('rankBox').hidden=t!=='spearman';
+  $('capMain').hidden=t!=='spearman';$('capMain').textContent='Raw scores';
+  $('cvMain').classList.toggle('drag',t!=='phi');
+  $('cvMain').setAttribute('aria-label',ARIA[t]);
+  $('dataCap').textContent=CAPS[t];
+  /* sliders */
+  $('sc_r').value=S.tr;$('o_sc_r').textContent=(S.tr/100).toFixed(2).replace('-','−');
+  $('sc_n').value=S.n;$('o_sc_n').textContent=S.n;
+  $('shapeSw').setAttribute('aria-checked',S.mono);$('swLin').classList.toggle('on',!S.mono);$('swMono').classList.toggle('on',S.mono);
+  $('curvWrap').hidden=!S.mono;$('sc_curv').value=S.curv;$('o_sc_curv').textContent=S.curv;
+  $('sc_px').value=S.px;$('o_sc_px').textContent=S.px;
+  const q=S.pb;
+  [['d',q.d,1],['sd',q.sd,1],['n0',q.n0,0],['n1',q.n1,0]].forEach(([k,v,dec])=>{$('pb_'+k).value=v;$('o_pb_'+k).textContent=(+v).toFixed(dec).replace('-','−');});
+  $('pb_exact').checked=q.exact;
+  $('pbTruth').innerHTML=`True group means <b>${f(50-q.d*q.sd/2,1)}</b> and <b>${f(50+q.d*q.sd/2,1)}</b> · population d = <b>${f(q.d,2)}</b>`;
+  ['a','b','c','d'].forEach(k=>{$('ph_'+k).value=S.ph[k];$('o_ph_'+k).textContent=S.ph[k];});
+  const N=S.ph.a+S.ph.b+S.ph.c+S.ph.d;$('phTruth').innerHTML=`N = <b>${N}</b> · the plot and table update as you move the sliders`;
+  $('tgLine').textContent='Regression line: '+(S.showLine?'on':'off');$('tgLine').setAttribute('aria-pressed',S.showLine);
+  $('tgRes').textContent='Residuals: '+(S.showRes?'on':'off');$('tgRes').setAttribute('aria-pressed',S.showRes);
+  $('tgBand').textContent='±1 SEE band: '+(S.showBand?'on':'off');$('tgBand').setAttribute('aria-pressed',S.showBand);
+  $('alpha').value=String(S.alpha);$('alphaSee').value=String(S.alphaSee);
+}
+function render(){
+  syncUI();
+  if(S.tab==='spearman')PR.size();
+  const t=S.tab;
+  if(t==='pearson')rPearson();else if(t==='spearman')rSpearman();else if(t==='pb')rPb();else if(t==='phi')rPhi();else rSee();
+}
+
+/* ============ Presets ============ */
+const setPb=v=>()=>{Object.assign(S.pb,v);genPb();};
+const setPh=v=>()=>{Object.assign(S.ph,v);};
+const PRESETS={
+  sc:[
+    {name:'Anscombe I',fn:()=>anscombe('a1')},{name:'II',fn:()=>anscombe('a2')},{name:'III',fn:()=>anscombe('a3')},{name:'IV',fn:()=>anscombe('a4')},
+    {name:'Curved (r ≈ 0)',fn:curved},{name:'Rounded ratings (ties)',fn:rounded}
+  ],
+  pb:[
+    {name:'No difference',fn:setPb({d:0,sd:10,n0:25,n1:25})},
+    {name:'Medium effect (d = .5)',fn:setPb({d:0.5,sd:10,n0:25,n1:25})},
+    {name:'Large effect (d = 1.2)',fn:setPb({d:1.2,sd:10,n0:25,n1:25})},
+    {name:'Unequal group sizes',fn:setPb({d:0.8,sd:10,n0:10,n1:60})},
+    {name:'Tiny samples',fn:setPb({d:0.8,sd:10,n0:6,n1:6})}
+  ],
+  phi:[
+    {name:'No association',fn:setPh({a:25,b:25,c:25,d:25})},
+    {name:'Moderate (φ = .20)',fn:setPh({a:30,b:20,c:20,d:30})},
+    {name:'Strong (φ = .80)',fn:setPh({a:45,b:5,c:5,d:45})},
+    {name:'Perfect (φ = 1)',fn:setPh({a:50,b:0,c:0,d:50})},
+    {name:'Same φ, bigger N',fn:setPh({a:105,b:45,c:45,d:105})},
+    {name:'Skewed margins',fn:setPh({a:80,b:5,c:10,d:5})}
+  ]
+};
+
+/* ============ Wiring ============ */
+function currentTheme(){
+  const t=document.documentElement.getAttribute('data-theme');
+  return t||(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
+}
+function syncThemeBtn(){const dark=currentTheme()==='dark',b=$('themeBtn');b.textContent=dark?'☀ Light theme':'☾ Dark theme';b.setAttribute('aria-pressed',dark);}
+const pos=e=>{const b=$('cvMain').getBoundingClientRect();return{x:e.clientX-b.left,y:e.clientY-b.top};};
+function nearest(m){
+  let best=-1,bd=196;
+  if(S.tab==='pb')pbPts.forEach((p,i)=>{const dx=PM.X(ptX(p))-m.x,dy=PM.Y(p.y)-m.y,d=dx*dx+dy*dy;if(d<bd){bd=d;best=i;}});
+  else pts.forEach((p,i)=>{const dx=PM.X(p.x)-m.x,dy=PM.Y(p.y)-m.y,d=dx*dx+dy*dy;if(d<bd){bd=d;best=i;}});
+  return best;
+}
+function init(){
+  PM=mkPlot($('cvMain'));PR=mkPlot($('cvRank'));
+  syncThemeBtn();
+  $('themeBtn').onclick=()=>{
+    const next=currentTheme()==='dark'?'light':'dark';
+    document.documentElement.setAttribute('data-theme',next);
+    try{localStorage.setItem('ttest-theme',next);}catch(e){}
+    syncThemeBtn();render();
+  };
+  if(window.matchMedia){const mq=matchMedia('(prefers-color-scheme: dark)');if(mq.addEventListener)mq.addEventListener('change',()=>{syncThemeBtn();render();});}
+  TABS.forEach(k=>$('tab-'+k).onclick=()=>{if(SC(k)!==SC(S.tab)||!SC(k))label='';S.tab=k;drag=-1;render();});
+  $('presets').addEventListener('click',e=>{
+    const b=e.target.closest('button');if(!b)return;
+    const grp=SC(S.tab)?'sc':S.tab;if(grp!=='sc')label='';PRESETS[grp][+b.dataset.i].fn();render();
+  });
+  /* scatter controls */
+  $('sc_r').oninput=e=>{S.tr=+e.target.value;generate();render();};
+  $('sc_n').oninput=e=>{S.n=+e.target.value;generate();render();};
+  $('shapeSw').onclick=()=>{S.mono=!S.mono;generate();render();};
+  $('sc_curv').oninput=e=>{S.curv=+e.target.value;generate();render();};
+  $('sc_px').oninput=e=>{S.px=+e.target.value;render();};
+  $('scNew').onclick=()=>{S.seed=Math.floor(Math.random()*1e6);generate();render();};
+  $('scOut').onclick=()=>{
+    const L=lin(pts.map(p=>p.x),pts.map(p=>p.y)),tr=L&&L.ok?L.r:0;
+    pts.push(tr>=0?{x:92,y:6}:{x:92,y:94});label='Outlier added: notice how much one point moves r, and how little it moves ρ.';render();
+  };
+  $('scClear').onclick=()=>{pts=[];label='';render();};
+  $('tgLine').onclick=()=>{S.showLine=!S.showLine;render();};
+  $('tgRes').onclick=()=>{S.showRes=!S.showRes;render();};
+  $('tgBand').onclick=()=>{S.showBand=!S.showBand;render();};
+  /* point-biserial controls */
+  ['d','sd','n0','n1'].forEach(k=>$('pb_'+k).oninput=e=>{S.pb[k]=+e.target.value;genPb();render();});
+  $('pb_exact').onchange=e=>{S.pb.exact=e.target.checked;genPb();render();};
+  $('pbNew').onclick=()=>{S.pb.seed=Math.floor(Math.random()*1e6);genPb();render();};
+  $('pbClear').onclick=()=>{pbPts=[];label='';render();};
+  /* phi controls */
+  ['a','b','c','d'].forEach(k=>$('ph_'+k).oninput=e=>{S.ph[k]=+e.target.value;render();});
+  /* options */
+  $('alpha').onchange=e=>{S.alpha=+e.target.value;render();};
+  $('alphaSee').onchange=e=>{S.alphaSee=+e.target.value;render();};
+  /* canvas interaction */
+  const cv=$('cvMain');
+  cv.addEventListener('pointerdown',e=>{
+    if(S.tab==='phi')return;
+    const m=pos(e),i=nearest(m);
+    if(i>=0){drag=i;cv.setPointerCapture(e.pointerId);}
+    else if(S.tab==='pb'){
+      const gx=PM.iX(m.x),y=PM.iY(m.y);
+      if(y>=0&&y<=100&&gx>-0.6&&gx<1.6){const g=gx<0.5?0:1;pbPts.push({g,y,j:Math.max(-1,Math.min(1,(gx-g)/0.2))});label='';}
+    }else{
+      const x=PM.iX(m.x),y=PM.iY(m.y);
+      if(x>=0&&x<=100&&y>=0&&y<=100){pts.push({x,y});label='';}
+    }
+    render();
+  });
+  cv.addEventListener('pointermove',e=>{
+    if(drag<0)return;
+    const m=pos(e);
+    if(S.tab==='pb'){const p=pbPts[drag];p.g=PM.iX(m.x)<0.5?0:1;p.y=clamp(PM.iY(m.y));}
+    else{const p=pts[drag];p.x=clamp(PM.iX(m.x));p.y=clamp(PM.iY(m.y));}
+    label='';render();
+  });
+  const up=()=>{if(drag>=0){drag=-1;render();}};
+  cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
+  cv.addEventListener('dblclick',e=>{
+    if(S.tab==='phi')return;
+    const i=nearest(pos(e));
+    if(i>=0){if(S.tab==='pb')pbPts.splice(i,1);else pts.splice(i,1);drag=-1;render();}
+  });
+  $('copy').onclick=()=>{
+    const txt=$('apa').textContent,done=()=>{$('copy').textContent='Copied';setTimeout(()=>$('copy').textContent='Copy',1200);};
+    if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(txt).then(done,done);
+    else{const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');}catch(e){}ta.remove();done();}
+  };
+  window.addEventListener('resize',render);
+  generate();genPb();render();
+}
+init();
 </script>
-</div>
+</body>
+</html>
