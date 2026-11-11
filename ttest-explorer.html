@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>t-Test Explorer: Single-Sample, Independent &amp; Repeated Measures</title>
-<meta name="description" content="Interactive explorer for the single-sample, independent-samples and repeated-measures (paired) t-test. Adjust means, SDs, sample sizes, the hypothesized mean and the correlation and watch the test statistic, p-value, confidence interval, effect size and power respond.">
+<title>t-Test Explorer: Student, Welch, Yuen &amp; Bayesian t Tests</title>
+<meta name="description" content="Interactive explorer for Student's, Welch's, Yuen's (trimmed-mean) and Bayesian t tests across independent-samples, repeated-measures and single-sample designs. Change the data, the population shape, the trimming and the prior, and see how the tests relate.">
 <script>try{var t=localStorage.getItem("ttest-theme");if(t==="light"||t==="dark")document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
 <style>
 :root{
@@ -23,6 +23,7 @@ body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-app
 header{padding:26px 22px 8px;max-width:1280px;margin:0 auto;position:relative}
 .theme-btn{position:absolute;top:26px;right:22px;border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:7px 14px;border-radius:999px;font:inherit;font-size:.85rem;font-weight:600;cursor:pointer}
 .theme-btn:hover{border-color:var(--accent)}
+@media(max-width:600px){.theme-btn{position:static;display:block;margin:0 0 10px auto}}
 h1{margin:0 0 4px;font-size:1.65rem;letter-spacing:-.01em}
 header p{margin:0;color:var(--muted);max-width:760px}
 .tabs{display:flex;gap:6px;margin-top:16px;flex-wrap:wrap}
@@ -87,6 +88,17 @@ details summary{cursor:pointer;font-weight:600}
 code,.f{font-family:var(--mono);font-size:.88rem}
 footer{max-width:1280px;margin:0 auto;padding:6px 22px 30px;color:var(--muted);font-size:.82rem}
 dl.key{display:grid;grid-template-columns:max-content 1fr;gap:6px 16px;margin:0}dl.key dt{font-family:var(--mono);font-size:.88rem;font-weight:600}dl.key dd{margin:0;color:var(--muted)}
+.tabrow{display:flex;align-items:center;gap:12px;margin-top:14px;flex-wrap:wrap}
+.tabrow-lab{font-size:.75rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);width:56px;flex:none}
+.tabrow .tabs{margin-top:0}
+.tabrow.sub .tab{padding:6px 14px;font-size:.88rem;font-weight:500}
+.pair{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+@media(max-width:700px){.pair{grid-template-columns:1fr}}
+.chartcap{font-size:.8rem;color:var(--muted);margin:0 0 5px;font-weight:600}
+.scroll{overflow-x:auto}
+th.num,td.num{text-align:right}
+td.num{white-space:nowrap}
+.badge{white-space:nowrap}
 [hidden]{display:none!important}
 </style>
 </head>
@@ -94,12 +106,20 @@ dl.key{display:grid;grid-template-columns:max-content 1fr;gap:6px 16px;margin:0}
 <header>
   <button class="theme-btn" id="themeBtn" type="button" aria-label="Switch between light and dark theme"></button>
   <h1>t-Test Explorer</h1>
-  <p>Compare two <b>independent</b> groups, two <b>repeated measures</b> on the same people, or one sample with a hypothesized value (<b>single sample</b>). Drag the sliders, switch tests, or paste your own data and see how the t statistic, p-value, confidence interval, effect size and power respond.</p>
-  <div class="tabs" role="tablist" aria-label="Test type">
-    <button class="tab" role="tab" id="tab-ind" aria-selected="true">Independent samples</button>
-    <button class="tab" role="tab" id="tab-paired" aria-selected="false">Repeated measures (paired)</button>
-    <button class="tab" role="tab" id="tab-single" aria-selected="false">Single sample</button>
-  </div>
+  <p>Explore four versions of the t test, <b>Student’s</b>, <b>Welch’s</b>, <b>Yuen’s</b> (trimmed means) and <b>Bayesian</b>, and see how they relate. Each works on two independent groups, two repeated measures on the same people, or one sample with a hypothesized value (single sample). Drag the sliders, change the population shape, switch tests, or paste your own data and watch the statistic, p-value or Bayes factor, interval, effect size and power respond.</p>
+  <div class="tabrow"><span class="tabrow-lab">Test</span>
+    <div class="tabs" role="tablist" aria-label="Test">
+      <button class="tab" role="tab" id="tab-student" aria-selected="true">Student’s t</button>
+      <button class="tab" role="tab" id="tab-welch" aria-selected="false">Welch’s t</button>
+      <button class="tab" role="tab" id="tab-yuen" aria-selected="false">Yuen’s t (trimmed)</button>
+      <button class="tab" role="tab" id="tab-bayes" aria-selected="false">Bayesian t</button>
+    </div></div>
+  <div class="tabrow sub"><span class="tabrow-lab">Design</span>
+    <div class="tabs" role="tablist" aria-label="Design">
+      <button class="tab" role="tab" id="tab-ind" aria-selected="true">Independent samples</button>
+      <button class="tab" role="tab" id="tab-paired" aria-selected="false">Repeated measures (paired)</button>
+      <button class="tab" role="tab" id="tab-single" aria-selected="false">Single sample</button>
+    </div></div>
 </header>
 
 <main>
@@ -115,6 +135,7 @@ dl.key{display:grid;grid-template-columns:max-content 1fr;gap:6px 16px;margin:0}
 
     <div id="simBox">
       <fieldset id="params"></fieldset>
+      <div class="opt"><label for="shape">Population shape</label><select id="shape"><option value="normal">Normal</option><option value="heavy">Heavy-tailed (t, df = 3)</option><option value="contam">Contaminated (10% outliers)</option><option value="skew">Skewed (lognormal)</option></select></div>
       <div class="opt"><label><input type="checkbox" id="exact"> Make the sample match the settings exactly</label></div>
       <div class="row">
         <button class="pill" id="resample">New random sample</button>
@@ -134,10 +155,11 @@ dl.key{display:grid;grid-template-columns:max-content 1fr;gap:6px 16px;margin:0}
     <div class="opt" id="mu0Opt" hidden><label for="mu0">Hypothesized population mean μ₀</label><input type="number" id="mu0" step="0.5"></div>
     <div class="opt"><label for="tails">Alternative hypothesis</label>
       <select id="tails"></select></div>
-    <div class="opt"><label for="alpha">Significance level α</label>
+    <div class="opt"><label for="alpha" id="alphaLab">Significance level α</label>
       <select id="alpha"><option value="0.10">.10</option><option value="0.05" selected>.05</option><option value="0.01">.01</option><option value="0.001">.001</option></select></div>
-    <div class="opt" id="welchOpt"><label for="variant">Variance assumption</label>
-      <select id="variant"><option value="welch" selected>Welch (unequal variances)</option><option value="student">Student (pooled variance)</option></select></div>
+    <div class="sl" id="trimOpt" hidden><label for="trim"><span>Trimming proportion γ (each tail)</span><output id="o_trim"></output></label><input type="range" id="trim" min="0" max="0.4" step="0.05"></div>
+    <div class="opt" id="priorOpt" hidden><label for="prior">Prior scale r (Cauchy width on δ)</label>
+      <select id="prior"><option value="0.5">0.50: narrow (small effects expected)</option><option value="0.7071" selected>0.71: default (√2/2)</option><option value="1">1.00: wide</option><option value="1.4142">1.41: ultrawide</option></select></div>
   </aside>
 
   <section class="stack">
@@ -149,7 +171,7 @@ dl.key{display:grid;grid-template-columns:max-content 1fr;gap:6px 16px;margin:0}
     </div>
 
     <div class="panel" id="pDist">
-      <h2><span class="n">2</span>Where does the observed t fall if H₀ were true?</h2>
+      <h2><span class="n">2</span><span id="distTitle">Where does the observed t fall if H₀ were true?</span></h2>
       <div id="chartT"></div>
       <div class="legend">
         <span><i style="background:var(--rej);opacity:.35"></i>Rejection region (area = α)</span>
@@ -157,6 +179,13 @@ dl.key{display:grid;grid-template-columns:max-content 1fr;gap:6px 16px;margin:0}
         <span><i style="background:var(--ink);height:3px;vertical-align:3px"></i>Observed t</span>
         <span><i style="border:1px dashed var(--muted);background:none"></i>Normal curve (for comparison)</span>
       </div>
+    </div>
+
+    <div class="panel" id="pBayes" hidden>
+      <h2><span class="n">2</span>What do the data say about the effect size δ?</h2>
+      <div id="chartPost"></div>
+      <div class="legend" id="bayesLegend"></div>
+      <p class="cap" id="bayesNote"></p>
     </div>
 
     <div class="panel" id="pRes" aria-live="polite">
@@ -184,8 +213,38 @@ dl.key{display:grid;grid-template-columns:max-content 1fr;gap:6px 16px;margin:0}
       <p class="cap">Raise n and t* shrinks toward z* (they are nearly equal once df passes about 30). With a tiny sample the heavier tails of t keep you from declaring too many false positives; a z test with s in place of σ would not.</p>
     </div>
 
+    <div class="panel" id="pWelch" hidden>
+      <h2><span class="n">★</span><span id="welchTitle">Welch vs Student: what changes?</span></h2>
+      <p class="f" id="welchFormula" style="margin:0 0 10px"></p>
+      <div id="welchBars"></div>
+      <p class="cap" id="welchCap"></p>
+    </div>
+
+    <div class="panel" id="pYuen" hidden>
+      <h2><span class="n">★</span>What trimming and winsorizing do</h2>
+      <div class="scroll"><table id="yuenTable"></table></div>
+      <p class="f" id="yuenFormula" style="margin:10px 0"></p>
+      <div id="yuenBars"></div>
+      <p class="cap" id="yuenCap"></p>
+    </div>
+
+    <div class="panel" id="pBF" hidden>
+      <h2><span class="n">★</span>Evidence versus significance</h2>
+      <div class="pair">
+        <div><p class="chartcap">How the Bayes factor depends on the prior</p><div id="chartBFr"></div></div>
+        <div><p class="chartcap">How the Bayes factor depends on t (this n)</p><div id="chartBFt"></div></div>
+      </div>
+      <p class="cap" id="bfTxt" style="margin-top:8px;font-size:.88rem"></p>
+    </div>
+
+    <div class="panel" id="pAll">
+      <h2><span class="n">4</span>The four tests side by side, and how they relate</h2>
+      <div class="scroll"><table id="allTable"></table></div>
+      <ul id="relList" style="margin:10px 0 0;padding-left:20px"></ul>
+    </div>
+
     <div class="panel" id="pSim">
-      <h2><span class="n">4</span>Repeat the experiment many times</h2>
+      <h2><span class="n">5</span>Repeat the experiment many times</h2>
       <div class="row" style="align-items:center;margin-bottom:8px">
         <label for="simN" class="cap" style="margin:0">Experiments:</label>
         <select id="simN" style="width:auto"><option>500</option><option selected>2000</option><option>5000</option></select>
@@ -193,7 +252,8 @@ dl.key{display:grid;grid-template-columns:max-content 1fr;gap:6px 16px;margin:0}
       </div>
       <div id="chartSim"></div>
       <p id="simTxt" style="margin:8px 0 0"></p>
-      <p class="cap">Uses the population settings in the sliders (not your own data). If H₀ is true (the true difference is 0, or for the single-sample test the true mean equals μ₀), p-values are uniform and about α of experiments come out “significant” (false positives). If it isn't, the significant share estimates the test's <b>power</b>.</p>
+      <table id="simRates" style="margin-top:6px"></table>
+      <p class="cap" id="simNote"></p>
     </div>
   </section>
 </main>
@@ -201,46 +261,84 @@ dl.key{display:grid;grid-template-columns:max-content 1fr;gap:6px 16px;margin:0}
 <details>
   <summary>Formulas used</summary>
   <div class="panel">
-    <p><b>Independent samples.</b> <span class="f">t = (M₁ − M₂) / SE</span></p>
+    <p><b>Common to all designs.</b> Every classical test has the form <span class="f">t = (estimate − null value) / SE</span>, compared with a t distribution. Confidence intervals are two-sided at level 1 − α: <span class="f">estimate ± t<sub>crit</sub>·SE</span>. p-values come from the exact t distribution (regularised incomplete beta function). Where the designs differ is the estimate, SE and df:</p>
     <ul>
-      <li>Student: <span class="f">SE = s<sub>p</sub>·√(1/n₁ + 1/n₂)</span>, <span class="f">s<sub>p</sub>² = [(n₁−1)s₁² + (n₂−1)s₂²]/(n₁+n₂−2)</span>, <span class="f">df = n₁ + n₂ − 2</span></li>
-      <li>Welch: <span class="f">SE = √(s₁²/n₁ + s₂²/n₂)</span>, df by Welch–Satterthwaite</li>
-      <li>Effect size: Cohen's <span class="f">d = (M₁ − M₂)/s<sub>p</sub></span>; Hedges' <span class="f">g = d·(1 − 3/(4·df − 1))</span> (with df = n₁ + n₂ − 2)</li>
+      <li><b>Independent samples:</b> estimate M₁ − M₂.</li>
+      <li><b>Repeated measures:</b> let <span class="f">D<sub>i</sub> = X<sub>1i</sub> − X<sub>2i</sub></span>; the test is a one-sample test on D with μ₀ = 0, and <span class="f">s<sub>D</sub>² = s₁² + s₂² − 2·r·s₁·s₂</span>.</li>
+      <li><b>Single sample:</b> estimate M − μ₀, <span class="f">SE = s/√n</span>, <span class="f">df = n − 1</span>.</li>
     </ul>
-    <p><b>Repeated measures.</b> Let <span class="f">D<sub>i</sub> = X<sub>1i</sub> − X<sub>2i</sub></span>. Then <span class="f">t = M<sub>D</sub> / (s<sub>D</sub>/√n)</span>, <span class="f">df = n − 1</span>, and <span class="f">s<sub>D</sub>² = s₁² + s₂² − 2·r·s₁·s₂</span>.</p>
-    <ul><li>Effect sizes: <span class="f">d<sub>z</sub> = M<sub>D</sub>/s<sub>D</sub></span> (difference-score SD) and <span class="f">d<sub>av</sub> = M<sub>D</sub>/((s₁+s₂)/2)</span> (comparable to an independent-groups d).</li></ul>
-    <p><b>Single sample.</b> <span class="f">t = (M − μ₀) / SE</span>, <span class="f">SE = s/√n</span>, <span class="f">df = n − 1</span>.</p>
+    <p><b>Student’s t.</b> Assumes equal population variances.</p>
     <ul>
-      <li>Effect size: Cohen's <span class="f">d = (M − μ₀)/s</span>; Hedges' <span class="f">g = d·(1 − 3/(4·df − 1))</span>.</li>
-      <li>The CI for μ is <span class="f">M ± t<sub>crit</sub>·SE</span>; the CI for M − μ₀ is the same interval shifted down by μ₀. The paired test is exactly this test applied to the difference scores with μ₀ = 0.</li>
+      <li>Independent: <span class="f">SE = s<sub>p</sub>·√(1/n₁ + 1/n₂)</span>, <span class="f">s<sub>p</sub>² = [(n₁−1)s₁² + (n₂−1)s₂²]/(n₁+n₂−2)</span>, <span class="f">df = n₁ + n₂ − 2</span>.</li>
+      <li>Paired and single sample: <span class="f">t = M<sub>D</sub> / (s<sub>D</sub>/√n)</span> (or <span class="f">(M − μ₀)/(s/√n)</span>), <span class="f">df = n − 1</span>.</li>
+      <li>Effect size: Cohen’s <span class="f">d = (M₁ − M₂)/s<sub>p</sub></span> (single sample <span class="f">d = (M − μ₀)/s</span>); Hedges’ <span class="f">g = d·(1 − 3/(4·df − 1))</span>; for paired data <span class="f">d<sub>z</sub> = M<sub>D</sub>/s<sub>D</sub></span> and <span class="f">d<sub>av</sub> = M<sub>D</sub>/((s₁+s₂)/2)</span>.</li>
     </ul>
-    <p>Confidence intervals are two-sided at level 1 − α: <span class="f">estimate ± t<sub>crit</sub>·SE</span>. p-values come from the exact t distribution (regularised incomplete beta function). Everything runs in your browser; nothing is uploaded.</p>
+    <p><b>Welch’s t.</b> Drops the equal-variance assumption for two independent groups.</p>
+    <ul>
+      <li><span class="f">SE = √(s₁²/n₁ + s₂²/n₂)</span>, with Welch–Satterthwaite <span class="f">df = (s₁²/n₁ + s₂²/n₂)² / [(s₁²/n₁)²/(n₁−1) + (s₂²/n₂)²/(n₂−1)]</span>.</li>
+      <li>With equal n, Welch’s t equals Student’s t (only df differ). For a single sample or for difference scores there is one variance only, and Welch’s test is Student’s test.</li>
+    </ul>
+    <p><b>Yuen’s t (trimmed means).</b> Let γ be the trimming proportion, <span class="f">g = ⌊γn⌋</span> the number of scores removed from each end and <span class="f">h = n − 2g</span> the number kept.</p>
+    <ul>
+      <li>Trimmed mean <span class="f">M<sub>t</sub></span> = mean of the h central scores. Winsorized variance <span class="f">s<sub>w</sub>²</span> = sample variance after replacing the g lowest scores by the next-lowest kept score and the g highest by the next-highest kept score.</li>
+      <li>Independent (Yuen–Welch): <span class="f">d<sub>j</sub> = (n<sub>j</sub> − 1)·s<sub>w,j</sub>² / (h<sub>j</sub>(h<sub>j</sub> − 1))</span>, <span class="f">t<sub>Y</sub> = (M<sub>t1</sub> − M<sub>t2</sub>) / √(d₁ + d₂)</span>, <span class="f">df = (d₁ + d₂)² / [d₁²/(h₁−1) + d₂²/(h₂−1)]</span>.</li>
+      <li>Paired and single sample (Tukey–McLaughlin): <span class="f">t<sub>Y</sub> = (M<sub>t</sub> − μ₀) / (s<sub>w</sub>·√n / h)</span>, <span class="f">df = h − 1</span>, applied to the difference scores for paired data (the trimmed mean of the differences, which can differ from the difference of the trimmed means).</li>
+      <li>Robust effect size: <span class="f">d<sub>R</sub> = c·(M<sub>t1</sub> − M<sub>t2</sub>) / s<sub>w,pooled</sub></span> (or <span class="f">c·(M<sub>t</sub> − μ₀)/s<sub>w</sub></span>), where c is the SD of a winsorized standard normal (c ≈ .642 at 20% trimming), so that d<sub>R</sub> matches Cohen’s d for normal data.</li>
+      <li>With γ = 0, Yuen’s test is Welch’s test (and Student’s test for one set of scores).</li>
+    </ul>
+    <p><b>Bayesian t (JZS Bayes factor).</b> Let δ be the standardized effect size (δ = (μ₁ − μ₂)/σ, or (μ − μ₀)/σ). H₀: δ = 0; H₁: δ ~ Cauchy(0, r), with scale r (default √2/2 ≈ 0.71). The data enter only through Student’s t, its df ν and the effective sample size N (<span class="f">N = n₁n₂/(n₁ + n₂)</span> for independent groups, N = n otherwise).</p>
+    <ul>
+      <li><span class="f">BF<sub>01</sub> = (1 + t²/ν)<sup>−(ν+1)/2</sup> / ∫₀^∞ (1 + N·g·r²)<sup>−1/2</sup> (1 + t² / [(1 + N·g·r²)·ν])<sup>−(ν+1)/2</sup> (2π)<sup>−1/2</sup> g<sup>−3/2</sup> e<sup>−1/(2g)</sup> dg</span>, and <span class="f">BF<sub>10</sub> = 1/BF<sub>01</sub></span> (evaluated here by numerical integration).</li>
+      <li>Posterior of δ: prior(δ) × noncentral-t likelihood <span class="f">f(t | ν, λ = δ√N)</span>, normalised on a fine grid; the reported median and credible interval come from this posterior.</li>
+      <li>Savage–Dickey check: <span class="f">BF<sub>01</sub> = posterior density at δ = 0 / prior density at δ = 0</span>.</li>
+      <li>One-sided hypotheses (δ &gt; 0 or δ &lt; 0) use a half-Cauchy prior: <span class="f">BF<sub>+0</sub> = BF<sub>10</sub> · P(δ &gt; 0 | data) / P(δ &gt; 0)</span>, with P(δ &gt; 0) = ½.</li>
+      <li>Verbal labels (Lee &amp; Wagenmakers): 1–3 anecdotal, 3–10 moderate, 10–30 strong, 30–100 very strong, &gt; 100 extreme; the same bands apply to BF<sub>01</sub> for evidence for H₀.</li>
+    </ul>
+    <p>Everything runs in your browser; nothing is uploaded.</p>
   </div>
 </details>
 <details id="keyBox">
   <summary>Key: symbols and terms</summary>
   <div class="panel">
     <dl class="key">
-      <dt>H₀</dt><dd>Null hypothesis: the population means do not differ (the true difference is 0). For the single-sample test: the population mean equals μ₀.</dd>
+      <dt>H₀</dt><dd>Null hypothesis: the population means do not differ (the true difference is 0). For the single-sample test: the population mean equals μ₀. In Bayesian terms: the effect size δ is exactly 0.</dd>
       <dt>Alternative</dt><dd>What you test against H₀. Two-sided: the means differ in either direction. One-sided: the difference goes in one stated direction only.</dd>
       <dt>μ</dt><dd>A population (true) mean. The sliders set the μ values the simulated data are drawn from.</dd>
       <dt>μ₀</dt><dd>The hypothesized population mean that the single-sample test compares the sample mean against (H₀: μ = μ₀). You set it under Test options.</dd>
       <dt>M</dt><dd>A sample mean.</dd>
       <dt>s, s²</dt><dd>Sample standard deviation and variance.</dd>
-      <dt>s<sub>p</sub></dt><dd>Pooled standard deviation: the two groups' variances combined, weighted by their degrees of freedom.</dd>
+      <dt>s<sub>p</sub></dt><dd>Pooled standard deviation: the two groups’ variances combined, weighted by their degrees of freedom (Student’s test).</dd>
       <dt>n</dt><dd>Number of observations (per group, the number of participants in a paired design, or the sample size in a single-sample test).</dd>
-      <dt>D, M<sub>D</sub>, s<sub>D</sub></dt><dd>Each participant's difference score (condition 1 − condition 2), its mean, and its standard deviation.</dd>
-      <dt>M − μ₀</dt><dd>The single-sample effect: how far the sample mean lies from the hypothesized mean. The t statistic is this distance divided by SE.</dd>
-      <dt>r</dt><dd>Pearson correlation between the two conditions across participants. The slider sets the population value; the results show the sample value.</dd>
+      <dt>D, M<sub>D</sub>, s<sub>D</sub></dt><dd>Each participant’s difference score (condition 1 − condition 2), its mean, and its standard deviation.</dd>
+      <dt>M − μ₀</dt><dd>The single-sample effect: how far the sample mean lies from the hypothesized mean.</dd>
+      <dt>r (sample correlation)</dt><dd>Pearson correlation between the two conditions across participants. The slider sets the population value; the results show the sample value.</dd>
       <dt>SE</dt><dd>Standard error: the typical size of sampling error in the estimated difference (s/√n for a single sample). Smaller SE gives a larger |t|.</dd>
-      <dt>t</dt><dd>Test statistic: the estimated difference divided by its SE, i.e. how many standard errors from 0 it lies.</dd>
-      <dt>df</dt><dd>Degrees of freedom: sets the exact shape of the t distribution (heavier tails when df is small). Welch's df is usually not a whole number; single-sample and paired tests use n − 1.</dd>
+      <dt>t, t<sub>Y</sub></dt><dd>Test statistic: the estimated difference divided by its SE, i.e. how many standard errors from 0 it lies. t<sub>Y</sub> is the same idea built from trimmed means.</dd>
+      <dt>df</dt><dd>Degrees of freedom: sets the exact shape of the t distribution (heavier tails when df is small). Welch’s and Yuen’s df are usually not whole numbers; single-sample and paired Student tests use n − 1.</dd>
       <dt>t*</dt><dd>Critical value: the |t| beyond which the result is significant at your α.</dd>
       <dt>p</dt><dd>p-value: the probability of a |t| (or t, if one-sided) at least as extreme as observed if H₀ were true. It is not the probability that H₀ is true.</dd>
-      <dt>α</dt><dd>Significance level: the false-positive rate you accept. The result is significant when p &lt; α.</dd>
+      <dt>α</dt><dd>Significance level: the false-positive rate you accept. The result is significant when p &lt; α. On the Bayesian tab it sets the level (1 − α) of the credible interval.</dd>
       <dt>CI</dt><dd>Confidence interval for the true mean difference (for a single sample, the difference between μ and μ₀). At level 1 − α, intervals built this way from repeated samples contain the true value in that proportion of cases.</dd>
-      <dt>d, g, d<sub>z</sub>, d<sub>av</sub></dt><dd>Standardised effect sizes: the mean difference in standard-deviation units (for a single sample, d = (M − μ₀)/s). g is d with a small-sample bias correction; d<sub>z</sub> uses the SD of difference scores; d<sub>av</sub> uses the average of the two conditions' SDs.</dd>
-      <dt>Welch</dt><dd>The independent-samples test that does not assume equal variances; df comes from the Welch–Satterthwaite approximation.</dd>
+      <dt>d, g, d<sub>z</sub>, d<sub>av</sub></dt><dd>Standardised effect sizes: the mean difference in standard-deviation units. g is d with a small-sample bias correction; d<sub>z</sub> uses the SD of difference scores; d<sub>av</sub> uses the average of the two conditions’ SDs.</dd>
+      <dt>Student’s t</dt><dd>The classical test that pools the variances (independent groups) and assumes they are equal.</dd>
+      <dt>Welch’s t</dt><dd>The independent-samples test that does not assume equal variances; df comes from the Welch–Satterthwaite approximation. Equal to Student’s test for one set of scores or for difference scores.</dd>
+      <dt>Yuen’s t</dt><dd>A robust test of trimmed means (Yuen–Welch for independent groups, Tukey–McLaughlin for one set of scores). It resists outliers and heavy tails.</dd>
+      <dt>Bayesian t</dt><dd>A test that compares H₀ (δ = 0) with H₁ (δ drawn from a prior) and reports how strongly the data favour each, instead of a p-value.</dd>
+      <dt>γ (trimming proportion)</dt><dd>Share of the scores removed from each end before computing the trimmed mean. 20% is a common default; 0% gives the ordinary mean.</dd>
+      <dt>g, h</dt><dd>Number of scores trimmed from each end (g = ⌊γn⌋) and the number kept (h = n − 2g).</dd>
+      <dt>M<sub>t</sub></dt><dd>Trimmed mean: the mean of the scores that remain after trimming. Hollow dots in the plots are the trimmed scores.</dd>
+      <dt>s<sub>w</sub></dt><dd>Winsorized standard deviation: the SD after the trimmed scores are replaced by the nearest retained score. It is far less affected by outliers than s.</dd>
+      <dt>d<sub>R</sub></dt><dd>Robust effect size: the trimmed-mean difference divided by the winsorized SD and rescaled so that it matches Cohen’s d for normal data.</dd>
+      <dt>Robust</dt><dd>Little affected by outliers, heavy tails or skew. Robust methods give up a little power under perfectly normal data in exchange for stability when the data are messy.</dd>
+      <dt>Outlier, heavy tails</dt><dd>An unusually extreme score; a heavy-tailed population produces many of them. They inflate s and can hide a real effect from Student’s test.</dd>
+      <dt>δ</dt><dd>The standardized effect size in the population (a difference in SD units). The Bayesian analysis reports a probability distribution for δ.</dd>
+      <dt>Prior, posterior</dt><dd>The prior says which values of δ are plausible before seeing data; the posterior is the updated distribution after seeing the data.</dd>
+      <dt>Cauchy prior, scale r</dt><dd>A bell-shaped prior with heavy tails centred on 0. The scale r sets its width: a larger r expects larger effects. The default is r = √2/2 ≈ 0.71.</dd>
+      <dt>BF₁₀, BF₀₁</dt><dd>Bayes factors: how many times more likely the data are under H₁ than under H₀ (BF₁₀), or the reverse (BF₀₁ = 1/BF₁₀). BF₁₀ = 5 means the data are five times more likely under H₁. BF₊₀ and BF₋₀ are the one-sided versions.</dd>
+      <dt>Credible interval</dt><dd>The interval that contains δ with the stated posterior probability (e.g. 95%), given the data and the prior. It is a direct probability statement, unlike a confidence interval.</dd>
+      <dt>Effective n</dt><dd>The sample size that enters the Bayes factor: n₁n₂/(n₁ + n₂) for two independent groups, n otherwise.</dd>
+      <dt>Savage–Dickey ratio</dt><dd>The posterior density at δ = 0 divided by the prior density at δ = 0; it equals BF₀₁.</dd>
+      <dt>Lindley’s paradox</dt><dd>With a large sample, a result can be significant (p &lt; α) while the Bayes factor favours H₀, because a tiny effect fits a modest t poorly.</dd>
       <dt>z test</dt><dd>The normal-curve version of the test, correct only if the population SD σ were known. With s estimated from a small sample it gives p-values that are too small.</dd>
       <dt>Type I error</dt><dd>Rejecting H₀ when it is true (a false positive). Its long-run rate equals α when the assumptions hold.</dd>
       <dt>Power</dt><dd>The probability of a significant result when the true difference is not 0. It rises with larger effects, larger n and, for paired data, higher r.</dd>
@@ -248,7 +346,7 @@ dl.key{display:grid;grid-template-columns:max-content 1fr;gap:6px 16px;margin:0}
     </dl>
   </div>
 </details>
-<footer>Single-file, dependency-free demo. Simulated data are drawn from normal distributions with a seeded random generator, so a given seed is reproducible.</footer>
+<footer>Single-file, dependency-free demo. Simulated data are drawn from the chosen population shape with a seeded random generator, so a given seed is reproducible. Bayes factors are computed by numerical integration in your browser.</footer>
 
 <script>
 "use strict";
@@ -340,18 +438,115 @@ function oneTest(X,mu0,tails,alpha,lite){
   return res;
 }
 
+/* ============ Robust (Yuen) and Bayesian cores ============ */
+function sigW2(g){if(g<=0)return 1;const z=zCrit(g);return 1-2*g-2*z*npdf(z)+2*g*z*z;}
+function trimInfo(arr,gam){
+  const n=arr.length,g=Math.floor(gam*n+1e-9),idx=arr.map((v,i)=>i).sort((a,b)=>arr[a]-arr[b]),s=idx.map(i=>arr[i]),h=n-2*g;
+  let tm=0;for(let i=g;i<n-g;i++)tm+=s[i];tm/=h;
+  const w=s.map((v,i)=>i<g?s[g]:i>=n-g?s[n-g-1]:v),mw=mean(w),sw2=w.reduce((a,v)=>a+(v-mw)*(v-mw),0)/(n-1);
+  const trimmed=new Array(n).fill(false);for(let i=0;i<g;i++){trimmed[idx[i]]=true;trimmed[idx[n-1-i]]=true;}
+  return{n,g,h,tm,sw2,trimmed};
+}
+function yuenInd(A,B,gam,tails,alpha,lite){
+  const nA=A.length,nB=B.length;
+  if(nA<3||nB<3)return{invalid:true,msg:'Yuen’s test needs at least 3 values in each group.'};
+  const a=trimInfo(A,gam),b=trimInfo(B,gam);
+  if(a.h<2||b.h<2)return{invalid:true,msg:'Too few scores remain after trimming. Lower the trimming proportion.'};
+  const dA=(nA-1)*a.sw2/(a.h*(a.h-1)),dB=(nB-1)*b.sw2/(b.h*(b.h-1)),se=Math.sqrt(dA+dB);
+  if(!(se>0))return{invalid:true,msg:'The trimmed data have no variability, so t is undefined.'};
+  const df=(dA+dB)**2/(dA*dA/(a.h-1)+dB*dB/(b.h-1)),diff=a.tm-b.tm;
+  const spw=Math.sqrt(((nA-1)*a.sw2+(nB-1)*b.sw2)/(nA+nB-2)),dR=Math.sqrt(sigW2(gam))*diff/spw;
+  return decide({kind:'ind',test:'yuen',gam,nA,nB,mA:mean(A),mB:mean(B),tmA:a.tm,tmB:b.tm,gA:a.g,gB:b.g,hA:a.h,hB:b.h,swA:Math.sqrt(a.sw2),swB:Math.sqrt(b.sw2),diff,se,df,t:diff/se,dR},tails,alpha,lite);
+}
+function yuenOne(X,mu0,gam,kind,tails,alpha,lite,extra){
+  const n=X.length;
+  if(n<3)return{invalid:true,msg:'Yuen’s test needs at least 3 values.'};
+  if(!isFinite(mu0))return{invalid:true,msg:'Enter a number for the hypothesized mean μ₀.'};
+  const a=trimInfo(X,gam);
+  if(a.h<2)return{invalid:true,msg:'Too few scores remain after trimming. Lower the trimming proportion.'};
+  const se=Math.sqrt(a.sw2*n)/a.h;
+  if(!(se>0))return{invalid:true,msg:'The trimmed data have no variability, so t is undefined.'};
+  const diff=a.tm-mu0;
+  const res={kind,test:'yuen',gam,n,mu0,mA:mean(X),tm:a.tm,g:a.g,h:a.h,sw:Math.sqrt(a.sw2),diff,se,df:a.h-1,t:diff/se,dR:Math.sqrt(sigW2(gam))*diff/Math.sqrt(a.sw2),D:lite?null:X.map(x=>x-mu0)};
+  if(extra)Object.assign(res,extra);
+  const out=decide(res,tails,alpha,lite);
+  if(!lite)out.ciMean=[out.ci[0]+mu0,out.ci[1]+mu0];
+  return out;
+}
+function yuenPaired(A,B,gam,tails,alpha,lite){
+  if(A.length!==B.length||A.length<3)return{invalid:true,msg:'Paired data needs the same number of values (at least 3) in both conditions.'};
+  const D=A.map((a,i)=>a-B[i]);
+  return yuenOne(D,0,gam,'paired',tails,alpha,lite,{mA:mean(A),mB:mean(B),tmA:trimInfo(A,gam).tm,tmB:trimInfo(B,gam).tm,n:A.length});
+}
+/* noncentral t density: integrate over s = sqrt(chi2/nu) */
+function nctpdf(t,nu,lam){
+  const wmax=Math.max(4,1+12*Math.sqrt(2/nu)),smax=Math.sqrt(wmax),M=240,h=smax/M,lc=(nu/2)*Math.log(nu/2)-lgamma(nu/2);
+  let sum=0;
+  for(let i=0;i<=M;i++){
+    const x=i*h,v=2*Math.exp(lc)*Math.pow(x,nu)*Math.exp(-nu*x*x/2)*npdf(t*x-lam);
+    sum+=(i===0||i===M?1:i%2?4:2)*v;
+  }
+  return sum*h/3;
+}
+/* JZS Bayes factor BF10 (Rouder et al., 2009) with Cauchy(0, r) prior on the standardized effect */
+function bf10(t,N,nu,r,M,lo,hi){
+  M=M||600;lo=lo===undefined?-12:lo;hi=hi===undefined?22:hi;
+  const a=Math.pow(1+t*t/nu,-(nu+1)/2),h=(hi-lo)/M,r2=r*r;let s=0;
+  for(let i=0;i<=M;i++){
+    const g=Math.exp(lo+i*h),q=1+N*g*r2;
+    const v=Math.pow(q,-0.5)*Math.pow(1+t*t/(q*nu),-(nu+1)/2)*Math.exp(-1/(2*g))*Math.pow(g,-0.5)/2.5066282746310002;
+    s+=(i===0||i===M?1:i%2?4:2)*v;
+  }
+  return s*h/3/a;
+}
+function bayesPost(t,N,nu,r,tails,level){
+  const sq=Math.sqrt(N),dh=t/sq,L=Math.max(4,Math.abs(dh)+8/sq),K=800,dx=2*L/K,x=[],pr=[],po=[];
+  for(let k=0;k<=K;k++){const d=-L+dx*k;x.push(d);pr.push(1/(Math.PI*r*(1+(d/r)*(d/r))));po.push(pr[k]*nctpdf(t,nu,d*sq));}
+  let tot=0;for(let k=0;k<K;k++)tot+=(po[k]+po[k+1])/2*dx;
+  const post=po.map(v=>v/tot),side=tails==='greater'?1:tails==='less'?-1:0;
+  let mass=0;const cells=[];
+  for(let k=0;k<K;k++){const mid=(x[k]+x[k+1])/2,keep=side===0||mid*side>0,c=keep?(post[k]+post[k+1])/2*dx:0;cells.push(c);mass+=c;}
+  const sc=side===0?1:1/mass,postP=post.map((v,k)=>(side===0||x[k]*side>=-1e-12)?v*sc:0),priorP=pr.map((v,k)=>side===0?v:(x[k]*side>=-1e-12?2*v:0));
+  const q=(p)=>{let c=0;for(let k=0;k<K;k++){const cc=cells[k]*sc;if(c+cc>=p&&cc>0)return x[k]+dx*(p-c)/cc;c+=cc;}return x[K];};
+  const al=(1-level)/2;
+  return{x,prior:priorP,post:postP,median:q(.5),ci:[q(al),q(1-al)],mass:side===0?1:mass,side,L,prior0:1/(Math.PI*r)*(side===0?1:2),post0:post[K/2]*sc};
+}
+function bayesTest(stu,r,tails,alpha){
+  const N=stu.kind==='ind'?stu.nA*stu.nB/(stu.nA+stu.nB):stu.n,nu=stu.df,t=stu.t;
+  const bfTwo=bf10(t,N,nu,r),post=bayesPost(t,N,nu,r,tails,1-alpha);
+  const bf=tails==='two'?bfTwo:bfTwo*post.mass/0.5;
+  return{kind:stu.kind,test:'bayes',t,N,nu,r,tails,alpha,bfTwo,bf,post,stu};
+}
+function bfEvidence(bf){
+  const h=bf>=1,v=h?bf:1/bf;
+  if(v<1.0005)return'No evidence either way';
+  return(v<3?'Anecdotal':v<10?'Moderate':v<30?'Strong':v<100?'Very strong':'Extreme')+' evidence for H'+(h?'₁':'₀');
+}
+const apaP=p=>p<0.001?'< .001':'= '+fp(p);
+function fmtBF(bf){
+  if(!isFinite(bf))return'∞';
+  if(bf>=1e5||bf<1e-3)return bf.toExponential(1).replace('e+','e').replace('-','−');
+  return bf>=100?String(Math.round(bf)):bf>=10?bf.toFixed(1):bf.toFixed(2);
+}
+function shapeDraw(shape,g,rng){
+  if(shape==='heavy'){const z=g(),a=g(),b=g(),c=g();return z/Math.sqrt(a*a+b*b+c*c);}
+  if(shape==='contam'){const u=rng(),z=g();return(u<0.1?4*z:z)/Math.sqrt(2.5);}
+  if(shape==='skew'){const s=0.6,z=g(),m=Math.exp(s*s/2),sd=Math.sqrt((Math.exp(s*s)-1)*Math.exp(s*s));return(Math.exp(s*z)-m)/sd;}
+  return g();
+}
+
 /* ============ Random numbers ============ */
 function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
 function normalGen(rng){let spare=null;return function(){if(spare!==null){const s=spare;spare=null;return s;}let u=0,v=0;while(u===0)u=rng();v=rng();const m=Math.sqrt(-2*Math.log(u));spare=m*Math.sin(2*Math.PI*v);return m*Math.cos(2*Math.PI*v);};}
 
 /* ============ State ============ */
-const S={mode:'ind',source:'sim',muA:107.5,muB:100,sdA:15,sdB:15,nA:30,nB:30,mu0:100,r:0.6,alpha:0.05,tails:'two',variant:'welch',exact:false,seed:7,simSeed:1};
+const S={mode:'ind',source:'sim',muA:107.5,muB:100,sdA:15,sdB:15,nA:30,nB:30,mu0:100,r:0.6,alpha:0.05,tails:'two',test:'student',shape:'normal',trim:0.2,prior:0.7071,exact:false,seed:7,simSeed:1};
 const MAXN=100;
 let Z1,Z2,JIT;
 function genBase(){
   const rng=mulberry32(S.seed*7919+13),g=normalGen(rng);
   Z1=[];Z2=[];JIT=[];
-  for(let i=0;i<MAXN;i++){Z1.push(g());Z2.push(g());JIT.push(rng()*2-1);}
+  for(let i=0;i<MAXN;i++){Z1.push(shapeDraw(S.shape,g,rng));Z2.push(shapeDraw(S.shape,g,rng));JIT.push(rng()*2-1);}
 }
 function stdz(z){const m=mean(z),s=Math.sqrt(vari(z));return z.map(v=>(v-m)/s);}
 function orth(z2,z1){const m2=mean(z2);let num=0,den=0;for(let i=0;i<z1.length;i++){num+=z1[i]*(z2[i]-m2);den+=z1[i]*z1[i];}const b=num/den;return z2.map((v,i)=>v-m2-b*z1[i]);}
@@ -370,24 +565,6 @@ function ownData(){
   if(A.some(v=>!isFinite(v))||B.some(v=>!isFinite(v)))return{err:'Some entries are not numbers.'};
   return{A,B};
 }
-function runSim(N){
-  const rng=mulberry32(S.simSeed*104729+S.nA*31+S.nB),g=normalGen(rng),paired=S.mode==='paired',single=S.mode==='single';
-  const bins=new Array(20).fill(0);let sig=0,sigWrong=0,valid=0;
-  const nA=S.nA,nB=paired?S.nA:S.nB,r=S.r,k=Math.sqrt(1-r*r);
-  for(let it=0;it<N;it++){
-    const A=new Array(nA),B=single?null:new Array(nB);
-    if(single){for(let i=0;i<nA;i++)A[i]=S.muA+S.sdA*g();}
-    else if(paired){for(let i=0;i<nA;i++){const z1=g(),z2=g();A[i]=S.muA+S.sdA*z1;B[i]=S.muB+S.sdB*(r*z1+k*z2);}}
-    else{for(let i=0;i<nA;i++)A[i]=S.muA+S.sdA*g();for(let i=0;i<nB;i++)B[i]=S.muB+S.sdB*g();}
-    const res=single?oneTest(A,S.mu0,S.tails,S.alpha,true):paired?pairedTest(A,B,S.tails,S.alpha,true):indTest(A,B,S.variant,S.tails,S.alpha,true);
-    if(res.invalid)continue; valid++;
-    bins[Math.min(19,Math.floor(res.p*20))]++; if(res.sig)sig++;
-    if(single){if(pNorm(res.t,S.tails)<S.alpha)sigWrong++;}
-    else if(paired){const w=indTest(A,B,S.variant,S.tails,S.alpha,true);if(!w.invalid&&w.sig)sigWrong++;}
-  }
-  return{bins,sig,sigWrong,N:valid,paired,single};
-}
-
 /* ============ Formatting ============ */
 const $=id=>document.getElementById(id);
 const f=(x,d=2)=>isFinite(x)?x.toFixed(d).replace('-','−'):(x>0?'∞':x<0?'−∞':'–');
@@ -416,16 +593,22 @@ const PRESETS=[
   {name:'Paired, r = 0',mode:'paired',v:{muA:105,muB:100,sdA:15,sdB:15,nA:20,r:0}},
   {name:'Single sample: no true effect',mode:'single',v:{muA:100,sdA:15,nA:30,mu0:100}},
   {name:'Single sample: d = .5',mode:'single',v:{muA:107.5,sdA:15,nA:30,mu0:100}},
-  {name:'Single sample: tiny n',mode:'single',v:{muA:110,sdA:15,nA:6,mu0:100}}
+  {name:'Single sample: tiny n',mode:'single',v:{muA:110,sdA:15,nA:6,mu0:100}},
+  {name:'Heavy tails, true effect',mode:'ind',test:'yuen',v:{muA:110,muB:100,sdA:15,sdB:15,nA:25,nB:25,shape:'heavy'}},
+  {name:'Contaminated data',mode:'ind',test:'yuen',v:{muA:108,muB:100,sdA:15,sdB:15,nA:30,nB:30,shape:'contam'}},
+  {name:'Skewed data',mode:'ind',test:'yuen',v:{muA:105,muB:100,sdA:15,sdB:15,nA:30,nB:30,shape:'skew'}},
+  {name:'Bayes: modest evidence',mode:'ind',test:'bayes',v:{muA:106,muB:100,sdA:15,sdB:15,nA:25,nB:25}},
+  {name:'Bayes: evidence for H₀',mode:'ind',test:'bayes',v:{muA:100,muB:100,sdA:15,sdB:15,nA:60,nB:60}}
 ];
 function buildControls(){
   $('params').innerHTML=PARAMS.map(p=>`<div class="sl" id="w_${p.k}"><label for="p_${p.k}"><span id="l_${p.k}"></span><output id="o_${p.k}"></output></label><input type="range" id="p_${p.k}" min="${p.min}" max="${p.max}" step="${p.step}"></div>`).join('');
   PARAMS.forEach(p=>$('p_'+p.k).addEventListener('input',e=>{S[p.k]=+e.target.value;update();}));
   $('presets').innerHTML=PRESETS.map((p,i)=>`<button class="pill" data-i="${i}">${p.name}</button>`).join('');
-  $('presets').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const p=PRESETS[+b.dataset.i];Object.assign(S,p.v);S.mode=p.mode;S.source='sim';document.querySelector('input[name=src][value=sim]').checked=true;update();});
+  $('presets').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const p=PRESETS[+b.dataset.i];Object.assign(S,p.v);S.shape=p.v.shape||'normal';if(p.test)S.test=p.test;S.mode=p.mode;S.source='sim';genBase();document.querySelector('input[name=src][value=sim]').checked=true;update();});
 }
 function syncUI(){
   const ind=S.mode==='ind',one=S.mode==='single',lab=L();
+  ['student','welch','yuen','bayes'].forEach(k=>$('tab-'+k).setAttribute('aria-selected',S.test===k));
   $('tab-ind').setAttribute('aria-selected',ind);$('tab-paired').setAttribute('aria-selected',S.mode==='paired');$('tab-single').setAttribute('aria-selected',one);
   PARAMS.forEach(p=>{
     $('w_'+p.k).hidden=!!p.modes&&!p.modes.includes(S.mode);
@@ -433,8 +616,9 @@ function syncUI(){
   });
   $('params').disabled=S.source==='own';$('params').style.opacity=S.source==='own'?.45:1;
   $('simBox').hidden=S.source==='own';$('ownBox').hidden=S.source!=='own';
-  $('exact').checked=S.exact;$('alpha').value=String(S.alpha);$('variant').value=S.variant;
-  $('welchOpt').hidden=!ind;
+  $('exact').checked=S.exact;$('alpha').value=String(S.alpha);$('shape').value=S.shape;$('trim').value=S.trim;$('o_trim').textContent=Math.round(S.trim*100)+'%';$('prior').value=String(S.prior);
+  $('trimOpt').hidden=S.test!=='yuen';$('priorOpt').hidden=S.test!=='bayes';
+  $('alphaLab').textContent=S.test==='bayes'?'Credible-interval level (1 − α)':'Significance level α';
   $('mu0Opt').hidden=!one;if(document.activeElement!==$('mu0'))$('mu0').value=S.mu0;
   $('tails').innerHTML=`<option value="two">Two-sided (${lab.s1} ≠ ${lab.s2})</option><option value="greater">One-sided: ${lab.s1} &gt; ${lab.s2}</option><option value="less">One-sided: ${lab.s1} &lt; ${lab.s2}</option>`;
   $('tails').value=S.tails;
@@ -454,6 +638,9 @@ function syncUI(){
     :one
     ?'Dots are individual scores; the black mark is the sample mean with its CI, and the dashed red line is the hypothesized mean μ₀. The right panel shows each score minus μ₀ and the CI of the mean difference: when a two-sided test is significant, that interval excludes 0.'
     :'Each grey line is one participant. The right panel shows each participant’s difference score. The paired test uses these differences, so judge the effect there rather than from the two separate group CIs.';
+  if(S.test==='yuen')$('dataCap').textContent+=' Hollow dots are the scores trimmed away (the lowest and highest γ of each sample); the black marks are trimmed means with their CIs.';
+  if(S.test==='bayes')$('dataCap').textContent+=' The Bayesian test uses the same data; the marks shown here are ordinary means and CIs for reference.';
+  if(S.shape!=='normal')$('truth').innerHTML+=' · population shape <b>'+SHAPES[S.shape]+'</b>';
 }
 
 /* ============ SVG helpers ============ */
@@ -465,15 +652,15 @@ const px=v=>(+v.toFixed(2));
 function chartGroups(A,B,res){
   const paired=res.kind==='paired',lab=L();
   const W=560,H=340,m={l:50,r:12,t:14,b:50},pw=W-m.l-m.r,ph=H-m.t-m.b;
-  const hA=halfCI(A),hB=halfCI(B),mA=mean(A),mB=mean(B);
+  const cA=ctr(A),cB=ctr(B),hA=cA.h,hB=cB.h,mA=cA.m,mB=cB.m;
   let lo=Math.min(...A,...B,mA-hA,mB-hB),hi=Math.max(...A,...B,mA+hA,mB+hB);
   const pad=(hi-lo)*0.06||1;lo-=pad;hi+=pad;
   const y=v=>px(m.t+ph*(1-(v-lo)/(hi-lo))),x1=px(m.l+pw*0.27),x2=px(m.l+pw*0.73),jw=36;
   let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Scores for ${lab.A} and ${lab.B}">`+yAxis(m,W,y,lo,hi);
   s+=`<text transform="rotate(-90)" x="${-(m.t+ph/2)}" y="12" text-anchor="middle">Score</text>`;
   if(paired)for(let i=0;i<A.length;i++)s+=`<line x1="${x1}" x2="${x2}" y1="${y(A[i])}" y2="${y(B[i])}" style="stroke:var(--muted)" stroke-opacity=".4"/>`;
-  A.forEach((v,i)=>{const dx=paired?0:JIT[i%MAXN]*jw;s+=`<circle cx="${px(x1+dx)}" cy="${y(v)}" r="4" style="fill:var(--a)" fill-opacity=".72"/>`;});
-  B.forEach((v,i)=>{const dx=paired?0:JIT[(i+37)%MAXN]*jw;s+=`<circle cx="${px(x2+dx)}" cy="${y(v)}" r="4" style="fill:var(--b)" fill-opacity=".72"/>`;});
+  A.forEach((v,i)=>{const dx=paired?0:JIT[i%MAXN]*jw;s+=dot(px(x1+dx),y(v),'var(--a)',cA.flags&&cA.flags[i]);});
+  B.forEach((v,i)=>{const dx=paired?0:JIT[(i+37)%MAXN]*jw;s+=dot(px(x2+dx),y(v),'var(--b)',cB.flags&&cB.flags[i]);});
   if(paired)s+=`<line x1="${x1}" x2="${x2}" y1="${y(mA)}" y2="${y(mB)}" style="stroke:var(--ink)" stroke-width="2.5"/>`;
   [[x1,mA,hA],[x2,mB,hB]].forEach(([x,mu,h])=>{
     s+=`<line x1="${x}" x2="${x}" y1="${y(mu-h)}" y2="${y(mu+h)}" style="stroke:var(--ink)" stroke-width="2.5"/>`;
@@ -485,14 +672,14 @@ function chartGroups(A,B,res){
 }
 function chartOne(A,res){
   const lab=L(),W=560,H=340,m={l:50,r:12,t:14,b:50},pw=W-m.l-m.r,ph=H-m.t-m.b;
-  const h=halfCI(A),mA=mean(A),mu0=res.mu0;
+  const cA=ctr(A),h=cA.h,mA=cA.m,mu0=res.mu0;
   let lo=Math.min(...A,mA-h,mu0),hi=Math.max(...A,mA+h,mu0);
   const pad=(hi-lo)*0.06||1;lo-=pad;hi+=pad;
   const y=v=>px(m.t+ph*(1-(v-lo)/(hi-lo))),x1=px(m.l+pw/2),jw=80;
   let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Sample scores with the sample mean, its confidence interval and the hypothesized mean">`+yAxis(m,W,y,lo,hi);
   s+=`<text transform="rotate(-90)" x="${-(m.t+ph/2)}" y="12" text-anchor="middle">Score</text>`;
   s+=`<line x1="${m.l}" x2="${W-m.r}" y1="${y(mu0)}" y2="${y(mu0)}" style="stroke:var(--rej)" stroke-dasharray="6 4" stroke-width="1.8"/><text x="${W-m.r}" y="${y(mu0)-5}" text-anchor="end" style="fill:var(--rej)">μ₀ = ${f(mu0,1)}</text>`;
-  A.forEach((v,i)=>{s+=`<circle cx="${px(x1+JIT[i%MAXN]*jw)}" cy="${y(v)}" r="4" style="fill:var(--a)" fill-opacity=".72"/>`;});
+  A.forEach((v,i)=>{s+=dot(px(x1+JIT[i%MAXN]*jw),y(v),'var(--a)',cA.flags&&cA.flags[i]);});
   s+=`<line x1="${x1}" x2="${x1}" y1="${y(mA-h)}" y2="${y(mA+h)}" style="stroke:var(--ink)" stroke-width="2.5"/>`;
   s+=`<line x1="${x1-8}" x2="${x1+8}" y1="${y(mA-h)}" y2="${y(mA-h)}" style="stroke:var(--ink)" stroke-width="2.5"/><line x1="${x1-8}" x2="${x1+8}" y1="${y(mA+h)}" y2="${y(mA+h)}" style="stroke:var(--ink)" stroke-width="2.5"/>`;
   s+=`<line x1="${x1-30}" x2="${x1+30}" y1="${y(mA)}" y2="${y(mA)}" style="stroke:var(--ink)" stroke-width="3.5"/>`;
@@ -507,12 +694,13 @@ function chartDiff(res){
   const y=v=>px(m.t+ph*(1-(v-lo)/(hi-lo))),cx=px(m.l+pw/2);
   let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Estimated difference with confidence interval">`+yAxis(m,W,y,lo,hi);
   s+=`<line x1="${m.l}" x2="${W-m.r}" y1="${y(0)}" y2="${y(0)}" style="stroke:var(--rej)" stroke-dasharray="5 4" stroke-width="1.5"/><text x="${W-m.r}" y="${y(0)-5}" text-anchor="end" style="fill:var(--rej)">${res.kind==='single'?'0 = equals μ₀':'0 = no difference'}</text>`;
-  if(paired)res.D.forEach((v,i)=>{s+=`<circle cx="${px(cx+JIT[i%MAXN]*30)}" cy="${y(v)}" r="3.6" style="fill:var(--muted)" fill-opacity=".55"/>`;});
+  const fl=paired&&res.test==='yuen'?trimInfo(res.D,S.trim).trimmed:null;
+  if(paired)res.D.forEach((v,i)=>{s+=dot(px(cx+JIT[i%MAXN]*30),y(v),'var(--muted)',fl&&fl[i],3.6);});
   const col=res.sig?'var(--ok)':'var(--ink)';
   s+=`<line x1="${cx}" x2="${cx}" y1="${y(res.ci[0])}" y2="${y(res.ci[1])}" style="stroke:${col}" stroke-width="3"/>`;
   s+=`<line x1="${cx-9}" x2="${cx+9}" y1="${y(res.ci[0])}" y2="${y(res.ci[0])}" style="stroke:${col}" stroke-width="3"/><line x1="${cx-9}" x2="${cx+9}" y1="${y(res.ci[1])}" y2="${y(res.ci[1])}" style="stroke:${col}" stroke-width="3"/>`;
   s+=`<circle cx="${cx}" cy="${y(res.diff)}" r="6.5" style="fill:${col}"/>`;
-  s+=`<text x="${cx}" y="${H-m.b+20}" text-anchor="middle" style="fill:var(--ink);font-weight:600">${res.kind==='single'?'Scores minus μ₀':paired?'Differences (1 − 2)':'Mean difference (A − B)'}</text><text x="${cx}" y="${H-m.b+35}" text-anchor="middle">${f(res.diff)} · ${lvl()} CI</text>`;
+  s+=`<text x="${cx}" y="${H-m.b+20}" text-anchor="middle" style="fill:var(--ink);font-weight:600">${res.kind==='single'?'Scores minus μ₀':paired?'Differences (1 − 2)':res.test==='yuen'?'Trimmed-mean difference (A − B)':'Mean difference (A − B)'}</text><text x="${cx}" y="${H-m.b+35}" text-anchor="middle">${f(res.diff)} · ${lvl()} CI</text>`;
   return s+'</svg>';
 }
 function chartT(res){
@@ -557,6 +745,239 @@ function chartSim(sim){
   return s+'</svg>';
 }
 
+/* ============ Four-test helpers ============ */
+function computeAll(A,B){
+  const one=S.mode==='single',pr=S.mode==='paired',ind=S.mode==='ind';
+  const stu=one?oneTest(A,S.mu0,S.tails,S.alpha):pr?pairedTest(A,B,S.tails,S.alpha):indTest(A,B,'student',S.tails,S.alpha);
+  const wel=ind?indTest(A,B,'welch',S.tails,S.alpha):stu;
+  const yue=one?yuenOne(A,S.mu0,S.trim,'single',S.tails,S.alpha):pr?yuenPaired(A,B,S.trim,S.tails,S.alpha):yuenInd(A,B,S.trim,S.tails,S.alpha);
+  const bay=stu.invalid?stu:bayesTest(stu,S.prior,S.tails,S.alpha);
+  return{student:stu,welch:wel,yuen:yue,bayes:bay};
+}
+function ctr(arr){
+  if(S.test==='yuen'){const t=trimInfo(arr,S.trim);return{m:t.tm,h:t.h>=2?tCrit(S.alpha/2,t.h-1)*Math.sqrt(t.sw2*arr.length)/t.h:0,flags:t.trimmed};}
+  return{m:mean(arr),h:halfCI(arr),flags:null};
+}
+const dot=(cx,cy,c,hollow,r=4)=>hollow?`<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" style="stroke:${c}" stroke-width="1.5" stroke-opacity=".8"/>`:`<circle cx="${cx}" cy="${cy}" r="${r}" style="fill:${c}" fill-opacity=".72"/>`;
+const TESTNAME={student:'Student’s t',welch:'Welch’s t',yuen:'Yuen’s t',bayes:'Bayesian t'};
+const SHAPES={normal:'normal',heavy:'heavy-tailed (t, df = 3)',contam:'contaminated (10% outliers)',skew:'skewed (lognormal)'};
+const pctTrim=()=>Math.round(S.trim*100)+'%';
+
+/* ---------- log-scale Bayes factor chart ---------- */
+function chartLogBF(o){
+  const W=440,H=270,m={l:56,r:14,t:16,b:42},pw=W-m.l-m.r,ph=H-m.t-m.b;
+  const all=[...o.ys,o.cur.y];
+  const ymax=Math.max(2,Math.ceil(Math.max(...all)+0.15)),ymin=Math.min(-2,Math.floor(Math.min(...all)-0.15)),stp=Math.max(1,Math.ceil((ymax-ymin)/8));
+  const X=v=>px(m.l+pw*(v-o.xmin)/(o.xmax-o.xmin)),Y=v=>px(m.t+ph*(1-(v-ymin)/(ymax-ymin)));
+  const lab=v=>v<0?'1/'+Math.round(Math.pow(10,-v)):String(Math.round(Math.pow(10,v)));
+  let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${o.aria}">`;
+  for(let v=Math.ceil(ymin/stp)*stp;v<=ymax;v+=stp)s+=`<line class="ax" x1="${m.l}" x2="${W-m.r}" y1="${Y(v)}" y2="${Y(v)}"/><text x="${m.l-6}" y="${Y(v)+4}" text-anchor="end">${lab(v)}</text>`;
+  const l3=Math.log10(3);
+  [l3,-l3].forEach(v=>{s+=`<line x1="${m.l}" x2="${W-m.r}" y1="${Y(v)}" y2="${Y(v)}" style="stroke:var(--muted)" stroke-dasharray="4 4"/>`;});
+  s+=`<text x="${W-m.r}" y="${Y(l3)-4}" text-anchor="end">BF = 3</text><text x="${W-m.r}" y="${Y(-l3)+12}" text-anchor="end">BF = 1/3</text>`;
+  s+=`<line x1="${m.l}" x2="${W-m.r}" y1="${Y(0)}" y2="${Y(0)}" style="stroke:var(--ink)" stroke-width="1.2"/>`;
+  if(o.vline)s+=`<line x1="${X(o.vline.x)}" x2="${X(o.vline.x)}" y1="${m.t}" y2="${H-m.b}" style="stroke:var(--rej)" stroke-dasharray="5 4" stroke-width="1.5"/><text x="${X(o.vline.x)+5}" y="${m.t+11}" style="fill:var(--rej)">${o.vline.label}</text>`;
+  s+=`<path d="${o.xs.map((x,i)=>(i?'L':'M')+X(x)+' '+Y(o.ys[i])).join('')}" fill="none" style="stroke:var(--accent)" stroke-width="2.4"/>`;
+  s+=`<circle cx="${X(o.cur.x)}" cy="${Y(o.cur.y)}" r="6" style="fill:var(--ink)"/>`;
+  o.xt.forEach(v=>{s+=`<text x="${X(v)}" y="${H-m.b+16}" text-anchor="middle">${tk(v)}</text>`;});
+  s+=`<text x="${m.l+pw/2}" y="${H-5}" text-anchor="middle">${o.xlab}</text><text transform="rotate(-90)" x="${-(m.t+ph/2)}" y="12" text-anchor="middle">BF₁₀ (log scale)</text>`;
+  return s+'</svg>';
+}
+function chartPost(res){
+  const P=res.post,W=900,H=290,m={l:46,r:14,t:26,b:46},pw=W-m.l-m.r,ph=H-m.t-m.b;
+  const vlo=Math.min(-2.5,P.ci[0]-0.8),vhi=Math.max(2.5,P.ci[1]+0.8),lo=Math.max(vlo,P.x[0]),hi=Math.min(vhi,P.x[P.x.length-1]);
+  let ymax=0;P.x.forEach((d,i)=>{if(d>=lo&&d<=hi)ymax=Math.max(ymax,P.post[i],P.prior[i]);});ymax*=1.1;
+  const X=v=>px(m.l+pw*(v-lo)/(hi-lo)),Y=v=>px(H-m.b-ph*v/ymax);
+  const path=arr=>{let d='';P.x.forEach((x,i)=>{if(x>=lo&&x<=hi)d+=(d?'L':'M')+X(x)+' '+Y(arr[i]);});return d;};
+  const area=()=>{let d='',first=null,last=null;P.x.forEach((x,i)=>{if(x>=lo&&x<=hi&&P.post[i]>0){if(first===null)first=x;last=x;d+=(d?'L':'M')+X(x)+' '+Y(P.post[i]);}});return d?d+`L${X(last)} ${Y(0)}L${X(first)} ${Y(0)}Z`:'';};
+  let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Prior and posterior density of the standardized effect size">`;
+  for(const v of ticks(lo,hi,8))s+=`<line class="ax" x1="${X(v)}" x2="${X(v)}" y1="${m.t}" y2="${H-m.b}" stroke-opacity=".5"/><text x="${X(v)}" y="${H-m.b+16}" text-anchor="middle">${tk(v)}</text>`;
+  s+=`<line x1="${m.l}" x2="${W-m.r}" y1="${Y(0)}" y2="${Y(0)}" style="stroke:var(--muted)"/>`;
+  s+=`<path d="${area()}" style="fill:var(--accent)" fill-opacity=".22"/>`;
+  s+=`<path d="${path(P.prior)}" fill="none" style="stroke:var(--muted)" stroke-width="2" stroke-dasharray="5 4"/>`;
+  s+=`<path d="${path(P.post)}" fill="none" style="stroke:var(--accent)" stroke-width="2.6"/>`;
+  s+=`<line x1="${X(0)}" x2="${X(0)}" y1="${m.t}" y2="${H-m.b}" style="stroke:var(--rej)" stroke-dasharray="5 4" stroke-width="1.3"/><text x="${X(0)+5}" y="${m.t+10}" style="fill:var(--rej)">H₀: δ = 0</text>`;
+  s+=dot(X(0),Y(P.prior0),'var(--muted)',false,5)+dot(X(0),Y(P.post0),'var(--accent)',false,5);
+  s+=`<line x1="${X(P.ci[0])}" x2="${X(P.ci[1])}" y1="${H-m.b+28}" y2="${H-m.b+28}" style="stroke:var(--ink)" stroke-width="4" stroke-linecap="round"/>`;
+  s+=`<circle cx="${X(P.median)}" cy="${H-m.b+28}" r="5.5" style="fill:var(--panel);stroke:var(--ink)" stroke-width="2"/>`;
+  s+=`<text x="${m.l+pw/2}" y="${H-3}" text-anchor="middle">Standardized effect size δ (bar = ${lvl()} credible interval, circle = median)</text>`;
+  return s+'</svg>';
+}
+
+/* ---------- Result renderers ---------- */
+function renderYuen(res,lab){
+  const kind=res.kind,ind=kind==='ind',ci=`[${f(res.ci[0])}, ${f(res.ci[1])}]`;
+  $('badge').innerHTML=`<span class="badge ${res.sig?'sig':'ns'}">${res.sig?'Significant':'Not significant'} at α = ${fp(res.alpha)}</span>`;
+  let cards=[['t_Y',f(res.t,3)],['df',fdf(res.df)],['p',fp(res.p)]];
+  if(ind)cards.push(['Trimmed-mean difference',f(res.diff)],[lvl()+' CI',ci],['Std. error',f(res.se,3)],['Robust d (d_R)',f(res.dR)],['Trimmed mean A',f(res.tmA)],['Trimmed mean B',f(res.tmB)],['Scores trimmed per tail',res.gA+' / '+res.gB]);
+  else if(kind==='paired')cards.push(['Trimmed mean of differences',f(res.diff)],[lvl()+' CI',ci],['Std. error',f(res.se,3)],['Robust d (d_R)',f(res.dR)],['Scores trimmed per tail',res.g]);
+  else cards.push(['Trimmed mean',f(res.tm)],['Trimmed M − μ₀',f(res.diff)],[lvl()+' CI (M_t − μ₀)',ci],[lvl()+' CI for trimmed mean','['+f(res.ciMean[0])+', '+f(res.ciMean[1])+']'],['Std. error',f(res.se,3)],['Robust d (d_R)',f(res.dR)],['Scores trimmed per tail',res.g]);
+  $('stats').innerHTML=cards.map(([a,b])=>`<div class="stat"><small>${a}</small><b>${b}</b></div>`).join('');
+  const dir=res.diff>=0?'higher':'lower',alt=res.tails==='two'?'two-sided':'one-sided ('+(res.tails==='greater'?lab.s1+' > '+lab.s2:lab.s1+' < '+lab.s2)+')';
+  let txt;
+  if(ind)txt=`The ${pctTrim()} trimmed mean of ${lab.A} (M<sub>t</sub> = ${f(res.tmA)}) was ${dir} than that of ${lab.B} (M<sub>t</sub> = ${f(res.tmB)}) by ${f(Math.abs(res.diff))} points; the ordinary means were ${f(res.mA)} and ${f(res.mB)}.`;
+  else if(kind==='paired')txt=`The ${pctTrim()} trimmed mean of the ${res.n} difference scores was ${f(res.diff)} (the ordinary mean difference was ${f(res.mA-res.mB)}).`;
+  else txt=`The ${pctTrim()} trimmed mean (M<sub>t</sub> = ${f(res.tm)}, n = ${res.n}) was ${dir} than μ₀ = ${f(res.mu0)} by ${f(Math.abs(res.diff))} points (the ordinary mean was ${f(res.mA)}).`;
+  txt+=` Trimming removed the lowest and highest ${ind?res.gA+(res.gA===res.gB?'':' / '+res.gB):res.g} score${(ind?res.gA:res.g)===1?'':'s'} ${ind?'in each group':''}, so extreme values cannot drive the result. With a ${alt} test at α = ${fp(res.alpha)}, p ${res.p<0.001?'< .001':'= '+fp(res.p)}, so H₀ (${kind==='single'?'the population trimmed mean equals μ₀':'equal population trimmed means'}) is ${res.sig?'<b>rejected</b>':'<b>not rejected</b>'}.`;
+  txt+=` The robust effect size d<sub>R</sub> = ${f(res.dR)} is a ${effLabel(res.dR)} effect on Cohen’s scale (it is rescaled to match d for normal data). Yuen’s test compares <i>trimmed</i> means, which equal the ordinary means only when the population is symmetric.`;
+  if(res.tails!=='two'&&((res.tails==='greater'&&res.diff<0)||(res.tails==='less'&&res.diff>0)))txt+=' <b>Note:</b> the observed difference is in the opposite direction to the one-sided hypothesis.';
+  $('interp').innerHTML=txt;
+  $('apa').textContent=`t_Y(${fdf(res.df)}) = ${f(res.t)}, p ${res.p<0.001?'< .001':'= '+fp(res.p)}, d_R = ${f(res.dR)}, ${lvl()} CI [${f(res.ci[0])}, ${f(res.ci[1])}], ${pctTrim()} trimming`;
+}
+function renderBayes(res,lab){
+  const P=res.post,two=res.tails==='two',name=two?'BF₁₀':res.tails==='greater'?'BF₊₀':'BF₋₀',ev=bfEvidence(res.bf),lg=Math.log10(res.bf);
+  $('badge').innerHTML=`<span class="badge ${res.bf>=3?'sig':'ns'}">${ev}</span>`;
+  const name01=two?'BF₀₁':res.tails==='greater'?'BF₀₊':'BF₀₋';
+  const cards=[[name,fmtBF(res.bf)],[name01,fmtBF(1/res.bf)],['log₁₀ '+name,f(lg,2)],['Posterior median δ',f(P.median,2)],[lvl()+' credible interval','['+f(P.ci[0])+', '+f(P.ci[1])+']'],['Prior on δ','Cauchy(0, '+(+res.r.toFixed(3))+')'],['Student’s t (input)',f(res.t,3)],['df',fdf(res.nu)],['Effective n',f(res.N,1)]];
+  if(two)cards.splice(5,0,['P(δ > 0 | data)',f(1-integrateBelow(P),3)]);
+  $('stats').innerHTML=cards.map(([a,b])=>`<div class="stat"><small>${a}</small><b>${b}</b></div>`).join('');
+  const h=res.bf>=1,v=h?res.bf:1/res.bf,kind=res.kind;
+  const what=kind==='ind'?'the standardized difference between the group means':kind==='paired'?'the standardized mean difference (d<sub>z</sub>)':'the standardized distance of the mean from μ₀';
+  let txt=`${name} = ${fmtBF(res.bf)}: the data are about <b>${fmtBF(v)} times more likely under ${h?'H₁':'H₀'}</b> than under ${h?'H₀':'H₁'} (H₀: δ = 0; H₁: δ ~ Cauchy(0, ${+res.r.toFixed(3)})${two?'':', restricted to '+(res.tails==='greater'?'δ > 0':'δ < 0')}). That is <b>${ev.toLowerCase()}</b>. `;
+  txt+=`After seeing the data, the most credible value of ${what} is δ ≈ ${f(P.median,2)}, with a ${lvl()} credible interval of [${f(P.ci[0],2)}, ${f(P.ci[1],2)}] (a ${effLabel(P.median)} effect). `;
+  if(res.bf<3&&res.bf>1/3)txt+='A Bayes factor between 1/3 and 3 is inconclusive: more data are needed to favour either hypothesis. ';
+  else if(res.bf<=1/3)txt+='Unlike a p-value, a Bayes factor can quantify evidence <i>for</i> the null hypothesis. ';
+  txt+='The Bayes factor depends on the prior: see how it changes with the prior scale in the panel below.';
+  if(!two&&((res.tails==='greater'&&res.t<0)||(res.tails==='less'&&res.t>0)))txt+=' <b>Note:</b> the observed difference is in the opposite direction to the one-sided hypothesis, which lowers the Bayes factor.';
+  $('interp').innerHTML=txt;
+  $('apa').textContent=`${name.replace('₁₀','10').replace('₊₀','+0').replace('₋₀','-0')} = ${fmtBF(res.bf)}, δ = ${f(P.median)}, ${lvl()} CrI [${f(P.ci[0])}, ${f(P.ci[1])}], Cauchy prior r = ${+res.r.toFixed(3)}`;
+}
+function integrateBelow(P){let c=0;for(let k=0;k<P.x.length-1;k++){const mid=(P.x[k]+P.x[k+1])/2;if(mid<0)c+=(P.post[k]+P.post[k+1])/2*(P.x[k+1]-P.x[k]);}return c;}
+
+/* ---------- Test-specific panels ---------- */
+function renderPrior(res){
+  $('chartPost').innerHTML=chartPost(res);
+  const P=res.post,two=res.tails==='two';
+  $('bayesLegend').innerHTML=`<span><i style="background:var(--muted);opacity:.7"></i>Prior: Cauchy(0, ${+res.r.toFixed(3)})${two?'':' (one side only)'}</span><span><i style="background:var(--accent)"></i>Posterior (after the data)</span><span><i style="background:var(--rej);opacity:.5"></i>H₀ (δ = 0)</span>`;
+  $('bayesNote').innerHTML=`<b>Savage–Dickey check:</b> the Bayes factor for H₀ equals the posterior density at δ = 0 divided by the prior density at δ = 0 (${f(P.post0,3)} ÷ ${f(P.prior0,3)} = ${f(P.post0/P.prior0,3)} ≈ BF₀₁ = ${fmtBF(1/res.bfTwo*(two?1:2*P.mass))}). Where the posterior has moved away from 0, the data count against H₀.`;
+}
+function renderBFPanel(res){
+  const xs=[],ys=[];for(let i=0;i<=24;i++){const r=0.1+i*(1.9/24);xs.push(r);ys.push(Math.log10(bf10(res.t,res.N,res.nu,r,300)));}
+  const lc=Math.log10(bf10(res.t,res.N,res.nu,res.r,300));
+  $('chartBFr').innerHTML=chartLogBF({xs,ys,cur:{x:res.r,y:lc},xmin:0.1,xmax:2,xt:[0.5,1,1.5,2],xlab:'Prior scale r (width of the Cauchy prior)',aria:'Bayes factor as a function of the prior scale'});
+  const tcr=tCrit(S.alpha/2,res.nu),tmax=Math.max(5,Math.abs(res.t)*1.2,tcr*1.3),xs2=[],ys2=[];
+  for(let i=0;i<=40;i++){const t=tmax*i/40;xs2.push(t);ys2.push(Math.log10(bf10(t,res.N,res.nu,res.r,300)));}
+  $('chartBFt').innerHTML=chartLogBF({xs:xs2,ys:ys2,cur:{x:Math.abs(res.t),y:Math.log10(bf10(res.t,res.N,res.nu,res.r,300))},xmin:0,xmax:tmax,xt:ticks(0,tmax,6),xlab:'|t| (this sample size, '+(+res.r.toFixed(3))+' prior)',vline:{x:tcr,label:'p = '+fp(S.alpha)},aria:'Bayes factor as a function of the t statistic'});
+  const bfCrit=bf10(tcr,res.N,res.nu,res.r,300),big=bf10(tcr,res.N*10,Math.round(res.nu*10),res.r,300),
+    bfs=[.5,.7071,1,1.4142].map(r=>fmtBF(bf10(res.t,res.N,res.nu,r,300)));
+  $('bfTxt').innerHTML=`<b>Same t, different prior:</b> with prior scales 0.5, 0.71, 1 and 1.41 the Bayes factor is ${bfs.join(', ')}. <b>Significance is not the same as strong evidence:</b> a result that is just significant at α = ${fp(S.alpha)} here (|t| = ${f(tcr,2)}) corresponds to BF₁₀ ≈ ${fmtBF(bfCrit)}; with ten times the sample the same |t| would give BF₁₀ ≈ ${fmtBF(big)}. The Bayes factor for a given t falls as n grows, because a large sample makes a tiny effect a poor explanation for a modest t (Lindley’s paradox).`;
+}
+function renderWelchPanel(all){
+  const st=all.student,we=all.welch;
+  if(S.mode!=='ind'){
+    $('welchTitle').textContent='Welch’s test and this design';
+    $('welchFormula').innerHTML='';$('welchBars').innerHTML='';
+    $('welchCap').innerHTML=`Welch’s adjustment exists to handle <i>two independent groups</i> with unequal variances. In a ${S.mode==='paired'?'paired design the test runs on the difference scores':'single-sample test there is only one set of scores'}, so there is just one variance to estimate and nothing to adjust: Welch’s test is identical to Student’s here (t = ${f(st.t,3)}, df = ${fdf(st.df)}, p = ${fp(st.p)}). Switch to <b>Independent samples</b> to see the two tests diverge.`;
+    return;
+  }
+  $('welchTitle').textContent='Welch vs Student: what changes?';
+  const a=st.vA/st.nA,b=st.vB/st.nB,mx=Math.max(st.se,we.se),mdf=Math.max(st.df,we.df);
+  $('welchFormula').innerHTML=`Welch–Satterthwaite df = (s₁²/n₁ + s₂²/n₂)² / [(s₁²/n₁)²/(n₁−1) + (s₂²/n₂)²/(n₂−1)] = (${f(a,2)} + ${f(b,2)})² / [${f(a*a,2)}/${st.nA-1} + ${f(b*b,2)}/${st.nB-1}] = <b>${f(we.df,2)}</b>`;
+  const bar=(lab,v,mm,c,tx)=>`<div style="display:grid;grid-template-columns:190px 1fr 70px;gap:8px;align-items:center;margin:4px 0"><span class="cap" style="margin:0">${lab}</span><div class="bar" style="width:${Math.max(2,100*v/mm)}%;background:${c}"></div><span class="f">${tx}</span></div>`;
+  $('welchBars').innerHTML=bar('SE, Student (pooled)',st.se,mx,'var(--muted)',f(st.se,3))+bar('SE, Welch',we.se,mx,'var(--accent)',f(we.se,3))+bar('df, Student',st.df,mdf,'var(--muted)',fdf(st.df))+bar('df, Welch',we.df,mdf,'var(--accent)',f(we.df,1));
+  $('welchCap').innerHTML=st.nA===st.nB?`With <b>equal n</b> the two standard errors are identical, so t is the same; only the df differ (Welch’s df is lower when the variances differ). Make n unequal in the sliders to see t itself change.`:`With <b>unequal n</b>, Student’s pooled variance gives the larger group too much weight. When the larger group has the <i>larger</i> variance Student’s test becomes too conservative; when it has the <i>smaller</i> variance Student’s test rejects too often. Welch’s test keeps its error rate near α in both cases (try the “Unequal variances &amp; n” preset and the repeat-experiment panel).`;
+}
+function renderYuenPanel(all,A,B){
+  const rows=[];
+  const one=(name,arr)=>{const t=trimInfo(arr,S.trim);rows.push(`<tr><td>${name}</td><td class="num">${arr.length}</td><td class="num">${t.g}</td><td class="num">${t.h}</td><td class="num">${f(mean(arr))}</td><td class="num">${f(t.tm)}</td><td class="num">${f(Math.sqrt(vari(arr)))}</td><td class="num">${f(Math.sqrt(t.sw2))}</td></tr>`);};
+  const lab=L();
+  if(S.mode==='ind'){one(lab.A,A);one(lab.B,B);}
+  else if(S.mode==='paired'){one('Differences (1 − 2)',A.map((v,i)=>v-B[i]));}
+  else one(lab.A,A);
+  $('yuenTable').innerHTML='<tr><th>Scores</th><th>n</th><th>Trimmed per tail (g)</th><th>Kept (h)</th><th>Mean</th><th>Trimmed mean</th><th>SD</th><th>Winsorized SD</th></tr>'+rows.join('');
+  const y=all.yuen,st=all.welch,mx=Math.max(y.se,st.se);
+  $('yuenFormula').innerHTML=S.mode==='ind'?`t<sub>Y</sub> = (M<sub>t1</sub> − M<sub>t2</sub>) / √(d₁ + d₂), d<sub>j</sub> = (n<sub>j</sub> − 1)·s<sub>w,j</sub>² / (h<sub>j</sub>(h<sub>j</sub> − 1)) = (${f(y.tmA)} − ${f(y.tmB)}) / ${f(y.se,3)} = <b>${f(y.t,3)}</b>`:`t<sub>Y</sub> = (M<sub>t</sub> − μ₀) / SE, SE = s<sub>w</sub>·√n / h = (${f(y.diff+(y.mu0||0))} − ${f(y.mu0||0)}) / ${f(y.se,3)} = <b>${f(y.t,3)}</b>`;
+  const bar=(lab,v,c)=>`<div style="display:grid;grid-template-columns:190px 1fr 70px;gap:8px;align-items:center;margin:4px 0"><span class="cap" style="margin:0">${lab}</span><div class="bar" style="width:${Math.max(2,100*v/mx)}%;background:${c}"></div><span class="f">${f(v,3)}</span></div>`;
+  $('yuenBars').innerHTML=bar(S.mode==='ind'?'SE of the ordinary mean difference (Welch)':'SE of the ordinary mean (Student)',st.se,'var(--muted)')+bar('SE of the trimmed estimate (Yuen)',y.se,'var(--accent)');
+  $('yuenCap').innerHTML=`Hollow dots in the plot above are the scores removed by trimming (${pctTrim()} from each end); winsorizing instead <i>replaces</i> them with the nearest kept score when estimating the variance. With heavy tails or outliers the ordinary SD is inflated, so trimming can shrink the standard error and raise power; with clean normal data it costs a little power. Set the trim to 0% and Yuen’s test becomes Welch’s test exactly. ${S.shape==='skew'&&S.mode==='ind'&&S.sdA!==S.sdB?'<b>Caution:</b> in skewed populations with unequal spreads the trimmed means differ even when the means are equal, so Yuen’s test can reject a true null about means.':''}`;
+}
+function renderAll(all,A_,B_){
+  const lab=L(),es=r=>r.kind==='paired'?f(r.dz):f(r.d);
+  const row=(key,name,r,cells,sel)=>r.invalid?`<tr><td>${name}</td><td colspan="6">n/a: ${r.msg}</td></tr>`:`<tr class="${sel?'sel':''}"><td><b>${name}</b></td>${cells}</tr>`;
+  const cell=(r,stat)=>`<td class="num">${stat}</td><td class="num">${fdf(r.df)}</td><td class="num">${fp(r.p)}</td><td class="num">${f(r.diff)} [${f(r.ci[0])}, ${f(r.ci[1])}]</td>`;
+  const sv=r=>`<td>${r.sig?'<span class="badge sig">Significant</span>':'<span class="badge ns">Not significant</span>'}</td>`;
+  const st=all.student,we=all.welch,yu=all.yuen,ba=all.bayes;
+  let h=row('student','Student’s t',st,cell(st,'t = '+f(st.t,3))+`<td class="num">${es(st)}</td>`+sv(st),S.test==='student');
+  h+=row('welch','Welch’s t',we,cell(we,'t = '+f(we.t,3))+`<td class="num">${es(we)}</td>`+sv(we),S.test==='welch');
+  h+=row('yuen','Yuen’s t ('+pctTrim()+' trim)',yu,cell(yu,'t<sub>Y</sub> = '+f(yu.t,3))+`<td class="num">d<sub>R</sub> = ${f(yu.dR)}</td>`+sv(yu),S.test==='yuen');
+  if(ba.invalid)h+=`<tr><td>Bayesian t</td><td colspan="6">n/a</td></tr>`;
+  else h+=`<tr class="${S.test==='bayes'?'sel':''}"><td><b>Bayesian t</b></td><td class="num">${ba.tails==='two'?'BF₁₀':ba.tails==='greater'?'BF₊₀':'BF₋₀'} = ${fmtBF(ba.bf)}</td><td class="num">–</td><td class="num">–</td><td class="num">–</td><td class="num">δ = ${f(ba.post.median)} [${f(ba.post.ci[0])}, ${f(ba.post.ci[1])}]</td><td><span class="badge ${ba.bf>=3?'sig':'ns'}">${bfEvidence(ba.bf)}</span></td></tr>`;
+  $('allTable').innerHTML='<tr><th>Test</th><th>Statistic</th><th>df</th><th>p</th><th>Difference (CI)</th><th>Effect size</th><th>Verdict</th></tr>'+h;
+  /* relations */
+  const items=[],ind=S.mode==='ind';
+  if(ind&&!st.invalid&&!we.invalid)items.push(`<b>Student ⊂ Welch.</b> Student: t = ${f(st.t,3)}, df = ${fdf(st.df)}; Welch: t = ${f(we.t,3)}, df = ${f(we.df,2)}. ${st.nA===st.nB?'With equal n the t statistics are identical and only the df differ.':'With unequal n both t and df differ; the gap widens as the variances diverge.'} If the two variances are equal, Welch’s and Student’s tests agree closely.`);
+  else if(!st.invalid)items.push(`<b>Student = Welch here.</b> With a single set of scores (or one set of difference scores) there is no second variance, so the two tests are the same test (t = ${f(st.t,3)}, df = ${fdf(st.df)}).`);
+  if(!yu.invalid){
+    const y0=S.mode==='ind'?yuenInd(A_,B_,0,S.tails,S.alpha,true):S.mode==='paired'?yuenPaired(A_,B_,0,S.tails,S.alpha,true):yuenOne(A_,S.mu0,0,'single',S.tails,S.alpha,true);
+    if(!y0.invalid)items.push(`<b>Yuen with 0% trimming = ${S.mode==='ind'?'Welch':'Student'}.</b> Setting the trim to 0 gives t<sub>Y</sub> = ${f(y0.t,3)}, df = ${f(y0.df,2)}, the same as ${S.mode==='ind'?'Welch’s':'Student’s'} test. Trimming ${pctTrim()} moves t from ${f(y0.t,3)} to ${f(yu.t,3)} and df from ${f(y0.df,1)} to ${f(yu.df,1)}.`);
+  }
+  if(!ba.invalid){
+    const tcr=tCrit(S.alpha/2,ba.nu),bc=bf10(tcr,ba.N,ba.nu,ba.r,300);
+    items.push(`<b>The Bayes factor is built from Student’s t.</b> It uses only t = ${f(ba.t,3)}, df = ${fdf(ba.nu)} and the effective n = ${f(ba.N,1)}, plus the prior scale r = ${+ba.r.toFixed(3)}. Here p ${apaP(st.p)} corresponds to BF₁₀ = ${fmtBF(ba.bfTwo)}; the boundary of significance (|t| = ${f(tcr,2)}) corresponds to BF₁₀ ≈ ${fmtBF(bc)}, which is ${bc<3?'only anecdotal or moderate evidence':'moderate or stronger evidence'}, so “p &lt; ${fp(S.alpha)}” and “BF₁₀ &gt; 3” are different standards.`);
+  }
+  if(!st.invalid&&!yu.invalid&&!ba.invalid){
+    const e=ba.bf>=3?'H₁':ba.bf<=1/3?'H₀':'neither hypothesis';
+    items.push(st.sig===yu.sig?`<b>Verdicts.</b> Student’s and Yuen’s tests ${st.sig?'both reject':'both fail to reject'} H₀; the Bayes factor favours ${e}.`:`<b>Verdicts disagree.</b> Student’s test ${st.sig?'rejects':'does not reject'} H₀ but Yuen’s test ${yu.sig?'rejects':'does not'}: extreme scores or skew are pulling the ordinary mean and SD. Look at the hollow (trimmed) points in the plot. The Bayes factor favours ${e}.`);
+  }
+  $('relList').innerHTML=items.map(x=>`<li>${x}</li>`).join('');
+}
+
+function runSim(N){
+  const rng=mulberry32(S.simSeed*104729+S.nA*31+S.nB),g=normalGen(rng),dz=()=>shapeDraw(S.shape,g,rng);
+  const paired=S.mode==='paired',single=S.mode==='single',ind=S.mode==='ind',nA=S.nA,nB=paired?S.nA:S.nB,r=S.r,k=Math.sqrt(1-r*r);
+  const bays=S.test==='bayes',nb=bays?16:20,bins=new Array(nb).fill(0);
+  let valid=0,sigWrong=0;const cnt={student:0,welch:0,yuen:0,bf3:0,bf3n:0};
+  for(let it=0;it<N;it++){
+    const A=new Array(nA),B=single?null:new Array(nB);
+    if(single){for(let i=0;i<nA;i++)A[i]=S.muA+S.sdA*dz();}
+    else if(paired){for(let i=0;i<nA;i++){const z1=dz(),z2=dz();A[i]=S.muA+S.sdA*z1;B[i]=S.muB+S.sdB*(r*z1+k*z2);}}
+    else{for(let i=0;i<nA;i++)A[i]=S.muA+S.sdA*dz();for(let i=0;i<nB;i++)B[i]=S.muB+S.sdB*dz();}
+    const stu=single?oneTest(A,S.mu0,S.tails,S.alpha,true):paired?pairedTest(A,B,S.tails,S.alpha,true):indTest(A,B,'student',S.tails,S.alpha,true);
+    if(stu.invalid)continue; valid++;
+    const wel=ind?indTest(A,B,'welch',S.tails,S.alpha,true):stu;
+    const yue=single?yuenOne(A,S.mu0,S.trim,'single',S.tails,S.alpha,true):paired?yuenPaired(A,B,S.trim,S.tails,S.alpha,true):yuenInd(A,B,S.trim,S.tails,S.alpha,true);
+    if(stu.sig)cnt.student++; if(!wel.invalid&&wel.sig)cnt.welch++; if(!yue.invalid&&yue.sig)cnt.yuen++;
+    const Ne=ind?nA*nB/(nA+nB):nA,bf=bf10(stu.t,Ne,stu.df,S.prior,160,-8,18);
+    if(bf>3)cnt.bf3++; if(bf<1/3)cnt.bf3n++;
+    if(bays){const lb=Math.log10(bf);bins[Math.max(0,Math.min(nb-1,Math.floor((lb+2)/4*nb)))]++;}
+    else{const sel=S.test==='welch'?wel:S.test==='yuen'?yue:stu;if(!sel.invalid)bins[Math.min(19,Math.floor(sel.p*20))]++;}
+    if(S.test==='student'){
+      if(single){if(pNorm(stu.t,S.tails)<S.alpha)sigWrong++;}
+      else if(paired){const w=indTest(A,B,'welch',S.tails,S.alpha,true);if(!w.invalid&&w.sig)sigWrong++;}
+    }
+  }
+  return{bins,cnt,sigWrong,N:valid,paired,single,bays};
+}
+function chartSimBF(sim){
+  const W=700,H=210,m={l:46,r:10,t:12,b:34},pw=W-m.l-m.r,ph=H-m.t-m.b,nb=sim.bins.length,bw=pw/nb;
+  const props=sim.bins.map(c=>c/sim.N),ymax=Math.max(...props,0.1)*1.12,Y=v=>px(m.t+ph*(1-v/ymax));
+  let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Histogram of Bayes factors from repeated experiments">`;
+  for(const v of ticks(0,ymax,4))s+=`<line class="ax" x1="${m.l}" x2="${W-m.r}" y1="${Y(v)}" y2="${Y(v)}"/><text x="${m.l-6}" y="${Y(v)+4}" text-anchor="end">${Math.round(v*100)}%</text>`;
+  props.forEach((p,i)=>{const c=-2+(i+.5)*4/nb,col=c>Math.log10(3)?'var(--accent)':c<-Math.log10(3)?'var(--ok)':'var(--muted)';s+=`<rect x="${px(m.l+i*bw+1)}" y="${Y(p)}" width="${px(bw-2)}" height="${px(Y(0)-Y(p))}" style="fill:${col}" fill-opacity=".7"/>`;});
+  const X=v=>px(m.l+pw*(v+2)/4);
+  [Math.log10(3),-Math.log10(3)].forEach(v=>{s+=`<line x1="${X(v)}" x2="${X(v)}" y1="${m.t}" y2="${H-m.b}" style="stroke:var(--ink)" stroke-dasharray="4 4"/>`;});
+  [[-2,'≤ 1/100'],[-1,'1/10'],[0,'1'],[1,'10'],[2,'≥ 100']].forEach(([v,l])=>{s+=`<text x="${X(v)}" y="${H-m.b+16}" text-anchor="middle">${l}</text>`;});
+  s+=`<text x="${m.l+pw/2}" y="${H-4}" text-anchor="middle">BF₁₀ (log scale; dashed lines at 1/3 and 3)</text>`;
+  return s+'</svg>';
+}
+function renderSim(){
+  const N=+$('simN').value,sim=runSim(N);
+  if(!sim.N){$('chartSim').innerHTML='';$('simTxt').textContent='';$('simRates').innerHTML='';return;}
+  $('chartSim').innerHTML=sim.bays?chartSimBF(sim):chartSim(sim);
+  const trueD=S.mode==='single'?S.muA-S.mu0:S.muA-S.muB,h0=trueD===0,what=h0?'false-positive rate (Type I error)':'power';
+  const pc=c=>(100*c/sim.N).toFixed(1)+'%',cnt=sim.cnt;
+  const sel=S.test==='bayes'?null:S.test==='welch'?'welch':S.test==='yuen'?'yuen':'student';
+  let t=sim.bays?`Across ${sim.N.toLocaleString()} experiments, <b>${pc(cnt.bf3)}</b> gave BF₁₀ &gt; 3 (moderate or stronger evidence for H₁), <b>${pc(cnt.bf3n)}</b> gave BF₁₀ &lt; 1/3 (evidence for H₀) and <b>${pc(sim.N-cnt.bf3-cnt.bf3n)}</b> were inconclusive. ${h0?'Because H₀ is true, the first figure is the Bayesian analogue of a false-positive rate.':'Because H₁ is true, the first figure is the Bayesian analogue of power.'}`
+    :`<b>${cnt[sel].toLocaleString()}</b> of ${sim.N.toLocaleString()} experiments (<b>${pc(cnt[sel])}</b>) were significant at α = ${fp(S.alpha)} with ${TESTNAME[sel]}: an estimate of the ${what}.`;
+  if(S.test==='student'&&sim.paired)t+=` Analysing the same data with an independent-groups test would have found only <b>${(100*sim.sigWrong/sim.N).toFixed(1)}%</b>.`;
+  if(S.test==='student'&&sim.single)t+=` Using the normal curve (a z test with s in place of σ) instead of t would have found <b>${(100*sim.sigWrong/sim.N).toFixed(1)}%</b>${h0&&sim.sigWrong>cnt.student?', more false positives than the t test gives (the gap is largest when n is small)':''}.`;
+  $('simTxt').innerHTML=t;
+  const rows=[['student','Student’s t',pc(cnt.student)+' significant'],['welch','Welch’s t',pc(cnt.welch)+' significant'],['yuen','Yuen’s t ('+pctTrim()+' trim)',pc(cnt.yuen)+' significant'],['bayes','Bayesian t (BF₁₀ &gt; 3 / &lt; 1/3)',pc(cnt.bf3)+' / '+pc(cnt.bf3n)]];
+  $('simRates').innerHTML='<caption class="cap" style="text-align:left;margin:10px 0 4px"><b>All four tests on the same simulated experiments</b> ('+(h0?'H₀ true: the significant share is the Type I error rate, which should be near α':'H₁ true: the significant share is the power')+')</caption><tr><th>Test</th><th>Share of experiments</th></tr>'+rows.map(([k,n,v])=>`<tr class="${k===S.test?'sel':''}"><td>${n}</td><td class="num">${v}</td></tr>`).join('');
+  const sh=S.shape!=='normal'?` Data are drawn from a <b>${SHAPES[S.shape]}</b> population.`:'';
+  $('simNote').innerHTML=`Uses the population settings in the sliders (not your own data).${sh} If H₀ is true (the true difference is 0, or for the single-sample test the true mean equals μ₀), p-values from a valid test are uniform and about α of experiments come out “significant”. If it isn’t, the significant share estimates the power. Bayes-factor counts use the two-sided Cauchy(0, ${+S.prior.toFixed(3)}) prior.${S.shape!=='normal'?' Try heavy-tailed or contaminated data with a true difference to see where Yuen’s test gains power, or equal means with unequal SDs and unequal n to see Student’s test lose control of its error rate.':''}`;
+}
+
 /* ============ Rendering ============ */
 function effLabel(d){d=Math.abs(d);return d<0.2?'negligible':d<0.5?'small':d<0.8?'medium':'large';}
 function renderResult(res,lab){
@@ -585,10 +1006,10 @@ function renderCompare(A,B,res){
   const mk=(name,r,sel)=>r.invalid?{name,invalid:true}:{name,t:r.t,df:fdf(r.df),se:r.se,p:r.p,sel};
   if(res.kind==='ind'){
     $('cmpTitle').textContent='Student vs Welch on the same data';
-    rows=['student','welch'].map(v=>mk(v==='student'?'Student (pooled variance)':'Welch (unequal variances)',indTest(A,B,v,S.tails,S.alpha),v===S.variant));
+    rows=['student','welch'].map(v=>mk(v==='student'?'Student (pooled variance)':'Welch (unequal variances)',indTest(A,B,v,S.tails,S.alpha),v===(S.test==='welch'?'welch':'student')));
   }else if(res.kind==='paired'){
     $('cmpTitle').textContent='Right test vs wrong test on the same data';
-    rows=[mk('Paired t-test (correct)',res,true),mk('Independent t-test, ignoring the pairing',indTest(A,B,S.variant,S.tails,S.alpha),false)];
+    rows=[mk('Paired t-test (correct)',res,true),mk('Independent t-test, ignoring the pairing',indTest(A,B,'welch',S.tails,S.alpha),false)];
   }else{
     $('cmpTitle').textContent='t test vs normal (z) approximation on the same data';
     rows=[mk('One-sample t test (df = n − 1)',res,true),{name:'z test: treats s as if it were σ',t:res.t,df:'∞',se:res.se,p:pNorm(res.t,S.tails),sel:false}];
@@ -610,16 +1031,6 @@ function renderWhy1(res){
   $('whyBars1').innerHTML=bar(`Critical t* (df = ${res.df})`,tc,'var(--accent)')+bar('Critical z* (normal curve)',zc,'var(--muted)')
     +`<p class="cap" style="margin:4px 0 0">At α = ${fp(res.alpha)}, t* is <b>${f(100*(tc/zc-1),1)}%</b> larger than z*, so the t test needs a larger |t| to reject H₀ than a z test would.</p>`;
 }
-function renderSim(){
-  const N=+$('simN').value,sim=runSim(N);
-  if(!sim.N){$('chartSim').innerHTML='';$('simTxt').textContent='';return;}
-  $('chartSim').innerHTML=chartSim(sim);
-  const pct=100*sim.sig/sim.N,trueD=S.mode==='single'?S.muA-S.mu0:S.muA-S.muB,what=trueD===0?'false-positive rate (Type I error)':'power';
-  let t=`<b>${sim.sig.toLocaleString()}</b> of ${sim.N.toLocaleString()} experiments (<b>${pct.toFixed(1)}%</b>) were significant at α = ${fp(S.alpha)}: an estimate of the ${what}.`;
-  if(sim.paired)t+=` Analysing the same data with an independent-groups test would have found only <b>${(100*sim.sigWrong/sim.N).toFixed(1)}%</b>.`;
-  if(sim.single)t+=` Using the normal curve (a z test with s in place of σ) instead of t would have found <b>${(100*sim.sigWrong/sim.N).toFixed(1)}%</b>${trueD===0&&sim.sigWrong>sim.sig?', more false positives than the t test gives (the gap is largest when n is small)':''}.`;
-  $('simTxt').innerHTML=t;
-}
 let simTimer=null;
 function scheduleSim(){clearTimeout(simTimer);simTimer=setTimeout(renderSim,40);}
 
@@ -628,21 +1039,37 @@ function update(){
   let A,B;
   if(S.source==='sim'){const d=simData();A=d.A;B=d.B;}
   else{const d=ownData();if(d.err){return showErr(d.err);}A=d.A;B=d.B;}
-  const res=S.mode==='single'?oneTest(A,S.mu0,S.tails,S.alpha):S.mode==='paired'?pairedTest(A,B,S.tails,S.alpha):indTest(A,B,S.variant,S.tails,S.alpha);
-  if(res.invalid)return showErr(res.msg);
+  const all=computeAll(A,B);
+  if(all.student.invalid)return showErr(all.student.msg);
+  const prim=all[S.test];
+  if(prim.invalid)return showErr(prim.msg);
   $('msg').hidden=true;
-  ['pDist','pRes'].forEach(id=>$(id).hidden=false);
+  const bay=S.test==='bayes',res=bay?all.student:prim;
+  ['pRes','pAll'].forEach(id=>$(id).hidden=false);
+  $('pDist').hidden=bay;$('pBayes').hidden=!bay;
   $('chartMain').innerHTML=res.kind==='single'?chartOne(A,res):chartGroups(A,B,res);$('chartDiff').innerHTML=chartDiff(res);
-  $('chartT').innerHTML=chartT(res);
-  renderResult(res,L());renderCompare(A,B,res);
-  $('pWhy').hidden=res.kind!=='paired';if(res.kind==='paired')renderWhy(res);
-  $('pWhy1').hidden=res.kind!=='single';if(res.kind==='single')renderWhy1(res);
+  const lab=L();
+  if(bay){renderPrior(prim);renderBayes(prim,lab);renderBFPanel(prim);}
+  else{
+    $('distTitle').textContent=S.test==='yuen'?'Where does the observed t_Y fall if H₀ were true?':'Where does the observed t fall if H₀ were true?';
+    $('chartT').innerHTML=chartT(prim);
+    if(S.test==='yuen')renderYuen(prim,lab);else renderResult(prim,lab);
+  }
+  const cmpShow=S.test==='student'||S.test==='welch';
+  $('cmpTitle').hidden=!cmpShow;$('cmp').hidden=!cmpShow;if(cmpShow)renderCompare(A,B,prim);
+  const w1=S.test==='student'&&res.kind==='paired',w2=S.test==='student'&&res.kind==='single';
+  $('pWhy').hidden=!w1;if(w1)renderWhy(prim);
+  $('pWhy1').hidden=!w2;if(w2)renderWhy1(prim);
+  $('pWelch').hidden=S.test!=='welch';if(S.test==='welch')renderWelchPanel(all);
+  $('pYuen').hidden=S.test!=='yuen';if(S.test==='yuen')renderYuenPanel(all,A,B);
+  $('pBF').hidden=!bay;
+  renderAll(all,A,B);
   scheduleSim();
 }
 function showErr(msg){
   $('msg').hidden=false;$('msg').textContent=msg;
   $('chartMain').innerHTML='';$('chartDiff').innerHTML='';
-  $('pDist').hidden=true;$('pRes').hidden=true;$('pWhy').hidden=true;$('pWhy1').hidden=true;
+  ['pDist','pBayes','pRes','pWhy','pWhy1','pWelch','pYuen','pBF','pAll'].forEach(id=>$(id).hidden=true);
   scheduleSim();
 }
 
@@ -677,7 +1104,10 @@ function init(){
     update();}));
   $('tails').onchange=e=>{S.tails=e.target.value;update();};
   $('alpha').onchange=e=>{S.alpha=+e.target.value;update();};
-  $('variant').onchange=e=>{S.variant=e.target.value;update();};
+  ['student','welch','yuen','bayes'].forEach(k=>$('tab-'+k).onclick=()=>{S.test=k;update();});
+  $('shape').onchange=e=>{S.shape=e.target.value;genBase();update();};
+  $('trim').oninput=e=>{S.trim=+e.target.value;update();};
+  $('prior').onchange=e=>{S.prior=+e.target.value;update();};
   $('exact').onchange=e=>{S.exact=e.target.checked;update();};
   $('resample').onclick=()=>{S.seed=Math.floor(Math.random()*1e6);genBase();update();};
   $('ownA').oninput=update;$('ownB').oninput=update;
