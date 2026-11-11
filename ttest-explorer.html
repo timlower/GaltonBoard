@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>t-Test Explorer: Independent &amp; Repeated Measures</title>
-<meta name="description" content="Interactive explorer for the independent-samples and repeated-measures (paired) t-test. Adjust means, SDs, sample sizes and correlation and watch the test statistic, p-value, confidence interval, effect size and power respond.">
+<title>t-Test Explorer: Single-Sample, Independent &amp; Repeated Measures</title>
+<meta name="description" content="Interactive explorer for the single-sample, independent-samples and repeated-measures (paired) t-test. Adjust means, SDs, sample sizes, the hypothesized mean and the correlation and watch the test statistic, p-value, confidence interval, effect size and power respond.">
 <style>
 :root{
   --bg:#f5f4ef;--panel:#ffffff;--ink:#1b1e25;--muted:#5b6370;--line:#dedbd1;--soft:#efede6;
@@ -41,7 +41,7 @@ button.pill:hover{border-color:var(--accent)}
 .sl output{font-family:var(--mono);font-variant-numeric:tabular-nums}
 input[type=range]{width:100%;accent-color:var(--accent)}
 fieldset{border:0;padding:0;margin:0}
-select,textarea{font:inherit;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:6px 8px;width:100%}
+select,textarea,input[type=number]{font:inherit;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:6px 8px;width:100%}
 textarea{font-family:var(--mono);font-size:.85rem;min-height:84px;resize:vertical}
 .opt{margin:8px 0}.opt>label{display:block;font-size:.85rem;color:var(--muted);margin-bottom:3px}
 .seg{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
@@ -88,10 +88,11 @@ dl.key{display:grid;grid-template-columns:max-content 1fr;gap:6px 16px;margin:0}
 <body>
 <header>
   <h1>t-Test Explorer</h1>
-  <p>Compare two <b>independent</b> groups or two <b>repeated measures</b> on the same people. Drag the sliders, switch tests, or paste your own data and see how the t statistic, p-value, confidence interval, effect size and power respond.</p>
+  <p>Compare one sample with a hypothesized value (<b>single sample</b>), two <b>independent</b> groups, or two <b>repeated measures</b> on the same people. Drag the sliders, switch tests, or paste your own data and see how the t statistic, p-value, confidence interval, effect size and power respond.</p>
   <div class="tabs" role="tablist" aria-label="Test type">
     <button class="tab" role="tab" id="tab-ind" aria-selected="true">Independent samples</button>
     <button class="tab" role="tab" id="tab-paired" aria-selected="false">Repeated measures (paired)</button>
+    <button class="tab" role="tab" id="tab-single" aria-selected="false">Single sample</button>
   </div>
 </header>
 
@@ -118,12 +119,13 @@ dl.key{display:grid;grid-template-columns:max-content 1fr;gap:6px 16px;margin:0}
 
     <div id="ownBox" hidden>
       <div class="opt"><label id="lblOwnA" for="ownA">Group A</label><textarea id="ownA" placeholder="e.g. 12.1, 14.3, 9.8 …"></textarea></div>
-      <div class="opt"><label id="lblOwnB" for="ownB">Group B</label><textarea id="ownB"></textarea></div>
+      <div class="opt" id="optOwnB"><label id="lblOwnB" for="ownB">Group B</label><textarea id="ownB"></textarea></div>
       <button class="pill" id="loadSim">Load current simulated data into boxes</button>
-      <p class="cap">Separate values with spaces, commas or new lines. Paired data needs the same number of values in the same order.</p>
+      <p class="cap" id="ownCap">Separate values with spaces, commas or new lines. Paired data needs the same number of values in the same order.</p>
     </div>
 
     <h3>Test options</h3>
+    <div class="opt" id="mu0Opt" hidden><label for="mu0">Hypothesized population mean μ₀</label><input type="number" id="mu0" step="0.5"></div>
     <div class="opt"><label for="tails">Alternative hypothesis</label>
       <select id="tails"></select></div>
     <div class="opt"><label for="alpha">Significance level α</label>
@@ -168,6 +170,14 @@ dl.key{display:grid;grid-template-columns:max-content 1fr;gap:6px 16px;margin:0}
       <p class="cap">Raise the correlation <b>r</b> and the paired standard error falls while the independent one stays put. Set r near 0 and the two tests converge. Treating paired data as independent throws away power.</p>
     </div>
 
+    <div class="panel" id="pWhy1" hidden>
+      <h2><span class="n">★</span>Why t and not z?</h2>
+      <p style="margin:0 0 8px">The standard error uses the <i>sample</i> SD, which is itself an estimate. That extra uncertainty is why the reference distribution is t with df = n − 1 rather than the normal curve:</p>
+      <p class="f" id="whyFormula1" style="margin:0 0 10px"></p>
+      <div id="whyBars1"></div>
+      <p class="cap">Raise n and t* shrinks toward z* (they are nearly equal once df passes about 30). With a tiny sample the heavier tails of t keep you from declaring too many false positives; a z test with s in place of σ would not.</p>
+    </div>
+
     <div class="panel" id="pSim">
       <h2><span class="n">4</span>Repeat the experiment many times</h2>
       <div class="row" style="align-items:center;margin-bottom:8px">
@@ -177,7 +187,7 @@ dl.key{display:grid;grid-template-columns:max-content 1fr;gap:6px 16px;margin:0}
       </div>
       <div id="chartSim"></div>
       <p id="simTxt" style="margin:8px 0 0"></p>
-      <p class="cap">Uses the population settings in the sliders (not your own data). If the true difference is 0, p-values are uniform and about α of experiments come out “significant” (false positives). If it isn't, the significant share estimates the test's <b>power</b>.</p>
+      <p class="cap">Uses the population settings in the sliders (not your own data). If H₀ is true (the true difference is 0, or for the single-sample test the true mean equals μ₀), p-values are uniform and about α of experiments come out “significant” (false positives). If it isn't, the significant share estimates the test's <b>power</b>.</p>
     </div>
   </section>
 </main>
@@ -193,6 +203,11 @@ dl.key{display:grid;grid-template-columns:max-content 1fr;gap:6px 16px;margin:0}
     </ul>
     <p><b>Repeated measures.</b> Let <span class="f">D<sub>i</sub> = X<sub>1i</sub> − X<sub>2i</sub></span>. Then <span class="f">t = M<sub>D</sub> / (s<sub>D</sub>/√n)</span>, <span class="f">df = n − 1</span>, and <span class="f">s<sub>D</sub>² = s₁² + s₂² − 2·r·s₁·s₂</span>.</p>
     <ul><li>Effect sizes: <span class="f">d<sub>z</sub> = M<sub>D</sub>/s<sub>D</sub></span> (difference-score SD) and <span class="f">d<sub>av</sub> = M<sub>D</sub>/((s₁+s₂)/2)</span> (comparable to an independent-groups d).</li></ul>
+    <p><b>Single sample.</b> <span class="f">t = (M − μ₀) / SE</span>, <span class="f">SE = s/√n</span>, <span class="f">df = n − 1</span>.</p>
+    <ul>
+      <li>Effect size: Cohen's <span class="f">d = (M − μ₀)/s</span>; Hedges' <span class="f">g = d·(1 − 3/(4·df − 1))</span>.</li>
+      <li>The CI for μ is <span class="f">M ± t<sub>crit</sub>·SE</span>; the CI for M − μ₀ is the same interval shifted down by μ₀. The paired test is exactly this test applied to the difference scores with μ₀ = 0.</li>
+    </ul>
     <p>Confidence intervals are two-sided at level 1 − α: <span class="f">estimate ± t<sub>crit</sub>·SE</span>. p-values come from the exact t distribution (regularised incomplete beta function). Everything runs in your browser; nothing is uploaded.</p>
   </div>
 </details>
@@ -200,24 +215,27 @@ dl.key{display:grid;grid-template-columns:max-content 1fr;gap:6px 16px;margin:0}
   <summary>Key: symbols and terms</summary>
   <div class="panel">
     <dl class="key">
-      <dt>H₀</dt><dd>Null hypothesis: the population means do not differ (the true difference is 0).</dd>
+      <dt>H₀</dt><dd>Null hypothesis: the population means do not differ (the true difference is 0). For the single-sample test: the population mean equals μ₀.</dd>
       <dt>Alternative</dt><dd>What you test against H₀. Two-sided: the means differ in either direction. One-sided: the difference goes in one stated direction only.</dd>
       <dt>μ</dt><dd>A population (true) mean. The sliders set the μ values the simulated data are drawn from.</dd>
+      <dt>μ₀</dt><dd>The hypothesized population mean that the single-sample test compares the sample mean against (H₀: μ = μ₀). You set it under Test options.</dd>
       <dt>M</dt><dd>A sample mean.</dd>
       <dt>s, s²</dt><dd>Sample standard deviation and variance.</dd>
       <dt>s<sub>p</sub></dt><dd>Pooled standard deviation: the two groups' variances combined, weighted by their degrees of freedom.</dd>
-      <dt>n</dt><dd>Number of observations (per group, or the number of participants in a paired design).</dd>
+      <dt>n</dt><dd>Number of observations (per group, the number of participants in a paired design, or the sample size in a single-sample test).</dd>
       <dt>D, M<sub>D</sub>, s<sub>D</sub></dt><dd>Each participant's difference score (condition 1 − condition 2), its mean, and its standard deviation.</dd>
+      <dt>M − μ₀</dt><dd>The single-sample effect: how far the sample mean lies from the hypothesized mean. The t statistic is this distance divided by SE.</dd>
       <dt>r</dt><dd>Pearson correlation between the two conditions across participants. The slider sets the population value; the results show the sample value.</dd>
-      <dt>SE</dt><dd>Standard error: the typical size of sampling error in the estimated difference. Smaller SE gives a larger |t|.</dd>
+      <dt>SE</dt><dd>Standard error: the typical size of sampling error in the estimated difference (s/√n for a single sample). Smaller SE gives a larger |t|.</dd>
       <dt>t</dt><dd>Test statistic: the estimated difference divided by its SE, i.e. how many standard errors from 0 it lies.</dd>
-      <dt>df</dt><dd>Degrees of freedom: sets the exact shape of the t distribution (heavier tails when df is small). Welch's df is usually not a whole number.</dd>
+      <dt>df</dt><dd>Degrees of freedom: sets the exact shape of the t distribution (heavier tails when df is small). Welch's df is usually not a whole number; single-sample and paired tests use n − 1.</dd>
       <dt>t*</dt><dd>Critical value: the |t| beyond which the result is significant at your α.</dd>
       <dt>p</dt><dd>p-value: the probability of a |t| (or t, if one-sided) at least as extreme as observed if H₀ were true. It is not the probability that H₀ is true.</dd>
       <dt>α</dt><dd>Significance level: the false-positive rate you accept. The result is significant when p &lt; α.</dd>
-      <dt>CI</dt><dd>Confidence interval for the true mean difference. At level 1 − α, intervals built this way from repeated samples contain the true value in that proportion of cases.</dd>
-      <dt>d, g, d<sub>z</sub>, d<sub>av</sub></dt><dd>Standardised effect sizes: the mean difference in standard-deviation units. g is d with a small-sample bias correction; d<sub>z</sub> uses the SD of difference scores; d<sub>av</sub> uses the average of the two conditions' SDs.</dd>
+      <dt>CI</dt><dd>Confidence interval for the true mean difference (for a single sample, the difference between μ and μ₀). At level 1 − α, intervals built this way from repeated samples contain the true value in that proportion of cases.</dd>
+      <dt>d, g, d<sub>z</sub>, d<sub>av</sub></dt><dd>Standardised effect sizes: the mean difference in standard-deviation units (for a single sample, d = (M − μ₀)/s). g is d with a small-sample bias correction; d<sub>z</sub> uses the SD of difference scores; d<sub>av</sub> uses the average of the two conditions' SDs.</dd>
       <dt>Welch</dt><dd>The independent-samples test that does not assume equal variances; df comes from the Welch–Satterthwaite approximation.</dd>
+      <dt>z test</dt><dd>The normal-curve version of the test, correct only if the population SD σ were known. With s estimated from a small sample it gives p-values that are too small.</dd>
       <dt>Type I error</dt><dd>Rejecting H₀ when it is true (a false positive). Its long-run rate equals α when the assumptions hold.</dd>
       <dt>Power</dt><dd>The probability of a significant result when the true difference is not 0. It rises with larger effects, larger n and, for paired data, higher r.</dd>
       <dt>Seed</dt><dd>The number that fixes the random generator, so the same seed reproduces the same simulated sample.</dd>
@@ -264,6 +282,11 @@ function tCrit(tailProb,df){ // t>0 with P(T>t)=tailProb
 }
 function tpdf(x,df){ return Math.exp(lgamma((df+1)/2)-lgamma(df/2)-0.5*Math.log(df*Math.PI)-((df+1)/2)*Math.log(1+x*x/df)); }
 function npdf(x){ return Math.exp(-x*x/2)/Math.sqrt(2*Math.PI); }
+/* normal-curve helpers (used only to contrast z with t) */
+function erfc(x){const z=Math.abs(x),t=1/(1+0.5*z);const r=t*Math.exp(-z*z-1.26551223+t*(1.00002368+t*(0.37409196+t*(0.09678418+t*(-0.18628806+t*(0.27886807+t*(-1.13520398+t*(1.48851587+t*(-0.82215223+t*0.17087277)))))))));return x>=0?r:2-r;}
+function pNormTwo(z){return erfc(Math.abs(z)/Math.SQRT2);}
+function pNorm(z,tails){const p2=pNormTwo(z);if(tails==='two')return p2;const upper=z>=0?p2/2:1-p2/2;return tails==='greater'?upper:1-upper;}
+function zCrit(tailProb){let lo=0,hi=40;for(let i=0;i<80;i++){const mid=(lo+hi)/2;if(pNormTwo(mid)>2*tailProb)lo=mid;else hi=mid;}return (lo+hi)/2;}
 const mean=a=>a.reduce((s,v)=>s+v,0)/a.length;
 function vari(a){const m=mean(a);return a.reduce((s,v)=>s+(v-m)*(v-m),0)/(a.length-1);}
 function corr(a,b){const ma=mean(a),mb=mean(b);let sab=0,sa=0,sb=0;for(let i=0;i<a.length;i++){sab+=(a[i]-ma)*(b[i]-mb);sa+=(a[i]-ma)**2;sb+=(b[i]-mb)**2;}return sab/Math.sqrt(sa*sb);}
@@ -299,12 +322,24 @@ function pairedTest(A,B,tails,alpha,lite){
   return decide({kind:'paired',n,D,mA:mean(A),mB:mean(B),vA,vB,diff:md,sdD,se,df,t:md/se,dz,gz,dav,r:corr(A,B)},tails,alpha,lite);
 }
 
+function oneTest(X,mu0,tails,alpha,lite){
+  const n=X.length;
+  if(n<2)return{invalid:true,msg:'The sample needs at least 2 values.'};
+  if(!isFinite(mu0))return{invalid:true,msg:'Enter a number for the hypothesized mean μ₀.'};
+  const m=mean(X),v=vari(X),sd=Math.sqrt(v);
+  if(!(sd>0))return{invalid:true,msg:'All scores are identical (SD = 0), so t is undefined.'};
+  const se=sd/Math.sqrt(n),df=n-1,diff=m-mu0,d=diff/sd,g=d*(1-3/(4*df-1));
+  const res=decide({kind:'single',n,mu0,mA:m,v,sd,diff,se,df,t:diff/se,d,g,D:lite?null:X.map(x=>x-mu0)},tails,alpha,lite);
+  if(!lite)res.ciMean=[res.ci[0]+mu0,res.ci[1]+mu0];
+  return res;
+}
+
 /* ============ Random numbers ============ */
 function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
 function normalGen(rng){let spare=null;return function(){if(spare!==null){const s=spare;spare=null;return s;}let u=0,v=0;while(u===0)u=rng();v=rng();const m=Math.sqrt(-2*Math.log(u));spare=m*Math.sin(2*Math.PI*v);return m*Math.cos(2*Math.PI*v);};}
 
 /* ============ State ============ */
-const S={mode:'ind',source:'sim',muA:107.5,muB:100,sdA:15,sdB:15,nA:30,nB:30,r:0.6,alpha:0.05,tails:'two',variant:'welch',exact:false,seed:7,simSeed:1};
+const S={mode:'ind',source:'sim',muA:107.5,muB:100,sdA:15,sdB:15,nA:30,nB:30,mu0:100,r:0.6,alpha:0.05,tails:'two',variant:'welch',exact:false,seed:7,simSeed:1};
 const MAXN=100;
 let Z1,Z2,JIT;
 function genBase(){
@@ -315,6 +350,7 @@ function genBase(){
 function stdz(z){const m=mean(z),s=Math.sqrt(vari(z));return z.map(v=>(v-m)/s);}
 function orth(z2,z1){const m2=mean(z2);let num=0,den=0;for(let i=0;i<z1.length;i++){num+=z1[i]*(z2[i]-m2);den+=z1[i]*z1[i];}const b=num/den;return z2.map((v,i)=>v-m2-b*z1[i]);}
 function simData(){
+  if(S.mode==='single'){let z=Z1.slice(0,S.nA);if(S.exact)z=stdz(z);return{A:z.map(v=>S.muA+S.sdA*v),B:[]};}
   const paired=S.mode==='paired',nA=S.nA,nB=paired?S.nA:S.nB;
   let z1=Z1.slice(0,nA),z2=Z2.slice(0,nB);
   if(S.exact){z1=stdz(z1);if(paired)z2=orth(z2,z1);z2=stdz(z2);}
@@ -324,24 +360,26 @@ function simData(){
 }
 function parseList(s){return s.split(/[\s,;]+/).filter(x=>x!=='').map(Number);}
 function ownData(){
-  const A=parseList($('ownA').value),B=parseList($('ownB').value);
+  const A=parseList($('ownA').value),B=S.mode==='single'?[]:parseList($('ownB').value);
   if(A.some(v=>!isFinite(v))||B.some(v=>!isFinite(v)))return{err:'Some entries are not numbers.'};
   return{A,B};
 }
 function runSim(N){
-  const rng=mulberry32(S.simSeed*104729+S.nA*31+S.nB),g=normalGen(rng),paired=S.mode==='paired';
+  const rng=mulberry32(S.simSeed*104729+S.nA*31+S.nB),g=normalGen(rng),paired=S.mode==='paired',single=S.mode==='single';
   const bins=new Array(20).fill(0);let sig=0,sigWrong=0,valid=0;
   const nA=S.nA,nB=paired?S.nA:S.nB,r=S.r,k=Math.sqrt(1-r*r);
   for(let it=0;it<N;it++){
-    const A=new Array(nA),B=new Array(nB);
-    if(paired){for(let i=0;i<nA;i++){const z1=g(),z2=g();A[i]=S.muA+S.sdA*z1;B[i]=S.muB+S.sdB*(r*z1+k*z2);}}
+    const A=new Array(nA),B=single?null:new Array(nB);
+    if(single){for(let i=0;i<nA;i++)A[i]=S.muA+S.sdA*g();}
+    else if(paired){for(let i=0;i<nA;i++){const z1=g(),z2=g();A[i]=S.muA+S.sdA*z1;B[i]=S.muB+S.sdB*(r*z1+k*z2);}}
     else{for(let i=0;i<nA;i++)A[i]=S.muA+S.sdA*g();for(let i=0;i<nB;i++)B[i]=S.muB+S.sdB*g();}
-    const res=paired?pairedTest(A,B,S.tails,S.alpha,true):indTest(A,B,S.variant,S.tails,S.alpha,true);
+    const res=single?oneTest(A,S.mu0,S.tails,S.alpha,true):paired?pairedTest(A,B,S.tails,S.alpha,true):indTest(A,B,S.variant,S.tails,S.alpha,true);
     if(res.invalid)continue; valid++;
     bins[Math.min(19,Math.floor(res.p*20))]++; if(res.sig)sig++;
-    if(paired){const w=indTest(A,B,S.variant,S.tails,S.alpha,true);if(!w.invalid&&w.sig)sigWrong++;}
+    if(single){if(pNorm(res.t,S.tails)<S.alpha)sigWrong++;}
+    else if(paired){const w=indTest(A,B,S.variant,S.tails,S.alpha,true);if(!w.invalid&&w.sig)sigWrong++;}
   }
-  return{bins,sig,sigWrong,N:valid,paired};
+  return{bins,sig,sigWrong,N:valid,paired,single};
 }
 
 /* ============ Formatting ============ */
@@ -351,17 +389,17 @@ const fp=p=>p<0.001?'< .001':p.toFixed(3).replace(/^0/,'');
 const fdf=df=>Number.isInteger(df)?String(df):df.toFixed(2);
 const tk=v=>(+v.toFixed(6)).toString().replace('-','−');
 const lvl=()=>(+((1-S.alpha)*100).toFixed(1))+'%';
-const L=()=>S.mode==='ind'?{A:'Group A',B:'Group B',d:'A − B',s1:'A',s2:'B'}:{A:'Condition 1',B:'Condition 2',d:'1 − 2',s1:'1',s2:'2'};
+const L=()=>S.mode==='ind'?{A:'Group A',B:'Group B',d:'A − B',s1:'A',s2:'B'}:S.mode==='paired'?{A:'Condition 1',B:'Condition 2',d:'1 − 2',s1:'1',s2:'2'}:{A:'Sample',B:'μ₀',d:'M − μ₀',s1:'μ',s2:'μ₀'};
 
 /* ============ Controls ============ */
 const PARAMS=[
-  {k:'muA',min:50,max:150,step:0.5,dec:1,lab:m=>m==='ind'?'Mean of group A':'Mean of condition 1'},
-  {k:'muB',min:50,max:150,step:0.5,dec:1,lab:m=>m==='ind'?'Mean of group B':'Mean of condition 2'},
-  {k:'sdA',min:1,max:40,step:0.5,dec:1,lab:m=>m==='ind'?'SD of group A':'SD of condition 1'},
-  {k:'sdB',min:1,max:40,step:0.5,dec:1,lab:m=>m==='ind'?'SD of group B':'SD of condition 2'},
-  {k:'nA',min:3,max:100,step:1,dec:0,lab:m=>m==='ind'?'n in group A':'n (participants)'},
-  {k:'nB',min:3,max:100,step:1,dec:0,only:'ind',lab:()=>'n in group B'},
-  {k:'r',min:-0.5,max:0.95,step:0.05,dec:2,only:'paired',lab:()=>'Correlation r between conditions'}
+  {k:'muA',min:50,max:150,step:0.5,dec:1,lab:m=>m==='ind'?'Mean of group A':m==='paired'?'Mean of condition 1':'True population mean μ'},
+  {k:'muB',min:50,max:150,step:0.5,dec:1,modes:['ind','paired'],lab:m=>m==='ind'?'Mean of group B':'Mean of condition 2'},
+  {k:'sdA',min:1,max:40,step:0.5,dec:1,lab:m=>m==='ind'?'SD of group A':m==='paired'?'SD of condition 1':'Population SD σ'},
+  {k:'sdB',min:1,max:40,step:0.5,dec:1,modes:['ind','paired'],lab:m=>m==='ind'?'SD of group B':'SD of condition 2'},
+  {k:'nA',min:3,max:100,step:1,dec:0,lab:m=>m==='ind'?'n in group A':m==='paired'?'n (participants)':'n (sample size)'},
+  {k:'nB',min:3,max:100,step:1,dec:0,modes:['ind'],lab:()=>'n in group B'},
+  {k:'r',min:-0.5,max:0.95,step:0.05,dec:2,modes:['paired'],lab:()=>'Correlation r between conditions'}
 ];
 const PRESETS=[
   {name:'No true effect',mode:'ind',v:{muA:100,muB:100,sdA:15,sdB:15,nA:30,nB:30}},
@@ -369,7 +407,10 @@ const PRESETS=[
   {name:'Unequal variances & n',mode:'ind',v:{muA:100,muB:108,sdA:10,sdB:25,nA:15,nB:45}},
   {name:'Tiny samples',mode:'ind',v:{muA:110,muB:100,sdA:15,sdB:15,nA:6,nB:6}},
   {name:'Paired, r = .8',mode:'paired',v:{muA:105,muB:100,sdA:15,sdB:15,nA:20,r:0.8}},
-  {name:'Paired, r = 0',mode:'paired',v:{muA:105,muB:100,sdA:15,sdB:15,nA:20,r:0}}
+  {name:'Paired, r = 0',mode:'paired',v:{muA:105,muB:100,sdA:15,sdB:15,nA:20,r:0}},
+  {name:'Single sample: no true effect',mode:'single',v:{muA:100,sdA:15,nA:30,mu0:100}},
+  {name:'Single sample: d = .5',mode:'single',v:{muA:107.5,sdA:15,nA:30,mu0:100}},
+  {name:'Single sample: tiny n',mode:'single',v:{muA:110,sdA:15,nA:6,mu0:100}}
 ];
 function buildControls(){
   $('params').innerHTML=PARAMS.map(p=>`<div class="sl" id="w_${p.k}"><label for="p_${p.k}"><span id="l_${p.k}"></span><output id="o_${p.k}"></output></label><input type="range" id="p_${p.k}" min="${p.min}" max="${p.max}" step="${p.step}"></div>`).join('');
@@ -378,26 +419,34 @@ function buildControls(){
   $('presets').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const p=PRESETS[+b.dataset.i];Object.assign(S,p.v);S.mode=p.mode;S.source='sim';document.querySelector('input[name=src][value=sim]').checked=true;update();});
 }
 function syncUI(){
-  const ind=S.mode==='ind',lab=L();
-  $('tab-ind').setAttribute('aria-selected',ind);$('tab-paired').setAttribute('aria-selected',!ind);
+  const ind=S.mode==='ind',one=S.mode==='single',lab=L();
+  $('tab-ind').setAttribute('aria-selected',ind);$('tab-paired').setAttribute('aria-selected',S.mode==='paired');$('tab-single').setAttribute('aria-selected',one);
   PARAMS.forEach(p=>{
-    $('w_'+p.k).hidden=!!p.only&&p.only!==S.mode;
+    $('w_'+p.k).hidden=!!p.modes&&!p.modes.includes(S.mode);
     $('l_'+p.k).textContent=p.lab(S.mode);$('p_'+p.k).value=S[p.k];$('o_'+p.k).textContent=(+S[p.k]).toFixed(p.dec);
   });
   $('params').disabled=S.source==='own';$('params').style.opacity=S.source==='own'?.45:1;
   $('simBox').hidden=S.source==='own';$('ownBox').hidden=S.source!=='own';
   $('exact').checked=S.exact;$('alpha').value=String(S.alpha);$('variant').value=S.variant;
   $('welchOpt').hidden=!ind;
+  $('mu0Opt').hidden=!one;if(document.activeElement!==$('mu0'))$('mu0').value=S.mu0;
   $('tails').innerHTML=`<option value="two">Two-sided (${lab.s1} ≠ ${lab.s2})</option><option value="greater">One-sided: ${lab.s1} &gt; ${lab.s2}</option><option value="less">One-sided: ${lab.s1} &lt; ${lab.s2}</option>`;
   $('tails').value=S.tails;
   $('seedTxt').textContent='seed '+S.seed;
-  $('lblOwnA').textContent=lab.A+(ind?'':' (one value per participant)');$('lblOwnB').textContent=lab.B+(ind?'':' (same participant order)');
+  $('lblOwnA').textContent=ind?lab.A:one?'Sample scores (one value per participant)':lab.A+' (one value per participant)';
+  $('optOwnB').hidden=one;
+  $('lblOwnB').textContent=ind?lab.B:lab.B+' (same participant order)';
+  $('ownCap').textContent=one?'Separate values with spaces, commas or new lines. At least 2 values are needed; set μ₀ under Test options.':'Separate values with spaces, commas or new lines. Paired data needs the same number of values in the same order.';
   if(ind){const sp=Math.sqrt(((S.nA-1)*S.sdA**2+(S.nB-1)*S.sdB**2)/(S.nA+S.nB-2));
     $('truth').innerHTML=`True mean difference <b>${f(S.muA-S.muB,1)}</b> · population d ≈ <b>${f((S.muA-S.muB)/sp,2)}</b>`;}
+  else if(one){
+    $('truth').innerHTML=`True mean <b>${f(S.muA,1)}</b> vs μ₀ <b>${f(S.mu0,1)}</b> · true difference <b>${f(S.muA-S.mu0,1)}</b> · population d ≈ <b>${f((S.muA-S.mu0)/S.sdA,2)}</b>`;}
   else{const sdD=Math.sqrt(Math.max(1e-9,S.sdA**2+S.sdB**2-2*S.r*S.sdA*S.sdB));
     $('truth').innerHTML=`True mean difference <b>${f(S.muA-S.muB,1)}</b> · SD of differences <b>${f(sdD,1)}</b> · d<sub>z</sub> ≈ <b>${f((S.muA-S.muB)/sdD,2)}</b>`;}
   $('dataCap').textContent=ind
     ?'Dots are individual scores; the black marks are each group mean with its CI. The right panel shows the estimated difference with its CI: when a two-sided test is significant, that interval excludes 0.'
+    :one
+    ?'Dots are individual scores; the black mark is the sample mean with its CI, and the dashed red line is the hypothesized mean μ₀. The right panel shows each score minus μ₀ and the CI of the mean difference: when a two-sided test is significant, that interval excludes 0.'
     :'Each grey line is one participant. The right panel shows each participant’s difference score. The paired test uses these differences, so judge the effect there rather than from the two separate group CIs.';
 }
 
@@ -428,20 +477,36 @@ function chartGroups(A,B,res){
   s+=`<text style="fill:var(--ink);font-weight:600" x="${x2}" y="${H-m.b+20}" text-anchor="middle">${lab.B}</text><text x="${x2}" y="${H-m.b+35}" text-anchor="middle">n = ${B.length} · M = ${f(mB)}</text>`;
   return s+'</svg>';
 }
+function chartOne(A,res){
+  const lab=L(),W=560,H=340,m={l:50,r:12,t:14,b:50},pw=W-m.l-m.r,ph=H-m.t-m.b;
+  const h=halfCI(A),mA=mean(A),mu0=res.mu0;
+  let lo=Math.min(...A,mA-h,mu0),hi=Math.max(...A,mA+h,mu0);
+  const pad=(hi-lo)*0.06||1;lo-=pad;hi+=pad;
+  const y=v=>px(m.t+ph*(1-(v-lo)/(hi-lo))),x1=px(m.l+pw/2),jw=80;
+  let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Sample scores with the sample mean, its confidence interval and the hypothesized mean">`+yAxis(m,W,y,lo,hi);
+  s+=`<text transform="rotate(-90)" x="${-(m.t+ph/2)}" y="12" text-anchor="middle">Score</text>`;
+  s+=`<line x1="${m.l}" x2="${W-m.r}" y1="${y(mu0)}" y2="${y(mu0)}" style="stroke:var(--rej)" stroke-dasharray="6 4" stroke-width="1.8"/><text x="${W-m.r}" y="${y(mu0)-5}" text-anchor="end" style="fill:var(--rej)">μ₀ = ${f(mu0,1)}</text>`;
+  A.forEach((v,i)=>{s+=`<circle cx="${px(x1+JIT[i%MAXN]*jw)}" cy="${y(v)}" r="4" style="fill:var(--a)" fill-opacity=".72"/>`;});
+  s+=`<line x1="${x1}" x2="${x1}" y1="${y(mA-h)}" y2="${y(mA+h)}" style="stroke:var(--ink)" stroke-width="2.5"/>`;
+  s+=`<line x1="${x1-8}" x2="${x1+8}" y1="${y(mA-h)}" y2="${y(mA-h)}" style="stroke:var(--ink)" stroke-width="2.5"/><line x1="${x1-8}" x2="${x1+8}" y1="${y(mA+h)}" y2="${y(mA+h)}" style="stroke:var(--ink)" stroke-width="2.5"/>`;
+  s+=`<line x1="${x1-30}" x2="${x1+30}" y1="${y(mA)}" y2="${y(mA)}" style="stroke:var(--ink)" stroke-width="3.5"/>`;
+  s+=`<text style="fill:var(--ink);font-weight:600" x="${x1}" y="${H-m.b+20}" text-anchor="middle">${lab.A}</text><text x="${x1}" y="${H-m.b+35}" text-anchor="middle">n = ${A.length} · M = ${f(mA)}</text>`;
+  return s+'</svg>';
+}
 function chartDiff(res){
-  const paired=res.kind==='paired',W=250,H=340,m={l:48,r:10,t:14,b:50},pw=W-m.l-m.r,ph=H-m.t-m.b;
+  const paired=res.kind!=='ind',W=250,H=340,m={l:48,r:10,t:14,b:50},pw=W-m.l-m.r,ph=H-m.t-m.b;
   const vals=paired?res.D:[];
   let lo=Math.min(0,res.ci[0],...vals),hi=Math.max(0,res.ci[1],...vals);
   const pad=(hi-lo)*0.08||1;lo-=pad;hi+=pad;
   const y=v=>px(m.t+ph*(1-(v-lo)/(hi-lo))),cx=px(m.l+pw/2);
   let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Estimated difference with confidence interval">`+yAxis(m,W,y,lo,hi);
-  s+=`<line x1="${m.l}" x2="${W-m.r}" y1="${y(0)}" y2="${y(0)}" style="stroke:var(--rej)" stroke-dasharray="5 4" stroke-width="1.5"/><text x="${W-m.r}" y="${y(0)-5}" text-anchor="end" style="fill:var(--rej)">0 = no difference</text>`;
+  s+=`<line x1="${m.l}" x2="${W-m.r}" y1="${y(0)}" y2="${y(0)}" style="stroke:var(--rej)" stroke-dasharray="5 4" stroke-width="1.5"/><text x="${W-m.r}" y="${y(0)-5}" text-anchor="end" style="fill:var(--rej)">${res.kind==='single'?'0 = equals μ₀':'0 = no difference'}</text>`;
   if(paired)res.D.forEach((v,i)=>{s+=`<circle cx="${px(cx+JIT[i%MAXN]*30)}" cy="${y(v)}" r="3.6" style="fill:var(--muted)" fill-opacity=".55"/>`;});
   const col=res.sig?'var(--ok)':'var(--ink)';
   s+=`<line x1="${cx}" x2="${cx}" y1="${y(res.ci[0])}" y2="${y(res.ci[1])}" style="stroke:${col}" stroke-width="3"/>`;
   s+=`<line x1="${cx-9}" x2="${cx+9}" y1="${y(res.ci[0])}" y2="${y(res.ci[0])}" style="stroke:${col}" stroke-width="3"/><line x1="${cx-9}" x2="${cx+9}" y1="${y(res.ci[1])}" y2="${y(res.ci[1])}" style="stroke:${col}" stroke-width="3"/>`;
   s+=`<circle cx="${cx}" cy="${y(res.diff)}" r="6.5" style="fill:${col}"/>`;
-  s+=`<text x="${cx}" y="${H-m.b+20}" text-anchor="middle" style="fill:var(--ink);font-weight:600">${paired?'Differences (1 − 2)':'Mean difference (A − B)'}</text><text x="${cx}" y="${H-m.b+35}" text-anchor="middle">${f(res.diff)} · ${lvl()} CI</text>`;
+  s+=`<text x="${cx}" y="${H-m.b+20}" text-anchor="middle" style="fill:var(--ink);font-weight:600">${res.kind==='single'?'Scores minus μ₀':paired?'Differences (1 − 2)':'Mean difference (A − B)'}</text><text x="${cx}" y="${H-m.b+35}" text-anchor="middle">${f(res.diff)} · ${lvl()} CI</text>`;
   return s+'</svg>';
 }
 function chartT(res){
@@ -490,33 +555,40 @@ function chartSim(sim){
 function effLabel(d){d=Math.abs(d);return d<0.2?'negligible':d<0.5?'small':d<0.8?'medium':'large';}
 function renderResult(res,lab){
   $('badge').innerHTML=`<span class="badge ${res.sig?'sig':'ns'}">${res.sig?'Significant':'Not significant'} at α = ${fp(res.alpha)}</span>`;
-  const ci=`[${f(res.ci[0])}, ${f(res.ci[1])}]`,ind=res.kind==='ind';
-  const cards=ind
-    ?[['t',f(res.t,3)],['df',fdf(res.df)],['p',fp(res.p)],['Mean difference',f(res.diff)],[lvl()+' CI',ci],['Std. error',f(res.se,3)],["Cohen's d",f(res.d)],["Hedges' g",f(res.g)]]
-    :[['t',f(res.t,3)],['df',fdf(res.df)],['p',fp(res.p)],['Mean difference',f(res.diff)],[lvl()+' CI',ci],['Std. error',f(res.se,3)],['d_z (diff SD)',f(res.dz)],['d_av',f(res.dav)],['Sample r',f(res.r)]];
+  const ci=`[${f(res.ci[0])}, ${f(res.ci[1])}]`,kind=res.kind,ind=kind==='ind';
+  let cards;
+  if(ind)cards=[['t',f(res.t,3)],['df',fdf(res.df)],['p',fp(res.p)],['Mean difference',f(res.diff)],[lvl()+' CI',ci],['Std. error',f(res.se,3)],["Cohen's d",f(res.d)],["Hedges' g",f(res.g)]];
+  else if(kind==='paired')cards=[['t',f(res.t,3)],['df',fdf(res.df)],['p',fp(res.p)],['Mean difference',f(res.diff)],[lvl()+' CI',ci],['Std. error',f(res.se,3)],['d_z (diff SD)',f(res.dz)],['d_av',f(res.dav)],['Sample r',f(res.r)]];
+  else cards=[['t',f(res.t,3)],['df',fdf(res.df)],['p',fp(res.p)],['Sample mean',f(res.mA)],['M − μ₀',f(res.diff)],[lvl()+' CI (M − μ₀)',ci],[lvl()+' CI for μ','['+f(res.ciMean[0])+', '+f(res.ciMean[1])+']'],['Std. error',f(res.se,3)],["Cohen's d",f(res.d)],["Hedges' g",f(res.g)]];
   $('stats').innerHTML=cards.map(([a,b])=>`<div class="stat"><small>${a}</small><b>${b}</b></div>`).join('');
-  const dir=res.diff>=0?'higher':'lower',es=ind?res.d:res.dz;
+  const dir=res.diff>=0?'higher':'lower',es=kind==='paired'?res.dz:res.d,dlab=kind==='paired'?'d<sub>z</sub>':'d';
   const alt=res.tails==='two'?'two-sided':'one-sided ('+(res.tails==='greater'?lab.s1+' > '+lab.s2:lab.s1+' < '+lab.s2)+')';
-  let txt=ind
-    ?`${lab.A} (M = ${f(res.mA)}) was ${dir} than ${lab.B} (M = ${f(res.mB)}) by ${f(Math.abs(res.diff))} points.`
-    :`On average ${lab.A} (M = ${f(res.mA)}) was ${dir} than ${lab.B} (M = ${f(res.mB)}), a mean difference of ${f(res.diff)} across ${res.n} participants.`;
-  txt+=` With a ${alt} test at α = ${fp(res.alpha)}, p ${res.p<0.001?'< .001':'= '+fp(res.p)}, so H₀ (no difference in population means) is ${res.sig?'<b>rejected</b>':'<b>not rejected</b>'}.`;
-  txt+=` The effect is ${effLabel(es)} by Cohen’s rough benchmarks (${ind?'d':'d<sub>z</sub>'} = ${f(es)}). “Not rejected” does not mean “no effect”; look at how wide the CI is.`;
+  let txt;
+  if(ind)txt=`${lab.A} (M = ${f(res.mA)}) was ${dir} than ${lab.B} (M = ${f(res.mB)}) by ${f(Math.abs(res.diff))} points.`;
+  else if(kind==='paired')txt=`On average ${lab.A} (M = ${f(res.mA)}) was ${dir} than ${lab.B} (M = ${f(res.mB)}), a mean difference of ${f(res.diff)} across ${res.n} participants.`;
+  else txt=`The sample mean (M = ${f(res.mA)}, n = ${res.n}) was ${dir} than the hypothesized mean μ₀ = ${f(res.mu0)} by ${f(Math.abs(res.diff))} points.`;
+  const h0=kind==='single'?`H₀ (μ = ${f(res.mu0)})`:'H₀ (no difference in population means)';
+  txt+=` With a ${alt} test at α = ${fp(res.alpha)}, p ${res.p<0.001?'< .001':'= '+fp(res.p)}, so ${h0} is ${res.sig?'<b>rejected</b>':'<b>not rejected</b>'}.`;
+  txt+=` The effect is ${effLabel(es)} by Cohen’s rough benchmarks (${dlab} = ${f(es)}). “Not rejected” does not mean “no effect”; look at how wide the CI is.`;
   if(res.tails!=='two'&&((res.tails==='greater'&&res.diff<0)||(res.tails==='less'&&res.diff>0)))txt+=' <b>Note:</b> the observed difference is in the opposite direction to the one-sided hypothesis.';
   $('interp').innerHTML=txt;
-  $('apa').textContent=`t(${fdf(res.df)}) = ${f(res.t)}, p ${res.p<0.001?'< .001':'= '+fp(res.p)}, ${ind?'d':'d_z'} = ${f(es)}, ${lvl()} CI [${f(res.ci[0])}, ${f(res.ci[1])}]`;
+  $('apa').textContent=`t(${fdf(res.df)}) = ${f(res.t)}, p ${res.p<0.001?'< .001':'= '+fp(res.p)}, ${kind==='paired'?'d_z':'d'} = ${f(es)}, ${lvl()} CI [${f(res.ci[0])}, ${f(res.ci[1])}]`;
 }
 function renderCompare(A,B,res){
   let rows;
+  const mk=(name,r,sel)=>r.invalid?{name,invalid:true}:{name,t:r.t,df:fdf(r.df),se:r.se,p:r.p,sel};
   if(res.kind==='ind'){
     $('cmpTitle').textContent='Student vs Welch on the same data';
-    rows=['student','welch'].map(v=>({name:v==='student'?'Student (pooled variance)':'Welch (unequal variances)',r:indTest(A,B,v,S.tails,S.alpha),sel:v===S.variant}));
-  }else{
+    rows=['student','welch'].map(v=>mk(v==='student'?'Student (pooled variance)':'Welch (unequal variances)',indTest(A,B,v,S.tails,S.alpha),v===S.variant));
+  }else if(res.kind==='paired'){
     $('cmpTitle').textContent='Right test vs wrong test on the same data';
-    rows=[{name:'Paired t-test (correct)',r:res,sel:true},{name:'Independent t-test, ignoring the pairing',r:indTest(A,B,S.variant,S.tails,S.alpha),sel:false}];
+    rows=[mk('Paired t-test (correct)',res,true),mk('Independent t-test, ignoring the pairing',indTest(A,B,S.variant,S.tails,S.alpha),false)];
+  }else{
+    $('cmpTitle').textContent='t test vs normal (z) approximation on the same data';
+    rows=[mk('One-sample t test (df = n − 1)',res,true),{name:'z test: treats s as if it were σ',t:res.t,df:'∞',se:res.se,p:pNorm(res.t,S.tails),sel:false}];
   }
-  $('cmp').innerHTML='<tr><th>Test</th><th>t</th><th>df</th><th>SE</th><th>p</th></tr>'+rows.map(o=>o.r.invalid?`<tr><td>${o.name}</td><td colspan="4">n/a</td></tr>`
-    :`<tr class="${o.sel?'sel':''}"><td>${o.name}</td><td class="num">${f(o.r.t,3)}</td><td class="num">${fdf(o.r.df)}</td><td class="num">${f(o.r.se,3)}</td><td class="num">${fp(o.r.p)}</td></tr>`).join('');
+  $('cmp').innerHTML='<tr><th>Test</th><th>t</th><th>df</th><th>SE</th><th>p</th></tr>'+rows.map(o=>o.invalid?`<tr><td>${o.name}</td><td colspan="4">n/a</td></tr>`
+    :`<tr class="${o.sel?'sel':''}"><td>${o.name}</td><td class="num">${f(o.t,3)}</td><td class="num">${o.df}</td><td class="num">${f(o.se,3)}</td><td class="num">${fp(o.p)}</td></tr>`).join('');
 }
 function renderWhy(res){
   const s1=Math.sqrt(res.vA),s2=Math.sqrt(res.vB),n=res.n,r=res.r;
@@ -525,13 +597,21 @@ function renderWhy(res){
   const bar=(lab,v,c)=>`<div style="display:grid;grid-template-columns:190px 1fr 60px;gap:8px;align-items:center;margin:4px 0"><span class="cap" style="margin:0">${lab}</span><div class="bar" style="width:${Math.max(2,100*v/mx)}%;background:${c}"></div><span class="f">${f(v,3)}</span></div>`;
   $('whyBars').innerHTML=bar('SE if treated as independent',seInd,'var(--muted)')+bar('SE of paired differences',sePair,'var(--accent)');
 }
+function renderWhy1(res){
+  const tp=res.tails==='two'?res.alpha/2:res.alpha,tc=res.tcrit,zc=zCrit(tp),mx=Math.max(tc,zc);
+  $('whyFormula1').innerHTML=`SE = s/√n = ${f(res.sd,2)}/√${res.n} = <b>${f(res.se,3)}</b> &nbsp;·&nbsp; t = (M − μ₀)/SE = (${f(res.mA)} − ${f(res.mu0)})/${f(res.se,3)} = <b>${f(res.t,3)}</b>`;
+  const bar=(lab,v,c)=>`<div style="display:grid;grid-template-columns:190px 1fr 60px;gap:8px;align-items:center;margin:4px 0"><span class="cap" style="margin:0">${lab}</span><div class="bar" style="width:${Math.max(2,100*v/mx)}%;background:${c}"></div><span class="f">${f(v,3)}</span></div>`;
+  $('whyBars1').innerHTML=bar(`Critical t* (df = ${res.df})`,tc,'var(--accent)')+bar('Critical z* (normal curve)',zc,'var(--muted)')
+    +`<p class="cap" style="margin:4px 0 0">At α = ${fp(res.alpha)}, t* is <b>${f(100*(tc/zc-1),1)}%</b> larger than z*, so the t test needs a larger |t| to reject H₀ than a z test would.</p>`;
+}
 function renderSim(){
   const N=+$('simN').value,sim=runSim(N);
   if(!sim.N){$('chartSim').innerHTML='';$('simTxt').textContent='';return;}
   $('chartSim').innerHTML=chartSim(sim);
-  const pct=100*sim.sig/sim.N,trueD=S.muA-S.muB,what=trueD===0?'false-positive rate (Type I error)':'power';
+  const pct=100*sim.sig/sim.N,trueD=S.mode==='single'?S.muA-S.mu0:S.muA-S.muB,what=trueD===0?'false-positive rate (Type I error)':'power';
   let t=`<b>${sim.sig.toLocaleString()}</b> of ${sim.N.toLocaleString()} experiments (<b>${pct.toFixed(1)}%</b>) were significant at α = ${fp(S.alpha)}: an estimate of the ${what}.`;
   if(sim.paired)t+=` Analysing the same data with an independent-groups test would have found only <b>${(100*sim.sigWrong/sim.N).toFixed(1)}%</b>.`;
+  if(sim.single)t+=` Using the normal curve (a z test with s in place of σ) instead of t would have found <b>${(100*sim.sigWrong/sim.N).toFixed(1)}%</b>${trueD===0&&sim.sigWrong>sim.sig?', more false positives than the t test gives (the gap is largest when n is small)':''}.`;
   $('simTxt').innerHTML=t;
 }
 let simTimer=null;
@@ -542,28 +622,32 @@ function update(){
   let A,B;
   if(S.source==='sim'){const d=simData();A=d.A;B=d.B;}
   else{const d=ownData();if(d.err){return showErr(d.err);}A=d.A;B=d.B;}
-  const res=S.mode==='paired'?pairedTest(A,B,S.tails,S.alpha):indTest(A,B,S.variant,S.tails,S.alpha);
+  const res=S.mode==='single'?oneTest(A,S.mu0,S.tails,S.alpha):S.mode==='paired'?pairedTest(A,B,S.tails,S.alpha):indTest(A,B,S.variant,S.tails,S.alpha);
   if(res.invalid)return showErr(res.msg);
   $('msg').hidden=true;
   ['pDist','pRes'].forEach(id=>$(id).hidden=false);
-  $('chartMain').innerHTML=chartGroups(A,B,res);$('chartDiff').innerHTML=chartDiff(res);
+  $('chartMain').innerHTML=res.kind==='single'?chartOne(A,res):chartGroups(A,B,res);$('chartDiff').innerHTML=chartDiff(res);
   $('chartT').innerHTML=chartT(res);
   renderResult(res,L());renderCompare(A,B,res);
   $('pWhy').hidden=res.kind!=='paired';if(res.kind==='paired')renderWhy(res);
+  $('pWhy1').hidden=res.kind!=='single';if(res.kind==='single')renderWhy1(res);
   scheduleSim();
 }
 function showErr(msg){
   $('msg').hidden=false;$('msg').textContent=msg;
   $('chartMain').innerHTML='';$('chartDiff').innerHTML='';
-  $('pDist').hidden=true;$('pRes').hidden=true;$('pWhy').hidden=true;
+  $('pDist').hidden=true;$('pRes').hidden=true;$('pWhy').hidden=true;$('pWhy1').hidden=true;
   scheduleSim();
 }
 
 /* ============ Wiring ============ */
 function init(){
   buildControls();genBase();
-  $('tab-ind').onclick=()=>{S.mode='ind';update();};
-  $('tab-paired').onclick=()=>{S.mode='paired';update();};
+  const setMode=m=>{S.mode=m;if(S.source==='own'&&m!=='single'&&!$('ownB').value.trim())loadSim();update();};
+  $('tab-ind').onclick=()=>setMode('ind');
+  $('tab-paired').onclick=()=>setMode('paired');
+  $('tab-single').onclick=()=>setMode('single');
+  $('mu0').oninput=e=>{const v=parseFloat(e.target.value);if(isFinite(v)){S.mu0=v;update();}};
   document.querySelectorAll('input[name=src]').forEach(el=>el.addEventListener('change',e=>{
     S.source=e.target.value;
     if(S.source==='own'&&!$('ownA').value&&!$('ownB').value)loadSim();
