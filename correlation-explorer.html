@@ -106,6 +106,11 @@ button.sw::after{content:"";position:absolute;top:2px;left:2px;width:18px;height
 button.sw[aria-checked="true"]{background:var(--accent);border-color:var(--accent)}
 button.sw[aria-checked="true"]::after{transform:translateX(20px);background:#fff}
 button.sw:focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 55%,transparent);outline-offset:2px}
+.gtab{margin-top:12px}
+.gtab caption{caption-side:top;text-align:left;font-size:.78rem;font-weight:600;color:var(--muted);padding:0 0 4px}
+.gtab th,.gtab td{text-align:center}
+.gtab th:first-child,.gtab td:first-child{text-align:left}
+.gtab td.on{background:var(--accent);color:#fff;font-weight:700}
 @media(max-width:600px){.theme-btn{position:static;display:block;margin:0 0 10px auto}}
 </style>
 </head>
@@ -230,6 +235,7 @@ button.sw:focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 55%,tr
       <h2><span class="n">3</span>Result <span id="badge"></span></h2>
       <div class="stats" id="stats"></div>
       <p class="interp" id="interp"></p>
+      <div class="scroll"><table class="gtab" id="guideTable"></table></div>
       <div class="apa" id="apaRow"><span id="apa"></span><button class="pill" id="copy">Copy</button></div>
     </div>
   </section>
@@ -526,7 +532,18 @@ function drawPhi(Q){
 }
 
 /* ============ Rendering helpers ============ */
+function guideRows(rows){
+  const hd='<caption>Effect-size guidelines (Cohen): your result is highlighted</caption><thead><tr><th>Measure</th><th class="num">Value</th><th>Negligible</th><th>Small</th><th>Medium</th><th>Large</th></tr></thead><tbody>';
+  const t=[.1,.3,.5];
+  const body=rows.map(([lab,v])=>{
+    const a=Math.abs(v),cur=a<t[0]?0:a<t[1]?1:a<t[2]?2:3;
+    const T=['&lt; '+fr(t[0]),fr(t[0])+' to &lt; '+fr(t[1]),fr(t[1])+' to &lt; '+fr(t[2]),'≥ '+fr(t[2])];
+    return `<tr><td>${lab}</td><td class="num">${fr(v)}</td>${T.map((x,i)=>`<td class="f${i===cur?' on':''}">${x}</td>`).join('')}</tr>`;
+  }).join('');
+  $('guideTable').innerHTML=hd+body+'</tbody>';
+}
 function showResult(o){
+  guideRows(o.guides);
   $('badge').innerHTML=o.p==null?'':`<span class="badge ${o.p<o.alpha?'sig':'ns'}">${o.p<o.alpha?'Significant':'Not significant'} at α = ${fp(o.alpha)}</span>`;
   $('stats').innerHTML=o.cards.map(([a,b])=>`<div class="stat"><small>${a}</small><b>${b}</b></div>`).join('');
   $('interp').innerHTML=(label?`<b>${label}</b><br>`:'')+o.interp;
@@ -558,7 +575,7 @@ function rPearson(){
   if(t)m+=testSentence(t,'ρ = 0');
   if(L.n<15)m+=' <i>With so few points, r can swing a lot from a single point, so try dragging one.</i>';
   m+=' <i>Correlation measures linear association only, and it does not show causation.</i>';
-  showResult({p:t?t.p:null,alpha:S.alpha,cards,interp:m,apa:t?`r(${t.df}) = ${fr(L.r)}, p ${apaP(t.p)}`:''});
+  showResult({p:t?t.p:null,alpha:S.alpha,cards,guides:[['|r| (Pearson)',L.r]],interp:m,apa:t?`r(${t.df}) = ${fr(L.r)}, p ${apaP(t.p)}`:''});
 }
 
 /* ---------- Spearman ---------- */
@@ -581,7 +598,7 @@ function rSpearman(){
   }
   if(t)m+=testSentence(t,'no monotonic association in the population');
   if(RX.ties+RY.ties>0)m+=' Tied scores share average ranks, so ρ is computed as Pearson r on those ranks.';
-  showResult({p:t?t.p:null,alpha:S.alpha,cards,interp:m,apa:t?`r_s(${t.df}) = ${fr(rho)}, p ${apaP(t.p)}`:''});
+  showResult({p:t?t.p:null,alpha:S.alpha,cards,guides:[['|ρ| (Spearman)',rho]],interp:m,apa:t?`r_s(${t.df}) = ${fr(rho)}, p ${apaP(t.p)}`:''});
   /* rank table */
   const rows=Math.min(n,10);let h='<tr><th>#</th><th class="num">X</th><th class="num">Y</th><th class="num">Rank X</th><th class="num">Rank Y</th><th class="num">d</th><th class="num">d²</th></tr>';
   for(let i=0;i<rows;i++){const d=RX.r[i]-RY.r[i];h+=`<tr><td>${i+1}</td><td class="num">${f(xs[i],1)}</td><td class="num">${f(ys[i],1)}</td><td class="num">${f(RX.r[i],1)}</td><td class="num">${f(RY.r[i],1)}</td><td class="num">${f(d,1)}</td><td class="num">${f(d*d,2)}</td></tr>`;}
@@ -612,7 +629,7 @@ function rPb(){
   let m=`Group 1 (M = ${f(B.m1)}) scored ${B.m1>=B.m0?'higher':'lower'} than group 0 (M = ${f(B.m0)}) by ${f(Math.abs(B.m1-B.m0))} points. This is a <b>${strength(a)} ${a<0.1?'':B.r>0?'positive ':'negative '}relationship</b> between group membership and score (r<sub>pb</sub> = ${f(B.r,2)}): group membership is associated with ${(B.r*B.r*100).toFixed(0)}% of the variation in scores.`;
   m+=testSentence(t,'ρ<sub>pb</sub> = 0, equivalently no difference between the population means');
   m+=' <i>The sign depends only on which group is coded 1.</i>';
-  showResult({p:t.p,alpha:S.alpha,cards,interp:m,apa:`r_pb(${t.df}) = ${fr(B.r)}, p ${apaP(t.p)}`});
+  showResult({p:t.p,alpha:S.alpha,cards,guides:[['|r_pb| (point-biserial)',B.r]],interp:m,apa:`r_pb(${t.df}) = ${fr(B.r)}, p ${apaP(t.p)}`});
   $('pbTable').innerHTML='<tr><th>Test</th><th class="num">Statistic</th><th class="num">t</th><th class="num">df</th><th class="num">p</th></tr>'+
     `<tr class="sel"><td>Point-biserial correlation</td><td class="num">r<sub>pb</sub> = ${f(B.r,3)}</td><td class="num">${f(t.t,3)}</td><td class="num">${t.df}</td><td class="num">${fp(t.p)}</td></tr>`+
     `<tr><td>Independent-measures t test (pooled)</td><td class="num">d = ${f(B.d,3)}</td><td class="num">${f(B.tPool,3)}</td><td class="num">${B.n-2}</td><td class="num">${fp(pTwo(B.tPool,B.n-2))}</td></tr>`;
@@ -638,7 +655,7 @@ function rPhi(){
   let m=`This is a <b>${strength(a)} ${a<0.1?'':Q.phi>0?'positive ':'negative '}association</b> (φ = ${f(Q.phi,2)}): Y = 1 occurs in ${(100*Q.p1).toFixed(0)}% of the X = 1 group versus ${(100*Q.p0).toFixed(0)}% of the X = 0 group. With χ²(1, N = ${Q.n}) = ${f(Q.chi,2)}, p ${apaP(Q.p)}, H₀ (no association between X and Y) is ${Q.p<S.alpha?'<b>rejected</b>':'<b>not rejected</b>'} at α = ${fp(S.alpha)}.`;
   m+=` With these margins φ cannot exceed ${f(Q.phimax,2)}.`;
   if(Q.minE<5)m+=' <b>Note:</b> an expected count is below 5, so the chi-square approximation is unreliable here.';
-  showResult({p:Q.p,alpha:S.alpha,cards,interp:m,apa:`φ = ${fr(Q.phi)}, χ²(1, N = ${Q.n}) = ${f(Q.chi,2)}, p ${apaP(Q.p)}`});
+  showResult({p:Q.p,alpha:S.alpha,cards,guides:[['|φ| (= Cohen\'s w for a 2 × 2 table)',Q.phi]],interp:m,apa:`φ = ${fr(Q.phi)}, χ²(1, N = ${Q.n}) = ${f(Q.chi,2)}, p ${apaP(Q.p)}`});
   $('phTable').innerHTML='<tr><th></th><th class="num">Y = 0</th><th class="num">Y = 1</th><th class="num">Row total</th></tr>'+
     `<tr><td><b>X = 0</b></td><td class="num">${Q.a}</td><td class="num">${Q.b}</td><td class="num">${Q.R0}</td></tr>`+
     `<tr><td><b>X = 1</b></td><td class="num">${Q.c}</td><td class="num">${Q.d}</td><td class="num">${Q.R1}</td></tr>`+
@@ -661,7 +678,7 @@ function rSee(){
   const redu=100*(1-see/sY);
   let m=`Predictions from the regression line miss the actual Y by about <b>${f(see,2)}</b> units, typically. If you ignored X and always guessed the mean of Y, the typical miss would be ${f(sY,2)}, so knowing X ${redu>=0?`cuts the typical error by ${redu.toFixed(0)}%`:'does not reduce the typical error'}. For a new case at X = ${x}, the line predicts Y ≈ ${f(yh,1)}, and ${lev} of such cases should fall between ${f(yh-pi,1)} and ${f(yh+pi,1)}.`;
   m+=` About ${(100*within/L.n).toFixed(0)}% of the points lie within ±1 SEE of the line (roughly 68% is expected when the scatter around the line is normal and even).`;
-  showResult({p:null,alpha:S.alphaSee,cards,interp:m,apa:''});
+  showResult({p:null,alpha:S.alphaSee,cards,guides:[['|r| (drives the SEE)',L.r]],interp:m,apa:''});
   $('seeFormula').innerHTML=`SEE = √(SS<sub>residual</sub>/(n − 2)) = √(${f(ssres,1)}/${df}) = <b>${f(see,2)}</b> &nbsp;·&nbsp; s<sub>Y</sub>√(1 − r²)√((n − 1)/(n − 2)) = ${f(sY,2)}·${f(Math.sqrt(Math.max(0,1-L.r*L.r)),3)}·${f(Math.sqrt((L.n-1)/df),3)} = <b>${f(sY*Math.sqrt(Math.max(0,1-L.r*L.r))*Math.sqrt((L.n-1)/df),2)}</b>`;
   const mx=Math.max(sY,see);
   $('seeBars').innerHTML=bar('Typical miss using only the mean (SD of Y)',sY,mx,'var(--muted)',f(sY,2))+bar('Typical miss using the line (SEE)',see,mx,'var(--accent)',f(see,2));
