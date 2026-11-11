@@ -1,0 +1,1540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Contingency Table Tests Explorer: chi-square, binomial, odds ratio and Fisher's exact tests</title>
+<meta name="description" content="Interactive explorer for tests on count data: chi-square goodness of fit and independence, odds ratios with Wald and exact confidence intervals, Fisher's exact test (2×2 and r×c), phi and Cramér's V, and a side-by-side comparison of every test with a simulation of their error rates.">
+<script>try{var t=localStorage.getItem("ttest-theme");if(t==="light"||t==="dark")document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
+<style>
+:root{
+  --bg:#f5f4ef;--panel:#ffffff;--ink:#1b1e25;--muted:#5b6370;--line:#dedbd1;--soft:#efede6;
+  --a:#2468d6;--b:#d9730d;--rej:#c8372d;--ok:#1b8a5a;--accent:#2468d6;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){--bg:#13151a;--panel:#1c1f26;--ink:#e8e9ed;--muted:#9aa1ae;--line:#323744;--soft:#252932;
+    --a:#6ba4ff;--b:#ffa24f;--rej:#ff7064;--ok:#4cc58c;--accent:#6ba4ff;}
+}
+:root[data-theme="dark"]{--bg:#13151a;--panel:#1c1f26;--ink:#e8e9ed;--muted:#9aa1ae;--line:#323744;--soft:#252932;
+    --a:#6ba4ff;--b:#ffa24f;--rej:#ff7064;--ok:#4cc58c;--accent:#6ba4ff;}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{padding:26px 22px 8px;max-width:1280px;margin:0 auto;position:relative}
+.theme-btn{position:absolute;top:26px;right:22px;border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:7px 14px;border-radius:999px;font:inherit;font-size:.85rem;font-weight:600;cursor:pointer}
+.theme-btn:hover{border-color:var(--accent)}
+h1{margin:0 0 4px;font-size:1.65rem;letter-spacing:-.01em}
+header p{margin:0;color:var(--muted);max-width:760px}
+.tabs{display:flex;gap:6px;margin-top:16px;flex-wrap:wrap}
+.tab{border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:9px 16px;border-radius:999px;font:inherit;font-weight:600;cursor:pointer}
+.tab[aria-selected="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.tab:focus-visible,.theme-btn:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,summary:focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 55%,transparent);outline-offset:2px}
+main{max-width:1280px;margin:0 auto;padding:14px 22px 30px;display:grid;grid-template-columns:330px minmax(0,1fr);gap:18px;align-items:start}
+@media(max-width:940px){main{grid-template-columns:1fr}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 18px}
+.controls{position:sticky;top:10px}
+@media(max-width:940px){.controls{position:static}}
+.stack{display:flex;flex-direction:column;gap:18px;min-width:0}
+h2{margin:0 0 10px;font-size:1.02rem}
+h2 .n{display:inline-block;background:var(--soft);border-radius:6px;padding:0 7px;margin-right:6px;color:var(--muted);font-variant-numeric:tabular-nums}
+h3{margin:14px 0 6px;font-size:.78rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+button.pill{border:1px solid var(--line);background:var(--soft);color:var(--ink);padding:5px 11px;border-radius:8px;font:inherit;font-size:.85rem;cursor:pointer}
+button.pill:hover{border-color:var(--accent)}
+.sl{margin:9px 0}
+.sl label{display:flex;justify-content:space-between;font-size:.88rem}
+.sl output{font-family:var(--mono);font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--accent)}
+fieldset{border:0;padding:0;margin:0}
+select,textarea,input[type=number]{font:inherit;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:6px 8px;width:100%}
+textarea{font-family:var(--mono);font-size:.85rem;min-height:84px;resize:vertical}
+.opt{margin:8px 0}.opt>label{display:block;font-size:.85rem;color:var(--muted);margin-bottom:3px}
+.seg{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg label{flex:1;text-align:center;padding:6px 4px;font-size:.85rem;cursor:pointer;color:var(--ink);margin:0}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg input:checked+span{background:var(--accent);color:#fff}
+.seg span{display:block;padding:6px 4px;margin:-6px -4px}
+.seg input:focus-visible+span{outline:3px solid color-mix(in srgb,var(--accent) 55%,transparent);outline-offset:-3px}
+.truth{font-size:.85rem;background:var(--soft);border-radius:8px;padding:7px 10px;margin-top:10px;color:var(--muted)}
+.truth b{color:var(--ink);font-family:var(--mono)}
+.charts{display:grid;grid-template-columns:minmax(0,2.1fr) minmax(0,1fr);gap:14px}
+@media(max-width:700px){.charts{grid-template-columns:1fr}}
+svg{width:100%;height:auto;display:block;overflow:visible}
+svg text{fill:var(--muted);font:11px system-ui,sans-serif}
+svg .ax{stroke:var(--line)}
+svg .strong{fill:var(--ink)}
+.cap{font-size:.82rem;color:var(--muted);margin:6px 0 0}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:.82rem;color:var(--muted);margin-top:6px}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.stat{background:var(--soft);border-radius:10px;padding:9px 12px}
+.stat small{display:block;color:var(--muted);font-size:.75rem}
+.stat b{font:600 1.15rem var(--mono);font-variant-numeric:tabular-nums}
+.badge{display:inline-block;padding:3px 10px;border-radius:999px;font-weight:700;font-size:.82rem;color:#fff}
+.badge.sig{background:var(--ok)}.badge.ns{background:#7b8392}
+.interp{margin:12px 0 0}
+.apa{font-family:var(--mono);font-size:.88rem;background:var(--soft);padding:8px 10px;border-radius:8px;display:flex;justify-content:space-between;gap:10px;align-items:center;margin-top:10px}
+table{border-collapse:collapse;width:100%;font-size:.88rem}
+th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line)}
+th{font-weight:600;color:var(--muted);font-size:.78rem}
+td.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+tr.sel td{background:color-mix(in srgb,var(--accent) 10%,transparent)}
+.bar{height:14px;border-radius:4px;background:var(--a)}
+.err{color:var(--rej);font-weight:600}
+details{max-width:1280px;margin:0 auto 10px;padding:0 22px}
+details .panel{margin-top:8px}
+details summary{cursor:pointer;font-weight:600}
+code,.f{font-family:var(--mono);font-size:.88rem}
+footer{max-width:1280px;margin:0 auto;padding:6px 22px 30px;color:var(--muted);font-size:.82rem}
+dl.key{display:grid;grid-template-columns:max-content 1fr;gap:6px 16px;margin:0}dl.key dt{font-family:var(--mono);font-size:.88rem;font-weight:600}dl.key dd{margin:0;color:var(--muted)}
+[hidden]{display:none!important}
+canvas{width:100%;display:block;border:1px solid var(--line);border-radius:10px;background:var(--panel);touch-action:none}
+canvas.drag{cursor:crosshair}
+.charts{grid-template-columns:minmax(0,1fr)}
+.charts.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+@media(max-width:700px){.charts.two{grid-template-columns:1fr}}
+.chartcap{font-size:.8rem;color:var(--muted);margin:0 0 5px;font-weight:600}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 2px}
+button.pill[aria-pressed="true"]{border-color:var(--accent)}
+th.num,td.num{text-align:right}
+.scroll{overflow-x:auto}
+.sw-row{display:flex;align-items:center;gap:10px;margin:12px 0 4px;font-size:.88rem}
+.sw-row .lab{color:var(--muted);font-weight:600}
+.sw-row .lab.on{color:var(--ink)}
+button.sw{position:relative;flex:none;width:44px;height:24px;border-radius:12px;border:1px solid var(--line);background:var(--soft);padding:0;cursor:pointer;transition:background .2s,border-color .2s}
+button.sw::after{content:"";position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:var(--muted);transition:transform .2s,background .2s}
+button.sw[aria-checked="true"]{background:var(--accent);border-color:var(--accent)}
+button.sw[aria-checked="true"]::after{transform:translateX(20px);background:#fff}
+button.sw:focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 55%,transparent);outline-offset:2px}
+@media(max-width:600px){.theme-btn{position:static;display:block;margin:0 0 10px auto}}
+.gtab{margin-top:12px}
+.gtab caption{caption-side:top;text-align:left;font-size:.78rem;font-weight:600;color:var(--muted);padding:0 0 4px}
+.gtab th,.gtab td{text-align:center}
+.gtab th:first-child,.gtab td:first-child{text-align:left}
+.gtab td.on{background:var(--accent);color:#fff;font-weight:700}
+.dt{min-width:340px}
+.dt th,.dt td{text-align:right;vertical-align:middle}
+.dt th.lab,.dt td.lab{text-align:left}
+.dt input[type=number]{width:84px;padding:4px 6px;text-align:right;font-family:var(--mono)}
+.dt td small{display:block;color:var(--muted);font-size:.7rem;font-family:var(--mono);margin-top:2px;white-space:nowrap}
+.dt tfoot th,.dt tr.tot th{border-bottom:0}
+td.name{font-weight:600}
+td.note{color:var(--muted);font-size:.82rem}
+.cmpt td.f{font-family:inherit}
+.rel{margin:0;padding-left:20px}.rel li{margin:5px 0}
+.warn{background:color-mix(in srgb,var(--b) 14%,transparent);border-left:3px solid var(--b);border-radius:6px;padding:7px 10px;font-size:.88rem;margin:10px 0 0}
+.mini{width:100%;margin-top:10px}
+.mini th,.mini td{text-align:right}.mini th:first-child,.mini td:first-child{text-align:left}
+.orgrid{display:grid;grid-template-columns:minmax(0,1.9fr) minmax(0,1fr);gap:14px;align-items:center}
+@media(max-width:700px){.orgrid{grid-template-columns:1fr}}
+.stat small+small{margin-top:1px}
+.gtab td.f{font-family:inherit;font-size:.82rem}
+.wz .dq{font-weight:600;margin:0 0 8px}
+.dopts{display:flex;flex-direction:column;gap:6px}
+button.dopt{text-align:left;border:1px solid var(--line);background:var(--soft);color:var(--ink);padding:9px 12px;border-radius:10px;font:inherit;font-size:.9rem;cursor:pointer}
+button.dopt:hover{border-color:var(--accent)}
+.crumbs{display:flex;flex-direction:column;gap:4px;margin-bottom:12px}
+button.crumb{text-align:left;border:0;background:transparent;color:var(--muted);font:inherit;font-size:.82rem;padding:2px 0;cursor:pointer}
+button.crumb:hover{color:var(--accent)}button.crumb b{color:var(--ink)}
+.dres{border-left:3px solid var(--accent);padding:2px 0 2px 14px}
+.dtitle{font-size:1.05rem;font-weight:700;margin:0 0 6px}
+.dlist{list-style:none;padding:0;margin:10px 0}
+.dlist li{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;margin:7px 0}
+.dlist li span{color:var(--muted);font-size:.88rem;flex:1 1 220px}
+.glance th,.glance td{vertical-align:top}
+</style>
+</head>
+<body>
+<header>
+  <button class="theme-btn" id="themeBtn" type="button" aria-label="Switch between light and dark theme"></button>
+  <h1>Contingency Table Tests Explorer</h1>
+  <p>Test whether <b>counts</b> fit a hypothesis or whether two categorical variables are related: <span style="white-space:nowrap">χ² = Σ (O − E)² / E</span> for <b>goodness of fit</b> and <b>independence</b>, the <b>odds ratio</b> for the size of a 2 × 2 effect, the <b>binomial test</b> and <b>Fisher’s exact test</b> when counts are small. Then measure <i>how strong</i> the association is with <b>phi and Cramér’s V</b>, and <b>compare every test</b> on the same data.</p>
+  <div class="tabs" role="tablist" aria-label="Analysis">
+    <button class="tab" role="tab" id="tab-gof" aria-selected="true">Goodness of fit</button>
+    <button class="tab" role="tab" id="tab-binom" aria-selected="false">Binomial test</button>
+    <button class="tab" role="tab" id="tab-ind" aria-selected="false">Test of independence</button>
+    <button class="tab" role="tab" id="tab-or" aria-selected="false">Odds ratio</button>
+    <button class="tab" role="tab" id="tab-fisher" aria-selected="false">Fisher’s exact</button>
+    <button class="tab" role="tab" id="tab-assoc" aria-selected="false">Phi &amp; Cramér's V</button>
+    <button class="tab" role="tab" id="tab-cmp" aria-selected="false">Compare tests</button>
+  </div>
+</header>
+
+<main>
+  <aside class="panel controls" aria-label="Controls">
+    <h2>Setup</h2>
+    <div class="row" id="presets"></div>
+
+    <div data-tabs="gof">
+      <h3>Sample</h3>
+      <div class="sl"><label for="sl_k"><span>Categories</span><output id="o_sl_k"></output></label><input type="range" id="sl_k" min="2" max="8" step="1"></div>
+      <div class="sl"><label for="sl_gn"><span>Sample size (n)</span><output id="o_sl_gn"></output></label><input type="range" id="sl_gn" min="20" max="1000" step="10"></div>
+      <div class="sl"><label for="sl_gd"><span>True departure from H₀</span><output id="o_sl_gd"></output></label><input type="range" id="sl_gd" min="0" max="80" step="1"></div>
+      <div class="row"><button class="pill" id="gNew">New random sample</button></div>
+    </div>
+
+    <div data-tabs="binom">
+      <h3>Trials and H₀</h3>
+      <div class="sl"><label for="sl_bn"><span>Trials (n)</span><output id="o_sl_bn"></output></label><input type="range" id="sl_bn" min="5" max="300" step="1"></div>
+      <div class="sl"><label for="sl_bx"><span>Successes (x)</span><output id="o_sl_bx"></output></label><input type="range" id="sl_bx" min="0" max="20" step="1"></div>
+      <div class="sl"><label for="sl_bp0"><span>Hypothesised proportion p₀</span><output id="o_sl_bp0"></output></label><input type="range" id="sl_bp0" min="5" max="95" step="1"></div>
+      <div class="sl"><label for="sl_bt"><span>True proportion</span><output id="o_sl_bt"></output></label><input type="range" id="sl_bt" min="1" max="99" step="1"></div>
+      <div class="row"><button class="pill" id="bNew" type="button">Draw a random sample</button></div>
+    </div>
+
+    <div data-tabs="ind or fisher assoc cmp">
+      <h3>Table and sample</h3>
+      <div data-tabs="ind fisher assoc cmp">
+      <div class="sl"><label for="sl_R"><span>Rows</span><output id="o_sl_R"></output></label><input type="range" id="sl_R" min="2" max="4" step="1"></div>
+      <div class="sl"><label for="sl_C"><span>Columns</span><output id="o_sl_C"></output></label><input type="range" id="sl_C" min="2" max="4" step="1"></div>
+      </div>
+      <div class="sl"><label for="sl_in"><span>Sample size (n)</span><output id="o_sl_in"></output></label><input type="range" id="sl_in" min="20" max="1000" step="10"></div>
+      <div class="sl"><label for="sl_id"><span>True association</span><output id="o_sl_id"></output></label><input type="range" id="sl_id" min="0" max="80" step="1"></div>
+      <div class="row">
+        <button class="pill" id="iNew">New random sample</button>
+        <button class="pill" id="yatesBtn" aria-pressed="false" data-tabs="ind" hidden>Yates correction: off</button>
+      </div>
+    </div>
+
+    <div class="truth" id="truth" hidden></div>
+
+    <div data-tabs="gof binom ind or fisher assoc cmp">
+      <h3>Test options</h3>
+      <div class="opt"><label for="alpha">Significance level α</label>
+        <select id="alpha"><option value="0.10">.10</option><option value="0.05" selected>.05</option><option value="0.01">.01</option><option value="0.001">.001</option></select></div>
+      <div class="opt" id="tailsBox" data-tabs="or fisher"><label for="tails">Alternative hypothesis</label>
+        <select id="tails"><option value="two" selected>Two-sided (OR ≠ 1)</option><option value="greater">One-sided: OR &gt; 1</option><option value="less">One-sided: OR &lt; 1</option></select></div>
+      <div class="opt" id="btailsBox" data-tabs="binom"><label for="btails">Alternative hypothesis</label>
+        <select id="btails"><option value="two" selected>Two-sided (p ≠ p₀)</option><option value="greater">One-sided: p &gt; p₀</option><option value="less">One-sided: p &lt; p₀</option></select></div>
+      <div class="opt" id="bmethBox" data-tabs="binom"><label for="bmeth">Binomial p-value</label>
+        <select id="bmeth"><option value="exact" selected>Exact (conventional)</option><option value="mid">Mid-p (less conservative)</option></select></div>
+      <div class="opt" id="fmethBox" data-tabs="fisher"><label for="fmeth">Fisher p-value</label>
+        <select id="fmeth"><option value="exact" selected>Exact (conventional)</option><option value="mid">Mid-p (less conservative)</option></select></div>
+    </div>
+
+    <div data-tabs="gof ind">
+      <h3>Simulation</h3>
+      <div class="row">
+        <button class="pill" id="simBtn">Run 1,000 simulations under H₀</button>
+        <button class="pill" id="simClr">Clear</button>
+      </div>
+      <p class="cap">Draws 1,000 random samples of the same size with H₀ true and plots their χ² values against the theoretical curve.</p>
+    </div>
+  </aside>
+
+  <section class="stack">
+    <div class="panel" id="pData" data-tabs="gof ind or fisher assoc cmp">
+      <h2><span class="n">1</span><span id="dataTitle">The data</span></h2>
+      <div id="msg" class="err" hidden></div>
+      <div class="charts">
+        <div><p class="chartcap" id="capMain"></p><canvas id="cvMain" role="img"></canvas></div>
+      </div>
+      <p class="cap" id="dataCap"></p>
+      <div class="scroll" style="margin-top:12px"><div id="tw"></div></div>
+      <p class="cap" id="hyp"></p>
+    </div>
+
+    <div class="panel" id="p2binom" data-tabs="binom">
+      <h2><span class="n">1</span>Where would the success count fall if H₀ were true?</h2>
+      <div id="bChart"></div>
+      <div class="legend"><span><i style="background:var(--a);opacity:.4"></i>Outcomes that are not extreme</span><span><i style="background:var(--rej);opacity:.6"></i>Rejection region (outcomes with p ≤ α)</span><span><i style="background:repeating-linear-gradient(45deg,var(--ink) 0 2px,transparent 2px 5px);opacity:.6"></i>Counted in your p-value</span><span><i style="background:var(--ink)"></i>Your count</span></div>
+      <p class="cap" id="bCap"></p>
+    </div>
+
+    <div class="panel" id="p2bc" data-tabs="binom">
+      <h2><span class="n">2</span>Exact test versus the χ² approximation</h2>
+      <div id="bLadder"></div>
+      <div class="scroll"><table class="cmpt" id="bCmp"></table></div>
+      <p class="cap" id="bCmpCap"></p>
+      <div class="scroll"><table class="mini" id="bCI"></table></div>
+    </div>
+
+    <div class="panel" id="p2bsim" data-tabs="binom">
+      <h2><span class="n">3</span>How often does each test reject?</h2>
+      <div id="bSimChart"></div>
+      <p class="cap" id="bSimTxt"></p>
+      <p class="cap" id="bSimNote"></p>
+    </div>
+
+    <div class="panel" id="p2dist" data-tabs="gof ind">
+      <h2><span class="n">2</span>The χ² distribution under H₀</h2>
+      <div><canvas id="cvDist" role="img" aria-label="Chi-square distribution with the observed statistic, the critical value and the p-value area"></canvas></div>
+      <div class="legend" id="distLegend"></div>
+      <p class="cap">The curve shows how χ² behaves when H₀ is true. The red region is the rejection region (area α); the shaded blue area beyond your χ² is the p-value.</p>
+    </div>
+
+    <div class="panel" id="p2assoc" data-tabs="assoc">
+      <h2><span class="n">2</span>Association versus significance</h2>
+      <div id="assocBars"></div>
+      <h3>What happens when every count is multiplied by k?</h3>
+      <div class="scroll"><table id="scaleTable"></table></div>
+      <p class="cap" id="scaleCap"></p>
+    </div>
+
+    <div class="panel" id="p2or" data-tabs="or">
+      <h2><span class="n">2</span>Odds ratio and risk</h2>
+      <div class="orgrid"><div id="orChart"></div><div id="riskChart"></div></div>
+      <p class="cap" id="orCap"></p>
+    </div>
+
+    <div class="panel" id="p2fish" data-tabs="fisher">
+      <h2><span class="n">2</span><span id="fishTitle">Exact null distribution</span></h2>
+      <div id="fishChart"></div>
+      <div class="legend" id="fishLegend"><span><i style="background:var(--a);opacity:.4"></i>Tables that are not extreme</span><span><i style="background:var(--rej);opacity:.6"></i>Rejection region (total probability ≤ α)</span><span><i style="background:repeating-linear-gradient(45deg,var(--ink) 0 2px,transparent 2px 5px);opacity:.6"></i>Counted in your p-value</span><span><i style="background:var(--ink)"></i>Your table</span></div>
+      <p class="cap" id="fishCap"></p>
+    </div>
+
+    <div class="panel" id="p2cmp" data-tabs="cmp">
+      <h2><span class="n">2</span>Every test on the same table</h2>
+      <div id="chartLadder"></div>
+      <div class="scroll"><table class="cmpt" id="cmpAll"></table></div>
+      <p class="cap" id="cmpCap"></p>
+      <h3>How the tests relate</h3>
+      <div id="relBody"></div>
+    </div>
+
+    <div class="panel" id="pSim" data-tabs="fisher cmp">
+      <h2><span class="n">3</span>Simulation: how often does each test reject?</h2>
+      <div class="row" style="align-items:center;margin-bottom:6px">
+        <label for="simN" class="cap" style="margin:0">Simulated samples</label>
+        <select id="simN" style="width:auto"><option value="1000">1,000</option><option value="2000" selected>2,000</option><option value="5000">5,000</option></select>
+        <button class="pill" id="simRerun" type="button">Draw new samples</button>
+      </div>
+      <div id="chartSim"></div>
+      <p class="cap" id="simTxt"></p>
+      <div class="scroll"><table class="mini" id="simRates"></table></div>
+      <p class="cap" id="simNote"></p>
+    </div>
+
+    <div class="panel" id="pRes" aria-live="polite">
+      <h2><span class="n">3</span>Result <span id="badge"></span></h2>
+      <div class="stats" id="stats"></div>
+      <div class="warn" id="warn" hidden></div>
+      <p class="interp" id="interp"></p>
+      <div class="scroll"><table class="gtab" id="guideTable"></table></div>
+      <div class="apa" id="apaRow"><span id="apa"></span><button class="pill" id="copy">Copy</button></div>
+    </div>
+
+    <div class="panel" id="pHow" data-tabs="binom or fisher">
+      <h2><span class="n">4</span><span id="howTitle"></span></h2>
+      <div id="howBody"></div>
+    </div>
+  </section>
+</main>
+
+<details>
+  <summary>Formulas used</summary>
+  <div class="panel">
+    <p><b>Chi-square statistic.</b> <span class="f">χ² = Σ (O − E)² / E</span>, summed over every category or cell. p-values come from the χ² distribution (regularised incomplete gamma function).</p>
+    <ul>
+      <li><b>Goodness of fit:</b> <span class="f">E = n · weight / Σweights</span>, <span class="f">df = k − 1</span>.</li>
+      <li><b>Independence:</b> <span class="f">E = (row total × column total) / n</span>, <span class="f">df = (r − 1)(c − 1)</span>.</li>
+      <li><b>Yates correction</b> (2 × 2 only): each |O − E| is reduced by 0.5 before squaring. Phi and V are always computed from the uncorrected χ².</li>
+      <li><b>Standardised residual:</b> <span class="f">(O − E) / √E</span>.</li>
+    </ul>
+    <p><b>Phi (φ).</b> For a 2 × 2 table with cells a, b (row 1) and c, d (row 2):</p>
+    <ul>
+      <li><span class="f">φ = (ad − bc) / √[(a+b)(c+d)(a+c)(b+d)]</span>, the Pearson r between the two 0/1 variables. Its sign depends on how the rows and columns are ordered; its size does not.</li>
+      <li><span class="f">φ² = χ² / n</span>, so <span class="f">χ² = n·φ²</span>. Effect size: φ² is the proportion of variance shared.</li>
+      <li>Largest possible |φ| given the margins: <span class="f">φ<sub>max</sub> = √[p<sub>lo</sub>(1 − p<sub>hi</sub>) / (p<sub>hi</sub>(1 − p<sub>lo</sub>))]</span>, where p<sub>lo</sub> and p<sub>hi</sub> are the smaller and larger of the two "second row" and "second column" proportions.</li>
+    </ul>
+    <p><b>Cramér's V.</b> <span class="f">V = √[χ² / (n · min(r − 1, c − 1))]</span>, which runs from 0 (no association) to 1 (perfect association). For a 2 × 2 table V = |φ|.</p>
+    <ul>
+      <li>V<sup>2</sup> = χ² / (n · df*), with <span class="f">df* = min(r − 1, c − 1)</span>.</li>
+      <li>Guidelines (Cohen): small ≈ .10/√df*, medium ≈ .30/√df*, large ≈ .50/√df*. For df* = 1 these are .10, .30 and .50.</li>
+    </ul>
+    <p><b>Cohen's w</b> (goodness of fit, and the general effect size): <span class="f">w = √(χ² / n)</span>. Small ≈ .10, medium ≈ .30, large ≈ .50. For a contingency table w = V·√df*, and for a 2 × 2 table w = |φ|.</p>
+    <p><b>Binomial test.</b> For x successes in n independent trials with null probability p₀: <span class="f">P(k) = C(n, k) p₀<sup>k</sup> (1 − p₀)<sup>n−k</sup></span>.</p>
+    <ul>
+      <li><b>One-sided p</b> = P(X ≥ x) or P(X ≤ x). <b>Two-sided p</b> = Σ P(k) over every k with P(k) ≤ P(x). <b>Mid-p</b> subtracts half of P(x) from a one-sided tail (or counts half the ties in the two-sided sum).</li>
+      <li><b>Clopper–Pearson interval:</b> the lower limit solves P(X ≥ x; p) = α/2, the upper limit solves P(X ≤ x; p) = α/2. <b>Wilson:</b> <span class="f">[p̂ + z²/2n ± z√(p̂(1−p̂)/n + z²/4n²)] / (1 + z²/n)</span>. <b>Wald:</b> <span class="f">p̂ ± z√(p̂(1−p̂)/n)</span>.</li>
+      <li><b>Cohen’s h</b> = 2·asin√p̂ − 2·asin√p₀; small, medium, large ≈ .2, .5, .8.</li>
+      <li>With two categories Pearson’s χ² is <span class="f">(x − np₀)² / [np₀(1 − p₀)] = z²</span>, valid when np₀ and n(1 − p₀) are at least 5.</li>
+    </ul>
+    <p><b>Odds ratio.</b> With cells a, b (row 1) and c, d (row 2), the odds of the outcome in each row are a/b and c/d.</p>
+    <ul>
+      <li><span class="f">OR = (a/b) / (c/d) = ad / bc</span>. OR = 1 means no association; swapping rows or columns turns OR into 1/OR.</li>
+      <li><b>Wald interval:</b> <span class="f">ln OR ± z<sub>α/2</sub> · SE</span>, <span class="f">SE = √(1/a + 1/b + 1/c + 1/d)</span>, then exponentiate. Test: <span class="f">z = ln OR / SE</span>. If any cell is 0, ½ is added to every cell (Haldane–Anscombe).</li>
+      <li><b>Exact (conditional) interval:</b> the set of ψ for which the observed a is not in either α/2 tail of the noncentral hypergeometric distribution <span class="f">P(a) ∝ C(n₁, a) C(n₂, m₁ − a) ψ<sup>a</sup></span>. The conditional estimate (MLE) is the ψ whose mean equals the observed a, so it differs slightly from ad/bc.</li>
+      <li><b>Relative risk</b> <span class="f">RR = [a/(a+b)] / [c/(c+d)]</span> (Wald interval on ln RR); <b>risk difference</b> <span class="f">RD = a/(a+b) − c/(c+d)</span>. For rare outcomes OR ≈ RR; for common ones OR is further from 1.</li>
+      <li>Effect-size labels use Cohen’s d = ln OR · √3/π, so small, medium and large correspond to OR ≈ 1.44, 2.48 and 4.27 (or their reciprocals).</li>
+    </ul>
+    <p><b>Fisher’s exact test.</b> Fix the margins (n₁ = a+b, m₁ = a+c, N). Then a is hypergeometric: <span class="f">P(a) = C(m₁, a) C(N − m₁, n₁ − a) / C(N, n₁)</span>.</p>
+    <ul>
+      <li><b>Two-sided p</b> = Σ P(k) over all k with P(k) ≤ P(observed). <b>One-sided p</b> = P(a ≥ observed) or P(a ≤ observed).</li>
+      <li><b>Mid-p</b> counts half the probability of the observed table (and of any equally probable table): <span class="f">p<sub>mid</sub> = Σ P(k &lt; obs) + ½ Σ P(k = obs)</span> (two-sided).</li>
+      <li><b>Fisher–Freeman–Halton</b> (r × c): <span class="f">P = (Π r<sub>i</sub>! Π c<sub>j</sub>!) / (N! Π x<sub>ij</sub>!)</span>; p = Σ of P over every table with the same margins and P ≤ P(observed). Large cases use a Monte Carlo estimate.</li>
+    </ul>
+    <p><b>Likelihood-ratio G².</b> <span class="f">G² = 2 Σ O ln(O / E)</span>, referred to the χ² distribution with the same df as Pearson’s χ².</p>
+    <p><b>Why both a test and an effect size?</b> χ² grows in proportion to n, so with enough data a trivial association is "significant". φ and V do not depend on n, so they describe how <i>strong</i> the association is. Everything runs in your browser; nothing is uploaded.</p>
+  </div>
+</details>
+<details id="keyBox">
+  <summary>Key: symbols and terms</summary>
+  <div class="panel">
+    <dl class="key">
+      <dt>χ²</dt><dd>Chi-square statistic: the total gap between observed and expected counts. Bigger means a worse fit to H₀.</dd>
+      <dt>Σ</dt><dd>Sum over every category (or table cell).</dd>
+      <dt>O</dt><dd>Observed count: what the data actually show.</dd>
+      <dt>E</dt><dd>Expected count: what H₀ predicts.</dd>
+      <dt>(O − E)²/E</dt><dd>One category's contribution to χ². Squaring removes the sign; dividing by E scales the gap to the size of the count.</dd>
+      <dt>Residual</dt><dd>(O − E)/√E, the signed, standardised gap. Beyond about ±2 is notable. Orange = more than expected, blue = fewer.</dd>
+      <dt>n</dt><dd>Total number of observations.</dd>
+      <dt>H₀ / H₁</dt><dd>Null hypothesis (nothing going on) and the alternative.</dd>
+      <dt>df</dt><dd>Degrees of freedom: sets the shape of the χ² curve. k − 1 for goodness of fit, (r − 1)(c − 1) for independence.</dd>
+      <dt>p-value</dt><dd>Chance of a χ² at least this large if H₀ were true. It is the shaded area beyond your statistic, not the probability that H₀ is true.</dd>
+      <dt>α</dt><dd>Significance level: the cutoff for p, and the size of the red rejection region.</dd>
+      <dt>Critical value</dt><dd>The χ² value where the rejection region begins. Reject H₀ when your χ² is beyond it (equivalently, p &lt; α).</dd>
+      <dt>H₀ weight</dt><dd>Relative size of each category under H₀ in a goodness-of-fit test.</dd>
+      <dt>Yates correction</dt><dd>2 × 2 only: subtracts 0.5 from each |O − E| to offset the approximation's tendency to overstate significance.</dd>
+      <dt>φ</dt><dd>Phi coefficient: the strength of association in a 2 × 2 table, equal to the Pearson r between two 0/1 variables. Ranges from −1 to +1.</dd>
+      <dt>φ²</dt><dd>Phi squared: proportion of variance in one 0/1 variable shared with the other, and χ²/n.</dd>
+      <dt>φ<sub>max</sub></dt><dd>The largest |φ| the table's margins allow. Unequal margins make a perfect φ = 1 impossible.</dd>
+      <dt>V</dt><dd>Cramér's V: strength of association for a table of any size, from 0 (none) to 1 (perfect). It rescales χ² by n and by df*, so it is comparable across sample sizes and table shapes.</dd>
+      <dt>df*</dt><dd>min(r − 1, c − 1): the smaller table dimension minus one. Larger tables need smaller V values to count as small, medium or large.</dd>
+      <dt>w</dt><dd>Cohen's w, √(χ²/n): effect size for goodness of fit (and a general effect size for any χ²).</dd>
+      <dt>Binomial test</dt><dd>Exact test of whether the probability of success equals a hypothesised p₀, using the binomial distribution of the success count.</dd>
+      <dt>x, n, p̂</dt><dd>Number of successes, number of trials, and the observed proportion x/n.</dd>
+      <dt>p₀</dt><dd>The proportion H₀ claims is true.</dd>
+      <dt>Clopper–Pearson</dt><dd>The exact confidence interval for a proportion: guaranteed coverage, so somewhat wide.</dd>
+      <dt>Wilson interval</dt><dd>A score-based interval for a proportion that behaves well in small samples and near 0 or 1.</dd>
+      <dt>h</dt><dd>Cohen’s h: effect size for a difference between proportions, on an arcsine scale. .2 small, .5 medium, .8 large.</dd>
+      <dt>Odds</dt><dd>Events divided by non-events: a/b. A 50% risk is odds of 1; a 75% risk is odds of 3.</dd>
+      <dt>OR</dt><dd>Odds ratio: the odds in row 1 divided by the odds in row 2, ad/bc. 1 means no association; above 1 the first row has higher odds of the outcome.</dd>
+      <dt>ln OR, SE</dt><dd>The natural log of the odds ratio and its standard error. The log scale is symmetric around 0, so Wald intervals are built there and exponentiated.</dd>
+      <dt>Wald CI</dt><dd>Confidence interval from the normal approximation to ln OR. Fine for large counts, unreliable for small or zero cells.</dd>
+      <dt>Exact CI, conditional MLE</dt><dd>Interval and estimate of the odds ratio from the exact conditional (noncentral hypergeometric) distribution given the margins. Valid for small samples.</dd>
+      <dt>RR, RD</dt><dd>Relative risk (ratio of the two proportions) and risk difference (their gap).</dd>
+      <dt>Fisher’s exact test</dt><dd>A test of association that computes the probability of every table consistent with the margins, so no large-sample approximation is needed.</dd>
+      <dt>Hypergeometric</dt><dd>The distribution of one cell’s count when the margins are fixed, like drawing without replacement.</dd>
+      <dt>Mid-p</dt><dd>A Fisher p-value that counts only half the probability of the observed table, making the test less conservative.</dd>
+      <dt>Conservative</dt><dd>A test whose real false-positive rate is below its nominal α. Exact tests on discrete data usually are.</dd>
+      <dt>G²</dt><dd>Likelihood-ratio statistic, 2ΣO ln(O/E): an alternative to Pearson’s χ² with the same large-sample distribution.</dd>
+      <dt>Freeman–Halton</dt><dd>Fisher’s exact test generalised to tables larger than 2 × 2.</dd>
+      <dt>Haldane correction</dt><dd>Adding ½ to every cell so a zero cell does not make the odds ratio 0 or infinite in Wald calculations.</dd>
+      <dt>Type I error / power</dt><dd>The false-positive rate when H₀ is true, and the chance of rejecting when a real association exists.</dd>
+      <dt>True departure / association</dt><dd>How far the population being sampled is from H₀ (0 = H₀ exactly true). The population's own w, φ or V is shown under the sliders.</dd>
+      <dt>Margins</dt><dd>The row and column totals of a table.</dd>
+      <dt>Effect size</dt><dd>How large an effect is, independent of whether it is statistically significant.</dd>
+      <dt>Simulation</dt><dd>1,000 random samples drawn assuming H₀ is true. Their χ² histogram should hug the curve; the share beyond your χ² approximates p.</dd>
+    </dl>
+  </div>
+</details>
+<details id="decideBox">
+  <summary>Deciding which to use</summary>
+  <div class="panel wz">
+    <p class="cap" style="margin-top:0">Answer a few questions to find the test or statistic that fits your data. Each suggestion links to the tab where you can try it.</p>
+    <div id="decideBody"></div>
+    <h3>At a glance</h3>
+    <div class="scroll"><table class="glance">
+      <thead><tr><th>Your question</th><th>Use</th><th>Effect size</th></tr></thead>
+      <tbody>
+        <tr><td>One variable, two categories, any n</td><td>Binomial test (exact)</td><td>Cohen’s h; proportion CI</td></tr>
+        <tr><td>One variable, two categories, expected counts ≥ 5</td><td>Goodness-of-fit χ² or binomial test</td><td>w or h</td></tr>
+        <tr><td>One variable, three or more categories, expected ≥ 5</td><td>Goodness-of-fit χ²</td><td>Cohen’s w</td></tr>
+        <tr><td>Two variables, 2 × 2, expected ≥ 5</td><td>χ² test of independence (or Fisher)</td><td>φ, odds ratio</td></tr>
+        <tr><td>Two variables, 2 × 2, small or zero cells</td><td>Fisher’s exact (mid-p optional)</td><td>Exact odds-ratio interval</td></tr>
+        <tr><td>Two variables, larger table, expected adequate</td><td>χ² test of independence</td><td>Cramér’s V</td></tr>
+        <tr><td>Two variables, larger table, sparse</td><td>Fisher–Freeman–Halton</td><td>Cramér’s V</td></tr>
+        <tr><td>Three or more variables, paired or ordered data</td><td>Not covered here</td><td>See the notes above</td></tr>
+      </tbody></table></div>
+  </div>
+</details>
+<footer>Single-file, dependency-free demo. Random samples use a seeded generator. Chi-square, G² and Wald tests rely on large-sample approximations and work best when every expected count is at least 5; Fisher’s exact tests do not, but condition on the margins and are conservative. Tests assume independent observations and counts (not percentages). A significant result shows a pattern, not its cause. Exact computations are checked against SciPy.</footer>
+
+<script>
+"use strict";
+/* ============ Math ============ */
+function lgamma(x){const c=[76.18009172947146,-86.50532032941677,24.01409824083091,-1.231739572450155,0.1208650973866179e-2,-0.5395239384953e-5];let y=x,tmp=x+5.5,ser=1.000000000190015;tmp-=(x+0.5)*Math.log(tmp);for(let j=0;j<6;j++)ser+=c[j]/++y;return -tmp+Math.log(2.5066282746310005*ser/x);}
+function gammaQ(a,x){
+  if(x<=0)return 1;const gln=lgamma(a);
+  if(x<a+1){let ap=a,sum=1/a,del=sum;for(let i=0;i<1000;i++){ap++;del*=x/ap;sum+=del;if(Math.abs(del)<Math.abs(sum)*1e-15)break;}return Math.max(0,1-sum*Math.exp(-x+a*Math.log(x)-gln));}
+  let b=x+1-a,cc=1/1e-300,d=1/b,h=d;
+  for(let i=1;i<1000;i++){const an=-i*(i-a);b+=2;d=an*d+b;if(Math.abs(d)<1e-300)d=1e-300;cc=b+an/cc;if(Math.abs(cc)<1e-300)cc=1e-300;d=1/d;const del=d*cc;h*=del;if(Math.abs(del-1)<1e-15)break;}
+  return Math.exp(-x+a*Math.log(x)-gln)*h;
+}
+const pval=(x,df)=>gammaQ(df/2,x/2);
+function crit(df,al){let lo=0,hi=10;while(pval(hi,df)>al)hi*=2;for(let i=0;i<80;i++){const m=(lo+hi)/2;if(pval(m,df)>al)lo=m;else hi=m;}return(lo+hi)/2;}
+const pdf=(x,df)=>x<=0?0:Math.exp((df/2-1)*Math.log(x)-x/2-(df/2)*Math.LN2-lgamma(df/2));
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function multinom(n,probs,r){
+  const cum=[],out=[];let s=0;
+  for(const p of probs){s+=p;cum.push(s);out.push(0);}
+  for(let t=0;t<n;t++){const u=r()*s;let lo=0,hi=cum.length-1;while(lo<hi){const m=(lo+hi)>>1;if(cum[m]<u)lo=m+1;else hi=m;}out[lo]++;}
+  return out;
+}
+const sum=a=>a.reduce((s,v)=>s+v,0);
+
+/* ============ Extra math for the odds-ratio and exact tests ============ */
+function erfc(x){const z=Math.abs(x),t=1/(1+0.5*z);const r=t*Math.exp(-z*z-1.26551223+t*(1.00002368+t*(0.37409196+t*(0.09678418+t*(-0.18628806+t*(0.27886807+t*(-1.13520398+t*(1.48851587+t*(-0.82215223+t*0.17087277)))))))));return x>=0?r:2-r;}
+const Phi=z=>0.5*erfc(-z/Math.SQRT2);
+const pNormTwo=z=>erfc(Math.abs(z)/Math.SQRT2);
+function zCrit(tailProb){let lo=0,hi=40;for(let i=0;i<80;i++){const mid=(lo+hi)/2;if(pNormTwo(mid)>2*tailProb)lo=mid;else hi=mid;}return(lo+hi)/2;}
+const LFT=[0];
+function lf(n){if(n<LFT.length)return LFT[n];if(n>200000)return lgamma(n+1);for(let i=LFT.length;i<=n;i++)LFT.push(LFT[i-1]+Math.log(i));return LFT[n];}
+const lch=(n,k)=>lf(n)-lf(k)-lf(n-k);
+
+/* ---------- 2 x 2 tables: rows are groups, the first column is the outcome of interest ---------- */
+function hyper2(a,b,c,d){
+  const n1=a+b,m1=a+c,N=a+b+c+d,lo=Math.max(0,n1+m1-N),hi=Math.min(n1,m1),p=[];
+  for(let x=lo;x<=hi;x++)p.push(Math.exp(lch(m1,x)+lch(N-m1,n1-x)-lch(N,n1)));
+  return{lo,hi,p,n1,m1,N};
+}
+function fisher2(a,b,c,d){
+  const h=hyper2(a,b,c,d),po=h.p[a-h.lo];let two=0,eq=0,lt=0,gt=0,ls=0;
+  h.p.forEach((q,i)=>{const x=h.lo+i;
+    if(q<=po*(1+1e-7))two+=q;
+    if(Math.abs(q-po)<=po*1e-7)eq+=q;else if(q<po)lt+=q;
+    if(x>=a)gt+=q;if(x<=a)ls+=q;});
+  return{h,po,two:Math.min(1,two),greater:Math.min(1,gt),less:Math.min(1,ls),midTwo:Math.min(1,lt+0.5*eq),midGreater:Math.max(0,gt-0.5*po),midLess:Math.max(0,ls-0.5*po)};
+}
+function fisherP(fi,tails,method){
+  const mid=method==='mid';
+  return tails==='greater'?(mid?fi.midGreater:fi.greater):tails==='less'?(mid?fi.midLess:fi.less):(mid?fi.midTwo:fi.two);
+}
+/* noncentral hypergeometric: conditional MLE of the odds ratio and the exact conditional CI */
+function ncProbs(h,lpsi){
+  const lw=h.p.map((q,i)=>Math.log(q)+(h.lo+i)*lpsi),mx=Math.max(...lw),w=lw.map(v=>Math.exp(v-mx)),s=w.reduce((x,y)=>x+y,0);
+  return w.map(v=>v/s);
+}
+function ncMean(h,lpsi){const p=ncProbs(h,lpsi);let m=0;p.forEach((q,i)=>m+=q*(h.lo+i));return m;}
+function solveLog(fn,target,increasing){ // fn monotone in log psi; returns log psi with fn = target
+  let lo=-60,hi=60;
+  for(let i=0;i<120;i++){const mid=(lo+hi)/2,v=fn(mid);if((v<target)===increasing)lo=mid;else hi=mid;}
+  return(lo+hi)/2;
+}
+function exactOR(a,b,c,d,alpha){
+  const h=hyper2(a,b,c,d);let mle,lo,hi;
+  if(a===h.lo)mle=0;else if(a===h.hi)mle=Infinity;else mle=Math.exp(solveLog(l=>ncMean(h,l),a,true));
+  const tailUp=l=>{const p=ncProbs(h,l);let s=0;p.forEach((q,i)=>{if(h.lo+i>=a)s+=q;});return s;};
+  const tailDn=l=>{const p=ncProbs(h,l);let s=0;p.forEach((q,i)=>{if(h.lo+i<=a)s+=q;});return s;};
+  lo=a===h.lo?0:Math.exp(solveLog(tailUp,alpha/2,true));
+  hi=a===h.hi?Infinity:Math.exp(solveLog(tailDn,alpha/2,false));
+  return{mle,lo,hi};
+}
+function wald2(a,b,c,d,alpha){
+  const corr=!(a&&b&&c&&d),k=corr?.5:0,A=a+k,B=b+k,C=c+k,D=d+k;
+  const lor=Math.log(A*D/(B*C)),se=Math.sqrt(1/A+1/B+1/C+1/D),z=lor/se,zc=zCrit(alpha/2);
+  return{corr,or:Math.exp(lor),lor,se,z,lo:Math.exp(lor-zc*se),hi:Math.exp(lor+zc*se),p2:pNormTwo(z),pGreater:1-Phi(z),pLess:Phi(z)};
+}
+function riskStats(a,b,c,d,alpha){
+  const corr=!(a&&b&&c&&d),k=corr?.5:0,A=a+k,B=b+k,C=c+k,D=d+k,n1=A+B,n2=C+D,p1=A/n1,p2=C/n2,zc=zCrit(alpha/2);
+  const lrr=Math.log(p1/p2),serr=Math.sqrt(1/A-1/n1+1/C-1/n2),rd=p1-p2,serd=Math.sqrt(p1*(1-p1)/n1+p2*(1-p2)/n2);
+  return{corr,p1:a/(a+b),p2:c/(c+d),rr:Math.exp(lrr),rrLo:Math.exp(lrr-zc*serr),rrHi:Math.exp(lrr+zc*serr),rd:a/(a+b)-c/(c+d),rdLo:rd-zc*serd,rdHi:rd+zc*serd};
+}
+function chiStats(obs,exp,yates){ // Pearson (optionally Yates-corrected) and likelihood-ratio statistics
+  let x=0,g=0;
+  obs.forEach((o,i)=>{const e=exp[i];let dd=Math.abs(o-e);if(yates)dd=Math.max(0,dd-0.5);x+=dd*dd/e;if(o>0)g+=o*Math.log(o/e);});
+  return{chi:x,g:2*g};
+}
+
+/* ---------- r x c Fisher–Freeman–Halton exact test ---------- */
+const FH_CACHE=new Map();
+function fisherRxC(t,R,C){
+  const key=R+'x'+C+':'+t.join(',');if(FH_CACHE.has(key))return FH_CACHE.get(key);
+  const rt=Array(R).fill(0),ct=Array(C).fill(0);
+  for(let i=0;i<R;i++)for(let j=0;j<C;j++){rt[i]+=t[i*C+j];ct[j]+=t[i*C+j];}
+  const N=sum(rt),lconst=rt.reduce((s,v)=>s+lf(v),0)+ct.reduce((s,v)=>s+lf(v),0)-lf(N);
+  const lobs=lconst-t.reduce((s,v)=>s+lf(v),0),thr=lobs+1e-7,BUDGET=2500000;
+  let cnt=0,psum=0,over=false;
+  function rowFill(i,rem,acc){
+    if(over)return;
+    if(i===R-1){let l=acc;for(let j=0;j<C;j++)l+=lf(rem[j]);const lp=lconst-l;cnt++;if(cnt>BUDGET){over=true;return;}if(lp<=thr)psum+=Math.exp(lp);return;}
+    (function cell(j,left,acc2,cur){
+      if(over)return;
+      if(j===C-1){if(left>rem[j])return;const nr=rem.slice();let a3=acc2+lf(left);cur.push(left);
+        for(let k=0;k<C;k++)nr[k]-=cur[k];rowFill(i+1,nr,a3);cur.pop();return;}
+      let restCap=0;for(let k=j+1;k<C;k++)restCap+=rem[k];
+      const lo=Math.max(0,left-restCap),hi=Math.min(left,rem[j]);
+      for(let x=lo;x<=hi;x++){cur.push(x);cell(j+1,left-x,acc2+lf(x),cur);cur.pop();}
+    })(0,rt[i],acc,[]);
+  }
+  rowFill(0,ct.slice(),0);
+  let res;
+  if(!over)res={p:Math.min(1,psum),tables:cnt,exact:true,pObs:Math.exp(lobs)};
+  else{ // Monte Carlo over random tables with the same margins
+    const rng=mulberry32(987654),labels=[];for(let j=0;j<C;j++)for(let k=0;k<ct[j];k++)labels.push(j);
+    const B=20000;let hit=0;
+    for(let it=0;it<B;it++){
+      for(let i=labels.length-1;i>0;i--){const j=Math.floor(rng()*(i+1)),tmp=labels[i];labels[i]=labels[j];labels[j]=tmp;}
+      const tab=new Array(R*C).fill(0);let pos=0;
+      for(let i=0;i<R;i++)for(let k=0;k<rt[i];k++)tab[i*C+labels[pos++]]++;
+      let l=0;for(const v of tab)l+=lf(v);if(lconst-l<=thr)hit++;
+    }
+    res={p:(hit+1)/(B+1),tables:null,exact:false,B,pObs:Math.exp(lobs)};
+  }
+  FH_CACHE.set(key,res);return res;
+}
+
+/* ============ Formatting ============ */
+const $=id=>document.getElementById(id);
+const f=(x,d=2)=>isFinite(x)?x.toFixed(d).replace('-','−'):(x>0?'∞':x<0?'−∞':'–');
+const fr=(x,d=2)=>isFinite(x)?x.toFixed(d).replace(/^(-?)0\./,'$1.').replace('-','−'):'–';
+const fp=p=>p<0.001?'< .001':p.toFixed(3).replace(/^0/,'');
+const apaP=p=>p<0.001?'< .001':'= '+fp(p);
+const tk=v=>(+v.toFixed(6)).toString().replace('-','−');
+const col=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const isDark=()=>currentTheme()==='dark';
+function niceMax(v){if(v<=0)return{max:5,step:1};const raw=v/5,p=Math.pow(10,Math.floor(Math.log10(raw))),fr_=raw/p,st=(fr_<=1?1:fr_<=2?2:fr_<=5?5:10)*p;return{max:Math.ceil(v/st)*st,step:st};}
+function fit(cv,ratio,mn,mx){const w=cv.parentNode.clientWidth||700,dpr=window.devicePixelRatio||1,h=Math.round(Math.max(mn,Math.min(mx,w*ratio)));cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr);cv.style.height=h+'px';const c=cv.getContext('2d');c.setTransform(dpr,0,0,dpr,0,0);return{c,W:w,H:h};}
+const FONT='11px system-ui,sans-serif';
+
+/* ============ State ============ */
+const TABS=['gof','binom','ind','or','fisher','assoc','cmp'];
+const letters=k=>Array.from({length:k},(_,i)=>String.fromCharCode(65+i));
+const S={tab:'gof',alpha:.05,yates:false,seed:7,sim:null,drag:-1,ylock:0,ycur:10,c:null,truthG:'',truthI:'',
+  k:6,gn:120,gd:30,obs:[],w:[],gl:[],
+  R:2,C:2,iN:100,iA:30,t:[],rl:[],cl:[],tails:'two',fmeth:'exact',simSeed:1,bn:20,bx:14,bp0:50,bt:50};
+const isGof=()=>S.tab==='gof';
+const yatesOn=()=>S.tab==='ind'&&S.R===2&&S.C===2&&S.yates;
+
+/* ============ Statistics ============ */
+function term(o,e){let d=Math.abs(o-e);if(yatesOn())d=Math.max(0,d-0.5);return d*d/e;}
+function compute(){
+  const c={};
+  if(isGof()){
+    const n=sum(S.obs);
+    if(n<=0)return{err:'Enter at least one observation to compute χ².'};
+    const ws=S.w.map(v=>v>0?v:0.01),wt=sum(ws);
+    c.obs=S.obs.slice();c.n=n;c.df=S.k-1;
+    c.exp=ws.map(v=>n*v/wt);
+    c.con=c.obs.map((o,k)=>term(o,c.exp[k]));
+    c.res=c.obs.map((o,k)=>(o-c.exp[k])/Math.sqrt(c.exp[k]));
+    c.chiRaw=c.obs.reduce((s,o,k)=>s+(o-c.exp[k])**2/c.exp[k],0);
+  }else{
+    const R=S.R,C=S.C,rt=Array(R).fill(0),ct=Array(C).fill(0);
+    for(let i=0;i<R;i++)for(let j=0;j<C;j++){rt[i]+=S.t[i*C+j];ct[j]+=S.t[i*C+j];}
+    const N=sum(rt);
+    if(N<=0||(C>1&&rt.some(v=>v===0))||ct.some(v=>v===0))return{err:'Every row and every column needs at least one observation.'};
+    c.n=N;c.rt=rt;c.ct=ct;c.df=C===1?R-1:(R-1)*(C-1);c.obs=S.t.slice();c.exp=[];c.con=[];c.res=[];c.chiRaw=0;
+    for(let i=0;i<R;i++)for(let j=0;j<C;j++){
+      const e=C===1?N/R:rt[i]*ct[j]/N,o=S.t[i*C+j];
+      c.exp.push(e);c.con.push(term(o,e));c.res.push((o-e)/Math.sqrt(e));c.chiRaw+=(o-e)**2/e;
+    }
+    c.dfs=Math.min(R-1,C-1);
+    c.V=C===1?NaN:Math.sqrt(c.chiRaw/(N*c.dfs));
+    if(R===2&&C===2){
+      const [a,b,cc,d]=S.t;
+      c.phi=(a*d-b*cc)/Math.sqrt(rt[0]*rt[1]*ct[0]*ct[1]);
+      const px=rt[1]/N,py=ct[1]/N,lo=Math.min(px,py),hi=Math.max(px,py);
+      c.phimax=Math.sqrt(lo*(1-hi)/(hi*(1-lo)));
+      c.x=analyze2(S.t,S.alpha);
+    }
+  }
+  c.chi=sum(c.con);
+  c.p=pval(c.chi,c.df);
+  c.crit=crit(c.df,S.alpha);
+  c.minE=Math.min(...c.exp);
+  c.low=c.exp.filter(e=>e<5).length;
+  c.w=Math.sqrt(c.chiRaw/c.n);
+  return c;
+}
+/* effect-size label; s scales Cohen's guidelines by 1/sqrt(df*) for V */
+function effLabel(v,s=1){const u=v*s;return u<.1?'negligible':u<.3?'small':u<.5?'medium':'large';}
+function guideRows(rows){
+  const hd='<caption>Effect-size guidelines (Cohen): your result is highlighted</caption><thead><tr><th>Measure</th><th class="num">Value</th><th>Negligible</th><th>Small</th><th>Medium</th><th>Large</th></tr></thead><tbody>';
+  const body=rows.map(([lab,v,sc=1])=>{
+    const t=[.1,.3,.5].map(x=>x/sc),cur=v<t[0]?0:v<t[1]?1:v<t[2]?2:3;
+    const T=['&lt; '+fr(t[0]),fr(t[0])+' to &lt; '+fr(t[1]),fr(t[1])+' to &lt; '+fr(t[2]),'≥ '+fr(t[2])];
+    return `<tr><td>${lab}</td><td class="num">${fr(v)}</td>${T.map((x,i)=>`<td class="f${i===cur?' on':''}">${x}</td>`).join('')}</tr>`;
+  }).join('');
+  $('guideTable').innerHTML=hd+body+'</tbody>';
+}
+function thr(s){return[.1,.3,.5].map(x=>fr(x/s,2)).join(', ');}
+function popStats(gof){
+  /* population w / phi / V implied by the sliders */
+  if(gof){
+    const d=S.gd/100,k=S.k,ws=S.w.map(v=>v>0?v:0.01),wt=sum(ws);
+    const p=ws.map((v,i)=>v*(1+d*(k>1?1-2*i/(k-1):0))),pt=sum(p);
+    const w2=p.reduce((s,v,i)=>s+(v/pt-ws[i]/wt)**2/(ws[i]/wt),0);
+    return`Population w (what a large sample would estimate): <b>${fr(Math.sqrt(w2),2)}</b>`;
+  }
+  const a=S.iA/100,R=S.R,C=S.C,q=[];
+  if(C===1){const p=Array.from({length:R},(_,i)=>1+a*(1-2*i/(R-1))),pt=sum(p),w2=p.reduce((s,v)=>s+(v/pt-1/R)**2/(1/R),0);return`Population w (what a large sample would estimate): <b>${fr(Math.sqrt(w2),2)}</b>`;}
+  for(let i=0;i<R;i++)for(let j=0;j<C;j++)q.push(1+a*(1-2*i/(R-1))*(1-2*j/(C-1)));
+  const qt=sum(q),rp=Array(R).fill(0),cp=Array(C).fill(0);
+  q.forEach((v,k)=>{rp[Math.floor(k/C)]+=v/qt;cp[k%C]+=v/qt;});
+  let x2=0;q.forEach((v,k)=>{const e=rp[Math.floor(k/C)]*cp[k%C];x2+=(v/qt-e)**2/e;});
+  const V=Math.sqrt(x2/Math.min(R-1,C-1));
+  return`Population ${R===2&&C===2?'φ = V':'V'} (what a large sample would estimate): <b>${fr(V,2)}</b>`+(R===2&&C===2?` · odds ratio <b>${fo(((1+a)/(1-a))**2)}</b>`:'');
+}
+
+/* ============ Data generation ============ */
+function drawGof(){
+  const r=mulberry32(S.seed),d=S.gd/100,k=S.k,p=[];
+  for(let i=0;i<k;i++)p.push((S.w[i]>0?S.w[i]:0.01)*(1+d*(k>1?1-2*i/(k-1):0)));
+  S.obs=multinom(S.gn,p,r);S.truthG=popStats(true);
+}
+function defaultsInd(){S.rl=[];S.cl=[];for(let i=0;i<S.R;i++)S.rl.push('Row '+(i+1));for(let j=0;j<S.C;j++)S.cl.push(S.C===1?'Count':'Col '+String.fromCharCode(65+j));}
+function drawInd(){
+  const r=mulberry32(S.seed),a=S.iA/100,R=S.R,C=S.C,p=[];
+  for(let i=0;i<R;i++)for(let j=0;j<C;j++)p.push(C===1?1+a*(1-2*i/(R-1)):1+a*(1-2*i/(R-1))*(1-2*j/(C-1)));
+  S.t=multinom(S.iN,p,r);S.truthI=popStats(false);
+}
+
+/* ============ Tables ============ */
+function mk(tag,html,cls){const e=document.createElement(tag);if(html!=null)e.innerHTML=html;if(cls)e.className=cls;return e;}
+function numInput(attr,val,label,step){const i=mk('input');i.type='number';i.min=0;i.step=step||1;i.value=val;i.setAttribute(attr[0],attr[1]);i.setAttribute('aria-label',label);return i;}
+function buildTable(){
+  const tw=$('tw');tw.innerHTML='';
+  const tb=mk('table','', 'dt'),thd=mk('thead'),tr=mk('tr');
+  if(isGof()){
+    ['Category','Observed (O)','H₀ weight','Expected (E)','(O−E)²/E'].forEach((h,k)=>tr.appendChild(mk('th',h,k===0?'lab':'')));
+    thd.appendChild(tr);tb.appendChild(thd);
+    const body=mk('tbody');
+    for(let i=0;i<S.k;i++){
+      const r=mk('tr');r.appendChild(mk('td',S.gl[i],'lab'));
+      let td=mk('td');td.appendChild(numInput(['data-o',i],S.obs[i],'Observed count for '+S.gl[i]));r.appendChild(td);
+      td=mk('td');td.appendChild(numInput(['data-w',i],S.w[i],'Hypothesised weight for '+S.gl[i],'any'));r.appendChild(td);
+      td=mk('td','–','num');td.id='e'+i;r.appendChild(td);
+      td=mk('td','–','num');td.id='q'+i;r.appendChild(td);
+      body.appendChild(r);
+    }
+    const fr_=mk('tr','','tot');fr_.appendChild(mk('th','Total','lab'));
+    ['tO','tW','tE','tQ'].forEach(id=>{const t=mk('th','–');t.id=id;fr_.appendChild(t);});
+    body.appendChild(fr_);tb.appendChild(body);
+  }else{
+    tr.appendChild(mk('th','','lab'));
+    for(let j=0;j<S.C;j++)tr.appendChild(mk('th',S.cl[j]));
+    tr.appendChild(mk('th','Total'));thd.appendChild(tr);tb.appendChild(thd);
+    const bd=mk('tbody');
+    for(let i=0;i<S.R;i++){
+      const rr=mk('tr');rr.appendChild(mk('th',S.rl[i],'lab'));
+      for(let j=0;j<S.C;j++){
+        const k=i*S.C+j,c=mk('td');
+        c.appendChild(numInput(['data-c',k],S.t[k],'Count for '+S.rl[i]+', '+S.cl[j]));
+        const sm=mk('small','');sm.id='x'+k;c.appendChild(sm);rr.appendChild(c);
+      }
+      const tt=mk('th','–');tt.id='rt'+i;rr.appendChild(tt);bd.appendChild(rr);
+    }
+    const fr_=mk('tr','','tot');fr_.appendChild(mk('th','Total','lab'));
+    for(let j=0;j<S.C;j++){const t=mk('th','–');t.id='ct'+j;fr_.appendChild(t);}
+    const gt=mk('th','–');gt.id='gt';fr_.appendChild(gt);bd.appendChild(fr_);tb.appendChild(bd);
+  }
+  tw.appendChild(tb);
+}
+function shade(z){const a=Math.min(.5,Math.abs(z)/4);return z>=0?`rgba(217,115,13,${a.toFixed(2)})`:`rgba(36,104,214,${a.toFixed(2)})`;}
+function refreshTable(c){
+  if(isGof()){
+    for(let i=0;i<S.k;i++){
+      $('e'+i).textContent=c.err?'–':c.exp[i].toFixed(2);
+      const q=$('q'+i);q.textContent=c.err?'–':c.con[i].toFixed(3);q.style.background=c.err?'':shade(c.res[i]);
+    }
+    $('tO').textContent=sum(S.obs);$('tW').textContent='–';
+    $('tE').textContent=c.err?'–':sum(c.exp).toFixed(2);$('tQ').textContent=c.err?'–':c.chi.toFixed(3);
+  }else{
+    const rt=Array(S.R).fill(0),ct=Array(S.C).fill(0);
+    for(let i=0;i<S.R;i++)for(let j=0;j<S.C;j++){rt[i]+=S.t[i*S.C+j];ct[j]+=S.t[i*S.C+j];}
+    for(let i=0;i<S.R;i++){
+      $('rt'+i).textContent=rt[i];
+      for(let j=0;j<S.C;j++){
+        const k=i*S.C+j,sm=$('x'+k),td=sm.parentNode;
+        if(c.err){sm.textContent='';td.style.background='';}
+        else{sm.textContent='E = '+c.exp[k].toFixed(1)+' · res '+(c.res[k]>=0?'+':'−')+Math.abs(c.res[k]).toFixed(2);td.style.background=shade(c.res[k]);}
+      }
+    }
+    for(let j=0;j<S.C;j++)$('ct'+j).textContent=ct[j];
+    $('gt').textContent=sum(rt);
+  }
+}
+$('tw').addEventListener('input',e=>{
+  const t=e.target;let v;
+  if(t.hasAttribute('data-o')){v=Math.max(0,Math.round(+t.value)||0);S.obs[+t.getAttribute('data-o')]=v;}
+  else if(t.hasAttribute('data-w')){v=+t.value;S.w[+t.getAttribute('data-w')]=v>0?v:0;}
+  else if(t.hasAttribute('data-c')){v=Math.max(0,Math.round(+t.value)||0);S.t[+t.getAttribute('data-c')]=v;}
+  else return;
+  if(t.hasAttribute('data-c'))S.truthI='';else S.truthG='';changed();
+});
+
+/* ============ Chart 1 ============ */
+const SERIES=()=>[col('--a'),col('--b'),col('--ok'),isDark()?'#b794f6':'#8a56d6'];
+let G1={W:700,H:300};
+function geom1(){return{x0:46,x1:G1.W-14,y0:34,y1:G1.H-34};}
+function drawChart1(c){
+  const q=fit($('cvMain'),.5,240,340);G1={W:q.W,H:q.H};q.c.font=FONT;
+  if(isGof())drawBars(q.c,c);else if(S.C===1)drawBars(q.c,c,S.t.slice(),S.rl);else drawMosaic(q.c,c);
+}
+function drawBars(c1,c,OBS=S.obs,LAB=S.gl){
+  const g=geom1(),k=OBS.length,line=col('--line'),muted=col('--muted'),ink=col('--ink'),A=col('--a'),B=col('--b'),REJ=col('--rej'),panel=col('--panel');
+  const exp=c.err?OBS.map(()=>0):c.exp;let mx=1;
+  for(let i=0;i<k;i++)mx=Math.max(mx,OBS[i],exp[i]);
+  const nm=niceMax(mx*1.15),ym=S.ylock||nm.max,step=S.ylock?S.ylock/5:nm.step;S.ycur=ym;
+  const Y=v=>g.y1-v/ym*(g.y1-g.y0);
+  c1.textAlign='right';c1.textBaseline='middle';
+  for(let t=0;t<=ym+1e-9;t+=step){c1.strokeStyle=line;c1.lineWidth=1;c1.beginPath();c1.moveTo(g.x0,Y(t));c1.lineTo(g.x1,Y(t));c1.stroke();c1.fillStyle=muted;c1.fillText(+t.toFixed(2),g.x0-6,Y(t));}
+  c1.strokeStyle=line;c1.strokeRect(g.x0,g.y0,g.x1-g.x0,g.y1-g.y0);
+  const bw=(g.x1-g.x0)/k,w=Math.min(70,bw*.55);c1.textAlign='center';
+  for(let i=0;i<k;i++){
+    const cx=g.x0+bw*(i+.5),top=Y(Math.min(OBS[i],ym));
+    c1.globalAlpha=.85;c1.fillStyle=i===S.drag?B:A;c1.fillRect(cx-w/2,top,w,g.y1-top);c1.globalAlpha=1;
+    c1.strokeStyle=panel;c1.lineWidth=1.2;c1.strokeRect(cx-w/2,top,w,g.y1-top);
+    c1.fillStyle=ink;c1.textBaseline='bottom';c1.fillText(OBS[i],cx,top-3);
+    c1.fillStyle=muted;c1.textBaseline='top';c1.fillText(LAB[i],cx,g.y1+6);
+    if(!c.err){const ey=Y(Math.min(exp[i],ym));c1.strokeStyle=REJ;c1.lineWidth=2.5;c1.setLineDash([5,3]);c1.beginPath();c1.moveTo(cx-w/2-6,ey);c1.lineTo(cx+w/2+6,ey);c1.stroke();c1.setLineDash([]);}
+  }
+  c1.textAlign='left';c1.textBaseline='middle';
+  c1.globalAlpha=.85;c1.fillStyle=A;c1.fillRect(g.x0,10,12,12);c1.globalAlpha=1;
+  c1.fillStyle=muted;c1.fillText(isGof()?'Observed (drag a bar top)':'Observed',g.x0+17,16);
+  c1.strokeStyle=REJ;c1.lineWidth=2.5;c1.setLineDash([5,3]);c1.beginPath();c1.moveTo(g.x0+190,16);c1.lineTo(g.x0+212,16);c1.stroke();c1.setLineDash([]);
+  c1.fillStyle=muted;c1.fillText('Expected under H₀',g.x0+218,16);
+}
+function drawMosaic(c1,c){
+  const g=geom1(),R=S.R,C=S.C,gap=6,muted=col('--muted'),ink=col('--ink'),panel=col('--panel'),COLS=SERIES();
+  const rt=Array(R).fill(0),ct=Array(C).fill(0);
+  for(let i=0;i<R;i++)for(let j=0;j<C;j++){rt[i]+=S.t[i*C+j];ct[j]+=S.t[i*C+j];}
+  const N=sum(rt);
+  c1.textAlign='right';c1.textBaseline='middle';
+  for(let t=0;t<=100;t+=25){c1.fillStyle=muted;c1.fillText(t+'%',g.x0-6,g.y0+t/100*(g.y1-g.y0));}
+  if(N<=0||rt.some(v=>v===0)){c1.textAlign='center';c1.fillStyle=muted;c1.fillText('Each row needs at least one observation',(g.x0+g.x1)/2,(g.y0+g.y1)/2);return;}
+  const avail=g.x1-g.x0-gap*(R-1);let x=g.x0;
+  for(let i=0;i<R;i++){
+    const w=avail*rt[i]/N;let y=g.y0;
+    for(let j=0;j<C;j++){
+      const h=(g.y1-g.y0)*S.t[i*C+j]/rt[i];
+      c1.globalAlpha=.85;c1.fillStyle=COLS[j];c1.fillRect(x,y,w,h);c1.globalAlpha=1;
+      c1.strokeStyle=panel;c1.lineWidth=1.2;c1.strokeRect(x,y,w,h);
+      if(h>16&&w>34){c1.fillStyle='#fff';c1.textAlign='center';c1.textBaseline='middle';c1.fillText(Math.round(100*S.t[i*C+j]/rt[i])+'%',x+w/2,y+h/2);}
+      y+=h;
+    }
+    c1.fillStyle=muted;c1.textAlign='center';c1.textBaseline='top';
+    c1.fillText(S.rl[i]+' (n='+rt[i]+')',x+w/2,g.y1+6);x+=w+gap;
+  }
+  let cum=0;c1.strokeStyle=ink;c1.lineWidth=1.5;c1.setLineDash([5,3]);
+  for(let j=0;j<C-1;j++){cum+=ct[j]/N;const ly=g.y0+cum*(g.y1-g.y0);c1.beginPath();c1.moveTo(g.x0,ly);c1.lineTo(g.x1,ly);c1.stroke();}
+  c1.setLineDash([]);c1.textAlign='left';c1.textBaseline='middle';let lx=g.x0;
+  for(let j=0;j<C;j++){c1.globalAlpha=.85;c1.fillStyle=COLS[j];c1.fillRect(lx,10,12,12);c1.globalAlpha=1;c1.fillStyle=muted;c1.fillText(S.cl[j],lx+17,16);lx+=22+c1.measureText(S.cl[j]).width+12;}
+  c1.strokeStyle=ink;c1.setLineDash([5,3]);c1.beginPath();c1.moveTo(lx,16);c1.lineTo(lx+22,16);c1.stroke();c1.setLineDash([]);
+  c1.fillStyle=muted;c1.fillText('Overall split (what independence predicts)',lx+28,16);
+}
+
+/* ============ Chart 2: chi-square distribution ============ */
+function drawDist(c){
+  const q=fit($('cvDist'),.4,220,280),c2=q.c,W2=q.W,H2=q.H;c2.font=FONT;
+  const line=col('--line'),muted=col('--muted'),A=col('--a'),B=col('--b'),REJ=col('--rej');
+  const df=c.err?(isGof()?S.k-1:(S.R-1)*(S.C-1)):c.df,cr=c.err?crit(df,S.alpha):c.crit;
+  const xmax=Math.max(cr*1.7,df+5*Math.sqrt(2*df)+2,c.err?0:Math.min(c.chi*1.1,cr*6));
+  const P={l:46,r:14,t:30,b:34},pw=W2-P.l-P.r,ph=H2-P.t-P.b;
+  const X=v=>P.l+Math.min(v,xmax)/xmax*pw;
+  let ymax=0;for(let i=1;i<=240;i++)ymax=Math.max(ymax,pdf(xmax*i/240,df));
+  if(df===1)ymax=pdf(0.2,1);if(df===2)ymax=.5;
+  ymax*=1.12;
+  const Y=v=>P.t+ph-Math.min(v,ymax)/ymax*ph;
+  const nm=niceMax(xmax);
+  c2.textAlign='center';c2.textBaseline='top';
+  for(let t=0;t<=xmax+1e-9;t+=nm.step){c2.strokeStyle=line;c2.lineWidth=1;c2.beginPath();c2.moveTo(X(t),P.t);c2.lineTo(X(t),P.t+ph);c2.stroke();c2.fillStyle=muted;c2.fillText(+t.toFixed(2),X(t),P.t+ph+5);}
+  c2.strokeStyle=line;c2.strokeRect(P.l,P.t,pw,ph);
+  c2.fillStyle=muted;c2.fillText('χ² value',P.l+pw/2,H2-16);
+  c2.save();c2.translate(12,P.t+ph/2);c2.rotate(-Math.PI/2);c2.textBaseline='middle';c2.fillText('Density',0,0);c2.restore();
+  if(S.sim){
+    const nb=32,bwid=xmax/nb,cnt=Array(nb).fill(0);
+    S.sim.forEach(v=>{const b=Math.floor(v/bwid);if(b>=0&&b<nb)cnt[b]++;});
+    c2.globalAlpha=.3;c2.fillStyle=muted;
+    for(let i=0;i<nb;i++){const d=cnt[i]/(S.sim.length*bwid),x0=X(i*bwid),x1=X((i+1)*bwid);c2.fillRect(x0,Y(d),x1-x0-1,P.t+ph-Y(d));}
+    c2.globalAlpha=1;
+  }
+  function area(from,color,alpha){
+    c2.beginPath();c2.moveTo(X(from),Y(0));
+    for(let s=0;s<=160;s++){const xv=from+(xmax-from)*s/160;c2.lineTo(X(xv),Y(pdf(Math.max(xv,1e-6),df)));}
+    c2.lineTo(X(xmax),Y(0));c2.closePath();c2.globalAlpha=alpha;c2.fillStyle=color;c2.fill();c2.globalAlpha=1;
+  }
+  if(cr<xmax)area(cr,REJ,.2);
+  if(!c.err&&c.chi<xmax)area(c.chi,A,.4);
+  c2.beginPath();c2.strokeStyle=A;c2.lineWidth=2.5;let st=true;
+  for(let i=0;i<=300;i++){const xv=Math.max(xmax*i/300,df===1?0.004:1e-6),yv=pdf(xv,df);if(st){c2.moveTo(X(xv),Y(yv));st=false;}else c2.lineTo(X(xv),Y(yv));}
+  c2.stroke();
+  c2.save();c2.beginPath();c2.rect(P.l,P.t,pw,ph);c2.clip();
+  c2.strokeStyle=REJ;c2.lineWidth=2;c2.setLineDash([6,4]);c2.beginPath();c2.moveTo(X(cr),P.t);c2.lineTo(X(cr),P.t+ph);c2.stroke();c2.setLineDash([]);
+  if(!c.err){c2.strokeStyle=B;c2.lineWidth=3;c2.beginPath();c2.moveTo(X(c.chi),P.t);c2.lineTo(X(c.chi),P.t+ph);c2.stroke();}
+  c2.restore();
+  c2.textBaseline='bottom';
+  const chiRight=!c.err&&c.chi>=cr;
+  if(!c.err){
+    c2.fillStyle=B;
+    if(c.chi>xmax){c2.textAlign='right';c2.fillText('χ² = '+c.chi.toFixed(2)+' →',P.l+pw-4,P.t-2);}
+    else{c2.textAlign=chiRight?'left':'right';c2.fillText('χ² = '+c.chi.toFixed(2),X(c.chi)+(chiRight?5:-5),P.t-2);}
+  }
+  c2.fillStyle=REJ;const critLeft=chiRight&&c.chi<=xmax;
+  c2.textAlign=critLeft?'right':'left';c2.fillText('critical = '+cr.toFixed(2),X(cr)+(critLeft?-5:5),P.t-2);
+  $('distLegend').innerHTML=`<span><i style="background:${REJ};opacity:.35"></i>Rejection region (α = ${fr(S.alpha,3)})</span>`+
+    (c.err?'':`<span><i style="background:${A};opacity:.5"></i>p-value: area beyond your χ²</span><span><i style="background:${B}"></i>Your χ²</span>`)+
+    (S.sim?`<span><i style="background:${muted};opacity:.4"></i>1,000 simulated samples under H₀</span>`:'');
+}
+
+/* ============ Results ============ */
+const bar=(lab,v,mx,c,txt)=>`<div style="display:grid;grid-template-columns:minmax(120px,230px) 1fr 70px;gap:8px;align-items:center;margin:4px 0"><span class="cap" style="margin:0">${lab}</span><div class="bar" style="width:${Math.max(1,100*Math.min(v,mx)/mx)}%;background:${c}"></div><span class="f">${txt}</span></div>`;
+function showResult(o){
+  $('badge').innerHTML=o.p==null?'':`<span class="badge ${o.p<S.alpha?'sig':'ns'}">${o.p<S.alpha?'Significant':'Not significant'} at α = ${fp(S.alpha)}</span>`;
+  $('stats').innerHTML=o.cards.map(([a,b,s])=>`<div class="stat"><small>${a}</small><b>${b}</b>${s?'<small>'+s+'</small>':''}</div>`).join('');
+  $('warn').hidden=!o.warn;$('warn').innerHTML=o.warn||'';
+  if(o.gtab!=null)$('guideTable').innerHTML=o.gtab;else guideRows(o.guides);
+  $('interp').innerHTML=o.interp;
+  $('apaRow').hidden=!o.apa;$('apa').textContent=o.apa||'';
+}
+function hypText(){
+  if(isGof())return'<b>H₀:</b> the population proportions match the hypothesised weights. <b>H₁:</b> at least one proportion differs. Expected count = n × weight share.';
+  if(S.tab==='or')return'<b>H₀:</b> the odds ratio is 1 (the outcome is equally likely in both rows). <b>H₁:</b> OR ≠ 1, or OR &gt; 1 / OR &lt; 1 if one-sided.';
+  if(S.tab==='fisher')return'<b>H₀:</b> the row and column variables are independent, given the observed margins. <b>H₁:</b> they are associated. No expected-count rule applies.';
+  if(S.tab==='cmp'&&S.C===1)return'<b>H₀:</b> every row is equally likely (expected count = n / rows). With two rows this is a binomial test of p₀ = .5. <b>H₁:</b> at least one row differs.';
+  if(S.tab==='cmp')return'<b>H₀:</b> the row and column variables are independent. Every test below addresses this same hypothesis (the odds-ratio test: OR = 1).';
+  return'<b>H₀:</b> the row and column variables are independent. <b>H₁:</b> they are associated. Expected count = (row total × column total) / n.';
+}
+function testSentence(c){
+  const h0=isGof()?'the counts match the hypothesised proportions':'the variables are independent',rej=c.p<S.alpha;
+  return `With α = ${fp(S.alpha)}, p ${apaP(c.p)}, so H₀ (${h0}) is ${rej?'<b>rejected</b>':'<b>not rejected</b>'}.`;
+}
+function extras(c){
+  let m='';
+  if(c.chi>0&&!(S.tab==='assoc')){
+    let mi=0;for(let i=1;i<c.con.length;i++)if(c.con[i]>c.con[mi])mi=i;
+    const nm=isGof()?`category <b>${S.gl[mi]}</b>`:`the cell <b>${S.rl[Math.floor(mi/S.C)]} × ${S.cl[mi%S.C]}</b>`;
+    m+=` Largest contributor: ${nm} (O = ${c.obs[mi]}, E = ${c.exp[mi].toFixed(1)}), ${Math.round(100*c.con[mi]/c.chi)}% of χ².`;
+  }
+  if(c.low>0)m+=`<br><i>Caution: ${c.low} expected count${c.low>1?'s are':' is'} below 5, so the chi-square approximation may be unreliable.</i>`;
+  if(isGof()&&S.k===2&&c.low>0)m+='<br><i>With two categories and small expected counts, the exact binomial test tab is the better choice.</i>';
+  if(yatesOn())m+='<br><i>Yates continuity correction is applied to χ² (φ and V use the uncorrected value).</i>';
+  if(S.sim){
+    let hit=0;S.sim.forEach(v=>{if(v>=c.chi-1e-9)hit++;});
+    m+=`<br><b>Simulation:</b> ${hit} of ${S.sim.length} samples drawn under H₀ gave χ² ≥ ${c.chi.toFixed(2)} (simulated p ≈ ${(hit/S.sim.length).toFixed(3)}, theory ${fp(c.p)}).`;
+  }
+  return m;
+}
+function renderResult(c){
+  if(c.err){$('msg').hidden=false;$('msg').textContent=c.err;['pRes','p2dist','p2assoc','p2or','p2fish','p2cmp','pSim','pHow','p2binom','p2bc','p2bsim'].forEach(id=>$(id).hidden=true);return;}
+  $('msg').hidden=true;$('pRes').hidden=S.tab==='cmp';
+  if(S.tab==='or')return renderOR(c);
+  if(S.tab==='fisher')return renderFisher(c);
+  if(S.tab==='cmp')return renderCompare(c);
+  const chiLab='χ²'+(yatesOn()?' (Yates)':''),rej=c.p<S.alpha;
+  const cardsTest=[[chiLab,f(c.chi)],['df',c.df],['p-value',fp(c.p)],['Critical χ²',f(c.crit)]];
+  if(isGof()){
+    const lab=effLabel(c.w);
+    showResult({p:c.p,cards:[...cardsTest,['Cohen\'s w',fr(c.w)],['n',c.n]],guides:[['Cohen\'s w',c.w]],
+      interp:`${testSentence(c)} Effect size: Cohen's w = ${fr(c.w)}, a <b>${lab}</b> departure (guideline: ${thr(1)} for small, medium, large). ${rej?'The counts sit further from the hypothesised proportions than chance alone would usually allow.':'The gaps are within normal sampling noise.'}${!rej&&c.n<60?' With a small sample a real departure can easily go undetected.':''}${rej&&lab==='negligible'||rej&&lab==='small'?' A significant result with a small w means the departure is detectable but modest.':''}`+extras(c),
+      apa:`χ²(${c.df}, N = ${c.n}) = ${f(c.chi)}, p ${apaP(c.p)}, w = ${fr(c.w)}`});
+  }else if(S.tab==='ind'){
+    const two=S.R===2&&S.C===2,lab=effLabel(c.V,Math.sqrt(c.dfs)),sym=two?'φ':'Cramér\'s V';
+    const cards=[...cardsTest];
+    if(two)cards.push(['φ (signed)',fr(c.phi)]);
+    cards.push([two?'|φ| = V':'Cramér\'s V',fr(c.V)],['V² (shared)',fr(c.V*c.V,3)],['n',c.n]);
+    showResult({p:c.p,cards,guides:[two?['|φ| = V',c.V]:['Cramér\'s V (df* = '+c.dfs+')',c.V,Math.sqrt(c.dfs)]],
+      interp:`${testSentence(c)} ${rej?'The pattern across rows differs more than independence would predict, so the variables look associated.':'There is no convincing evidence of association; the data are consistent with independence.'} <b>Effect size:</b> ${two?`φ = ${fr(c.phi)} (|φ| = V = ${fr(c.V)})`:`V = ${fr(c.V)} with df* = ${c.dfs}`}, a <b>${lab}</b> association (guideline for df* = ${c.dfs}: ${thr(Math.sqrt(c.dfs))} for small, medium, large). ${rej&&lab!=='medium'&&lab!=='large'?'Significant but weak: χ² grows with n, so a large sample can detect even a faint association. ':''}${!rej&&(lab==='medium'||lab==='large')?'The association looks sizeable but the sample is too small to rule out chance. ':''}Open the <b>Phi &amp; Cramér's V</b> tab to see how these measures behave as n changes.`+extras(c),
+      apa:`χ²(${c.df}, N = ${c.n}) = ${f(c.chi)}, p ${apaP(c.p)}, ${two?'φ = '+fr(c.phi):'Cramér\'s V = '+fr(c.V)}`});
+  }else{
+    const two=S.R===2&&S.C===2,s=Math.sqrt(c.dfs),lab=effLabel(c.V,s);
+    const cards=[];
+    if(two)cards.push(['φ (signed)',fr(c.phi)],['|φ| = V',fr(c.V)],['φ² = V²',fr(c.V*c.V,3)],['φmax (margins)',fr(c.phimax)],['|φ| / φmax',fr(c.V/c.phimax)]);
+    else cards.push(['Cramér\'s V',fr(c.V)],['V²',fr(c.V*c.V,3)],['df*',c.dfs],['Cohen\'s w',fr(c.w)]);
+    cards.push(['χ² (for contrast)',f(c.chiRaw)],['p-value',fp(c.p)],['n',c.n]);
+    let t=two
+      ?`φ = ${fr(c.phi)} is the Pearson correlation between the two 0/1 variables. Its size, |φ| = ${fr(c.V)}, is a <b>${lab}</b> association (guideline: ${thr(1)}), and φ² = ${fr(c.V*c.V,3)}, so about ${Math.round(100*c.V*c.V)}% of the variance in one variable is shared with the other. Given these margins the largest possible |φ| is ${fr(c.phimax)}, so |φ| reaches ${Math.round(100*c.V/c.phimax)}% of its ceiling.`
+      :`V = ${fr(c.V)} with df* = ${c.dfs} is a <b>${lab}</b> association (guideline: ${thr(s)} for small, medium, large). V = 0 means no association and V = 1 means each category of one variable maps onto a single category of the other; V² = ${fr(c.V*c.V,3)} is the proportion of the maximum possible χ² that the data reach.`;
+    t+=` Unlike χ², V does not grow with n: multiplying every count by k multiplies χ² by k and leaves ${two?'φ':'V'} unchanged (panel 2). For the significance question: ${testSentence(c)}`;
+    if(c.low>0)t+=`<br><i>Caution: ${c.low} expected count${c.low>1?'s are':' is'} below 5; V is also biased upward in small samples.</i>`;
+    showResult({p:c.p,cards,interp:t,guides:two?[['|φ| = V',c.V]]:[['Cramér\'s V (df* = '+c.dfs+')',c.V,s],['Cohen\'s w',c.w]],
+      apa:`${two?'φ = '+fr(c.phi):'V = '+fr(c.V)}, χ²(${c.df}, N = ${c.n}) = ${f(c.chiRaw)}, p ${apaP(c.p)}`});
+    renderAssoc(c,two);
+  }
+}
+function renderAssoc(c,two){
+  const A=col('--a'),B=col('--b'),OK=col('--ok');
+  let h=bar(two?'|φ| (= V)':'Cramér\'s V',c.V,1,A,fr(c.V));
+  if(two)h+=bar('φmax allowed by the margins',c.phimax,1,B,fr(c.phimax));
+  h+=bar(two?'φ² (variance shared)':'V²',c.V*c.V,1,OK,fr(c.V*c.V,3));
+  h+=bar('Cohen\'s "medium" for this table',.3/Math.sqrt(c.dfs),1,col('--muted'),fr(.3/Math.sqrt(c.dfs)));
+  $('assocBars').innerHTML=h+`<p class="cap">Each bar runs from 0 to 1. ${two?'The orange bar is the ceiling on |φ| set by unequal margins; when it is below 1, even a perfectly "tidy" table cannot reach φ = 1.':''}</p>`;
+  const mult=[.5,1,2,5,10,25];
+  let t='<thead><tr><th>Counts ×</th><th class="num">n</th><th class="num">χ²</th><th class="num">p</th><th class="num">'+(two?'|φ|':'V')+'</th><th>Significant?</th></tr></thead><tbody>';
+  mult.forEach(m=>{
+    const x2=c.chiRaw*m,p=pval(x2,c.df);
+    t+=`<tr${m===1?' class="sel"':''}><td class="f">×${m}${m===1?' (yours)':''}</td><td class="num">${f(c.n*m,m<1?1:0)}</td><td class="num">${f(x2)}</td><td class="num">${fp(p)}</td><td class="num">${fr(c.V)}</td><td>${p<S.alpha?'<span class="badge sig">Yes</span>':'<span class="badge ns">No</span>'}</td></tr>`;
+  });
+  $('scaleTable').innerHTML=t+'</tbody>';
+  $('scaleCap').textContent=`The pattern of proportions is identical in every row, so the strength of association (${two?'φ':'V'}) never changes, but χ² grows in step with n and eventually crosses the critical value. Significance depends on both strength and sample size; ${two?'φ':'V'} reports strength alone.`;
+}
+
+/* ============ SVG chart helpers (theme-aware through CSS variables) ============ */
+const px=v=>(+v.toFixed(2));
+function ticks(lo,hi,n=6){const raw=(hi-lo)/n,mag=Math.pow(10,Math.floor(Math.log10(raw))),nm=raw/mag,step=(nm<1.5?1:nm<3?2:nm<7?5:10)*mag,out=[];for(let v=Math.ceil(lo/step-1e-9)*step;v<=hi+1e-9;v+=step)out.push(+v.toPrecision(12));return out;}
+const rot=(x,y,t)=>`<text transform="rotate(-90)" x="${-x}" y="${y}" text-anchor="middle">${t}</text>`;
+function barsFromDist(p,off,rejFn,prFn,maxBars=160){
+  const n=p.length,k=Math.max(1,Math.ceil(n/maxBars)),bars=[];
+  for(let i=0;i<n;i+=k){const j=Math.min(n-1,i+k-1);let s=0;for(let t=i;t<=j;t++)s+=p[t];const c=Math.round((i+j)/2);
+    bars.push({x0:off+i-.5,x1:off+j+.5,p:s,rej:rejFn(c),pr:prFn(c)});}
+  return bars;
+}
+function chartNull(o){
+  const pid=o.pid||'hatchCT',W=700,H=250,m={l:56,r:14,t:24,b:40},pw=W-m.l-m.r,ph=H-m.t-m.b,bars=o.bars;
+  const xmin=bars[0].x0,xmax=bars[bars.length-1].x1,X=v=>px(m.l+pw*(v-xmin)/(xmax-xmin));
+  const dens=bars.map(b=>b.p/(b.x1-b.x0)),ymax=(Math.max(...dens)*1.18)||1,Y=v=>px(m.t+ph*(1-v/ymax));
+  let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${o.aria||'Null distribution'}"><defs><pattern id="${pid}" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="5" style="stroke:var(--ink)" stroke-width="1.6" stroke-opacity=".55"/></pattern></defs>`;
+  for(const v of ticks(0,ymax,4))s+=`<line class="ax" x1="${m.l}" x2="${W-m.r}" y1="${Y(v)}" y2="${Y(v)}"/><text x="${m.l-6}" y="${Y(v)+4}" text-anchor="end">${tk(v)}</text>`;
+  s+=rot(m.t+ph/2,12,'Probability');
+  bars.forEach((b,i)=>{const x0=X(b.x0),w=Math.max(px(X(b.x1)-x0-(bars.length>90?0.3:1)),0.6),h=px(Y(0)-Y(dens[i]));
+    s+=`<rect x="${x0}" y="${Y(dens[i])}" width="${w}" height="${h}" style="fill:${b.rej?'var(--rej)':'var(--a)'}" fill-opacity="${b.rej?.5:.3}"/>`;
+    if(b.pr)s+=`<rect x="${x0}" y="${Y(dens[i])}" width="${w}" height="${h}" fill="url(#${pid})"/>`;});
+  const xs=X(o.obs);
+  s+=`<line x1="${xs}" x2="${xs}" y1="${m.t-4}" y2="${Y(0)}" style="stroke:var(--ink)" stroke-width="2.5"/><text style="fill:var(--ink);font-weight:600" x="${Math.min(Math.max(xs,m.l+40),W-m.r-40)}" y="${m.t-8}" text-anchor="middle">${o.obsLabel}</text>`;
+  ticks(xmin,xmax,8).filter(v=>v%1===0).forEach(v=>{s+=`<text x="${X(v)}" y="${H-m.b+16}" text-anchor="middle">${tk(v)}</text>`;});
+  return s+`<text x="${m.l+pw/2}" y="${H-4}" text-anchor="middle">${o.xlab}</text></svg>`;
+}
+function chartLadder(rows,alpha){
+  const W=700,rh=38,m={l:190,r:70,t:14,b:36},H=m.t+m.b+rh*rows.length,pw=W-m.l-m.r,X=p=>px(m.l+pw*(Math.log10(Math.max(p,1e-4))+4)/4);
+  let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="p-values of each test on a logarithmic axis"><rect x="${m.l}" y="${m.t}" width="${px(X(alpha)-m.l)}" height="${rh*rows.length}" style="fill:var(--rej)" fill-opacity=".14"/>`;
+  [[1e-4,'.0001'],[1e-3,'.001'],[1e-2,'.01'],[1e-1,'.1'],[1,'1']].forEach(([v,t])=>{s+=`<line class="ax" x1="${X(v)}" x2="${X(v)}" y1="${m.t}" y2="${H-m.b}"/><text x="${X(v)}" y="${H-m.b+16}" text-anchor="middle">${t}</text>`;});
+  s+=`<line x1="${X(alpha)}" x2="${X(alpha)}" y1="${m.t}" y2="${H-m.b}" style="stroke:var(--rej)" stroke-width="1.6" stroke-dasharray="5 4"/><text x="${X(alpha)}" y="${H-m.b+31}" text-anchor="middle" style="fill:var(--rej)">α = ${fp(alpha)}</text>`;
+  rows.forEach((r,i)=>{const cy=m.t+rh*i+rh/2,c=r.sig?'var(--ok)':'#7b8392';
+    s+=`<line x1="${m.l}" x2="${W-m.r}" y1="${cy}" y2="${cy}" class="ax" stroke-opacity=".5"/><text x="${m.l-10}" y="${cy+4}" text-anchor="end" style="fill:var(--ink);font-weight:600">${r.name}</text><circle cx="${X(r.p)}" cy="${cy}" r="7" style="fill:${c}"/><text x="${W-m.r+8}" y="${cy+4}">${r.pTxt}</text>`;});
+  return s+'</svg>';
+}
+function chartSimBars(rows,alpha,h0,selKey){
+  const W=700,rh=34,m={l:190,r:60,t:10,b:30},H=m.t+m.b+rh*rows.length,pw=W-m.l-m.r,X=v=>px(m.l+pw*v);
+  let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Share of simulated experiments that were significant">`;
+  [0,.25,.5,.75,1].forEach(v=>{s+=`<line class="ax" x1="${X(v)}" x2="${X(v)}" y1="${m.t}" y2="${H-m.b}"/><text x="${X(v)}" y="${H-m.b+16}" text-anchor="middle">${Math.round(v*100)}%</text>`;});
+  if(h0)s+=`<line x1="${X(alpha)}" x2="${X(alpha)}" y1="${m.t}" y2="${H-m.b}" style="stroke:var(--rej)" stroke-width="1.6" stroke-dasharray="5 4"/><text x="${X(alpha)+4}" y="${m.t+10}" style="fill:var(--rej)">α</text>`;
+  rows.forEach((r,i)=>{const y0=m.t+rh*i+6,sel=r.key===selKey;
+    s+=`<text x="${m.l-10}" y="${y0+rh/2-2}" text-anchor="end" style="fill:var(--ink);font-weight:${sel?700:500}">${r.name}</text><rect x="${m.l}" y="${y0}" width="${Math.max(px(pw*r.rate),1)}" height="${rh-12}" rx="3" style="fill:var(--a)" fill-opacity="${sel?.9:.5}"/><text x="${px(m.l+pw*r.rate+6)}" y="${y0+rh/2-2}">${pc1(r.rate)}</text>`;});
+  return s+'</svg>';
+}
+/* odds-ratio forest plot on a log axis, and risk bars */
+function chartOR(x,alpha){
+  const w=x.wa,e=x.ex,W=560,H=210,m={l:112,r:24,t:18,b:46},pw=W-m.l-m.r,ph=H-m.t-m.b;
+  const fin=v=>isFinite(v)&&v>0;
+  const vals=[Math.log(w.or),Math.log(w.lo),Math.log(w.hi)];
+  [e.mle,e.lo,e.hi].forEach(v=>{if(fin(v))vals.push(Math.log(v));});
+  const lim=Math.min(Math.max(1.1*Math.max(...vals.map(Math.abs)),Math.log(4)),Math.log(2000)),X=v=>px(m.l+pw*(Math.log(Math.min(Math.max(v,Math.exp(-lim)),Math.exp(lim)))+lim)/(2*lim));
+  let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Odds ratio with Wald and exact confidence intervals on a log scale">`;
+  [.01,.02,.05,.1,.2,.5,1,2,5,10,20,50,100,200,500,1000].filter(v=>Math.log(v)>=-lim-1e-9&&Math.log(v)<=lim+1e-9).forEach(v=>{s+=`<line class="ax" x1="${X(v)}" x2="${X(v)}" y1="${m.t}" y2="${m.t+ph}"/><text x="${X(v)}" y="${m.t+ph+16}" text-anchor="middle">${v}</text>`;});
+  s+=`<line x1="${X(1)}" x2="${X(1)}" y1="${m.t-4}" y2="${m.t+ph}" style="stroke:var(--ink)" stroke-width="2" stroke-dasharray="5 4"/><text x="${X(1)}" y="${m.t-7}" text-anchor="middle" style="fill:var(--ink)">OR = 1 (no association)</text>`;
+  s+=`<text x="${m.l+pw/2}" y="${H-6}" text-anchor="middle">Odds ratio (log scale)</text>`;
+  [['Wald CI',w.or,w.lo,w.hi,m.t+ph*0.3,'var(--a)'],['Exact (conditional) CI',e.mle,e.lo,e.hi,m.t+ph*0.72,'var(--b)']].forEach(([lab,est,lo,hi,y,c])=>{
+    const xl=lo>0?X(lo):m.l,xh=isFinite(hi)?X(hi):m.l+pw;
+    s+=`<text x="${m.l-8}" y="${y+4}" text-anchor="end" style="fill:var(--ink);font-weight:600">${lab}</text><line x1="${xl}" x2="${xh}" y1="${y}" y2="${y}" style="stroke:${c}" stroke-width="3"/>`;
+    s+=lo>0?`<line x1="${xl}" x2="${xl}" y1="${y-7}" y2="${y+7}" style="stroke:${c}" stroke-width="3"/>`:`<path d="M${xl+8} ${y-6}L${xl} ${y}L${xl+8} ${y+6}" fill="none" style="stroke:${c}" stroke-width="3"/>`;
+    s+=isFinite(hi)?`<line x1="${xh}" x2="${xh}" y1="${y-7}" y2="${y+7}" style="stroke:${c}" stroke-width="3"/>`:`<path d="M${xh-8} ${y-6}L${xh} ${y}L${xh-8} ${y+6}" fill="none" style="stroke:${c}" stroke-width="3"/>`;
+    if(fin(est)||est===0||est===Infinity){const ex=est===0?m.l:est===Infinity?m.l+pw:X(est);s+=`<rect x="${ex-6}" y="${y-6}" width="12" height="12" style="fill:${c}" transform="rotate(45 ${ex} ${y})"/>`;}
+    s+=`<text x="${xl}" y="${y-12}" text-anchor="middle">${fo(lo)}</text><text x="${xh}" y="${y-12}" text-anchor="middle">${fo(hi)}</text>`;});
+  return s+'</svg>';
+}
+function chartRisk(x,rl,cl){
+  const W=300,H=210,m={l:42,r:10,t:18,b:46},pw=W-m.l-m.r,ph=H-m.t-m.b,Y=v=>px(m.t+ph*(1-v)),bw=56;
+  let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Proportion with the outcome in each row"><text x="${m.l}" y="11" style="font-weight:600">Risk of “${cl}”</text>`;
+  [0,.25,.5,.75,1].forEach(v=>{s+=`<line class="ax" x1="${m.l}" x2="${W-m.r}" y1="${Y(v)}" y2="${Y(v)}"/><text x="${m.l-6}" y="${Y(v)+4}" text-anchor="end">${Math.round(v*100)}%</text>`;});
+  [[x.rk.p1,'var(--a)',rl[0],m.l+pw*0.27],[x.rk.p2,'var(--b)',rl[1],m.l+pw*0.73]].forEach(([p,c,nm,cx])=>{
+    s+=`<rect x="${px(cx-bw/2)}" y="${Y(p)}" width="${bw}" height="${px(Y(0)-Y(p))}" style="fill:${c}" fill-opacity=".75"/><text x="${cx}" y="${Y(p)-5}" text-anchor="middle" style="fill:var(--ink);font-weight:700">${pc1(p)}</text><text x="${cx}" y="${H-m.b+16}" text-anchor="middle" style="fill:var(--ink);font-weight:600">${nm}</text>`;});
+  return s+'</svg>';
+}
+
+/* ============ Odds ratio, Fisher exact and comparison tabs ============ */
+const pc1=x=>(100*x).toFixed(1)+'%';
+const lvl=()=>(+((1-S.alpha)*100).toFixed(1))+'%';
+const fo=v=>v===Infinity?'∞':(v==null||!isFinite(v))?'–':v===0?'0':v<10?v.toFixed(2):v<100?v.toFixed(1):Math.round(v).toLocaleString('en-US');
+const fp4=x=>x<0.0001?x.toExponential(1):x.toFixed(4);
+const tailTxt=()=>S.tails==='two'?'two-sided':'one-sided';
+const OR_T=[.2,.5,.8].map(d=>Math.exp(d*Math.PI/Math.sqrt(3))); // Cohen's d = .2/.5/.8 expressed as odds ratios
+const orLab=v=>{v=Math.max(v,1/v);return v<OR_T[0]?'negligible':v<OR_T[1]?'small':v<OR_T[2]?'medium':'large';};
+function analyze2(t,alpha){
+  const[a,b,c,d]=t,N=a+b+c+d,e=[(a+b)*(a+c)/N,(a+b)*(b+d)/N,(c+d)*(a+c)/N,(c+d)*(b+d)/N];
+  const st=chiStats(t,e,false),sy=chiStats(t,e,true);
+  return{a,b,c,d,N,fi:fisher2(a,b,c,d),ex:exactOR(a,b,c,d,alpha),wa:wald2(a,b,c,d,alpha),rk:riskStats(a,b,c,d,alpha),g:st.g,chiY:sy.chi,
+    orS:b*c===0?(a*d===0?NaN:Infinity):a*d/(b*c)};
+}
+function gtabHTML(rows){
+  const hd='<caption>Effect-size guidelines: your result is highlighted</caption><thead><tr><th>Measure</th><th class="num">Value</th><th>Negligible</th><th>Small</th><th>Medium</th><th>Large</th></tr></thead><tbody>';
+  return hd+rows.map(([lab,v,t,fm])=>{
+    const cur=v<t[0]?0:v<t[1]?1:v<t[2]?2:3,T=['&lt; '+fm(t[0]),fm(t[0])+' to &lt; '+fm(t[1]),fm(t[1])+' to &lt; '+fm(t[2]),'≥ '+fm(t[2])];
+    return `<tr><td>${lab}</td><td class="num">${fm(v)}</td>${T.map((x,i)=>`<td class="f${i===cur?' on':''}">${x}</td>`).join('')}</tr>`;}).join('')+'</tbody>';
+}
+const gOR=o=>['Odds ratio (larger of OR and 1/OR)',isFinite(o)&&o>0?Math.max(o,1/o):Infinity,OR_T,v=>v===Infinity?'∞':f(v,2)];
+const gPhi=v=>['|φ|',Math.abs(v),[.1,.3,.5],v=>fr(v)];
+const fhRes=c=>fisherRxC(S.t,S.R,S.C);
+
+/* ---------- Odds ratio tab ---------- */
+function renderOR(c){
+  const x=c.x,w=x.wa,e=x.ex,k=x.rk,rl=S.rl,o=S.cl[0],OR=x.orS;
+  const p=S.tails==='two'?w.p2:S.tails==='greater'?w.pGreater:w.pLess,rej=p<S.alpha;
+  const cards=[['Odds ratio (sample)',fo(OR)],['ln(OR) ± SE',f(w.lor)+' ± '+f(w.se)],['Wald z',f(w.z)],['p-value ('+tailTxt()+')',fp(p)],
+    [lvl()+' CI, Wald','['+fo(w.lo)+', '+fo(w.hi)+']'],[lvl()+' CI, exact','['+fo(e.lo)+', '+fo(e.hi)+']'],
+    ['Relative risk',fo(k.rr)],['Risk difference',fr(k.rd)],['φ (signed)',fr(c.phi)]];
+  const ratio=isFinite(OR)&&isFinite(k.rr)&&k.rr>0?OR/k.rr:NaN;
+  const interp=`In <b>${rl[0]}</b> the odds of “${o}” are ${x.a}:${x.b} = ${fo(x.a/x.b)} (a risk of ${pc1(k.p1)}); in <b>${rl[1]}</b> they are ${x.c}:${x.d} = ${fo(x.c/x.d)} (risk ${pc1(k.p2)}). Dividing the first odds by the second gives <b>OR = ${fo(OR)}</b> (ln OR = ${f(w.lor)}): the odds of “${o}” are ${isNaN(OR)?'<b>undefined</b> (both rows have a zero cell)':OR===0?'<b>zero</b>, since there are no “'+o+'” cases in '+rl[0]+',':OR===Infinity?'<b>unboundedly higher</b>, since the comparison odds are zero,':OR>=1?`<b>${fo(OR)} times as high</b>`:`<b>${fo(1/OR)} times as low</b>`} ${OR===0||OR===Infinity?'compared with '+rl[1]+'.':'in '+rl[0]+' as in '+rl[1]+'.'} With α = ${fp(S.alpha)}, the ${tailTxt()} Wald test gives p ${apaP(p)}, so H₀ (OR = 1) is ${rej?'<b>rejected</b>':'<b>not rejected</b>'}. The ${lvl()} Wald interval [${fo(w.lo)}, ${fo(w.hi)}] ${w.lo>1||w.hi<1?'excludes':'includes'} 1, and the exact conditional interval [${fo(e.lo)}, ${fo(e.hi)}] ${e.lo>1||e.hi<1?'excludes':'includes'} 1. Size: converting the odds ratio to Cohen’s d scale (d = ln OR · √3/π), this is a <b>${orLab(OR)}</b> effect. The relative risk is ${fo(k.rr)} (${lvl()} CI [${fo(k.rrLo)}, ${fo(k.rrHi)}]); ${isFinite(ratio)?(ratio>1.25||ratio<.8?`because the outcome is fairly common here the OR (${fo(OR)}) noticeably ${OR>1?'overstates':'understates'} the RR; the two agree only when the outcome is rare`:`the OR and RR are close because risks of ${pc1(k.p1)} and ${pc1(k.p2)} are both small, as they must be for the OR to approximate the RR`):''}.`;
+  showResult({p,cards,gtab:gtabHTML([gOR(OR),gPhi(c.phi)]),
+    warn:w.corr?'A cell is zero, so the sample odds ratio is 0 or ∞. The Wald interval and the relative risk add ½ to every cell (Haldane–Anscombe correction); the exact interval needs no correction.':'',
+    interp,apa:`OR = ${fo(OR)}, ${lvl()} CI [${fo(w.lo)}, ${fo(w.hi)}] (Wald), z = ${f(w.z)}, p ${apaP(p)}, N = ${c.n}`});
+  $('orChart').innerHTML=chartOR(x,S.alpha);$('riskChart').innerHTML=chartRisk(x,rl,o);
+  $('orCap').innerHTML=`Diamonds mark the estimate: the sample odds ratio for the Wald interval, and the conditional maximum-likelihood estimate (${fo(e.mle)}) for the exact interval. If a bar crosses the dashed line at 1, the data are consistent with no association. Intervals are symmetric on the log scale, not the raw scale.`;
+  $('howTitle').textContent='How the odds ratio works';
+  $('howBody').innerHTML=`<p><b>H₀:</b> the odds ratio is 1, so the outcome is equally likely in both groups. <b>H₁:</b> OR ≠ 1 (or OR &gt; 1 / OR &lt; 1 if one-sided).</p>
+  <ol class="rel"><li>Odds are events divided by non-events. ${rl[0]}: a/b = ${x.a}/${x.b} = <b>${fo(x.a/x.b)}</b>. ${rl[1]}: c/d = ${x.c}/${x.d} = <b>${fo(x.c/x.d)}</b>. (A 50% risk is odds of 1; a 75% risk is odds of 3.)</li>
+  <li><b>OR = (a/b) ÷ (c/d) = ad/bc = ${fo(OR)}.</b> Above 1 favours ${rl[0]}, below 1 favours ${rl[1]}. Swapping the two rows (or the two columns) turns OR into 1/OR.</li>
+  <li>On the log scale ln OR is approximately normal with SE = √(1/a + 1/b + 1/c + 1/d) = ${f(w.se,3)}, so the Wald interval is exp(ln OR ± z<sub>α/2</sub>·SE) and the test statistic is z = ln OR / SE = ${f(w.z)}.</li>
+  <li>The exact conditional interval inverts Fisher’s test: it collects every odds ratio ψ for which the observed count of ${x.a} would not be extreme under the noncentral hypergeometric distribution with that ψ. It stays valid for small or sparse tables and can be wider than the Wald interval.</li></ol>
+  <p class="cap">The OR is the same whichever variable you call the outcome, which is why it is used in case–control studies and logistic regression. It is not the relative risk: for common outcomes it is further from 1 than the RR. Try the <i>Rare outcome</i> and <i>Common outcome</i> presets.</p>`;
+}
+
+/* ---------- Fisher exact tab ---------- */
+function renderFisher(c){
+  const mid=S.fmeth==='mid';
+  if(S.R===2&&S.C===2){
+    const x=c.x,fi=x.fi,h=fi.h,N=x.N,n1=x.a+x.b,m1=x.a+x.c,rl=S.rl,o=S.cl[0];
+    const p=fisherP(fi,S.tails,S.fmeth),rej=p<S.alpha,E=n1*m1/N;
+    const cards=[['Top-left count a',x.a,'expected '+f(E,1)],['P(this exact table)',fp4(fi.po)],['p-value ('+(mid?'mid-p, ':'')+tailTxt()+')',fp(p)],
+      ['Exact p, two-sided',fp(fi.two)],['Exact p, one-sided ≥',fp(fi.greater)],['Exact p, one-sided ≤',fp(fi.less)],['Mid-p, two-sided',fp(fi.midTwo)],
+      ['Conditional OR (MLE)',fo(x.ex.mle),lvl()+' CI ['+fo(x.ex.lo)+', '+fo(x.ex.hi)+']'],['φ (signed)',fr(c.phi)]];
+    const interp=`Fisher’s test treats the margins as fixed: ${n1} in ${rl[0]} and ${x.c+x.d} in ${rl[1]}; ${m1} with “${o}” and ${x.b+x.d} without. Given them, the number of ${rl[0]} cases with “${o}” follows a hypergeometric distribution with mean ${f(E,2)}; you observed <b>${x.a}</b>, which has probability ${fp4(fi.po)}. The ${tailTxt()} ${mid?'mid-p':'exact'} p-value adds the probabilities of ${S.tails==='two'?'every table no more probable than the observed one':'every table at least as extreme in the stated direction'}${mid?', counting only half of the observed table’s own probability':''}, giving p ${apaP(p)}, so H₀ (independence, OR = 1) is ${rej?'<b>rejected</b>':'<b>not rejected</b>'} at α = ${fp(S.alpha)}. The conditional estimate of the odds ratio is ${fo(x.ex.mle)} (${lvl()} CI [${fo(x.ex.lo)}, ${fo(x.ex.hi)}]). ${mid?'':'<i>The exact p-value is conservative: because the distribution is discrete, the long-run false-positive rate is usually below α. Mid-p trades some of that safety for power (see the Compare tab and the simulation).</i>'}`;
+    showResult({p,cards,gtab:gtabHTML([gPhi(c.phi)]),warn:'',interp,
+      apa:`Fisher’s exact test${mid?' (mid-p)':''}, p ${apaP(p)}${S.tails==='two'?'':' (one-sided)'}, conditional OR = ${fo(x.ex.mle)}, ${lvl()} CI [${fo(x.ex.lo)}, ${fo(x.ex.hi)}], N = ${N}`});
+    const pa=h.p.map((_,i)=>{const xx=h.lo+i;return fisherP(fisher2(xx,n1-xx,m1-xx,N-n1-m1+xx),S.tails,S.fmeth);});
+    $('fishChart').innerHTML=chartNull({bars:barsFromDist(h.p,h.lo,i=>pa[i]<=S.alpha+1e-12,i=>pa[i]<=p+1e-9),obs:x.a,obsLabel:'a = '+x.a,xlab:'Count in '+rl[0]+' × '+S.cl[0]+' (top-left cell)',aria:'Hypergeometric null distribution of the top-left cell'});
+    $('fishCap').innerHTML=`With the margins fixed there are ${h.p.length} possible values of a (from ${h.lo} to ${h.hi}). Shading uses the p-value method and alternative you selected${S.tails==='two'?'; two-sided Fisher p-values order tables by their probability, so the red regions can be uneven':''}.`;
+    $('fishTitle').textContent='Where would the top-left count fall if H₀ were true?';
+    $('fishLegend').hidden=false;
+    $('howTitle').textContent='How Fisher’s exact test works';
+    $('howBody').innerHTML=`<p><b>H₀:</b> the two variables are independent (for a 2 × 2 table, OR = 1). <b>H₁:</b> they are associated (or OR &gt; 1 / OR &lt; 1 if one-sided). There is no test statistic to look up: the p-value is computed directly from counting.</p>
+    <ol class="rel"><li>Fix the margins: row totals ${n1} and ${x.c+x.d}, column totals ${m1} and ${x.b+x.d}, N = ${N}. Under H₀ every way of arranging the ${N} observations that respects these margins is equally likely.</li>
+    <li>The count a in the top-left cell then has probability P(a) = C(${m1}, a)·C(${N-m1}, ${n1}−a) / C(${N}, ${n1}), the hypergeometric distribution. Observed: P(${x.a}) = ${fp4(fi.po)}.</li>
+    <li><b>Two-sided p</b> = sum of P(k) over every k with P(k) ≤ P(${x.a}) = ${fp(fi.two)}. <b>One-sided p</b> = P(a ≥ ${x.a}) = ${fp(fi.greater)} or P(a ≤ ${x.a}) = ${fp(fi.less)}.</li>
+    <li><b>Mid-p</b> counts only half of P(${x.a}) (and of any equally probable table), which removes some of the conservatism: two-sided mid-p = ${fp(fi.midTwo)}.</li></ol>
+    <p class="cap">Fisher’s test never uses the χ² approximation, so it is valid for any sample size, which is why it is the standard choice when expected counts fall below 5. Conditioning on the margins is what makes it “exact”, and also what makes it conservative. The classic example: a tea taster who correctly identifies 3 of 4 cups of each kind (try the <i>Lady tasting tea</i> preset) is not significant, because only 4 of the 70 arrangements are as good or better.</p>`;
+  }else{
+    const fh=fhRes(c),R=S.R,C=S.C;
+    const p=fh.p,rej=p<S.alpha;
+    const cards=[['Tables with these margins',fh.exact?fh.tables.toLocaleString('en-US'):'too many to list'],['P(this exact table)',fp4(fh.pObs)],['p (Freeman–Halton)'+(fh.exact?'':' ≈'),fp(p)],['χ² p-value (compare)',fp(c.p)],['Cramér’s V',fr(c.V)],['Smallest expected',f(c.minE,2)]];
+    showResult({p,cards,gtab:gtabHTML([['Cramér’s V (df* = '+c.dfs+')',c.V,[.1,.3,.5].map(v=>v/Math.sqrt(c.dfs)),v=>fr(v)]]),warn:fh.exact?'':'The number of tables is too large to enumerate, so the p-value is a Monte Carlo estimate from '+fh.B.toLocaleString('en-US')+' random tables with the same margins (standard error about ±'+(Math.sqrt(p*(1-p)/fh.B)).toFixed(3).replace(/^0/,'')+').',
+      interp:`The Fisher–Freeman–Halton test extends Fisher’s test to ${R} × ${C} tables. With the row totals (${c.rt.join(', ')}) and column totals (${c.ct.join(', ')}) fixed, it ${fh.exact?`lists all ${fh.tables.toLocaleString('en-US')} possible tables`:'samples random tables'} and adds the probabilities of those no more probable than yours (${fp4(fh.pObs)}). That gives p ${apaP(p)}, so H₀ (independence) is ${rej?'<b>rejected</b>':'<b>not rejected</b>'} at α = ${fp(S.alpha)}. The χ² test on the same table gives p ${apaP(c.p)}${c.low?` but ${c.low} expected count${c.low>1?'s are':' is'} below 5, so the exact result is the safer one`:''}. Cramér’s V = ${fr(c.V)}, a <b>${effLabel(c.V,Math.sqrt(c.dfs))}</b> association.`,
+      apa:`Fisher–Freeman–Halton exact test${fh.exact?'':' (Monte Carlo)'}, p ${apaP(p)}, Cramér’s V = ${fr(c.V)}, N = ${c.n}`});
+    $('fishChart').innerHTML='';$('fishLegend').hidden=true;
+    $('fishTitle').textContent='Exact test for a larger table';
+    $('fishCap').innerHTML=`Tables larger than 2 × 2 have no single count to plot, so the exact distribution is over whole tables. Probability of a table with cells x<sub>ij</sub>: P = (Π row totals! · Π column totals!) / (N! · Π x<sub>ij</sub>!). The observed table has P = ${fp4(fh.pObs)}; ${fh.exact?`p is the sum of P over all ${fh.tables.toLocaleString('en-US')} tables with P ≤ ${fp4(fh.pObs)}`:'p is estimated from random tables'}.`;
+    $('howTitle').textContent='How the Fisher–Freeman–Halton test works';
+    $('howBody').innerHTML=`<p><b>H₀:</b> the row and column variables are independent. <b>H₁:</b> they are associated. This is Fisher’s idea applied to an r × c table.</p>
+    <ol class="rel"><li>Keep the row totals and column totals fixed.</li><li>Every table with those margins has an exact probability, P = (Π row totals! · Π column totals!) / (N! · Π x<sub>ij</sub>!).</li><li>The p-value is the sum of P over all tables whose P is no larger than the observed table’s P = ${fp4(fh.pObs)}.</li></ol>
+    <p class="cap">It needs no large-sample approximation, so it suits sparse tables. The number of tables explodes with N, so beyond a few million this page switches to a Monte Carlo estimate. Use the 2 × 2 setting to see the hypergeometric picture, odds ratio and mid-p.</p>`;
+  }
+}
+
+/* ---------- Compare tab ---------- */
+function cmpRows(c){
+  const two=S.R===2&&S.C===2,pp=p=>({p,pTxt:fp(p),sig:p<=S.alpha});
+  if(two){
+    const x=c.x;
+    return[
+      {key:'pearson',name:'Pearson χ²',stat:'χ²(1) = '+f(c.chiRaw),...pp(pval(c.chiRaw,1)),eff:'φ = '+fr(c.phi),note:'Large-sample approximation; uses every cell'},
+      {key:'yates',name:'χ² with Yates’ correction',stat:'χ²(1) = '+f(x.chiY),...pp(pval(x.chiY,1)),eff:'φ = '+fr(c.phi),note:'Continuity-corrected, so conservative'},
+      {key:'g',name:'Likelihood-ratio G²',stat:'G²(1) = '+f(x.g),...pp(pval(x.g,1)),eff:'φ = '+fr(c.phi),note:'Large-sample; compares log likelihoods'},
+      {key:'fisher',name:'Fisher’s exact (two-sided)',stat:'a = '+x.a,...pp(x.fi.two),eff:'OR = '+fo(x.ex.mle),note:'Exact; conditions on the margins; conservative'},
+      {key:'mid',name:'Fisher’s mid-p',stat:'a = '+x.a,...pp(x.fi.midTwo),eff:'OR = '+fo(x.ex.mle),note:'Exact, less conservative'},
+      {key:'wald',name:'Odds-ratio Wald z',stat:'z = '+f(x.wa.z),...pp(x.wa.p2),eff:'OR = '+fo(x.orS),note:'Large-sample test of ln OR'+(x.wa.corr?' (½ added to cells)':'')}];
+  }
+  const fh=fhRes(c);
+  return[
+    {key:'pearson',name:'Pearson χ²',stat:'χ²('+c.df+') = '+f(c.chiRaw),...pp(pval(c.chiRaw,c.df)),eff:'V = '+fr(c.V),note:'Large-sample approximation'},
+    {key:'g',name:'Likelihood-ratio G²',stat:'G²('+c.df+') = '+f(chiG(c)),...pp(pval(chiG(c),c.df)),eff:'V = '+fr(c.V),note:'Large-sample'},
+    {key:'fisher',name:'Fisher–Freeman–Halton',stat:fh.exact?fh.tables.toLocaleString('en-US')+' tables':'Monte Carlo',...pp(fh.p),eff:'V = '+fr(c.V),note:fh.exact?'Exact; conditions on the margins':'Estimated from random tables'}];
+}
+const chiG=c=>chiStats(c.obs,c.exp,false).g;
+function cmpTable(el,rows){
+  el.innerHTML='<thead><tr><th>Test</th><th class="num">Statistic</th><th class="num">p</th><th>Decision at α</th><th class="num">Effect size</th><th>Character</th></tr></thead><tbody>'+
+    rows.map(r=>`<tr><td class="name">${r.name}</td><td class="num">${r.stat}</td><td class="num">${r.pTxt}</td><td><span class="badge ${r.sig?'sig':'ns'}">${r.sig?'Reject H₀':'Fail to reject'}</span></td><td class="num">${r.eff}</td><td class="note">${r.note}</td></tr>`).join('')+'</tbody>';
+}
+function renderCompare(c){
+  if(S.C===1)return renderCompareGof(c);
+  const rows=cmpRows(c),two=S.R===2&&S.C===2;
+  $('chartLadder').innerHTML=chartLadder(rows,S.alpha);cmpTable($('cmpAll'),rows);
+  $('cmpCap').innerHTML=`All tests are two-sided at α = ${fp(S.alpha)}. ${c.low>0?`<b>${c.low} expected count${c.low>1?'s are':' is'} below 5</b> (smallest ${f(c.minE,2)}), so the χ², G² and Wald results rest on an approximation that is unreliable here; the exact tests are the ones to trust.`:`Every expected count is at least 5 (smallest ${f(c.minE,2)}), so the large-sample tests should agree closely with the exact ones.`}`;
+  const sig=rows.filter(r=>r.sig).length;
+  let h=`<p style="margin-top:0"><b>On this table:</b> ${sig} of ${rows.length} tests reject H₀ at α = ${fp(S.alpha)}. ${sig>0&&sig<rows.length?'The disagreement is the point: these tests answer the same question with different approximations.':'They agree here.'}</p>`;
+  h+=two?`<ul class="rel"><li><b>Pearson χ²</b> compares observed and expected counts using the χ² curve. It is accurate when every expected count is at least about 5 and tends to be slightly liberal (too many rejections) in small samples.</li>
+  <li><b>Yates’ correction</b> shrinks each |O − E| by ½ to mimic the discreteness of counts. It over-corrects, making the test conservative, which is why many analysts now prefer Fisher’s test or no correction.</li>
+  <li><b>G²</b> (likelihood ratio) is asymptotically equivalent to Pearson’s χ² and is the statistic behind log-linear models and logistic regression. In small samples the two can differ.</li>
+  <li><b>Fisher’s exact test</b> conditions on both margins and uses the exact hypergeometric distribution, so it is valid at any sample size but conservative: its actual false-positive rate is typically below α. <b>Mid-p</b> gives back some of that power and is usually closer to α.</li>
+  <li><b>Wald z for ln OR</b> tests the odds ratio directly. It is a large-sample test, can be unstable when a cell is small, and needs a ½ correction when a cell is zero.</li></ul>`
+  :`<ul class="rel"><li><b>Pearson χ²</b> and <b>G²</b> are large-sample tests and agree when expected counts are comfortably above 5.</li><li>The <b>Fisher–Freeman–Halton</b> test is exact, so it remains valid for sparse tables, at the price of conservatism and heavy computation for large N.</li></ul>`;
+  h+=`<p class="cap" style="margin-bottom:0">${two?'Use the simulation below to see these differences as long-run error rates.':'Set the table to 2 × 2 to add Yates’ correction, mid-p and the odds-ratio test, and to run the simulation.'}</p>`;
+  $('relBody').innerHTML=h;
+}
+
+/* ---------- Simulation of 2 x 2 tests ---------- */
+let SIMKEY='';
+function runSim2(N){
+  const rng=mulberry32(S.simSeed*104729+S.iN*31+S.iA),a=S.iA/100,q=[1+a,1-a,1-a,1+a],keys=['pearson','yates','g','fisher','mid','wald'],cnt={};keys.forEach(k=>cnt[k]=0);let valid=0;
+  for(let it=0;it<N;it++){
+    const t=multinom(S.iN,q,rng),[A,B,C,D]=t,r1=A+B,r2=C+D,c1=A+C,c2=B+D,n=r1+r2;
+    if(r1===0||r2===0||c1===0||c2===0)continue;valid++;
+    const e=[r1*c1/n,r1*c2/n,r2*c1/n,r2*c2/n],s0=chiStats(t,e,false),s1=chiStats(t,e,true),fi=fisher2(A,B,C,D),wa=wald2(A,B,C,D,S.alpha);
+    if(pval(s0.chi,1)<=S.alpha)cnt.pearson++;if(pval(s1.chi,1)<=S.alpha)cnt.yates++;if(pval(s0.g,1)<=S.alpha)cnt.g++;
+    if(fi.two<=S.alpha)cnt.fisher++;if(fi.midTwo<=S.alpha)cnt.mid++;if(wa.p2<=S.alpha)cnt.wald++;
+  }
+  return{cnt,N:valid,keys};
+}
+function renderSim(){
+  if($('pSim').hidden)return;
+  const N=+$('simN').value,key=[S.iN,S.iA,S.alpha,N,S.simSeed].join('|');
+  if(key===SIMKEY)return;
+  const sim=runSim2(N);SIMKEY=key;
+  const h0=S.iA===0,what=h0?'false-positive rate (Type I error)':'power';
+  const nm={pearson:'Pearson χ²',yates:'χ² with Yates’ correction',g:'Likelihood-ratio G²',fisher:'Fisher’s exact (two-sided)',mid:'Fisher’s mid-p',wald:'Odds-ratio Wald z'};
+  const rows=sim.keys.map(k=>({key:k,name:nm[k],rate:sim.cnt[k]/sim.N}));
+  const selKey=S.tab==='fisher'?(S.fmeth==='mid'?'mid':'fisher'):S.tab==='ind'?'pearson':null;
+  $('chartSim').innerHTML=chartSimBars(rows,S.alpha,h0,selKey);
+  const me=p=>(1.96*Math.sqrt(Math.max(p*(1-p),1e-9)/sim.N)*100).toFixed(1);
+  $('simTxt').innerHTML=`Across ${sim.N.toLocaleString('en-US')} random 2 × 2 samples of n = ${S.iN}, the share significant at α = ${fp(S.alpha)} estimates each test’s ${what}.`+(h0?` A test that holds its error rate should land near α; <b>Fisher’s exact test</b> (${pc1(sim.cnt.fisher/sim.N)}) and <b>Yates</b> (${pc1(sim.cnt.yates/sim.N)}) fall below it, while the unadjusted tests sit closer to α.`:` Tests that spend their error budget more efficiently reject more often when the association is real.`);
+  $('simRates').innerHTML='<thead><tr><th>Test</th><th class="num">Share significant</th><th class="num">± 95% MC error</th></tr></thead><tbody>'+rows.map(r=>`<tr class="${r.key===selKey?'sel':''}"><td class="name">${r.name}</td><td class="num">${pc1(r.rate)}</td><td class="num">${me(r.rate)}</td></tr>`).join('')+'</tbody>';
+  $('simNote').innerHTML=`Uses the sample-size and true-association sliders (not the numbers typed in the table). Each sample has both margins at 50%, drawn from the population shown under the sliders. ${h0?'With no true association every rejection is a false positive.':'With a true association every rejection is a correct detection.'} Set the true association to 0 to see each test’s false-positive rate, and try a small n (20–40) to see the exact tests’ conservatism.`;
+}
+let simTimer=null;
+function scheduleSim(){clearTimeout(simTimer);simTimer=setTimeout(renderSim,40);}
+
+/* ============ Binomial test ============ */
+function binPmf(n,p){const o=[];for(let k=0;k<=n;k++)o.push(p<=0?(k===0?1:0):p>=1?(k===n?1:0):Math.exp(lch(n,k)+k*Math.log(p)+(n-k)*Math.log(1-p)));return o;}
+function binTail(pm,x,up){let s=0;if(up)for(let k=x;k<pm.length;k++)s+=pm[k];else for(let k=0;k<=x;k++)s+=pm[k];return s;}
+/* p-value of outcome x under H0 (pm = null pmf); tails: two | greater | less; mid: mid-p */
+function binP(pm,x,tails,mid){
+  const px=pm[x];
+  if(tails==='greater')return Math.min(1,binTail(pm,x,true)-(mid?.5*px:0));
+  if(tails==='less')return Math.min(1,binTail(pm,x,false)-(mid?.5*px:0));
+  let lt=0,eq=0;const lim=px*(1+1e-7);
+  for(let k=0;k<pm.length;k++){if(pm[k]<px*(1-1e-7))lt+=pm[k];else if(pm[k]<=lim)eq+=pm[k];}
+  return Math.min(1,mid?lt+.5*eq:lt+eq);
+}
+function cpCI(x,n,alpha){
+  const a2=alpha/2,bis=(fn,target,incr)=>{let lo=0,hi=1;for(let i=0;i<70;i++){const m=(lo+hi)/2;if((fn(m)<target)===incr)lo=m;else hi=m;}return(lo+hi)/2;};
+  const lo=x===0?0:bis(p=>binTail(binPmf(n,p),x,true),a2,true);
+  const hi=x===n?1:bis(p=>binTail(binPmf(n,p),x,false),a2,false);
+  return[lo,hi];
+}
+function wilsonCI(x,n,alpha){const z=zCrit(alpha/2),ph=x/n,d=1+z*z/n,c=(ph+z*z/(2*n))/d,h=z*Math.sqrt(ph*(1-ph)/n+z*z/(4*n*n))/d;return[Math.max(0,c-h),Math.min(1,c+h)];}
+function waldCI(x,n,alpha){const z=zCrit(alpha/2),ph=x/n,h=z*Math.sqrt(ph*(1-ph)/n);return[Math.max(0,ph-h),Math.min(1,ph+h)];}
+const xlogx=(o,e)=>o>0?o*Math.log(o/e):0;
+/* statistics for one outcome x under H0: p0 */
+function binStats(x,n,p0){
+  const e1=n*p0,e2=n*(1-p0),chi=(x-e1)**2/e1+(x-e1)**2/e2,d=Math.max(0,Math.abs(x-e1)-.5),chiY=d*d/e1+d*d/e2,g=2*(xlogx(x,e1)+xlogx(n-x,e2));
+  return{chi,chiY,g};
+}
+const binH=(ph,p0)=>2*Math.asin(Math.sqrt(ph))-2*Math.asin(Math.sqrt(p0));
+function binAll(n,p0,x,pm){
+  const st=binStats(x,n,p0);
+  return{exact:binP(pm,x,'two',false),mid:binP(pm,x,'two',true),pearson:pval(st.chi,1),yates:pval(st.chiY,1),g:pval(st.g,1),st};
+}
+const BKEYS=['exact','mid','pearson','yates','g'];
+const BNAMES={exact:'Exact binomial',mid:'Exact mid-p',pearson:'Pearson χ² (goodness of fit)',yates:'χ² with Yates’ correction',g:'Likelihood-ratio G²'};
+
+function renderBinom(){
+  $('msg').hidden=true;$('pRes').hidden=false;
+  const n=S.bn,x=Math.min(S.bx,n),p0=S.bp0/100,al=S.alpha,pm=binPmf(n,p0),ph=x/n,mid=S.fmeth==='mid',tails=S.tails;
+  const two=tails==='two',p=binP(pm,x,tails,mid),rej=p<al,e1=n*p0,e2=n*(1-p0);
+  const all=binAll(n,p0,x,pm),cp=cpCI(x,n,al),wi=wilsonCI(x,n,al),wa=waldCI(x,n,al),h=binH(ph,p0),lv=lvl();
+  const pEx={two:binP(pm,x,'two',false),gr:binP(pm,x,'greater',false),ls:binP(pm,x,'less',false),mid:binP(pm,x,'two',true)};
+  const small=e1<5||e2<5,tailW=two?'two-sided':'one-sided';
+  const cards=[['Successes x of n',x+' of '+n],['Observed p̂',fr(ph,3)],['H₀ proportion p₀',fr(p0,2),'expected np₀ = '+f(e1,1)],['p-value ('+(mid?'mid-p, ':'')+tailW+')',fp(p)],
+    ['Exact p, two-sided',fp(pEx.two)],['Exact p, one-sided ≥',fp(pEx.gr)],['Exact p, one-sided ≤',fp(pEx.ls)],['Mid-p, two-sided',fp(pEx.mid)],
+    [lv+' CI, Clopper–Pearson','['+fr(cp[0],3)+', '+fr(cp[1],3)+']'],[lv+' CI, Wilson','['+fr(wi[0],3)+', '+fr(wi[1],3)+']'],['Cohen’s h',f(h,2)]];
+  const altTxt=two?'p ≠ p₀':tails==='greater'?'p &gt; p₀':'p &lt; p₀';
+  const interp=`In <b>${n}</b> trials you saw <b>${x}</b> successes (p̂ = ${fr(ph,3)}); if H₀ (p = ${fr(p0,2)}) were true you would expect ${f(e1,1)}. Under H₀ the count follows a binomial distribution (n = ${n}, p = ${fr(p0,2)}), so the ${mid?'mid-p':'exact'} ${tailW} p-value (H₁: ${altTxt}) is p ${apaP(p)}, and H₀ is ${rej?'<b>rejected</b>':'<b>not rejected</b>'} at α = ${fp(al)}. The ${lv} Clopper–Pearson interval for the true proportion is [${fr(cp[0],3)}, ${fr(cp[1],3)}], which ${cp[0]>p0||cp[1]<p0?'excludes':'includes'} p₀. Cohen’s h = ${f(h,2)}, a <b>${Math.abs(h)<.2?'negligible':Math.abs(h)<.5?'small':Math.abs(h)<.8?'medium':'large'}</b> departure.${small?` <i>Because np₀ = ${f(e1,1)} or n(1 − p₀) = ${f(e2,1)} is below 5, the χ² (normal) approximation is unreliable here; the exact test is the one to report.</i>`:' Both expected counts are at least 5, so the χ² approximation should agree closely with the exact test.'}`;
+  showResult({p,cards,gtab:gtabHTML([['|Cohen’s h|',Math.abs(h),[.2,.5,.8],v=>f(v,2)]]),warn:x===0||x===n?'The observed count is at the boundary (0 or n), so p̂ = '+fr(ph,0)+' and the Wald interval collapses to a single point. The exact and Wilson intervals stay sensible.':'',
+    interp,apa:`Binomial test${mid?' (mid-p)':''}, ${x} of ${n}, p̂ = ${fr(ph,2)}, p ${apaP(p)}${two?'':' (one-sided)'}, ${lv} CI [${fr(cp[0],2)}, ${fr(cp[1],2)}] (Clopper–Pearson), h = ${f(h,2)}`});
+
+  /* null distribution */
+  const pa=pm.map((_,k)=>binP(pm,k,tails,mid));
+  $('bChart').innerHTML=chartNull({bars:barsFromDist(pm,0,k=>pa[k]<=al+1e-12,k=>pa[k]<=p+1e-9),obs:x,obsLabel:'x = '+x,xlab:'Number of successes in '+n+' trials',aria:'Null distribution of the success count (binomial)',pid:'hatchB'});
+  $('bCap').innerHTML=`The bars show the binomial distribution for n = ${n} and p = ${fr(p0,2)}: mean np₀ = ${f(e1,1)}, SD = ${f(Math.sqrt(n*p0*(1-p0)),2)}. Shading uses the p-value method and alternative you selected. ${p0!==.5?'Because p₀ ≠ .5 the distribution is skewed, so the two tails are not mirror images; the exact two-sided test counts every outcome no more probable than yours, not a simple doubling of one tail.':''}`;
+
+  /* comparison */
+  const rows=BKEYS.map(k=>({key:k,name:BNAMES[k],p:all[k],pTxt:fp(all[k]),sig:all[k]<=al,
+    stat:k==='exact'||k==='mid'?'x = '+x:k==='pearson'?'χ²(1) = '+f(all.st.chi):k==='yates'?'χ²(1) = '+f(all.st.chiY):'G²(1) = '+f(all.st.g),eff:'h = '+f(h,2),
+    note:{exact:'Exact; conservative (discrete)',mid:'Exact, less conservative',pearson:'Large-sample; equals z²; needs np₀ and n(1−p₀) ≥ 5',yates:'Continuity-corrected, conservative',g:'Large-sample; compares log likelihoods'}[k]}));
+  $('bLadder').innerHTML=chartLadder(rows,al);cmpTable($('bCmp'),rows);
+  const nsig=rows.filter(r=>r.sig).length;
+  $('bCmpCap').innerHTML=`All tests here are two-sided at α = ${fp(al)}, and ${nsig} of ${rows.length} reject H₀. ${small?`<b>np₀ = ${f(e1,1)} and n(1 − p₀) = ${f(e2,1)}: at least one is below 5</b>, so the χ² and G² p-values are approximations that can mislead; the exact tests do not depend on a sample-size rule.`:'Both expected counts are at least 5, so the approximations are reasonable.'} A goodness-of-fit χ² with two categories <i>is</i> this problem, which is why the binomial test is its exact alternative.`;
+  const ciRows=[['Clopper–Pearson (exact)',cp],['Wilson score',wi],['Wald (p̂ ± z·SE)',wa]];
+  $('bCI').innerHTML=`<caption>${lv} confidence intervals for the true proportion</caption><thead><tr><th>Method</th><th class="num">Lower</th><th class="num">Upper</th><th class="num">Width</th><th>Contains p₀?</th></tr></thead><tbody>`+ciRows.map(([nm,ci])=>`<tr><td class="name">${nm}</td><td class="num">${fr(ci[0],3)}</td><td class="num">${fr(ci[1],3)}</td><td class="num">${fr(ci[1]-ci[0],3)}</td><td>${ci[0]<=p0&&p0<=ci[1]?'Yes':'No'}</td></tr>`).join('')+'</tbody>';
+
+  /* actual rejection rates, computed exactly from the binomial distribution */
+  const pt=S.bt/100,pmt=binPmf(n,pt),rate={};BKEYS.forEach(k=>rate[k]=0);
+  for(let k=0;k<=n;k++){const a=binAll(n,p0,k,pm);BKEYS.forEach(key=>{if(a[key]<=al+1e-12)rate[key]+=pmt[k];});}
+  const h0=Math.abs(pt-p0)<1e-9,rr=BKEYS.map(k=>({key:k,name:BNAMES[k],rate:rate[k]}));
+  $('bSimChart').innerHTML=chartSimBars(rr,al,h0,mid?'mid':'exact');
+  $('bSimTxt').innerHTML=h0?`If the true proportion equals p₀ = ${fr(p0,2)}, every rejection is a false positive. A test that keeps its promise rejects about ${pc1(al)} of the time; <b>exact binomial</b> rejects ${pc1(rate.exact)} and <b>mid-p</b> ${pc1(rate.mid)}, while the <b>χ²</b> test rejects ${pc1(rate.pearson)}.`:`If the true proportion is ${fr(pt,2)} (p₀ = ${fr(p0,2)}), the rejection rate is each test’s <b>power</b>: exact ${pc1(rate.exact)}, mid-p ${pc1(rate.mid)}, χ² ${pc1(rate.pearson)}. Move the true proportion back to p₀ to see false-positive rates.`;
+  $('bSimNote').innerHTML=`These rates are calculated exactly from the binomial distribution (n = ${n}, p = ${fr(pt,2)}) (no random simulation). Try a small n (10–30) and p₀ far from .5: the rates bounce around because the count is discrete, and the exact test is conservative, often well below α.`;
+
+  $('howTitle').textContent='How the binomial test works';
+  $('howBody').innerHTML=`<p><b>H₀:</b> the true success probability is p₀ = ${fr(p0,2)}. <b>H₁:</b> p ≠ p₀ (or p &gt; p₀ / p &lt; p₀ if one-sided). Use it when each of n independent trials is a success or failure with the same probability, and especially when counts are too small for χ².</p>
+  <ol class="rel"><li>Under H₀ the number of successes is binomially distributed with n trials and success probability p₀: P(k) = C(${n}, k) · ${fr(p0,2)}<sup>k</sup> · ${fr(1-p0,2)}<sup>${n}−k</sup>. You observed k = ${x}, with P(${x}) = ${fp4(pm[x])}.</li>
+  <li><b>One-sided p</b> = P(X ≥ ${x}) = ${fp(pEx.gr)} or P(X ≤ ${x}) = ${fp(pEx.ls)}.</li>
+  <li><b>Two-sided p</b> = sum of P(k) over every k with P(k) ≤ P(${x}) = ${fp(pEx.two)}. <b>Mid-p</b> counts only half of P(${x}) (and of ties): ${fp(pEx.mid)}.</li>
+  <li><b>Clopper–Pearson interval:</b> the range of p for which ${x} would not fall in either α/2 tail. It is guaranteed to cover at least ${lv} of the time, so it is wider than Wilson or Wald.</li></ol>
+  <p class="cap">With two categories, Pearson’s goodness-of-fit χ² equals z² for the proportion; its p-value relies on a normal approximation. The Binomial test needs no approximation, which is why it replaces the goodness-of-fit χ² when np₀ or n(1 − p₀) is below 5. Its effect size here is Cohen’s h = 2·asin√p̂ − 2·asin√p₀. For more than two categories use the exact multinomial test (not included here) or a larger sample.</p>`;
+}
+
+/* ============ Compare tab with one column: goodness of fit versus binomial ============ */
+function renderCompareGof(c){
+  const R=S.R,n=c.n,obs=S.t.slice(),al=S.alpha,rl=S.rl,df=R-1,pp=p=>({p,pTxt:fp(p),sig:p<=al});
+  const g=2*obs.reduce((s,o,i)=>s+xlogx(o,c.exp[i]),0),rows=[];
+  rows.push({key:'pearson',name:'Pearson χ² (goodness of fit)',stat:'χ²('+df+') = '+f(c.chiRaw),...pp(pval(c.chiRaw,df)),eff:'w = '+fr(c.w),note:'Large-sample; tests the whole pattern'});
+  rows.push({key:'g',name:'Likelihood-ratio G²',stat:'G²('+df+') = '+f(g),...pp(pval(g,df)),eff:'w = '+fr(c.w),note:'Large-sample; compares log likelihoods'});
+  if(R===2){
+    const pm=binPmf(n,.5),x=obs[0],st=binStats(x,n,.5),h=binH(x/n,.5);
+    rows.push({key:'yates',name:'χ² with Yates’ correction',stat:'χ²(1) = '+f(st.chiY),...pp(pval(st.chiY,1)),eff:'h = '+f(h,2),note:'Continuity-corrected; conservative'});
+    rows.push({key:'exact',name:'Exact binomial (p₀ = .5)',stat:'x = '+x+' of '+n,...pp(binP(pm,x,'two',false)),eff:'h = '+f(h,2),note:'Exact; conservative (discrete)'});
+    rows.push({key:'mid',name:'Exact binomial, mid-p',stat:'x = '+x+' of '+n,...pp(binP(pm,x,'two',true)),eff:'h = '+f(h,2),note:'Exact, less conservative'});
+  }else{
+    const pm=binPmf(n,1/R);
+    obs.forEach((x,i)=>{const h=binH(Math.min(Math.max(x/n,0),1),1/R);rows.push({key:'b'+i,name:'Binomial: '+rl[i]+' vs the rest',stat:'x = '+x+' of '+n,...pp(binP(pm,x,'two',false)),eff:'h = '+f(h,2),note:'Exact test of p₀ = 1/'+R+'; not adjusted for '+R+' tests'});});
+  }
+  $('chartLadder').innerHTML=chartLadder(rows,al);cmpTable($('cmpAll'),rows);
+  const sig=rows.filter(r=>r.sig).length,E=n/R;
+  $('cmpCap').innerHTML=`H₀: all ${R} rows are equally likely, so each expected count is ${f(E,2)}. All tests are two-sided at α = ${fp(al)}; ${sig} of ${rows.length} reject. ${E<5?`<b>Expected counts are below 5</b>, so the χ² and G² p-values rest on an approximation that can mislead; the exact binomial results are the ones to trust.`:'Every expected count is at least 5, so the approximate and exact tests should agree closely.'}`;
+  $('relBody').innerHTML=R===2
+    ?`<p style="margin-top:0">With one column and two rows this is a <b>one-sample proportion problem</b>: ${obs[0]} of ${n} fall in “${rl[0]}” and H₀ says the chance is .5.</p>
+    <ul class="rel"><li><b>Pearson χ²</b> equals z² for the proportion, (x − n/2)² / (n/4). It uses the normal approximation to the binomial, which is crude when n is small.</li>
+    <li><b>Yates’ correction</b> shrinks |x − n/2| by ½, which mimics the discreteness of the counts and makes the test conservative; it lands close to the exact test.</li>
+    <li><b>G²</b> is the likelihood-ratio version of the same approximation.</li>
+    <li>The <b>exact binomial test</b> adds the probabilities of every outcome no more likely than yours, with no approximation. <b>Mid-p</b> counts half of the tied probability, which makes it less conservative.</li></ul>
+    <p class="cap" style="margin-bottom:0">Change the counts, or try the one-column presets, to see where the approximations and the exact test part ways. The Binomial tab adds confidence intervals and error rates for this same case.</p>`
+    :`<p style="margin-top:0">With one column and ${R} rows this is a <b>goodness-of-fit problem</b> with equal expected proportions.</p>
+    <ul class="rel"><li><b>Pearson χ²</b> and <b>G²</b> test all ${R} categories at once with ${df} degrees of freedom.</li>
+    <li>The <b>binomial</b> rows test one category at a time against 1/${R}, treating everything else as “the rest”. They show which category is out of line, but each is a separate test, so with ${R} of them the chance of a false positive somewhere is higher than α; the p-values here are not adjusted.</li></ul>
+    <p class="cap" style="margin-bottom:0">Set the table to two rows to see the goodness-of-fit and binomial tests give the same question in its simplest form.</p>`;
+}
+
+/* ============ Deciding which to use ============ */
+const TABNAME={gof:'Goodness of fit',binom:'Binomial test',ind:'Test of independence',or:'Odds ratio',fisher:'Fisher’s exact',assoc:'Phi &amp; Cramér’s V',cmp:'Compare tests'};
+const DEC={
+  start:{q:'What would you like to do?',o:[
+    ['Test one categorical variable against a hypothesised distribution (a fair coin, a 9:3:3:1 ratio, equal shares)','one'],
+    ['Test whether two categorical variables are related','two'],
+    ['Measure how strong an association is, or how large an effect is','size'],
+    ['Something else: more than two variables, paired or repeated measures, or ordered categories','other']]},
+  one:{q:'How many categories does the variable have?',o:[['Two (success and failure, heads and tails)','one2'],['Three or more','one3']]},
+  one2:{q:'Are n × p₀ and n × (1 − p₀) both at least 5? (n is the number of trials, p₀ the hypothesised proportion.)',o:[['Yes, both are at least 5','r_one2_big'],['No, or I am not sure (small sample, or p₀ close to 0 or 1)','r_one2_small']]},
+  one3:{q:'Is every expected count at least 5? (Expected count = n × the hypothesised share of that category.)',o:[['Yes','r_one3_big'],['No, some are smaller','r_one3_small']]},
+  two:{q:'What shape is the table of counts?',o:[['2 × 2: each variable has two categories','t22'],['Larger than 2 × 2','tbig']]},
+  t22:{q:'What is the smallest expected count in the table? (Switch to the Test of independence tab to see each cell’s expected count.)',o:[['5 or more in every cell','r_22_big'],['Under 5 in at least one cell, or the total n is small (roughly under 40)','r_22_small'],['An observed cell is 0','r_22_zero']]},
+  tbig:{q:'Are the expected counts large enough? (A common rule: none below 1 and no more than 20% below 5.)',o:[['Yes','r_big_ok'],['No, the table is sparse','r_big_sparse']]},
+  size:{q:'What kind of data do you have?',o:[['One variable tested against a hypothesis','s_one'],['A 2 × 2 table','s_22'],['A larger table','s_big']]},
+  other:{q:'Which of these describes your data?',o:[['More than two categorical variables (a three-way table)','o3'],['The same people measured twice (paired or repeated measures)','o_pair'],['The categories have a natural order (low, medium, high)','o_ord']]},
+  r_one2_big:{t:'Goodness-of-fit χ² or the binomial test',x:'With two categories these answer the same question, and with counts this large they agree closely. The binomial test is exact, so it is the safer default; the χ² version is the familiar one.',i:[['binom','exact p-value, confidence intervals (Clopper–Pearson, Wilson) and Cohen’s h'],['gof','Pearson χ² with Cohen’s w; set Categories to 2'],['cmp','set Columns to 1 to see both side by side','one']],n:['Report the confidence interval for the proportion, not just the p-value.','Use a one-sided alternative only if the direction was fixed before seeing the data.']},
+  r_one2_small:{t:'Binomial test',x:'The χ² approximation is unreliable when an expected count is below 5. The binomial test uses the exact distribution of the count, so it is valid at any sample size.',i:[['binom','exact or mid-p p-value, Clopper–Pearson interval, and the exact error rates of each test'],['cmp','set Columns to 1 to watch χ² and the exact test disagree','one']],n:['The conventional exact p-value is conservative; mid-p is less so.','Prefer the Clopper–Pearson or Wilson interval to the Wald interval, which fails near 0 or 1.','Zero events are fine: the exact and Wilson intervals stay sensible.']},
+  r_one3_big:{t:'Goodness-of-fit χ²',x:'It compares observed with expected counts across all categories at once, with k − 1 degrees of freedom.',i:[['gof','χ² test with Cohen’s w; set equal or custom H₀ weights'],['cmp','set Columns to 1 for G² and per-category binomial follow-ups','one']],n:['Look at the residuals to see which categories drive a significant result.','Per-category binomial tests are separate tests and are not adjusted for multiplicity.']},
+  r_one3_small:{t:'Combine categories, collect more data, or follow up with binomial tests',x:'With expected counts below 5 the χ² p-value is only approximate. An exact multinomial test is not included on this page.',i:[['gof','the χ² result, to be read with caution'],['cmp','set Columns to 1 to test each category against the rest with the exact binomial test','one']],n:['Merging neighbouring categories that make sense together is often the best fix.','Per-category binomial tests are not adjusted for multiplicity.']},
+  r_22_big:{t:'Test of independence (χ²), with φ and the odds ratio',x:'Every expected count is large enough for the approximation. Fisher’s exact test is also valid and will agree closely.',i:[['ind','Pearson χ², with φ'],['or','odds ratio with Wald and exact intervals, relative risk and risk difference'],['assoc','φ, its ceiling φmax, and why significance is not strength'],['cmp','every test on the same table, with their error rates']],n:['Yates’ correction is rarely needed and makes the test conservative.','Use the odds ratio when you want a ratio of odds (case–control studies, logistic regression); φ when you want a correlation-style effect size.']},
+  r_22_small:{t:'Fisher’s exact test',x:'With a small expected count or a small total the χ² approximation can mislead. Fisher’s test conditions on the margins and is valid at any sample size.',i:[['fisher','exact p-value (two- or one-sided, exact or mid-p) and the hypergeometric distribution'],['or','exact conditional interval for the odds ratio'],['cmp','see how χ², Yates, G² and Wald differ from the exact tests, with error rates']],n:['The conventional two-sided exact p-value is conservative; mid-p is less so.','Yates’ correction over-corrects; use Fisher’s test instead.','Choose a one-sided alternative only if the direction was fixed in advance.']},
+  r_22_zero:{t:'Fisher’s exact test with the exact odds-ratio interval',x:'A zero cell makes the sample odds ratio 0 or infinite, and χ², G² and the Wald z test are unreliable.',i:[['fisher','exact p-value'],['or','exact interval (needs no correction); the Wald interval adds ½ to each cell'],['cmp','compare how each test handles the zero']],n:['Report the exact interval; a Wald interval after adding ½ depends on that arbitrary choice.']},
+  r_big_ok:{t:'Test of independence (χ²) with Cramér’s V',x:'The χ² test works for any r × c table when expected counts are adequate.',i:[['ind','χ² test, residuals, and Cramér’s V'],['assoc','V and its guideline thresholds, which depend on the smaller table dimension'],['cmp','χ² and G² beside the exact test']],n:['The standardised residuals show which cells depart from independence.','Cramér’s V is comparable across sample sizes; χ² is not.']},
+  r_big_sparse:{t:'Fisher–Freeman–Halton exact test',x:'This extends Fisher’s test to larger tables, with no expected-count rule. Large tables use a Monte Carlo estimate.',i:[['fisher','exact (or Monte Carlo) p-value for the r × c table'],['ind','the χ² p-value, to compare'],['assoc','Cramér’s V as the effect size']],n:['Merging sparse categories that belong together can also restore a valid χ² test.','Cramér’s V is biased upward in small samples.']},
+  s_one:{t:'Cohen’s w or Cohen’s h',x:'These describe how far the observed proportions are from the hypothesised ones, independent of sample size.',i:[['gof','Cohen’s w (small .10, medium .30, large .50)'],['binom','Cohen’s h for a single proportion (small .2, medium .5, large .8)']],n:['Pair the effect size with a confidence interval where you can.']},
+  s_22:{t:'Phi, the odds ratio, or both',x:'They measure different things and answering the same question two ways is useful.',i:[['assoc','φ: the correlation between two 0/1 variables, limited by unequal margins (φmax)'],['or','odds ratio, relative risk and risk difference, with confidence intervals']],n:['An odds ratio of 1 means no association; the further from 1 (either way), the stronger.','For common outcomes the odds ratio is further from 1 than the relative risk.']},
+  s_big:{t:'Cramér’s V',x:'V runs from 0 to 1 for a table of any size, and its guidelines shrink as the table grows.',i:[['assoc','V, V², Cohen’s w and the guideline table'],['ind','the χ² test that goes with it']],n:['Significance and strength differ: with enough data a trivial association is significant.']},
+  o3:{t:'Not covered by this page',x:'These tests are for one or two categorical variables.',i:[],n:['Analyse pairs of variables with the tests here, or split the data by the third variable and run the test within each layer.','The standard tools for three or more variables are log-linear models, logistic regression and the Cochran–Mantel–Haenszel test for a stack of 2 × 2 tables.']},
+  o_pair:{t:'Not covered: use McNemar’s test',x:'Every test here assumes independent observations. Before-and-after counts on the same people are paired, and McNemar’s test (for a paired 2 × 2 table) is the usual choice. It is not included on this page.',i:[],n:['Do not apply the χ² or Fisher tests to paired data; they would treat each person as two independent observations.']},
+  o_ord:{t:'Not covered: use a test for trend',x:'The χ² test ignores order, so it has less power for an ordered pattern, but it is still valid for the question “are they related?”.',i:[['ind','a valid, if less powerful, test of association'],['assoc','Cramér’s V as a measure of strength']],n:['A test for trend (Cochran–Armitage, or the linear-by-linear association test) uses the order and is more powerful. It is not included on this page.']}
+};
+let DPATH=['start'];
+function openTab(k,mode){
+  setTab(k);
+  if(mode==='one'&&k==='cmp'){S.R=Math.max(2,S.R);S.C=1;defaultsInd();drawInd();syncSliders();rebuild();}
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function renderDecide(){
+  const id=DPATH[DPATH.length-1],nd=DEC[id],box=$('decideBody');let h='';
+  if(DPATH.length>1){h+='<div class="crumbs">'+DPATH.slice(0,-1).map((p,i)=>{const q=DEC[p],ans=DEC[DPATH[i+1]],lab=q.o.find(o=>o[1]===DPATH[i+1])[0];return`<button type="button" class="crumb" data-back="${i}"><span class="cq">${q.q.replace(/\s*\(.*$/,'')}</span> <b>${lab.replace(/\s*[:(].*$/,'')}</b></button>`;}).join('')+'</div>';}
+  if(nd.q){
+    h+=`<p class="dq">${nd.q}</p><div class="dopts">`+nd.o.map(o=>`<button type="button" class="dopt" data-go="${o[1]}">${o[0]}</button>`).join('')+'</div>';
+  }else{
+    h+=`<div class="dres"><h3 style="margin-top:0">Suggested</h3><p class="dtitle">${nd.t}</p><p>${nd.x}</p>`;
+    if(nd.i.length)h+='<ul class="dlist">'+nd.i.map(([k,why,mode])=>`<li><button type="button" class="pill" data-tab="${k}"${mode?` data-mode="${mode}"`:''}>Open: ${TABNAME[k]}</button> <span>${why}</span></li>`).join('')+'</ul>';
+    if(nd.n.length)h+='<h3>Things to keep in mind</h3><ul class="rel">'+nd.n.map(t=>`<li>${t}</li>`).join('')+'</ul>';
+    h+='</div>';
+  }
+  if(DPATH.length>1)h+='<div class="row" style="margin-top:12px"><button type="button" class="pill" data-reset="1">Start over</button></div>';
+  box.innerHTML=h;
+}
+$('decideBody').addEventListener('click',e=>{
+  const t=e.target.closest('button');if(!t)return;
+  if(t.dataset.go){DPATH.push(t.dataset.go);renderDecide();}
+  else if(t.dataset.back!=null){DPATH=DPATH.slice(0,+t.dataset.back+1);renderDecide();}
+  else if(t.dataset.reset){DPATH=['start'];renderDecide();}
+  else if(t.dataset.tab)openTab(t.dataset.tab,t.dataset.mode);
+});
+renderDecide();
+
+/* ============ Update cycle ============ */
+function render(){
+  syncUI();
+  if(S.tab==='binom'){
+    renderBinom();$('truth').hidden=true;
+    let m=0;document.querySelectorAll('.stack>.panel').forEach(p=>{if(!p.hidden){const s=p.querySelector('h2 .n');if(s)s.textContent=++m;}});
+    return;
+  }
+  const c=compute();S.c=c;
+  refreshTable(c);drawChart1(c);
+  if(S.tab==='gof'||S.tab==='ind')drawDist(c);
+  renderResult(c);
+  if(!(S.R===2&&S.C===2))$('pSim').hidden=true;
+  if(!c.err)scheduleSim();
+  let n=0;document.querySelectorAll('.stack>.panel').forEach(p=>{if(!p.hidden){const s=p.querySelector('h2 .n');if(s)s.textContent=++n;}});
+}
+function changed(){S.sim=null;render();}
+function rebuild(){buildTable();$('hyp').innerHTML=hypText();changed();}
+
+/* ============ Simulation ============ */
+function runSim(){
+  const c=S.c;if(!c||c.err)return;
+  const r=mulberry32(Math.floor(Math.random()*1e9)),out=[],p=c.exp.map(e=>e/c.n);
+  for(let s=0;s<1000;s++){
+    const cnt=multinom(c.n,p,r);let chi=0;
+    if(isGof())for(let i=0;i<cnt.length;i++)chi+=term(cnt[i],c.exp[i]);
+    else{
+      const R=S.R,C=S.C,rt=Array(R).fill(0),ct=Array(C).fill(0);
+      for(let i=0;i<R;i++)for(let j=0;j<C;j++){rt[i]+=cnt[i*C+j];ct[j]+=cnt[i*C+j];}
+      for(let i=0;i<R;i++)for(let j=0;j<C;j++){if(rt[i]===0||ct[j]===0)continue;chi+=term(cnt[i*C+j],rt[i]*ct[j]/c.n);}
+    }
+    out.push(chi);
+  }
+  S.sim=out;render();
+}
+
+/* ============ Presets ============ */
+const GP={
+  fair:{label:'Fair die',k:6,gl:['1','2','3','4','5','6'],w:[1,1,1,1,1,1],o:[18,22,19,21,20,20]},
+  loaded:{label:'Loaded die',k:6,gl:['1','2','3','4','5','6'],w:[1,1,1,1,1,1],o:[12,15,16,20,24,33]},
+  mendel:{label:'Mendel peas (9:3:3:1)',k:4,gl:['Round yellow','Round green','Wrinkled yellow','Wrinkled green'],w:[9,3,3,1],o:[315,101,108,32]}
+};
+const TRT=['Treatment','Placebo'],IMP=['Improved','No change'],XY=['X = 0','X = 1'],YY=['Y = 0','Y = 1'];
+const IP={
+  indep:{label:'Independent 2×2',R:2,C:2,rl:TRT,cl:IMP,t:[26,24,22,28]},
+  assoc:{label:'Associated 2×2',R:2,C:2,rl:TRT,cl:IMP,t:[30,20,18,32]},
+  big:{label:'Study time × grade (3×3)',R:3,C:3,rl:['Low study','Medium study','High study'],cl:['C or below','B','A'],t:[30,15,10,20,25,15,10,20,35]},
+  small:{label:'φ = .20, n = 50',R:2,C:2,rl:XY,cl:YY,t:[15,10,10,15]},
+  bigN:{label:'Same φ, n = 500',R:2,C:2,rl:XY,cl:YY,t:[150,100,100,150]},
+  skew:{label:'Skewed margins (φ = φmax)',R:2,C:2,rl:XY,cl:YY,t:[50,0,30,20]},
+  perfect:{label:'Perfect association',R:2,C:2,rl:XY,cl:YY,t:[50,0,0,50]},
+  tea:{label:'Lady tasting tea',R:2,C:2,rl:['Milk first','Tea first'],cl:['Said milk first','Said tea first'],t:[3,1,1,3]},
+  rare:{label:'Rare outcome (OR ≈ RR)',R:2,C:2,rl:['Exposed','Unexposed'],cl:['Disease','No disease'],t:[8,192,4,196]},
+  common:{label:'Common outcome (OR ≫ RR)',R:2,C:2,rl:['Exposed','Unexposed'],cl:['Disease','No disease'],t:[60,40,30,70]},
+  sparse:{label:'Sparse table (n = 16)',R:2,C:2,rl:['Drug','Control'],cl:['Recovered','Not recovered'],t:[8,2,3,3]},
+  zero:{label:'Zero cell',R:2,C:2,rl:['Drug','Control'],cl:['Adverse event','No event'],t:[0,12,5,9]},
+  dis:{label:'Tests disagree (n = 40)',R:2,C:2,rl:['Group 1','Group 2'],cl:['Yes','No'],t:[9,11,3,17]},
+  one2:{label:'One column, 2 rows: 9 vs 3',R:2,C:1,rl:['Heads','Tails'],cl:['Count'],t:[9,3]},
+  one2s:{label:'One column, 2 rows: 7 vs 1',R:2,C:1,rl:['Heads','Tails'],cl:['Count'],t:[7,1]},
+  one4:{label:'One column, 4 rows',R:4,C:1,rl:['A','B','C','D'],cl:['Count'],t:[30,20,25,45]},
+  rxc:{label:'Sparse 3×3',R:3,C:3,rl:['Low','Medium','High'],cl:['A','B','C'],t:[6,2,0,1,5,2,0,2,7]}
+};
+const BP={
+  coin:{label:'Coin: 9 heads in 12',n:12,x:9,p:50},
+  tiny:{label:'Small sample: 8 of 10',n:10,x:8,p:50},
+  zero:{label:'Zero events: 0 of 30 (p₀ = .15)',n:30,x:0,p:15},
+  rare:{label:'Rare event: 4 of 15 (p₀ = .05)',n:15,x:4,p:5},
+  mendel:{label:'Genetics: 14 of 40 (p₀ = .25)',n:40,x:14,p:25},
+  large:{label:'Large sample: 115 of 200',n:200,x:115,p:50}
+};
+const PRESETS={binom:['coin','tiny','zero','rare','mendel','large'],gof:['fair','loaded','mendel'],ind:['indep','assoc','big','small','bigN'],or:['assoc','rare','common','sparse','zero','bigN'],fisher:['tea','sparse','dis','zero','rxc','assoc'],assoc:['assoc','big','small','bigN','skew','perfect','indep'],cmp:['dis','sparse','tea','assoc','bigN','rxc','zero','one2','one2s','one4']};
+function renderPresets(){
+  const box=$('presets');box.innerHTML='';
+  PRESETS[S.tab].forEach(k=>{
+    const b=mk('button',(S.tab==='binom'?BP:isGof()?GP:IP)[k].label,'pill');b.type='button';b.dataset.k=k;box.appendChild(b);
+  });
+}
+$('presets').addEventListener('click',e=>{
+  const b=e.target.closest('button[data-k]');if(!b)return;
+  if(S.tab==='binom'){const p=BP[b.dataset.k];S.bn=p.n;S.bx=p.x;S.bp0=p.p;S.bt=p.p;syncSliders();render();return;}
+  if(isGof()){
+    const p=GP[b.dataset.k];S.k=p.k;S.gl=p.gl.slice();S.w=p.w.slice();S.obs=p.o.slice();S.gn=Math.min(1000,Math.max(20,sum(p.o)));
+  }else{
+    const p=IP[b.dataset.k];S.R=p.R;S.C=p.C;S.rl=p.rl.slice();S.cl=p.cl.slice();S.t=p.t.slice();S.iN=Math.min(1000,Math.max(20,sum(p.t)));
+    if(!(p.R===2&&p.C===2))S.yates=false;
+  }
+  if(isGof())S.truthG='';else S.truthI='';syncSliders();rebuild();
+});
+
+/* ============ Controls ============ */
+const SLD={
+  sl_k:['k',v=>v],sl_gn:['gn',v=>v],sl_gd:['gd',v=>(v/100).toFixed(2)],
+  sl_bn:['bn',v=>v],sl_bx:['bx',v=>v],sl_bp0:['bp0',v=>(v/100).toFixed(2)],sl_bt:['bt',v=>(v/100).toFixed(2)],
+  sl_R:['R',v=>v],sl_C:['C',v=>v],sl_in:['iN',v=>v],sl_id:['iA',v=>(v/100).toFixed(2)]
+};
+function syncSliders(){for(const id in SLD){$(id).value=S[SLD[id][0]];$('o_'+id).textContent=SLD[id][1](S[SLD[id][0]]);}}
+function regen(){isGof()?drawGof():drawInd();}
+['sl_gn','sl_gd'].forEach(id=>$(id).addEventListener('input',function(){S[SLD[id][0]]=+this.value;$('o_'+id).textContent=SLD[id][1](+this.value);drawGof();rebuild();}));
+$('sl_k').addEventListener('input',function(){S.k=+this.value;$('o_sl_k').textContent=this.value;S.gl=letters(S.k);S.w=Array(S.k).fill(1);drawGof();rebuild();});
+function resizeInd(){
+  S.R=+$('sl_R').value;S.C=+$('sl_C').value;$('o_sl_R').textContent=S.R;$('o_sl_C').textContent=S.C;
+  if(!(S.R===2&&S.C===2))S.yates=false;
+  defaultsInd();drawInd();rebuild();
+}
+$('sl_R').addEventListener('input',resizeInd);$('sl_C').addEventListener('input',resizeInd);
+['sl_in','sl_id'].forEach(id=>$(id).addEventListener('input',function(){S[SLD[id][0]]=+this.value;$('o_'+id).textContent=SLD[id][1](+this.value);drawInd();rebuild();}));
+$('gNew').onclick=()=>{S.seed=Math.floor(Math.random()*1e6);drawGof();rebuild();};
+$('iNew').onclick=()=>{S.seed=Math.floor(Math.random()*1e6);drawInd();rebuild();};
+$('yatesBtn').onclick=()=>{S.yates=!S.yates;changed();};
+$('alpha').onchange=function(){S.alpha=+this.value;render();};
+['sl_bn','sl_bx','sl_bp0','sl_bt'].forEach(id=>$(id).addEventListener('input',function(){
+  S[SLD[id][0]]=+this.value;if(S.bx>S.bn)S.bx=S.bn;$('sl_bx').max=S.bn;syncSliders();render();}));
+$('bNew').onclick=()=>{const r=mulberry32(Math.floor(Math.random()*1e9));let x=0;for(let i=0;i<S.bn;i++)if(r()<S.bt/100)x++;S.bx=x;syncSliders();render();};
+$('btails').onchange=function(){S.tails=this.value;render();};
+$('bmeth').onchange=function(){S.fmeth=this.value;render();};
+$('tails').onchange=function(){S.tails=this.value;render();};
+$('fmeth').onchange=function(){S.fmeth=this.value;render();};
+$('simN').onchange=()=>{scheduleSim();};
+$('simRerun').onclick=()=>{S.simSeed=Math.floor(Math.random()*1e6);renderSim();};
+$('simBtn').onclick=runSim;
+$('simClr').onclick=()=>{S.sim=null;render();};
+
+/* drag bars (goodness of fit) */
+const cv1=$('cvMain');
+const pos=e=>{const b=cv1.getBoundingClientRect();return{x:e.clientX-b.left,y:e.clientY-b.top};};
+function bandAt(m){const g=geom1(),bw=(g.x1-g.x0)/S.k,i=Math.floor((m.x-g.x0)/bw);return(i>=0&&i<S.k&&m.y>=g.y0-12&&m.y<=g.y1+4)?i:-1;}
+function setFromY(i,m){
+  const g=geom1();let v=Math.round((g.y1-m.y)/(g.y1-g.y0)*S.ycur);v=Math.max(0,Math.min(S.ycur,v));S.obs[i]=v;S.truthG='';
+  const inp=$('tw').querySelector(`[data-o="${i}"]`);if(inp)inp.value=v;changed();
+}
+cv1.addEventListener('pointerdown',e=>{if(!isGof())return;const m=pos(e),i=bandAt(m);if(i>=0){S.drag=i;S.ylock=S.ycur;cv1.setPointerCapture(e.pointerId);setFromY(i,m);}});
+cv1.addEventListener('pointermove',e=>{if(S.drag<0)return;setFromY(S.drag,pos(e));});
+function up(){if(S.drag>=0){S.drag=-1;S.ylock=0;render();}}
+cv1.addEventListener('pointerup',up);cv1.addEventListener('pointercancel',up);
+
+/* tabs, layout */
+function setTab(k){
+  S.tab=k;S.sim=null;
+  if(k!=='cmp'&&S.C<2){S.C=2;defaultsInd();drawInd();syncSliders();}
+  if(k==='or'&&!(S.R===2&&S.C===2)){S.R=2;S.C=2;S.yates=false;defaultsInd();drawInd();syncSliders();}
+  renderPresets();rebuild();
+}
+TABS.forEach(k=>$('tab-'+k).onclick=()=>{if(S.tab!==k)setTab(k);});
+function syncUI(){
+  TABS.forEach(k=>$('tab-'+k).setAttribute('aria-selected',S.tab===k));
+  document.querySelectorAll('[data-tabs]').forEach(el=>{if(el.id==='yatesBtn')return;el.hidden=!el.dataset.tabs.split(' ').includes(S.tab);});
+  $('sl_C').min=S.tab==='cmp'?1:2;$('sl_bx').max=S.bn;$('btails').value=S.tails;$('tails').value=S.tails;$('bmeth').value=S.fmeth;$('fmeth').value=S.fmeth;if(S.tab==='binom')$('truth').hidden=true;
+  const two=S.R===2&&S.C===2;$('tailsBox').hidden=!(S.tab==='or'||S.tab==='fisher')||!two;$('fmethBox').hidden=S.tab!=='fisher'||!two;
+  const yb=$('yatesBtn');yb.hidden=!(S.tab==='ind'&&S.R===2&&S.C===2);
+  yb.textContent='Yates correction: '+(S.yates?'on':'off');yb.setAttribute('aria-pressed',S.yates);
+  $('dataTitle').textContent=isGof()?'Observed and expected counts':'The contingency table';
+  $('capMain').textContent=S.C===1&&!isGof()?'Observed counts (bars) and counts expected if every row were equally likely (dashed)':isGof()?'Observed counts (bars) and counts expected under H₀ (dashed)':'How each row splits across the columns';
+  $('dataCap').innerHTML=S.C===1&&S.tab==='cmp'?'One column: each row is a category, so the table is a goodness-of-fit problem with equal expected counts. Type counts in the table, or use the sliders for a random sample. Orange shading = more than expected, blue = fewer.':S.tab==='or'?'Type counts in the table, or use the sliders for a random sample. Rows are the two groups; the first column is the outcome of interest, so the odds ratio compares its odds between the rows. Bars show how each row splits across the outcomes.':isGof()
+    ?'Click or drag a bar to change its observed count, or type counts and weights in the table. Orange shading in the last column = more than expected, blue = fewer.'
+    :'Type counts in the table, or use the sliders for a random sample. If the variables were independent every bar would line up with the dashed overall split. Cell shading: orange = more than expected, blue = fewer.';
+  const tr=isGof()?S.truthG:S.truthI;$('truth').hidden=!tr;$('truth').innerHTML=tr;
+  cv1.style.cursor=isGof()?'ns-resize':'default';cv1.classList.toggle('drag',isGof());
+  cv1.setAttribute('aria-label',isGof()?'Bar chart of observed counts with expected counts marked. Bars can be dragged.':'Stacked bars showing how each row splits across columns, with the overall split dashed.');
+}
+
+/* theme */
+function currentTheme(){const t=document.documentElement.getAttribute('data-theme');return t||(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');}
+function syncThemeBtn(){const dark=currentTheme()==='dark',b=$('themeBtn');b.textContent=dark?'☀ Light theme':'☾ Dark theme';b.setAttribute('aria-pressed',dark);}
+$('themeBtn').onclick=()=>{const next=currentTheme()==='dark'?'light':'dark';document.documentElement.setAttribute('data-theme',next);try{localStorage.setItem('ttest-theme',next);}catch(e){}syncThemeBtn();render();};
+if(window.matchMedia){const mq=matchMedia('(prefers-color-scheme: dark)');if(mq.addEventListener)mq.addEventListener('change',()=>{syncThemeBtn();render();});}
+$('copy').onclick=()=>{
+  const txt=$('apa').textContent,done=()=>{$('copy').textContent='Copied';setTimeout(()=>$('copy').textContent='Copy',1200);};
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(txt).then(done,done);
+  else{const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');}catch(e){}ta.remove();done();}
+};
+window.addEventListener('resize',render);
+
+/* init */
+S.gl=letters(6);S.w=Array(6).fill(1);
+S.R=2;S.C=2;defaultsInd();S.rl=TRT.slice();S.cl=IMP.slice();
+drawInd();drawGof();
+syncThemeBtn();syncSliders();renderPresets();
+rebuild();
+</script>
+</body>
+</html>
