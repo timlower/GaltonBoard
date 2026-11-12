@@ -1,0 +1,1041 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Descriptive Statistics Explorer</title>
+<meta name="description" content="Interactive explorer for descriptive statistics: frequency distributions, mean, median, mode, range, variance, standard deviation, z-scores, percentiles, percentages and proportions for categories, rating-scale summaries, observation measures, observer agreement and change in a single case.">
+<script>try{var t=localStorage.getItem("ttest-theme");if(t==="light"||t==="dark")document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
+<style>
+:root{
+  --bg:#f5f4ef;--panel:#ffffff;--ink:#1b1e25;--muted:#5b6370;--line:#dedbd1;--soft:#efede6;
+  --a:#2468d6;--b:#d9730d;--rej:#c8372d;--ok:#1b8a5a;--accent:#2468d6;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){--bg:#13151a;--panel:#1c1f26;--ink:#e8e9ed;--muted:#9aa1ae;--line:#323744;--soft:#252932;
+    --a:#6ba4ff;--b:#ffa24f;--rej:#ff7064;--ok:#4cc58c;--accent:#6ba4ff;}
+}
+:root[data-theme="dark"]{--bg:#13151a;--panel:#1c1f26;--ink:#e8e9ed;--muted:#9aa1ae;--line:#323744;--soft:#252932;
+    --a:#6ba4ff;--b:#ffa24f;--rej:#ff7064;--ok:#4cc58c;--accent:#6ba4ff;}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{padding:26px 22px 8px;max-width:1280px;margin:0 auto;position:relative}
+.theme-btn{position:absolute;top:26px;right:22px;border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:7px 14px;border-radius:999px;font:inherit;font-size:.85rem;font-weight:600;cursor:pointer}
+.theme-btn:hover{border-color:var(--accent)}
+h1{margin:0 0 4px;font-size:1.65rem;letter-spacing:-.01em}
+header p{margin:0;color:var(--muted);max-width:760px}
+.tabs{display:flex;gap:6px;margin-top:16px;flex-wrap:wrap}
+.tab{border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:9px 16px;border-radius:999px;font:inherit;font-weight:600;cursor:pointer}
+.tab[aria-selected="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.tab:focus-visible,.theme-btn:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,summary:focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 55%,transparent);outline-offset:2px}
+main{max-width:1280px;margin:0 auto;padding:14px 22px 30px;display:grid;grid-template-columns:330px minmax(0,1fr);gap:18px;align-items:start}
+@media(max-width:940px){main{grid-template-columns:1fr}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 18px}
+.controls{position:sticky;top:10px}
+@media(max-width:940px){.controls{position:static}}
+.stack{display:flex;flex-direction:column;gap:18px;min-width:0}
+h2{margin:0 0 10px;font-size:1.02rem}
+h2 .n{display:inline-block;background:var(--soft);border-radius:6px;padding:0 7px;margin-right:6px;color:var(--muted);font-variant-numeric:tabular-nums}
+h3{margin:14px 0 6px;font-size:.78rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+button.pill{border:1px solid var(--line);background:var(--soft);color:var(--ink);padding:5px 11px;border-radius:8px;font:inherit;font-size:.85rem;cursor:pointer}
+button.pill:hover{border-color:var(--accent)}
+.sl{margin:9px 0}
+.sl label{display:flex;justify-content:space-between;font-size:.88rem}
+.sl output{font-family:var(--mono);font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--accent)}
+fieldset{border:0;padding:0;margin:0}
+select,textarea,input[type=number]{font:inherit;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:6px 8px;width:100%}
+textarea{font-family:var(--mono);font-size:.85rem;min-height:84px;resize:vertical}
+.opt{margin:8px 0}.opt>label{display:block;font-size:.85rem;color:var(--muted);margin-bottom:3px}
+.seg{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg label{flex:1;text-align:center;padding:6px 4px;font-size:.85rem;cursor:pointer;color:var(--ink);margin:0}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg input:checked+span{background:var(--accent);color:#fff}
+.seg span{display:block;padding:6px 4px;margin:-6px -4px}
+.seg input:focus-visible+span{outline:3px solid color-mix(in srgb,var(--accent) 55%,transparent);outline-offset:-3px}
+.truth{font-size:.85rem;background:var(--soft);border-radius:8px;padding:7px 10px;margin-top:10px;color:var(--muted)}
+.truth b{color:var(--ink);font-family:var(--mono)}
+.charts{display:grid;grid-template-columns:minmax(0,2.1fr) minmax(0,1fr);gap:14px}
+@media(max-width:700px){.charts{grid-template-columns:1fr}}
+svg{width:100%;height:auto;display:block;overflow:visible}
+svg text{fill:var(--muted);font:11px system-ui,sans-serif}
+svg .ax{stroke:var(--line)}
+svg .strong{fill:var(--ink)}
+.cap{font-size:.82rem;color:var(--muted);margin:6px 0 0}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:.82rem;color:var(--muted);margin-top:6px}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.stat{background:var(--soft);border-radius:10px;padding:9px 12px}
+.stat small{display:block;color:var(--muted);font-size:.75rem}
+.stat b{font:600 1.15rem var(--mono);font-variant-numeric:tabular-nums}
+.badge{display:inline-block;padding:3px 10px;border-radius:999px;font-weight:700;font-size:.82rem;color:#fff}
+.badge.sig{background:var(--ok)}.badge.ns{background:#7b8392}
+.interp{margin:12px 0 0}
+.apa{font-family:var(--mono);font-size:.88rem;background:var(--soft);padding:8px 10px;border-radius:8px;display:flex;justify-content:space-between;gap:10px;align-items:center;margin-top:10px}
+table{border-collapse:collapse;width:100%;font-size:.88rem}
+th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line)}
+th{font-weight:600;color:var(--muted);font-size:.78rem}
+td.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+tr.sel td{background:color-mix(in srgb,var(--accent) 10%,transparent)}
+.bar{height:14px;border-radius:4px;background:var(--a)}
+.err{color:var(--rej);font-weight:600}
+details{max-width:1280px;margin:0 auto 10px;padding:0 22px}
+details .panel{margin-top:8px}
+details summary{cursor:pointer;font-weight:600}
+code,.f{font-family:var(--mono);font-size:.88rem}
+footer{max-width:1280px;margin:0 auto;padding:6px 22px 30px;color:var(--muted);font-size:.82rem}
+dl.key{display:grid;grid-template-columns:max-content 1fr;gap:6px 16px;margin:0}dl.key dt{font-family:var(--mono);font-size:.88rem;font-weight:600}dl.key dd{margin:0;color:var(--muted)}
+[hidden]{display:none!important}
+canvas{width:100%;display:block;border:1px solid var(--line);border-radius:10px;background:var(--panel);touch-action:none}
+canvas.drag{cursor:crosshair}
+.charts{grid-template-columns:minmax(0,1fr)}
+.charts.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+@media(max-width:700px){.charts.two{grid-template-columns:1fr}}
+.chartcap{font-size:.8rem;color:var(--muted);margin:0 0 5px;font-weight:600}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 2px}
+button.pill[aria-pressed="true"]{border-color:var(--accent)}
+th.num,td.num{text-align:right}
+.scroll{overflow-x:auto}
+.sw-row{display:flex;align-items:center;gap:10px;margin:12px 0 4px;font-size:.88rem}
+.sw-row .lab{color:var(--muted);font-weight:600}
+.sw-row .lab.on{color:var(--ink)}
+button.sw{position:relative;flex:none;width:44px;height:24px;border-radius:12px;border:1px solid var(--line);background:var(--soft);padding:0;cursor:pointer;transition:background .2s,border-color .2s}
+button.sw::after{content:"";position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:var(--muted);transition:transform .2s,background .2s}
+button.sw[aria-checked="true"]{background:var(--accent);border-color:var(--accent)}
+button.sw[aria-checked="true"]::after{transform:translateX(20px);background:#fff}
+button.sw:focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 55%,transparent);outline-offset:2px}
+.gtab{margin-top:12px}
+.gtab caption{caption-side:top;text-align:left;font-size:.78rem;font-weight:600;color:var(--muted);padding:0 0 4px}
+.gtab th,.gtab td{text-align:center}
+.gtab th:first-child,.gtab td:first-child{text-align:left}
+.gtab td.on{background:var(--accent);color:#fff;font-weight:700}
+.tabrow{display:flex;align-items:center;gap:12px;margin-top:10px;flex-wrap:wrap}
+.tabrow-lab{font-size:.75rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);width:70px;flex:none}
+.tabrow .tabs{margin-top:0}
+.tabrow.sub .tab{padding:6px 14px;font-size:.88rem;font-weight:500}
+.tabrow.sub[hidden]{display:none}
+.cmpt td.name{font-weight:600}
+.cmpt td.note{color:var(--muted);font-size:.82rem}
+.rel{margin:0;padding-left:20px}.rel li{margin:6px 0}
+.glance th,.glance td{vertical-align:top}
+.wz .dq{font-weight:600;margin:0 0 8px}
+.dopts{display:flex;flex-direction:column;gap:6px}
+button.dopt{text-align:left;border:1px solid var(--line);background:var(--soft);color:var(--ink);padding:9px 12px;border-radius:10px;font:inherit;font-size:.9rem;cursor:pointer}
+button.dopt:hover{border-color:var(--accent)}
+.crumbs{display:flex;flex-direction:column;gap:4px;margin-bottom:12px}
+button.crumb{text-align:left;border:0;background:transparent;color:var(--muted);font:inherit;font-size:.82rem;padding:2px 0;cursor:pointer}
+button.crumb:hover{color:var(--accent)}button.crumb b{color:var(--ink)}
+.dres{border-left:3px solid var(--accent);padding:2px 0 2px 14px}
+.dtitle{font-size:1.05rem;font-weight:700;margin:0 0 6px}
+.dlist{list-style:none;padding:0;margin:10px 0}
+.dlist li{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;margin:7px 0}
+.dlist li span{color:var(--muted);font-size:.88rem;flex:1 1 220px}
+@media(max-width:600px){.theme-btn{position:static;display:block;margin:0 0 10px auto}}
+
+svg{width:100%;height:auto;display:block;overflow:visible}
+svg text{fill:var(--muted);font:11px system-ui,sans-serif}
+svg text.strong{fill:var(--ink)}
+svg .ax{stroke:var(--line)}
+svg .gr{stroke:var(--line);stroke-opacity:.55}
+.two{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:14px;align-items:start}
+@media(max-width:860px){.two{grid-template-columns:1fr}}
+.stats{margin:12px 0 0}
+.opt select,.opt input[type=number]{font:inherit;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:6px 8px;width:100%}
+#ctl [data-fam]{margin:0}
+.panel .err{margin:0}
+.cap{margin:8px 0 0}
+</style>
+</head>
+<body>
+<header>
+  <button class="theme-btn" id="themeBtn" type="button" aria-label="Switch between light and dark theme"></button>
+  <h1>Descriptive Statistics Explorer</h1>
+  <p>Organize, summarize and simplify scores. Build a <b>frequency distribution</b>, find the <b>mean, median and mode</b>, measure spread with the <b>range, variance and standard deviation</b>, see how scores sit on the <b>normal curve</b>, describe <b>categories</b> with percentages and proportions, summarize <b>rating scales</b>, <b>observations</b> and <b>observer agreement</b>, and track <b>change</b> in a single case. Use simulated data or paste your own, and copy the results in APA style.</p>
+  <div class="tabs" role="tablist" aria-label="Kind of data">
+    <button class="tab" role="tab" id="tab-num" aria-selected="true">Numerical scores</button>
+    <button class="tab" role="tab" id="tab-cat" aria-selected="false">Categories</button>
+    <button class="tab" role="tab" id="tab-rate" aria-selected="false">Rating scales</button>
+    <button class="tab" role="tab" id="tab-obs" aria-selected="false">Observation &amp; agreement</button>
+    <button class="tab" role="tab" id="tab-case" aria-selected="false">Single case over time</button>
+  </div>
+</header>
+
+<main>
+  <aside class="panel controls" aria-label="Controls">
+    <h2>Setup</h2>
+    <div class="row" id="presets"></div>
+
+    <h3>Data source</h3>
+    <div class="seg" role="radiogroup" aria-label="Data source">
+      <label><input type="radio" name="src" value="sim" checked><span>Simulated</span></label>
+      <label><input type="radio" name="src" value="own"><span>My own data</span></label>
+    </div>
+
+    <div id="ctl"></div>
+
+    <div data-fam="num" class="own">
+      <h3>Your scores</h3>
+      <div class="opt"><label for="own_num">Numbers (spaces, commas or new lines; at least 2)</label><textarea id="own_num" placeholder="e.g. 5 4 4 4 3 3 3 3 2 2 2 1 1 0 0"></textarea></div>
+      <button class="pill loadSim" type="button">Load current simulated data into the box</button>
+    </div>
+    <div data-fam="cat" class="own">
+      <h3>Your categories</h3>
+      <div class="opt"><label for="own_cat">One category per line: label, count. A line with just a label counts as one observation, so you can also paste raw responses.</label><textarea id="own_cat" placeholder="Study alone, 34&#10;Study group, 28&#10;Online course, 25&#10;Tutor, 13"></textarea></div>
+      <button class="pill loadSim" type="button">Load current simulated data into the box</button>
+    </div>
+    <div data-fam="rate" class="own">
+      <h3>Your ratings</h3>
+      <div class="opt"><label for="own_rate">One respondent per line, one rating per item (spaces or commas). A first line of item names is used as labels.</label><textarea id="own_rate" placeholder="4, 5, 3, 4, 4&#10;2, 3, 3, 2, 4"></textarea></div>
+      <button class="pill loadSim" type="button">Load current simulated data into the box</button>
+    </div>
+    <div data-fam="obs" class="own">
+      <h3>Your observation session</h3>
+      <div class="opt"><label for="own_obs">One behavior bout per line: start, end (in seconds from the start of the session)</label><textarea id="own_obs" placeholder="12, 40&#10;95, 110&#10;300, 351"></textarea></div>
+      <div class="opt"><label for="own_obsLen">Session length (minutes)</label><input type="number" id="own_obsLen" min="1" max="600" step="1" value="20" style="width:100%"></div>
+      <button class="pill loadSim" type="button">Load current simulated session into the box</button>
+    </div>
+    <div data-fam="case" class="own">
+      <h3>Your weekly scores</h3>
+      <div class="opt"><label for="own_case">One score per week, in order (spaces, commas or new lines; at least 4)</label><textarea id="own_case" placeholder="21 19 22 20 18 14 12 11 10 9"></textarea></div>
+      <div class="opt"><label for="own_caseT">First week of treatment (leave empty for a case history with no treatment)</label><input type="number" id="own_caseT" min="2" step="1" style="width:100%"></div>
+      <button class="pill loadSim" type="button">Load current simulated data into the box</button>
+    </div>
+  </aside>
+
+  <section class="stack">
+    <div id="msg" class="err" hidden></div>
+
+    <!-- numerical scores -->
+    <div class="panel" data-fam="num"><h2><span class="n">1</span>Frequency distribution</h2>
+      <div class="btnrow" id="ovRow"></div>
+      <div class="two"><div class="scroll" id="numTable"></div><div id="numChart"></div></div>
+      <p class="cap" id="numCap"></p></div>
+    <div class="panel" data-fam="num"><h2><span class="n">2</span>Central tendency and dispersion</h2>
+      <div class="stats" id="numStats"></div><div id="numCalc"></div></div>
+    <div class="panel" data-fam="num"><h2><span class="n">3</span>Standard deviation and the normal distribution</h2>
+      <div id="numNorm"></div><div class="scroll" id="numNormTbl"></div><p class="cap" id="numNormTxt"></p></div>
+    <div class="panel" data-fam="num"><h2><span class="n">4</span>Where does a score sit? Quartiles, z and percentile</h2>
+      <div id="numBox"></div><div class="stats" id="numPos"></div><p class="cap" id="numPosTxt"></p></div>
+
+    <!-- categories -->
+    <div class="panel" data-fam="cat"><h2><span class="n">1</span>Describing non-numerical data</h2>
+      <p class="cap" style="margin:0 0 8px">Nominal and ordinal variables are described with percentages, proportions and the mode.</p>
+      <div id="catChart"></div></div>
+    <div class="panel" data-fam="cat"><h2><span class="n">2</span>Frequencies, proportions and percentages</h2>
+      <div class="scroll" id="catTable"></div><p class="cap" id="catCap"></p></div>
+
+    <!-- rating scales -->
+    <div class="panel" data-fam="rate"><h2><span class="n">1</span>Each item</h2>
+      <div id="rateChart"></div><div class="scroll" id="rateTable"></div><p class="cap" id="rateCap"></p></div>
+    <div class="panel" data-fam="rate"><h2><span class="n">2</span>Total scores</h2>
+      <div id="rateTot"></div><p class="cap" id="rateTotCap"></p></div>
+
+    <!-- observation -->
+    <div class="panel" data-fam="obs"><h2><span class="n">1</span>One session, three ways to quantify it</h2>
+      <div id="obsChart"></div><div class="scroll" id="obsTable"></div></div>
+    <div class="panel" data-fam="obs"><h2><span class="n">2</span>Two observers: percent agreement and Cohen&rsquo;s &kappa;</h2>
+      <div class="scroll" id="agrTable"></div><p class="cap" id="agrCap"></p></div>
+
+    <!-- single case -->
+    <div class="panel" data-fam="case"><h2><span class="n">1</span>One individual over the weeks</h2>
+      <div id="caseChart"></div><p class="cap" id="caseCap"></p></div>
+
+    <div class="panel" id="pRes" aria-live="polite">
+      <h2><span class="n" id="resN">5</span>Result</h2>
+      <div class="stats" id="stats"></div>
+      <p class="interp" id="interp"></p>
+      <div class="apa" id="apaRow"><span id="apa"></span><button class="pill" id="copy">Copy</button></div>
+    </div>
+  </section>
+</main>
+
+<details>
+  <summary>Formulas used</summary>
+  <div class="panel">
+    <p><b>Frequency distribution.</b> Each row lists a score (or group of scores) X and its frequency f, with <span class="f">n = Σf</span>.</p>
+    <ul>
+      <li>Proportion <span class="f">p = f / n</span>; percent <span class="f">100·f / n</span>; cumulative percent = running total of the percents from the lowest score up.</li>
+    </ul>
+    <p><b>Central tendency.</b></p>
+    <ul>
+      <li>Mean <span class="f">M = ΣX / n</span> (sample) or <span class="f">μ = ΣX / N</span> (population).</li>
+      <li>Median: the middle score of the sorted list (average of the two middle scores when n is even). It splits the distribution in half.</li>
+      <li>Mode: the most frequent score; there can be several (bimodal) or, for categories, a modal category.</li>
+    </ul>
+    <p><b>Dispersion.</b></p>
+    <ul>
+      <li>Range <span class="f">= max − min</span>.</li>
+      <li>Sum of squares <span class="f">SS = Σ(X − M)²</span>.</li>
+      <li>Sample variance <span class="f">s² = SS / (n − 1)</span>; sample standard deviation <span class="f">s = √s²</span>. For a whole population divide by N instead: <span class="f">σ² = SS / N</span>, <span class="f">σ = √σ²</span>.</li>
+      <li>Skewness <span class="f">g₁ = [Σ(X − M)³ / n] / [SS / n]<sup>3/2</sup></span>: positive when the long tail is on the right, where the mean is pulled above the median.</li>
+    </ul>
+    <p><b>Position and the normal curve.</b></p>
+    <ul>
+      <li>Quartiles Q1, Q2 (median) and Q3 by linear interpolation between sorted scores; <span class="f">IQR = Q3 − Q1</span>. Common outlier fences: <span class="f">Q1 − 1.5·IQR</span> and <span class="f">Q3 + 1.5·IQR</span>.</li>
+      <li>z-score <span class="f">z = (X − M) / s</span>: distance from the mean in standard deviations. Percentile rank = percent of scores below X plus half of those equal to X; the normal-curve percentile is <span class="f">Φ(z)</span>.</li>
+      <li>For a normal distribution about 68% of scores fall within ±1 SD, 95% within ±2 SD and 99.7% within ±3 SD.</li>
+    </ul>
+    <p><b>Non-numerical data.</b> Proportion <span class="f">f / N</span>, percent <span class="f">100·f / N</span>, mode = category with the largest f. For ordered (ordinal) categories add the cumulative percent; the median category is the first where it reaches 50%.</p>
+    <p><b>Rating scales.</b> Item mean, SD, median, mode and the percent choosing the top two options; a respondent&rsquo;s total score is the sum of their item ratings, summarized with <span class="f">M</span>, <span class="f">s</span> and the range.</p>
+    <p><b>Observation measures.</b></p>
+    <ul>
+      <li>Frequency method: the number of bouts. Duration method: <span class="f">total time in behavior</span>, and its share <span class="f">= total time / session length</span>.</li>
+      <li>Interval method (partial-interval): divide the session into K equal intervals and score each 1 if the behavior occurred at any time in it; report <span class="f">occurred / K</span>.</li>
+      <li>Percent agreement <span class="f">p<sub>o</sub> = (a + d) / N</span>; chance agreement <span class="f">p<sub>e</sub> = Σ (row total × column total) / N²</span>; Cohen&rsquo;s <span class="f">κ = (p<sub>o</sub> − p<sub>e</sub>) / (1 − p<sub>e</sub>)</span>.</li>
+    </ul>
+    <p><b>Change in a single case.</b> Change <span class="f">= M<sub>during</sub> − M<sub>before</sub></span>; relative change <span class="f">= change / M<sub>before</sub></span>.</p>
+    <p>Everything runs in your browser; nothing is uploaded.</p>
+  </div>
+</details>
+<details id="keyBox">
+  <summary>Key: symbols and terms</summary>
+  <div class="panel">
+    <dl class="key">
+      <dt>Descriptive statistics</dt><dd>Statistics that organize, summarize and simplify results. Inferential statistics instead generalize from samples to populations.</dd>
+      <dt>Statistic, parameter</dt><dd>A statistic describes a sample (M, s); a parameter describes a population (μ, σ).</dd>
+      <dt>X, f</dt><dd>A score, and the frequency (number of individuals) with that score.</dd>
+      <dt>n, N</dt><dd>Number of scores in a sample, and in a population.</dd>
+      <dt>M, μ</dt><dd>Sample mean and population mean.</dd>
+      <dt>Mdn, Mo</dt><dd>Median and mode.</dd>
+      <dt>SS</dt><dd>Sum of squares: the sum of squared distances from the mean.</dd>
+      <dt>s², s</dt><dd>Sample variance and standard deviation (n − 1 in the denominator). σ², σ are the population versions.</dd>
+      <dt>Range</dt><dd>Highest score minus lowest score.</dd>
+      <dt>Q1, Q3, IQR</dt><dd>First and third quartiles (25th and 75th percentiles) and the distance between them.</dd>
+      <dt>g₁ (skew)</dt><dd>Lopsidedness: 0 symmetric, positive long right tail, negative long left tail.</dd>
+      <dt>z</dt><dd>A score expressed as standard deviations above or below the mean.</dd>
+      <dt>Percentile rank</dt><dd>Percent of scores falling below a given score.</dd>
+      <dt>Nominal, ordinal</dt><dd>Categories without order, and categories with a natural order. Described with percentages, proportions and the mode.</dd>
+      <dt>Proportion, percent</dt><dd>f / N and 100·f / N.</dd>
+      <dt>Likert-type item</dt><dd>A rating on a numbered agreement scale (for example 1 = strongly disagree to 5 = strongly agree).</dd>
+      <dt>Frequency, duration, interval</dt><dd>Three ways to quantify behavior: count the bouts, time them, or score each time interval for whether the behavior occurred.</dd>
+      <dt>Percent agreement, κ</dt><dd>How often two observers code the same way, and the same corrected for the agreement expected by chance. The course content names inter-rater reliability without specifying an index; these are common examples.</dd>
+      <dt>Case history, case study</dt><dd>An in-depth description of one individual without, or with, a treatment.</dd>
+    </dl>
+  </div>
+</details>
+<details id="decideBox">
+  <summary>Deciding which to use</summary>
+  <div class="panel wz">
+    <p class="cap" style="margin-top:0">Answer a few questions to find the statistics that fit your data. Each suggestion opens the matching tab and example.</p>
+    <div id="decideBody"></div>
+    <h3>At a glance</h3>
+    <div class="scroll"><table class="glance">
+      <thead><tr><th>Your situation</th><th>Use</th><th>Reported</th></tr></thead>
+      <tbody>
+        <tr><td>Numerical scores, roughly symmetric</td><td>Mean and standard deviation</td><td>M, SD, n</td></tr>
+        <tr><td>Numerical scores, skewed or with outliers</td><td>Median and interquartile range</td><td>Mdn, Q1, Q3 (or IQR)</td></tr>
+        <tr><td>Most common value, or categories</td><td>Mode, percentages and proportions</td><td>Mo, f, %</td></tr>
+        <tr><td>Ordered categories</td><td>Mode, median category, cumulative percent</td><td>%, cumulative %</td></tr>
+        <tr><td>How one score compares with the rest</td><td>z-score and percentile rank</td><td>z, percentile</td></tr>
+        <tr><td>Rating-scale items</td><td>Item means and total scores</td><td>M, SD, range of totals</td></tr>
+        <tr><td>Behavior in an observed session</td><td>Frequency, duration or interval counts</td><td>Count, minutes, % of session</td></tr>
+        <tr><td>Two observers coding the same events</td><td>Percent agreement and Cohen&rsquo;s κ</td><td>p<sub>o</sub>, κ</td></tr>
+        <tr><td>One person measured weekly, with a treatment</td><td>Means before and during, change</td><td>M before, M during, relative change</td></tr>
+      </tbody>
+    </table></div>
+  </div>
+</details>
+<footer>Single-file, dependency-free demo. Simulated data come from a seeded random generator, so a given seed is reproducible. Anything you paste stays in your browser; nothing is uploaded. The quiz example (5, 4, 4, 4, 3, 3, 3, 3, 2, 2, 2, 1, 1, 0, 0) is the 5-point quiz from the course content; percent agreement, &kappa;, quartiles and z-scores are common extensions shown for illustration.</footer>
+
+<script>
+(function(){
+"use strict";
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const f=(x,d=2)=>{if(x===null||x===undefined||!isFinite(x))return '–';const t=x.toFixed(d);return +t===0?t.replace('-',''):t.replace('-','−');};
+const fb=(x,d=2)=>f(x,d).replace(/^(−?)0\./,'$1.');
+const pct=(x,d=1)=>isFinite(x)?f(100*x,d)+'%':'–';
+const sum=a=>a.reduce((s,v)=>s+v,0),mean=a=>sum(a)/a.length,sorted=a=>a.slice().sort((x,y)=>x-y);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+function quant(s,p){const h=(s.length-1)*p,lo=Math.floor(h),hi=Math.ceil(h);return s[lo]+(s[hi]-s[lo])*(h-lo);}
+function modes(x){const m=new Map();x.forEach(v=>m.set(v,(m.get(v)||0)+1));let mx=0;m.forEach(c=>{if(c>mx)mx=c;});return{m:[...m.entries()].filter(e=>e[1]===mx).map(e=>e[0]).sort((a,b)=>a-b),f:mx};}
+function erf(x){const t=1/(1+.3275911*Math.abs(x)),y=1-(((((1.061405429*t-1.453152027)*t)+1.421413741)*t-.284496736)*t+.254829592)*t*Math.exp(-x*x);return x>=0?y:-y;}
+const Phi=z=>.5*(1+erf(z/Math.SQRT2)),npdf=z=>Math.exp(-z*z/2)/Math.sqrt(2*Math.PI);
+function rng(seed){let a=(seed*2654435761+12345)>>>0;const u=()=>{a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};
+  const n=()=>{let p=0;while(!p)p=u();return Math.sqrt(-2*Math.log(p))*Math.cos(2*Math.PI*u());};return{u,n};}
+function parseNums(t,min){const tok=t.split(/[\s,;]+/).filter(Boolean),v=[];
+  for(const k of tok){const x=Number(k);if(!isFinite(x))return{err:'“'+k.slice(0,20)+'” is not a number. Enter numbers only.'};v.push(x);}
+  if(v.length<min)return{err:'Enter at least '+min+' numbers (found '+v.length+').'};
+  if(v.length>5000)return{err:'Use at most 5,000 values.'};return{v};}
+
+/* ============ state ============ */
+const QUIZ=[5,4,4,4,3,3,3,3,2,2,2,1,1,0,0];
+const CATSETS={study:{name:'Study method (nominal)',ord:false,labels:['Study alone','Study group','Online course','Tutor'],def:[34,28,25,13]},
+  sat:{name:'Satisfaction level (ordinal)',ord:true,labels:['Very low','Low','Medium','High','Very high'],def:[6,14,30,32,18]}};
+const ITEMS=['I enjoy math class','I feel confident doing math','Math is useful in daily life','I like solving math problems','I look forward to math lessons'];
+const DEF={
+ num:{src:'quiz',seed:12,n:40,mu:60,sdv:12,skew:0,shape:'normal',out:false,bw:0,pop:'sample',own:'',px:null,ov:{hist:true,poly:false,mean:true,med:false,mode:false}},
+ cat:{set:'study',c:{study:CATSETS.study.def.slice(),sat:CATSETS.sat.def.slice()},own:'',ord:'nominal'},
+ rate:{n:60,pts:5,mu:3.8,spread:.7,noise:.7,seed:3,own:''},
+ obs:{len:20,k:8,dur:30,iv:30,seed:5,own:'',ownLen:20,a:18,b:4,c:5,d:33},
+ case:{wks:16,base:20,noise:3,tx:true,t0:6,eff:-7,seed:7,own:'',ownT:''}};
+const S={tab:'num',source:'sim'};
+const clone=o=>JSON.parse(JSON.stringify(o));
+Object.keys(DEF).forEach(k=>S[k]=clone(DEF[k]));
+const TABS=['num','cat','rate','obs','case'];
+const ISDEC=(v)=>v;
+
+/* ============ control definitions ============ */
+const CD=[
+ {fam:'num',h:'Data',when:'sim'},
+ {fam:'num',k:'src',l:'Scores',t:'select',o:[['quiz','5-point quiz (course example)'],['sim','Simulated test scores']],when:'sim'},
+ {fam:'num',k:'n',l:'Number of scores',t:'range',min:10,max:300,step:5,when:'sim',show:s=>s.src==='sim'},
+ {fam:'num',k:'mu',l:'Typical score',t:'range',min:30,max:90,step:1,when:'sim',show:s=>s.src==='sim'},
+ {fam:'num',k:'sdv',l:'Spread',t:'range',min:3,max:25,step:1,when:'sim',show:s=>s.src==='sim'},
+ {fam:'num',k:'shape',l:'Shape',t:'select',o:[['normal','Single peak (use the skew slider)'],['bimodal','Two peaks (bimodal)']],when:'sim',show:s=>s.src==='sim'},
+ {fam:'num',k:'skew',l:'Skew (long tail to the right if positive)',t:'range',min:-2,max:2,step:.1,fmt:v=>f(v,1),when:'sim',show:s=>s.src==='sim'&&s.shape==='normal'},
+ {fam:'num',k:'out',t:'toggle',l:'Outlier',when:'sim',show:s=>s.src==='sim'},
+ {fam:'num',k:'new',t:'button',l:'New random sample',when:'sim',show:s=>s.src==='sim'},
+ {fam:'num',h:'Table and statistics',when:'both'},
+ {fam:'num',k:'bw',l:'Group width in the table',t:'range',min:0,max:20,step:1,fmt:v=>v?String(v):'auto',when:'both',show:s=>!(S.source==='sim'&&s.src==='quiz')},
+ {fam:'num',k:'pop',l:'Treat the scores as',t:'select',o:[['sample','A sample (divide by n − 1)'],['pop','A whole population (divide by N)']],when:'both'},
+ {fam:'num',k:'px',l:'Locate the score X =',t:'range',min:0,max:100,step:1,when:'both'},
+
+ {fam:'cat',h:'Variable',when:'sim'},
+ {fam:'cat',k:'set',l:'Variable',t:'select',o:Object.keys(CATSETS).map(k=>[k,CATSETS[k].name]),when:'sim',after:()=>buildCatSl()},
+ {fam:'cat',h:'Frequencies',when:'sim'},
+ {fam:'cat',k:'catSl',t:'custom',when:'sim'},
+ {fam:'cat',k:'ord',l:'Treat the categories as',t:'select',o:[['nominal','Nominal (no order)'],['ordinal','Ordinal (in the order typed)']],when:'own'},
+
+ {fam:'rate',h:'Data',when:'sim'},
+ {fam:'rate',k:'pts',l:'Scale points',t:'select',num:true,o:[[5,'5-point (1 to 5)'],[7,'7-point (1 to 7)']],when:'both'},
+ {fam:'rate',k:'n',l:'Respondents',t:'range',min:10,max:200,step:5,when:'sim'},
+ {fam:'rate',k:'mu',l:'Average attitude',t:'range',min:1,max:5,step:.1,fmt:v=>f(v,1),when:'sim'},
+ {fam:'rate',k:'spread',l:'Differences between people',t:'range',min:0,max:1.5,step:.05,fmt:v=>f(v,2),when:'sim'},
+ {fam:'rate',k:'noise',l:'Noise within a person',t:'range',min:0,max:1.5,step:.05,fmt:v=>f(v,2),when:'sim'},
+ {fam:'rate',k:'new',t:'button',l:'New random sample',when:'sim'},
+
+ {fam:'obs',h:'Session',when:'sim'},
+ {fam:'obs',k:'len',l:'Session length (minutes)',t:'range',min:5,max:60,step:1,when:'sim'},
+ {fam:'obs',k:'k',l:'Number of bouts of the behavior',t:'range',min:1,max:25,step:1,when:'sim'},
+ {fam:'obs',k:'dur',l:'Typical bout length (seconds)',t:'range',min:5,max:120,step:1,when:'sim'},
+ {fam:'obs',k:'new',t:'button',l:'New random session',when:'sim'},
+ {fam:'obs',h:'Interval method',when:'both'},
+ {fam:'obs',k:'iv',l:'Interval length',t:'select',num:true,o:[[10,'10 seconds'],[15,'15 seconds'],[30,'30 seconds'],[60,'60 seconds']],when:'both'},
+ {fam:'obs',h:'Two observers (counts of events)',when:'both'},
+ {fam:'obs',k:'a',l:'Both observers scored “occurred”',t:'range',min:0,max:60,step:1,when:'both'},
+ {fam:'obs',k:'b',l:'Only observer A scored “occurred”',t:'range',min:0,max:60,step:1,when:'both'},
+ {fam:'obs',k:'c',l:'Only observer B scored “occurred”',t:'range',min:0,max:60,step:1,when:'both'},
+ {fam:'obs',k:'d',l:'Both scored “did not occur”',t:'range',min:0,max:60,step:1,when:'both'},
+
+ {fam:'case',h:'The case',when:'sim'},
+ {fam:'case',k:'wks',l:'Weeks measured',t:'range',min:8,max:30,step:1,when:'sim'},
+ {fam:'case',k:'base',l:'Typical score before treatment',t:'range',min:5,max:40,step:1,when:'sim'},
+ {fam:'case',k:'noise',l:'Week-to-week fluctuation',t:'range',min:0,max:8,step:.5,fmt:v=>f(v,1),when:'sim'},
+ {fam:'case',k:'tx',t:'toggle',l:'Treatment given',when:'sim'},
+ {fam:'case',k:'t0',l:'First week of treatment',t:'range',min:3,max:20,step:1,when:'sim',show:s=>s.tx},
+ {fam:'case',k:'eff',l:'Change in the score during treatment',t:'range',min:-12,max:12,step:1,when:'sim',show:s=>s.tx},
+ {fam:'case',k:'new',t:'button',l:'New random sample',when:'sim'}
+];
+const PRE={
+ num:[['Quiz example',{src:'quiz'}],['Symmetric scores',{src:'sim'}],['Positive skew',{src:'sim',skew:1.5}],['Negative skew',{src:'sim',skew:-1.5}],['Bimodal',{src:'sim',shape:'bimodal'}],['With an outlier',{src:'sim',out:true}]],
+ cat:[['Study method (nominal)',{set:'study'}],['Satisfaction (ordinal)',{set:'sat'}]],
+ rate:[['Positive attitudes',{mu:4.1,spread:.6,noise:.6}],['Mixed attitudes',{mu:3,spread:.9,noise:.8}],['Negative attitudes',{mu:2.1,spread:.6,noise:.6}],['7-point scale',{pts:7,mu:5.3}]],
+ obs:[['Typical session',{}],['Few long bouts',{k:4,dur:90}],['Many short bouts',{k:18,dur:12}],['Strong agreement',{a:20,b:2,c:3,d:35}],['Weak agreement',{a:12,b:10,c:9,d:29}]],
+ case:[['Treatment helps',{}],['Case history (no treatment)',{tx:false}],['Treatment makes it worse',{eff:6}],['No change',{eff:0}]]
+};
+const TITLES={num:'Numerical scores',cat:'Categories',rate:'Rating scales',obs:'Observation and agreement',case:'Single case over time'};
+
+/* ============ controls ============ */
+function buildControls(){
+  let h='';
+  CD.forEach((d,i)=>{
+    const w=(extra)=>'<div data-fam="'+d.fam+'" data-i="'+i+'" class="'+[extra,d.when==='sim'?'sim':d.when==='own'?'own':''].join(' ').trim()+'"';
+    if(d.h){h+=w('')+'><h3>'+d.h+'</h3></div>';return;}
+    const id='c_'+d.fam+'_'+d.k;
+    if(d.t==='range')h+=w('sl')+'><label for="'+id+'"><span>'+d.l+'</span><output id="o_'+id+'"></output></label><input type="range" id="'+id+'" min="'+d.min+'" max="'+d.max+'" step="'+d.step+'"></div>';
+    else if(d.t==='select')h+=w('opt')+'><label for="'+id+'">'+d.l+'</label><select id="'+id+'">'+d.o.map(o=>'<option value="'+o[0]+'">'+o[1]+'</option>').join('')+'</select></div>';
+    else if(d.t==='toggle')h+=w('')+'><div class="btnrow"><button type="button" class="pill" id="'+id+'" aria-pressed="false"></button></div></div>';
+    else if(d.t==='button')h+=w('')+'><div class="btnrow"><button type="button" class="pill" id="'+id+'">'+d.l+'</button></div></div>';
+    else if(d.t==='custom')h+=w('')+' id="catSl"></div>';
+  });
+  $('ctl').innerHTML=h;
+  buildCatSl();
+}
+function buildCatSl(){
+  const set=CATSETS[S.cat.set],c=S.cat.c[S.cat.set];
+  $('catSl').innerHTML=set.labels.map((l,i)=>'<div class="sl"><label for="cc'+i+'"><span>'+esc(l)+'</span><output id="o_cc'+i+'">'+c[i]+'</output></label><input type="range" id="cc'+i+'" min="0" max="100" step="1" value="'+c[i]+'"></div>').join('');
+}
+function defOf(el){const w=el.closest('[data-i]');return w?CD[+w.dataset.i]:null;}
+function onCtl(e){
+  const el=e.target;
+  if(el.id&&/^cc\d$/.test(el.id)){S.cat.c[S.cat.set][+el.id.slice(2)]=+el.value;$('o_'+el.id).textContent=el.value;render();return;}
+  const d=defOf(el);if(!d||!d.k)return;
+  const st=S[d.fam];
+  if(d.t==='range')st[d.k]=+el.value;
+  else if(d.t==='select')st[d.k]=d.num?+el.value:el.value;
+  else if(d.t==='toggle'){if(e.type!=='click')return;st[d.k]=!st[d.k];}
+  else if(d.t==='button'){if(e.type!=='click')return;st.seed=(st.seed||0)+1;}
+  if(d.fam==='num'&&(d.k!=='px'))st.px=null;
+  if(d.after)d.after();
+  render();
+}
+function syncControls(){
+  CD.forEach((d,i)=>{
+    const w=document.querySelector('[data-i="'+i+'"]');if(!w)return;
+    let hide=d.fam!==S.tab;
+    if(d.when==='sim'&&S.source==='own')hide=true;
+    if(d.when==='own'&&S.source==='sim')hide=true;
+    if(!hide&&d.show&&!d.show(S[d.fam]))hide=true;
+    w.hidden=hide;
+    if(!d.k||d.t==='custom')return;
+    const id='c_'+d.fam+'_'+d.k,el=$(id),v=S[d.fam][d.k];
+    if(d.t==='range'){el.value=v;const o=$('o_'+id);if(o)o.textContent=d.fmt?d.fmt(+v):v;}
+    else if(d.t==='select')el.value=v;
+    else if(d.t==='toggle'){el.setAttribute('aria-pressed',!!v);el.textContent=d.l+': '+(v?'on':'off');}
+  });
+}
+function buildPresets(){
+  $('presets').innerHTML=PRE[S.tab].map((p,i)=>'<button type="button" class="pill" id="pre-'+S.tab+'-'+i+'">'+p[0]+'</button>').join('');
+}
+$('presets').addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b)return;
+  const m=/^pre-(\w+)-(\d+)$/.exec(b.id);if(!m)return;
+  const fam=m[1],p=PRE[fam][+m[2]][1];
+  const keep={own:S[fam].own};
+  if(fam==='num')Object.assign(S.num,clone(DEF.num),{own:S.num.own,ov:S.num.ov},p);
+  else if(fam==='cat'){S.cat.set=p.set;buildCatSl();}
+  else if(fam==='obs'){const o=clone(DEF.obs);Object.assign(S.obs,{k:o.k,dur:o.dur,a:o.a,b:o.b,c:o.c,d:o.d},p);}
+  else{Object.assign(S[fam],clone(DEF[fam]),keep,p);}
+  S.source='sim';render();
+});
+$('ctl').addEventListener('input',onCtl);$('ctl').addEventListener('change',onCtl);$('ctl').addEventListener('click',onCtl);
+
+/* ============ chart helpers ============ */
+const svgOpen=(W,H,label)=>'<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="'+esc(label)+'">';
+function niceTicks(lo,hi,n){const span=hi-lo||1,s0=span/Math.max(1,n),mag=Math.pow(10,Math.floor(Math.log10(s0))),e=s0/mag,st=(e>=7.5?10:e>=3.5?5:e>=1.5?2:1)*mag,t=[];for(let v=Math.ceil(lo/st-1e-9)*st;v<=hi+1e-9;v+=st)t.push(+v.toPrecision(12));return t;}
+const tl=v=>(+v.toPrecision(6)).toLocaleString('en-US',{maximumFractionDigits:4});
+function frame(W,H,m,xd,yd,o){
+  o=o||{};const sx=v=>m.l+(v-xd[0])/((xd[1]-xd[0])||1)*(W-m.l-m.r),sy=v=>H-m.b-(v-yd[0])/((yd[1]-yd[0])||1)*(H-m.t-m.b);let s='';
+  if(!o.noY)niceTicks(yd[0],yd[1],o.yn||5).forEach(t=>{s+='<line class="gr" x1="'+m.l+'" x2="'+(W-m.r)+'" y1="'+sy(t)+'" y2="'+sy(t)+'"/><text x="'+(m.l-6)+'" y="'+(sy(t)+4)+'" text-anchor="end">'+(o.yf?o.yf(t):tl(t))+'</text>';});
+  s+='<line class="ax" x1="'+m.l+'" x2="'+(W-m.r)+'" y1="'+(H-m.b)+'" y2="'+(H-m.b)+'"/>';
+  const xt=o.xt||niceTicks(xd[0],xd[1],o.xn||8).map(t=>[t,tl(t)]);
+  xt.forEach(t=>{s+='<line class="ax" x1="'+sx(t[0])+'" x2="'+sx(t[0])+'" y1="'+(H-m.b)+'" y2="'+(H-m.b+4)+'"/><text x="'+sx(t[0])+'" y="'+(H-m.b+16)+'" text-anchor="middle">'+t[1]+'</text>';});
+  if(o.xlab)s+='<text x="'+((m.l+W-m.r)/2)+'" y="'+(H-4)+'" text-anchor="middle">'+o.xlab+'</text>';
+  if(o.ylab)s+='<text transform="rotate(-90)" x="'+(-(m.t+H-m.b)/2)+'" y="13" text-anchor="middle">'+o.ylab+'</text>';
+  return{sx,sy,s};
+}
+function vline(fr,m,H,v,col,label,row){return '<line x1="'+fr.sx(v)+'" x2="'+fr.sx(v)+'" y1="'+m.t+'" y2="'+(H-m.b)+'" stroke="'+col+'" stroke-width="2" stroke-dasharray="6 4"/><text x="'+(fr.sx(v)+4)+'" y="'+(m.t+12+row*13)+'" style="fill:'+col+';font-weight:600">'+label+'</text>';}
+
+/* ============ numerical scores ============ */
+function simNum(p){
+  const R=rng(p.seed*43+5),v=[];
+  for(let i=0;i<p.n;i++){let z=R.n();
+    if(p.shape==='bimodal')z=(R.u()<.5?-1:1)*1.15+R.n()*.5;
+    else if(p.skew)z=(Math.exp(p.skew*z*.6)-1)/(p.skew*.6);
+    v.push(Math.round(clamp(p.mu+p.sdv*z,0,100)));}
+  if(p.out)v.push(Math.round(clamp(p.mu>=60?p.mu-4.5*p.sdv:p.mu+4.5*p.sdv,0,100)));
+  return v;
+}
+function numData(){
+  const s=S.num;
+  if(S.source==='own'){const r=parseNums(s.own,2);return r.err?{err:r.err}:{x:r.v};}
+  return{x:s.src==='quiz'?QUIZ.slice():simNum(s)};
+}
+function descr(x,pop){
+  const n=x.length,M=mean(x),s=sorted(x),SS=sum(x.map(v=>(v-M)**2)),den=pop?n:n-1,V=den>0?SS/den:NaN,m2=SS/n,m3=sum(x.map(v=>(v-M)**3))/n;
+  return{n,M,s,Md:quant(s,.5),Mo:modes(x),SS,V,SD:Math.sqrt(V),min:s[0],max:s[n-1],range:s[n-1]-s[0],Q1:quant(s,.25),Q3:quant(s,.75),g1:m2>0?m3/Math.pow(m2,1.5):0};
+}
+function niceStep(v){const mag=Math.pow(10,Math.floor(Math.log10(v))),e=v/mag;return(e<=1?1:e<=2?2:e<=5?5:10)*mag;}
+function autoBw(x){const mn=Math.min(...x),mx=Math.max(...x),isInt=x.every(Number.isInteger);if(isInt&&mx-mn<=15)return 1;return isInt?Math.max(1,Math.ceil((mx-mn+1)/10)):niceStep((mx-mn)/10||1);}
+function freqRows(x,bw){
+  const mn=Math.min(...x),mx=Math.max(...x),lo=Math.floor(mn/bw+1e-9)*bw,rows=[];
+  for(let a=lo;a<=mx+1e-9;a+=bw){const aa=+a.toPrecision(12);rows.push({a:aa,f:x.filter(v=>v>=aa-1e-9&&v<aa+bw-1e-9).length});}
+  return rows;
+}
+function drawHist(W,H,rows,bw,isInt,o){
+  const sh=isInt?.5:0,m={l:46,r:14,t:18,b:40},fmax=Math.max(...rows.map(r=>r.f)),yTop=Math.max(2,Math.ceil(fmax*1.15));
+  const lo=rows[0].a-sh,hi=rows[rows.length-1].a+bw-sh;
+  const xt=(bw===1&&isInt&&rows.length<=16)?rows.map(r=>[r.a,String(r.a)]):null;
+  const fr=frame(W,H,m,[lo,hi],[0,yTop],{xlab:o.xlab,ylab:'Frequency (f)',yn:Math.min(yTop,6),xn:8,xt});let s=fr.s;
+  if(o.hist!==false)rows.forEach(r=>{s+='<rect x="'+(fr.sx(r.a-sh)+1)+'" y="'+fr.sy(r.f)+'" width="'+Math.max(1,fr.sx(r.a+bw-sh)-fr.sx(r.a-sh)-2)+'" height="'+(fr.sy(0)-fr.sy(r.f))+'" fill="var(--a)" opacity=".75"/>';});
+  if(o.poly){const mid=r=>r.a+bw/2-(isInt?(bw===1?0:0):0)-(isInt?.5-.5:0);
+    const cx=r=>isInt?r.a+(bw-1)/2:r.a+bw/2;const pts=rows.map(r=>fr.sx(cx(r))+','+fr.sy(r.f));
+    s+='<polyline points="'+fr.sx(cx(rows[0])-bw)+','+fr.sy(0)+' '+pts.join(' ')+' '+fr.sx(cx(rows[rows.length-1])+bw)+','+fr.sy(0)+'" fill="none" stroke="var(--b)" stroke-width="2"/>';
+    rows.forEach(r=>{s+='<circle cx="'+fr.sx(cx(r))+'" cy="'+fr.sy(r.f)+'" r="3" fill="var(--b)"/>';});}
+  (o.lines||[]).forEach((l,i)=>{s+=vline(fr,m,H,l.v,l.col,l.label,i);});
+  return svgOpen(W,H,o.label)+s+'</svg>';
+}
+function rowLabel(r,bw,isInt){return bw===1&&isInt?String(r.a):isInt?r.a+'–'+(r.a+bw-1):tl(r.a)+' to <'+tl(+(r.a+bw).toPrecision(8));}
+function tbl(head,rows,cls){return '<table'+(cls?' class="'+cls+'"':'')+'><thead><tr>'+head.map(h=>'<th>'+h+'</th>').join('')+'</tr></thead><tbody>'+rows.map(r=>'<tr>'+r.map(c=>'<td>'+c+'</td>').join('')+'</tr>').join('')+'</tbody></table>';}
+const stat=(l,v)=>'<div class="stat"><small>'+l+'</small><b>'+v+'</b></div>';
+function setStats(id,a){$(id).innerHTML=a.map(x=>stat(x[0],x[1])).join('');}
+
+function rNum(){
+  const s=S.num,d=numData();if(d.err)return fail(d.err);
+  const x=d.x,pop=s.pop==='pop',D=descr(x,pop),n=D.n,isInt=x.every(Number.isInteger),quiz=S.source==='sim'&&s.src==='quiz';
+  const bw=quiz?1:(s.bw>0?s.bw:autoBw(x)),rows=freqRows(x,bw);
+  const vs=pop?'σ':'s',vn=pop?'Population':'Sample';
+  const ov=s.ov;
+  $('ovRow').innerHTML=[['hist','Histogram'],['poly','Polygon'],['mean','Mean'],['med','Median'],['mode','Mode']].map(o=>'<button type="button" class="pill" data-ov="'+o[0]+'" aria-pressed="'+!!ov[o[0]]+'">'+o[1]+': '+(ov[o[0]]?'on':'off')+'</button>').join('');
+  let cum=0;const cumR=rows.map(r=>{cum+=r.f;return cum/n;});
+  const trows=rows.map((r,i)=>[rowLabel(r,bw,isInt),r.f,f(r.f/n,2),pct(cumR[i],1)]).reverse().concat([['<b>Total</b>','<b>'+n+'</b>','<b>1.00</b>','']]);
+  $('numTable').innerHTML=tbl(['X','f','Proportion','Cumulative %'],trows);
+  const lines=[];if(ov.mean)lines.push({v:D.M,col:'var(--rej)',label:'Mean '+f(D.M)});if(ov.med)lines.push({v:D.Md,col:'var(--ok)',label:'Median '+f(D.Md)});if(ov.mode)lines.push({v:D.Mo.m[0],col:'var(--b)',label:'Mode '+D.Mo.m.map(v=>f(v,isInt?0:2)).join(', ')});
+  $('numChart').innerHTML=drawHist(640,260,rows,bw,isInt,{xlab:'Score (X)',label:'Frequency distribution of the scores as a histogram with optional polygon and mean, median and mode lines',hist:ov.hist,poly:ov.poly,lines});
+  $('numCap').textContent=(bw===1&&isInt?'One row per score.':'Scores are grouped in classes '+tl(bw)+' wide.')+' The table lists X from highest to lowest; the cumulative percent is the share of scores at or below that row.';
+  const modeTxt=D.Mo.m.length>1&&D.Mo.f===1?'none (all different)':(D.Mo.m.length>3?D.Mo.m.slice(0,3).map(v=>f(v,isInt?0:2)).join(', ')+'…':D.Mo.m.map(v=>f(v,isInt?0:2)).join(', '));
+  setStats('numStats',[['n',n],['Mean ('+(pop?'μ':'M')+')',f(D.M)],['Median',f(D.Md)],['Mode'+(D.Mo.m.length>1&&D.Mo.f>1?'s':''),modeTxt],['Range',f(D.range)],[vn+' variance ('+vs+'²)',f(D.V)],[vn+' SD ('+vs+')',f(D.SD)],['Skewness (g₁)',f(D.g1)]]);
+  const dev=n<=20?'<div class="scroll" style="margin:12px 0 8px"><table><thead><tr><th>X</th><th>X − M</th><th>(X − M)²</th></tr></thead><tbody>'+sorted(x).reverse().map(v=>'<tr><td>'+f(v,isInt?0:2)+'</td><td>'+f(v-D.M)+'</td><td>'+f((v-D.M)**2)+'</td></tr>').join('')+'<tr><td><b>Σ</b></td><td>'+f(sum(x.map(v=>v-D.M)))+'</td><td><b>'+f(D.SS)+'</b></td></tr></tbody></table></div>':'';
+  const skewTxt=D.M>D.Md+.05*D.SD?'Here the mean exceeds the median: a positive skew (long tail to the right).':D.M<D.Md-.05*D.SD?'Here the mean is below the median: a negative skew (long tail to the left).':'The mean and median nearly agree, so the distribution is roughly symmetric.';
+  $('numCalc').innerHTML=dev+'<ol class="rel"><li>Measure each score’s distance from the mean, square the distances and add them: <b>SS = '+f(D.SS)+'</b>.</li><li>Divide by '+(pop?'N':'n − 1')+' ('+(pop?n:n-1)+') to get the '+(pop?'population':'sample')+' variance: <b>'+vs+'² = '+f(D.V)+'</b>.</li><li>Take the square root: <b>'+vs+' = '+f(D.SD)+'</b>.</li></ol><p class="cap">The mean is the mathematical average, the median divides the distribution in half and the mode is the most common score. In a skewed distribution the mean is pulled toward the tail, away from the median. '+skewTxt+(D.Mo.m.length>1&&D.Mo.f>1?' This distribution has '+D.Mo.m.length+' modes.':'')+'</p>';
+  /* normal curve */
+  if(!(D.SD>0)){$('numNorm').innerHTML='<p class="err">All scores are identical, so the standard deviation is 0 and there is no normal curve to draw.</p>';$('numNormTbl').innerHTML='';$('numNormTxt').textContent='';}
+  else{
+    const bins=Math.min(24,Math.max(6,Math.round(Math.sqrt(n)*1.5))),a=D.M-3.2*D.SD,b=D.M+3.2*D.SD,bwd=(b-a)/bins,cnt=new Array(bins).fill(0);
+    x.forEach(v=>{const i=Math.floor((v-a)/bwd);if(i>=0&&i<bins)cnt[i]++;});
+    const dens=cnt.map(c=>c/n/bwd),W=640,H=250,m={l:46,r:14,t:18,b:40},ymax=Math.max(...dens,npdf(0)/D.SD)*1.15,fr=frame(W,H,m,[a,b],[0,ymax],{xlab:'Score',ylab:'Density',yn:4});let sv=fr.s;
+    dens.forEach((q,i)=>{sv+='<rect x="'+(fr.sx(a+i*bwd)+1)+'" y="'+fr.sy(q)+'" width="'+Math.max(1,fr.sx(a+bwd)-fr.sx(a)-2)+'" height="'+(fr.sy(0)-fr.sy(q))+'" fill="var(--a)" opacity=".5"/>';});
+    let path='';for(let i=0;i<=100;i++){const v=a+(b-a)*i/100;path+=(i?'L':'M')+fr.sx(v)+' '+fr.sy(npdf((v-D.M)/D.SD)/D.SD);}
+    sv+='<path d="'+path+'" fill="none" stroke="var(--b)" stroke-width="2"/>';
+    [-2,-1,1,2].forEach(k=>{sv+='<line x1="'+fr.sx(D.M+k*D.SD)+'" x2="'+fr.sx(D.M+k*D.SD)+'" y1="'+m.t+'" y2="'+(H-m.b)+'" stroke="var(--line)" stroke-width="1.5" stroke-dasharray="3 4"/><text x="'+fr.sx(D.M+k*D.SD)+'" y="'+(m.t+10)+'" text-anchor="middle">'+(k>0?'+':'−')+Math.abs(k)+' SD</text>';});
+    sv+='<line x1="'+fr.sx(D.M)+'" x2="'+fr.sx(D.M)+'" y1="'+m.t+'" y2="'+(H-m.b)+'" stroke="var(--rej)" stroke-width="2"/>';
+    $('numNorm').innerHTML=svgOpen(W,H,'Histogram of the scores with a normal curve and lines at plus and minus one and two standard deviations')+sv+'</svg>';
+    const w=k=>x.filter(v=>Math.abs(v-D.M)<=k*D.SD+1e-9).length/n,nm=[.6827,.9545,.9973];
+    $('numNormTbl').innerHTML=tbl(['Within','Your scores','Normal distribution'],[1,2,3].map((k,i)=>['±'+k+' SD of the mean',pct(w(k),1),pct(nm[i],1)]));
+    $('numNormTxt').textContent='The standard deviation describes the typical distance from the mean. If the scores are roughly normal, about 68% fall within ±1 SD and about 95% within ±2 SD, which lets you infer or predict aspects of the sample and population.'+(n<30?' With so few scores, expect only rough agreement.':'');
+  }
+  /* position */
+  const iqr=D.Q3-D.Q1,fl=D.Q1-1.5*iqr,fh=D.Q3+1.5*iqr,outs=x.filter(v=>v<fl||v>fh),inL=x.filter(v=>v>=fl&&v<=fh),wl=Math.min(...inL),wh=Math.max(...inL);
+  const px=$('c_num_px');px.min=D.min;px.max=D.max;px.step=isInt?1:+((D.max-D.min)/200||.01).toPrecision(2);
+  if(s.px===null||s.px<D.min||s.px>D.max)s.px=isInt?Math.round(D.M):D.M;px.value=s.px;$('o_c_num_px').textContent=f(s.px,isInt?0:2);
+  const X=s.px,z=D.SD>0?(X-D.M)/D.SD:NaN,below=x.filter(v=>v<X).length,eq=x.filter(v=>v===X).length,prk=(below+.5*eq)/n;
+  {const W=640,H=130,m={l:20,r:20,t:30,b:34},lo=Math.min(D.min,X),hi=Math.max(D.max,X),pad=(hi-lo)*.04||1,fr=frame(W,H,m,[lo-pad,hi+pad],[0,1],{noY:true,xlab:'Score',xn:8});let sv=fr.s;const y0=m.t+14,hh=34;
+    sv+='<line stroke="var(--ink)" stroke-width="1.5" x1="'+fr.sx(wl)+'" x2="'+fr.sx(D.Q1)+'" y1="'+(y0+hh/2)+'" y2="'+(y0+hh/2)+'"/><line stroke="var(--ink)" stroke-width="1.5" x1="'+fr.sx(D.Q3)+'" x2="'+fr.sx(wh)+'" y1="'+(y0+hh/2)+'" y2="'+(y0+hh/2)+'"/>';
+    sv+='<rect x="'+fr.sx(D.Q1)+'" y="'+y0+'" width="'+Math.max(1,fr.sx(D.Q3)-fr.sx(D.Q1))+'" height="'+hh+'" fill="var(--a)" fill-opacity=".35" stroke="var(--ink)" stroke-width="1.5"/>';
+    sv+='<line x1="'+fr.sx(D.Md)+'" x2="'+fr.sx(D.Md)+'" y1="'+y0+'" y2="'+(y0+hh)+'" stroke="var(--ok)" stroke-width="3"/>';
+    sv+='<line x1="'+fr.sx(wl)+'" x2="'+fr.sx(wl)+'" y1="'+(y0+8)+'" y2="'+(y0+hh-8)+'" stroke="var(--ink)" stroke-width="1.5"/><line x1="'+fr.sx(wh)+'" x2="'+fr.sx(wh)+'" y1="'+(y0+8)+'" y2="'+(y0+hh-8)+'" stroke="var(--ink)" stroke-width="1.5"/>';
+    outs.forEach(v=>{sv+='<circle cx="'+fr.sx(v)+'" cy="'+(y0+hh/2)+'" r="3.5" fill="none" stroke="var(--rej)" stroke-width="1.5"/>';});
+    sv+='<polygon points="'+fr.sx(D.M)+','+(y0+hh/2-6)+' '+(fr.sx(D.M)+6)+','+(y0+hh/2)+' '+fr.sx(D.M)+','+(y0+hh/2+6)+' '+(fr.sx(D.M)-6)+','+(y0+hh/2)+'" fill="var(--rej)"/>';
+    sv+='<line x1="'+fr.sx(X)+'" x2="'+fr.sx(X)+'" y1="'+(m.t-6)+'" y2="'+(H-m.b)+'" stroke="var(--b)" stroke-width="2" stroke-dasharray="5 3"/><text x="'+fr.sx(X)+'" y="'+(m.t-10)+'" text-anchor="middle" style="fill:var(--b);font-weight:600">X = '+f(X,isInt?0:2)+'</text>';
+    $('numBox').innerHTML=svgOpen(W,H,'Box plot of the scores with the quartiles, mean diamond, outliers and the selected score')+sv+'</svg>';}
+  setStats('numPos',[['Q1 (25th percentile)',f(D.Q1)],['Q3 (75th percentile)',f(D.Q3)],['IQR',f(iqr)],['Outliers (1.5 × IQR)',outs.length],['z for X = '+f(X,isInt?0:2),f(z)],['Percentile rank of X',f(100*prk,1)],['Normal-curve percentile',isFinite(z)?f(100*Phi(z),1):'–']]);
+  $('numPosTxt').textContent='The box spans Q1 to Q3 and the green line is the median; the red diamond is the mean and red circles are scores beyond the fences. Move the slider to place X: '+(isFinite(z)?'it lies '+f(Math.abs(z))+' standard deviations '+(z>=0?'above':'below')+' the mean, higher than about '+f(100*prk,0)+'% of these scores.':'the z-score is undefined because every score is the same.');
+  /* result */
+  const sk=Math.abs(D.g1)<.5?'roughly symmetric':D.g1>0?'positively skewed':'negatively skewed';
+  result({cards:[['n',n],[pop?'μ':'M',f(D.M)],['Median',f(D.Md)],[vs,f(D.SD)],['Range',f(D.min,isInt?0:2)+' to '+f(D.max,isInt?0:2)]],
+    interp:'The typical score is about <b>'+f(D.M)+'</b> (median '+f(D.Md)+'), and scores vary by about <b>'+f(D.SD)+'</b> from the mean across a range of '+f(D.range)+'. The distribution is <b>'+sk+'</b> (g₁ = '+f(D.g1)+'), so the '+(Math.abs(D.g1)<.5?'mean and SD summarize it well.':'median and quartiles may describe it better than the mean and SD.')+(outs.length?' '+outs.length+' score'+(outs.length>1?'s lie':' lies')+' beyond the 1.5 × IQR fences.':''),
+    apa:'M = '+f(D.M)+', SD = '+f(D.SD)+', Mdn = '+f(D.Md)+', n = '+n+(pop?' (population)':'')});
+}
+
+/* ============ categories ============ */
+function catData(){
+  const s=S.cat;
+  if(S.source==='own'){
+    const lines=s.own.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);if(!lines.length)return{err:'Enter at least two categories, one per line (label, count).'};
+    const map=new Map();
+    for(const l of lines){const m=/^(.*?)[,;\t]\s*(\d+(?:\.\d+)?)\s*$/.exec(l);let lab,c;if(m){lab=m[1].trim();c=+m[2];}else{lab=l;c=1;}if(!lab)return{err:'Every line needs a label.'};map.set(lab,(map.get(lab)||0)+c);}
+    if(map.size<2)return{err:'Enter at least two different categories.'};if(map.size>30)return{err:'Use at most 30 categories.'};
+    const labels=[...map.keys()],counts=labels.map(k=>map.get(k));if(sum(counts)<=0)return{err:'The counts add up to zero.'};
+    return{labels,counts,ord:s.ord==='ordinal'};
+  }
+  const set=CATSETS[s.set],c=s.c[s.set];if(sum(c)<=0)return{err:'All counts are zero. Move at least one slider.'};
+  return{labels:set.labels,counts:c.slice(),ord:set.ord};
+}
+function rCat(){
+  const d=catData();if(d.err)return fail(d.err);
+  const N=sum(d.counts),mx=Math.max(...d.counts),modeI=d.counts.map((c,i)=>c===mx?i:-1).filter(i=>i>=0),k=d.labels.length;
+  const W=640,H=270,m={l:46,r:14,t:18,b:58},top=d.ord?100:Math.max(5,Math.ceil(mx/N*100/10)*10+5),fr=frame(W,H,m,[0,k],[0,top],{ylab:'Percent',yf:v=>v+'%',xt:[],yn:5});let s=fr.s;
+  const cw=(W-m.l-m.r)/k;let cum=0,cp=[];
+  d.counts.forEach((c,i)=>{const p=c/N*100,x0=m.l+i*cw;cum+=p;
+    s+='<rect x="'+(x0+cw*.15)+'" y="'+fr.sy(p)+'" width="'+cw*.7+'" height="'+(fr.sy(0)-fr.sy(p))+'" fill="'+(c===mx?'var(--b)':'var(--a)')+'" opacity=".85"/>';
+    s+='<text class="strong" x="'+(x0+cw/2)+'" y="'+(fr.sy(p)-5)+'" text-anchor="middle">'+f(p,1)+'%</text>';
+    const lab=d.labels[i].length>14?d.labels[i].slice(0,13)+'…':d.labels[i];
+    s+='<text x="'+(x0+cw/2)+'" y="'+(H-m.b+16)+'" text-anchor="middle">'+esc(lab)+'</text>';
+    cp.push((x0+cw/2)+','+fr.sy(cum));});
+  if(d.ord){s+='<polyline points="'+cp.join(' ')+'" fill="none" stroke="var(--ok)" stroke-width="2"/>'+cp.map(p=>'<circle cx="'+p.split(',')[0]+'" cy="'+p.split(',')[1]+'" r="3.5" fill="var(--ok)"/>').join('');}
+  $('catChart').innerHTML=svgOpen(W,H,'Bar chart of the percentage in each category'+(d.ord?' with a line for the cumulative percentage':''))+s+'</svg>'+'<p class="cap">The orange bar marks the mode, the most frequent category.'+(d.ord?' The green line is the cumulative percent, which suits ordered categories.':'')+'</p>';
+  let c2=0,medI=-1;const rows=d.counts.map((c,i)=>{c2+=c;if(medI<0&&c2/N>=.5)medI=i;return[esc(d.labels[i])+(c===mx?' <b>(mode)</b>':''),f(c,Number.isInteger(c)?0:1),f(c/N,2),f(100*c/N,1)+'%'].concat(d.ord?[f(100*c2/N,1)+'%']:[]);});
+  rows.push(['<b>Total</b>','<b>'+f(N,Number.isInteger(N)?0:1)+'</b>','<b>1.00</b>','<b>100.0%</b>'].concat(d.ord?['']:[]));
+  $('catTable').innerHTML=tbl(['Category','Frequency (f)','Proportion','Percent'].concat(d.ord?['Cumulative %']:[]),rows);
+  $('catCap').textContent='Proportion = f ÷ N and percent = 100 × f ÷ N, with N = '+f(N,Number.isInteger(N)?0:1)+'. '+(modeI.length>1?'There is a tie for the mode.':'')+(d.ord?' The median category is the first one where the cumulative percent reaches 50%: '+d.labels[medI]+'.':' Nominal categories have no order, so a median or mean would be meaningless.');
+  const modeL=modeI.map(i=>d.labels[i]).join(' and ');
+  result({cards:[['N',f(N,Number.isInteger(N)?0:1)],['Categories',k],['Mode',esc(modeL)],['Modal percent',f(100*mx/N,1)+'%']].concat(d.ord?[['Median category',esc(d.labels[medI])]]:[]),
+    interp:'The most common '+(modeI.length>1?'categories are':'category is')+' <b>'+esc(modeL)+'</b> ('+f(100*mx/N,1)+'% of '+f(N,Number.isInteger(N)?0:1)+').'+(d.ord?' Because the categories are ordered, the <b>median category</b> is <b>'+esc(d.labels[medI])+'</b>.':' For unordered categories the mode, proportions and percentages are the appropriate descriptive statistics.'),
+    apa:'Mo = '+modeL+' ('+f(100*mx/N,1)+'%), N = '+f(N,Number.isInteger(N)?0:1)+(d.ord?', median category = '+d.labels[medI]:'')});
+}
+
+/* ============ rating scales ============ */
+function rateData(){
+  const s=S.rate,P=s.pts;
+  if(S.source==='own'){
+    const lines=s.own.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);if(lines.length<4)return{err:'Enter at least 3 respondents (one per line).'};
+    const split=l=>l.split(/[\t,;]+|\s{2,}|(?<=\d)\s+(?=\d)/).map(t=>t.trim()).filter(Boolean);
+    let names=null,body=lines;const t0=split(lines[0]);
+    if(t0.some(t=>!isFinite(Number(t)))){names=lines[0].split(/[\t,;]+/).map(t=>t.trim());body=lines.slice(1);}
+    const rows=[];
+    for(let i=0;i<body.length;i++){const t=split(body[i]).map(Number);if(t.some(v=>!isFinite(v)))return{err:'Line '+(i+1+(names?1:0))+' has a value that is not a number.'};
+      if(i&&t.length!==rows[0].length)return{err:'Line '+(i+1+(names?1:0))+' has '+t.length+' ratings but the first respondent has '+rows[0].length+'.'};
+      if(t.some(v=>!Number.isInteger(v)||v<1||v>P))return{err:'Line '+(i+1+(names?1:0))+' has a rating outside 1 to '+P+'. Change the scale points or the data.'};rows.push(t);}
+    if(rows.length<3)return{err:'Enter at least 3 respondents.'};if(rows[0].length<1)return{err:'Enter at least one rating per line.'};
+    const k=rows[0].length;return{rows,names:names&&names.length===k?names:Array.from({length:k},(_,i)=>'Item '+(i+1)),P};
+  }
+  const R=rng(s.seed*17+3),offs=[.35,-.25,.1,-.45,.25],rows=[];
+  for(let i=0;i<s.n;i++){const p=R.n()*s.spread;rows.push(offs.map(o=>clamp(Math.round(s.mu*(P/5)+o*(P/5)+p*(P/5)+R.n()*s.noise*(P/5)),1,P)));}
+  return{rows,names:ITEMS,P};
+}
+function rRate(){
+  const d=rateData();if(d.err)return fail(d.err);
+  const n=d.rows.length,k=d.rows[0].length,P=d.P,items=d.names.map((nm,j)=>{const v=d.rows.map(r=>r[j]),c=new Array(P).fill(0);v.forEach(q=>c[q-1]++);const Ds=descr(v,false);return{nm,v,c,M:Ds.M,SD:Ds.SD,Md:Ds.Md,Mo:Ds.Mo.m,top:v.filter(q=>q>=P-1).length/n};});
+  const ramp=['#d6e4fb','#b2cdf6','#8db5f1','#6a9de9','#4585df','#2468d6','#1a4fa6'],col=i=>ramp[Math.round(i/(P-1)*(ramp.length-1))];
+  const W=640,rowH=34,H=40+k*rowH+34,mL=190,mR=14,pw=W-mL-mR;let s='';
+  items.forEach((it,j)=>{const y=34+j*rowH;let x0=mL;s+='<text class="strong" x="'+(mL-8)+'" y="'+(y+rowH/2-2)+'" text-anchor="end">'+esc(it.nm.length>28?it.nm.slice(0,27)+'…':it.nm)+'</text>';
+    it.c.forEach((c,i)=>{const w=c/n*pw;if(w>0){s+='<rect x="'+x0+'" y="'+(y)+'" width="'+w+'" height="'+(rowH-8)+'" fill="'+col(i)+'" stroke="var(--panel)" stroke-width="1"/>';if(w>26)s+='<text x="'+(x0+w/2)+'" y="'+(y+(rowH-8)/2+4)+'" text-anchor="middle" style="fill:'+(i>=(P-1)/2?'#fff':'#1b1e25')+';font-weight:600">'+Math.round(c/n*100)+'%</text>';}x0+=w;});});
+  s+='<g>';for(let i=0;i<P;i++){const lx=mL+i*Math.min(70,pw/P);s+='<rect x="'+lx+'" y="'+(H-22)+'" width="12" height="12" fill="'+col(i)+'"/><text x="'+(lx+16)+'" y="'+(H-12)+'">'+(i+1)+(i===0?' (low)':i===P-1?' (high)':'')+'</text>';}s+='</g>';
+  $('rateChart').innerHTML=svgOpen(W,H,'Stacked bars showing the percentage choosing each rating for each item')+s+'</svg>';
+  $('rateTable').innerHTML=tbl(['Item','M','SD','Mdn','Mode','% top two'],items.map(it=>[esc(it.nm),f(it.M),f(it.SD),f(it.Md,1),it.Mo.slice(0,3).join(', ')+(it.Mo.length>3?'…':''),pct(it.top,0)]));
+  $('rateCap').textContent='Respondents rate each statement from 1 to '+P+'. The numerical ratings can be added and averaged, which makes them compatible with most standard statistics. “Top two” is the share choosing '+(P-1)+' or '+P+'.';
+  const tot=d.rows.map(r=>sum(r)),T=descr(tot,false),bw=Math.max(1,Math.ceil((T.range+1)/14)),rows=freqRows(tot,bw);
+  $('rateTot').innerHTML=drawHist(640,240,rows,bw,true,{xlab:'Total score (possible '+k+' to '+k*P+')',label:'Histogram of respondents total scores with the mean marked',lines:[{v:T.M,col:'var(--rej)',label:'Mean '+f(T.M,1)}]});
+  $('rateTotCap').textContent='A respondent’s total score is the sum of their ratings on the '+k+' item'+(k>1?'s':'')+'. Mean total = '+f(T.M,1)+', SD = '+f(T.SD,1)+', range of totals = '+T.min+' to '+T.max+' (possible '+k+' to '+k*P+').';
+  result({cards:[['Respondents',n],['Items',k],['Mean total',f(T.M,1)],['SD of total',f(T.SD,1)],['Range of totals',T.min+' to '+T.max]],
+    interp:'On the '+P+'-point scale the average item rating is <b>'+f(mean(items.map(i=>i.M)))+'</b>; respondents’ total scores average <b>'+f(T.M,1)+'</b> (SD = '+f(T.SD,1)+') out of a possible '+k*P+'. The highest-rated item is “'+esc(items.slice().sort((a,b)=>b.M-a.M)[0].nm)+'” and the lowest is “'+esc(items.slice().sort((a,b)=>a.M-b.M)[0].nm)+'”.',
+    apa:'Total score: M = '+f(T.M,1)+', SD = '+f(T.SD,1)+', range = '+T.min+'–'+T.max+', n = '+n});
+}
+
+/* ============ observation ============ */
+function obsData(){
+  const s=S.obs;
+  if(S.source==='own'){
+    const L=s.ownLen*60;if(!(L>0))return{err:'Enter the session length in minutes.'};
+    const lines=s.own.split(/\r?\n/).map(l=>l.trim()).filter(Boolean),b=[];
+    for(let i=0;i<lines.length;i++){const t=lines[i].split(/[\s,;]+/).map(Number);if(t.length!==2||t.some(v=>!isFinite(v)))return{err:'Line '+(i+1)+' needs two numbers: start, end.'};
+      if(t[0]<0||t[1]>L||t[0]>=t[1])return{err:'Line '+(i+1)+': each bout needs 0 ≤ start < end ≤ '+L+' seconds (the session length).'};b.push(t);}
+    b.sort((p,q)=>p[0]-q[0]);for(let i=1;i<b.length;i++)if(b[i][0]<b[i-1][1])return{err:'Bouts '+i+' and '+(i+1)+' overlap. Each bout must end before the next one starts.'};
+    return{L,b};
+  }
+  const L=s.len*60,R=rng(s.seed*29+7);let dur=Array.from({length:s.k},()=>Math.max(2,Math.round(s.dur*(.4+R.u()*1.2))));
+  const tot=sum(dur);if(tot>.85*L)dur=dur.map(v=>Math.max(2,Math.floor(v*.85*L/tot)));
+  const free=L-sum(dur),w=Array.from({length:s.k+1},()=>R.u()+.05),sw=sum(w);let t=0;const b=[];
+  for(let i=0;i<s.k;i++){t+=w[i]/sw*free;const st=Math.round(t);b.push([st,st+dur[i]]);t+=dur[i];}
+  return{L,b};
+}
+function rObs(){
+  const s=S.obs,d=obsData();if(d.err)return fail(d.err);
+  const L=d.L,b=d.b,k=b.length,dur=sum(b.map(q=>q[1]-q[0])),iv=s.iv,K=Math.ceil(L/iv),occ=new Array(K).fill(false);
+  b.forEach(q=>{for(let j=Math.floor(q[0]/iv);j<=Math.min(K-1,Math.ceil(q[1]/iv)-1);j++)occ[j]=true;});
+  const nOcc=occ.filter(Boolean).length,W=640,H=170,m={l:20,r:14,t:20,b:40},xd=[0,L],ticks=niceTicks(0,L/60,10).map(v=>[v*60,tl(v)]),fr=frame(W,H,m,xd,[0,1],{noY:true,xt:ticks,xlab:'Minutes into the session'});let sv=fr.s;
+  sv+='<text x="'+m.l+'" y="'+(m.t-6)+'">Behavior bouts (frequency and duration methods)</text>';
+  b.forEach(q=>{sv+='<rect x="'+fr.sx(q[0])+'" y="'+(m.t)+'" width="'+Math.max(1.5,fr.sx(q[1])-fr.sx(q[0]))+'" height="34" fill="var(--b)" opacity=".9"/>';});
+  sv+='<text x="'+m.l+'" y="'+(m.t+56)+'">Intervals of '+iv+' s scored “occurred” (interval method)</text>';
+  for(let j=0;j<K;j++){const x0=fr.sx(j*iv),x1=fr.sx(Math.min(L,(j+1)*iv));sv+='<rect x="'+x0+'" y="'+(m.t+62)+'" width="'+Math.max(.8,x1-x0-(K>150?0:1))+'" height="30" fill="'+(occ[j]?'var(--a)':'var(--soft)')+'" stroke="var(--line)" stroke-width=".5"/>';}
+  $('obsChart').innerHTML=svgOpen(W,H,'Timeline of behavior bouts and the intervals scored as occurred')+sv+'</svg>';
+  const show=b.slice(0,30);
+  $('obsTable').innerHTML=k?tbl(['Bout','Start (s)','End (s)','Duration (s)'],show.map((q,i)=>[i+1,f(q[0],0),f(q[1],0),f(q[1]-q[0],0)])):'<p class="cap">No bouts recorded.</p>';
+  const a=s.a,bb=s.b,c=s.c,dd=s.d,N=a+bb+c+dd,po=N?(a+dd)/N:NaN,pe=N?((a+bb)*(a+c)+(c+dd)*(bb+dd))/(N*N):NaN,kap=(isFinite(po)&&pe<1)?(po-pe)/(1-pe):NaN;
+  $('agrTable').innerHTML=tbl(['','Observer B: occurred','Observer B: did not occur','Row total'],[['Observer A: occurred',a,bb,a+bb],['Observer A: did not occur',c,dd,c+dd],['<b>Column total</b>',a+c,bb+dd,N]])+
+    '<div class="stats" style="margin-top:12px">'+[['Percent agreement (p<sub>o</sub>)',pct(po,1)],['Agreement expected by chance (p<sub>e</sub>)',pct(pe,1)],['Cohen’s κ',fb(kap)]].map(x=>stat(x[0],x[1])).join('')+'</div>';
+  $('agrCap').textContent=!isFinite(kap)?'κ is undefined here: add events or change the counts.':kap>=.8?'The observers agree well beyond chance, so the scores can be treated as reliable.':kap>=.6?'Agreement is moderate. Clearer category definitions and more observer training would improve reliability.':'Agreement is weak once chance is removed: percent agreement can look high simply because both observers mostly score “did not occur”.';
+  result({cards:[['Frequency (bouts)',k],['Total duration',f(dur/60,1)+' min'],['Share of session',pct(dur/L,1)],['Intervals with behavior',nOcc+' of '+K],['% of intervals',pct(nOcc/K,0)],['Percent agreement',pct(po,0)],['Cohen’s κ',fb(kap)]],
+    interp:'In a '+f(L/60,0)+'-minute session the behavior occurred <b>'+k+'</b> time'+(k===1?'':'s')+' for a total of <b>'+f(dur/60,1)+' minutes</b> ('+pct(dur/L,1)+' of the session'+(k?', about '+f(dur/k,0)+' seconds per bout':'')+'). With '+iv+'-second intervals it was scored in <b>'+nOcc+' of '+K+'</b> intervals ('+pct(nOcc/K,0)+'). The three methods answer different questions: how often, for how long, and in how much of the session.',
+    apa:'Frequency = '+k+'; duration = '+f(dur/60,1)+' min ('+pct(dur/L,1)+' of session); intervals scored = '+nOcc+'/'+K+(isFinite(kap)?'; κ = '+fb(kap)+', agreement = '+pct(po,0):'')});
+}
+function setStatsNoop(){}
+
+/* ============ single case ============ */
+function caseData(){
+  const s=S.case;
+  if(S.source==='own'){
+    const r=parseNums(s.own,4);if(r.err)return{err:r.err};let t0=null;
+    if(String(s.ownT).trim()!==''){t0=Math.round(+s.ownT);if(!(t0>=2&&t0<=r.v.length))return{err:'The first treatment week must be between 2 and '+r.v.length+'.'};}
+    return{y:r.v,t0};
+  }
+  const R=rng(s.seed*13+1),t0=s.tx?Math.min(s.t0,s.wks-2):null,y=[];
+  for(let i=1;i<=s.wks;i++)y.push(Math.round(Math.max(0,s.base+R.n()*s.noise+(t0&&i>=t0?s.eff:0))*10)/10);
+  return{y,t0};
+}
+function rCase(){
+  const d=caseData();if(d.err)return fail(d.err);
+  const y=d.y,n=y.length,t0=d.t0,pre=t0?y.slice(0,t0-1):y,post=t0?y.slice(t0-1):[],xs=y.map((_,i)=>i+1);
+  const W=640,H=260,m={l:46,r:14,t:20,b:40},lo=Math.min(...y),hi=Math.max(...y),pad=(hi-lo)*.15||1,fr=frame(W,H,m,[1,n],[Math.max(0,lo-pad),hi+pad],{xlab:'Week',ylab:'Score',xn:Math.min(n,10)});let sv=fr.s;
+  if(t0)sv+='<rect x="'+fr.sx(t0-.5)+'" y="'+m.t+'" width="'+(fr.sx(n+.5)-fr.sx(t0-.5))+'" height="'+(H-m.t-m.b)+'" fill="var(--b)" opacity=".12"/><text x="'+(fr.sx(t0-.5)+6)+'" y="'+(m.t+12)+'" style="fill:var(--b);font-weight:600">Treatment</text>';
+  const mline=(arr,from,to,col)=>'<line x1="'+fr.sx(from)+'" x2="'+fr.sx(to)+'" y1="'+fr.sy(mean(arr))+'" y2="'+fr.sy(mean(arr))+'" stroke="'+col+'" stroke-width="2" stroke-dasharray="6 4"/>';
+  if(t0){sv+=mline(pre,1,t0-1,'var(--rej)')+mline(post,t0,n,'var(--ok)');}else sv+=mline(y,1,n,'var(--rej)');
+  sv+='<polyline fill="none" stroke="var(--a)" stroke-width="2" points="'+xs.map((x,i)=>fr.sx(x)+','+fr.sy(y[i])).join(' ')+'"/>'+xs.map((x,i)=>'<circle cx="'+fr.sx(x)+'" cy="'+fr.sy(y[i])+'" r="3.5" fill="var(--a)"/>').join('');
+  $('caseChart').innerHTML=svgOpen(W,H,'Line chart of one individual’s weekly scores with the mean before and during treatment')+sv+'</svg>';
+  const T=descr(y,false),Mb=mean(pre),Ma=post.length?mean(post):NaN,ch=Ma-Mb,rel=ch/Mb;
+  $('caseCap').textContent=t0?'Dashed lines mark the mean before (red) and during (green) treatment. The scores change after treatment starts, but with one person and no comparison condition a case study cannot show that the treatment caused the change (history, maturation and chance are also possible).':'With no treatment this is a case history: an in-depth description of how one individual’s scores unfold over time. The dashed line is the overall mean.';
+  result({cards:t0?[['Mean before',f(Mb,1)],['Mean during',f(Ma,1)],['Change',(ch>0?'+':'')+f(ch,1)],['Relative change',isFinite(rel)?(rel>0?'+':'')+pct(rel,1):'–'],['SD (all weeks)',f(T.SD,1)],['Range',f(T.min,1)+' to '+f(T.max,1)]]:[['Weeks',n],['Mean',f(T.M,1)],['SD',f(T.SD,1)],['Range',f(T.min,1)+' to '+f(T.max,1)]],
+    interp:t0?'Before treatment (weeks 1 to '+(t0-1)+') the mean score was <b>'+f(Mb,1)+'</b>; during treatment (weeks '+t0+' to '+n+') it was <b>'+f(Ma,1)+'</b>, a change of <b>'+(ch>0?'+':'')+f(ch,1)+'</b> ('+(rel>0?'+':'')+pct(rel,1)+'). Averages describe this individual only; they do not generalize.':'Over '+n+' weeks the mean score was <b>'+f(T.M,1)+'</b> (SD = '+f(T.SD,1)+'), ranging from '+f(T.min,1)+' to '+f(T.max,1)+'.',
+    apa:t0?'M before = '+f(Mb,1)+', M during = '+f(Ma,1)+', change = '+(ch>0?'+':'')+f(ch,1)+' ('+(rel>0?'+':'')+pct(rel,1)+'), n = '+n+' weeks':'M = '+f(T.M,1)+', SD = '+f(T.SD,1)+', range = '+f(T.min,1)+'–'+f(T.max,1)+', n = '+n+' weeks'});
+}
+
+/* ============ result, errors, load-from-sim ============ */
+function result(o){
+  $('msg').hidden=true;$('pRes').hidden=false;
+  setStats('stats',o.cards);$('interp').innerHTML=o.interp;$('apa').textContent=o.apa;$('apaRow').hidden=!o.apa;
+}
+function fail(t){
+  $('msg').textContent=t;$('msg').hidden=false;
+  document.querySelectorAll('.stack [data-fam="'+S.tab+'"]').forEach(p=>p.hidden=true);$('pRes').hidden=true;
+}
+function loadSim(){
+  const t=S.tab,tmp=S.source;S.source='sim';
+  try{
+    if(t==='num')S.num.own=numData().x.join('\n');
+    else if(t==='cat'){const d=catData();S.cat.own=d.labels.map((l,i)=>l+', '+d.counts[i]).join('\n');S.cat.ord=d.ord?'ordinal':'nominal';}
+    else if(t==='rate'){const d=rateData();S.rate.own=d.names.join(', ')+'\n'+d.rows.map(r=>r.join(', ')).join('\n');}
+    else if(t==='obs'){const d=obsData();S.obs.own=d.b.map(q=>q.join(', ')).join('\n');S.obs.ownLen=d.L/60;}
+    else{const d=caseData();S.case.own=d.y.join('\n');S.case.ownT=d.t0||'';}
+  }finally{S.source=tmp;}
+  syncOwn();
+}
+function syncOwn(){
+  $('own_num').value=S.num.own;$('own_cat').value=S.cat.own;$('own_rate').value=S.rate.own;$('own_obs').value=S.obs.own;$('own_obsLen').value=S.obs.ownLen;$('own_case').value=S.case.own;$('own_caseT').value=S.case.ownT;
+}
+
+/* ============ main render ============ */
+const RENDER={num:rNum,cat:rCat,rate:rRate,obs:rObs,case:rCase};
+function syncUI(){
+  TABS.forEach(k=>$('tab-'+k).setAttribute('aria-selected',k===S.tab));
+  document.querySelector('input[name=src][value='+S.source+']').checked=true;
+  document.querySelectorAll('.stack [data-fam],aside [data-fam]').forEach(el=>{
+    if(el.closest('#ctl'))return;
+    let h=el.dataset.fam!==S.tab;
+    if(el.classList.contains('own')&&S.source==='sim')h=true;
+    el.hidden=h;
+  });
+  $('resN').textContent={num:5,cat:3,rate:3,obs:3,case:2}[S.tab];
+  buildPresets();syncControls();
+}
+function render(){
+  syncUI();$('msg').hidden=true;
+  RENDER[S.tab]();
+}
+/* ============ wiring ============ */
+function currentTheme(){const t=document.documentElement.getAttribute('data-theme');return t||(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');}
+function syncThemeBtn(){const dark=currentTheme()==='dark',b=$('themeBtn');b.textContent=dark?'☀ Light theme':'☾ Dark theme';b.setAttribute('aria-pressed',dark);}
+function init(){
+  buildControls();syncOwn();syncThemeBtn();
+  $('themeBtn').onclick=()=>{const next=currentTheme()==='dark'?'light':'dark';document.documentElement.setAttribute('data-theme',next);try{localStorage.setItem('ttest-theme',next);}catch(e){}syncThemeBtn();};
+  if(window.matchMedia){const mq=matchMedia('(prefers-color-scheme: dark)');if(mq.addEventListener)mq.addEventListener('change',syncThemeBtn);}
+  TABS.forEach(k=>$('tab-'+k).onclick=()=>{S.tab=k;render();});
+  document.querySelectorAll('input[name=src]').forEach(el=>el.addEventListener('change',e=>{S.source=e.target.value;if(S.source==='own'){const o={num:S.num.own,cat:S.cat.own,rate:S.rate.own,obs:S.obs.own,case:S.case.own}[S.tab];if(!String(o).trim())loadSim();}render();}));
+  document.querySelectorAll('.loadSim').forEach(b=>b.addEventListener('click',()=>{loadSim();render();}));
+  $('own_num').addEventListener('input',e=>{S.num.own=e.target.value;S.num.px=null;render();});
+  $('own_cat').addEventListener('input',e=>{S.cat.own=e.target.value;render();});
+  $('own_rate').addEventListener('input',e=>{S.rate.own=e.target.value;render();});
+  $('own_obs').addEventListener('input',e=>{S.obs.own=e.target.value;render();});
+  $('own_obsLen').addEventListener('input',e=>{S.obs.ownLen=+e.target.value;render();});
+  $('own_case').addEventListener('input',e=>{S.case.own=e.target.value;render();});
+  $('own_caseT').addEventListener('input',e=>{S.case.ownT=e.target.value;render();});
+  $('ovRow').addEventListener('click',e=>{const b=e.target.closest('button[data-ov]');if(!b)return;S.num.ov[b.dataset.ov]=!S.num.ov[b.dataset.ov];render();});
+  $('copy').onclick=()=>{const txt=$('apa').textContent,done=()=>{$('copy').textContent='Copied';setTimeout(()=>$('copy').textContent='Copy',1200);};
+    if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(txt).then(done,done);
+    else{const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');}catch(e){}ta.remove();done();}};
+  render();
+}
+window.__ds={S,render,loadSim};
+init();
+})();
+
+</script>
+<script>
+(function(){
+"use strict";
+const $=id=>document.getElementById(id);
+const DEC={
+ start:{q:"What kind of data are you describing?",o:[
+  ["Numerical scores (test scores, times, counts of things)","n1"],
+  ["Categories (nominal or ordinal): which group, which answer","r_cat"],
+  ["Ratings on a numbered scale (Likert-type items)","r_rate"],
+  ["Behavior seen during an observation session","o1"],
+  ["Scores from one individual measured over time","r_case"]]},
+ n1:{q:"What do you want to know about the scores?",o:[
+  ["What a typical score is","n2"],
+  ["How spread out the scores are","r_spread"],
+  ["How one particular score compares with the others","r_pos"],
+  ["What the overall shape looks like","r_shape"]]},
+ n2:{q:"What does the distribution look like?",o:[
+  ["Roughly symmetric, one peak","r_sym"],
+  ["Skewed, or a few extreme scores","r_skew"],
+  ["Two peaks","r_bi"]]},
+ o1:{q:"What do you want to report?",o:[
+  ["How often, how long and in how much of the session the behavior occurred","r_obs"],
+  ["Whether two observers coded the behavior the same way","r_agree"]]},
+ r_sym:{t:"Mean and standard deviation",x:"When scores form a single, roughly symmetric peak the mean, median and mode nearly coincide, so the mean (with the standard deviation) is the usual summary.",
+  i:[["Symmetric scores",["tab-num","pre-num-1"],"Mean, median and mode sit together."],["Quiz example",["tab-num","pre-num-0"],"The 5-point quiz from the course content."]],
+  n:["Report M, SD and n.","Check the histogram before trusting the mean: a skewed shape or an outlier can mislead it."]},
+ r_skew:{t:"Median and quartiles",x:"In a skewed distribution the mean is pulled toward the long tail, away from the median. The median and the interquartile range resist extreme scores and describe a typical score better.",
+  i:[["Positive skew",["tab-num","pre-num-2"],"The mean exceeds the median."],["Negative skew",["tab-num","pre-num-3"],"The mean falls below the median."],["With an outlier",["tab-num","pre-num-5"],"One extreme score moves the mean and SD but barely moves the median."]],
+  n:["Report Mdn with Q1 and Q3, and the mean as well if readers expect it.","Use the box plot in panel 4 to see which scores lie beyond the 1.5 × IQR fences."]},
+ r_bi:{t:"Describe both peaks",x:"A single average can sit in the empty valley between two groups and describe nobody. Report the modes (the peaks) and consider whether two distinct groups were mixed together.",
+  i:[["Bimodal scores",["tab-num","pre-num-4"],"The mean lands between the two peaks."]],
+  n:["The mode is the most frequent score; a distribution can have more than one.","Look for a grouping variable that separates the two peaks."]},
+ r_spread:{t:"Range, variance and standard deviation",x:"The range uses only the two extreme scores. The variance averages the squared distances from the mean (SS divided by n − 1 for a sample), and its square root, the standard deviation, is in the original units.",
+  i:[["Quiz example, step by step",["tab-num","pre-num-0"],"Follow the X − M and (X − M)² columns to SS, s² and s."],["Whole population",["tab-num","set:c_num_pop=pop"],"Divide by N instead of n − 1 to get σ."]],
+  n:["Use n − 1 for a sample (a statistic) and N for a whole population (a parameter).","For skewed data prefer the IQR to the SD."]},
+ r_pos:{t:"z-score and percentile rank",x:"A z-score expresses a score as standard deviations above or below the mean, and the percentile rank says what share of scores fall below it. Quartiles mark the 25th, 50th and 75th percentiles.",
+  i:[["Locate a score",["tab-num","pre-num-1"],"Move the X slider in panel 4."]],
+  n:["The normal-curve percentile is only trustworthy if the scores are roughly normal.","z is undefined when every score is the same."]},
+ r_shape:{t:"Frequency distribution and graphs",x:"A frequency table lists each score X with its frequency f; a histogram or polygon shows the shape. Check the symmetry, the number of peaks and any outliers, and compare with the normal curve.",
+  i:[["Histogram and polygon",["tab-num","pre-num-1"],"Toggle the overlays above the table."],["Normal curve",["tab-num","pre-num-1"],"Panel 3 compares the scores with ±1, 2 and 3 SD."]],
+  n:["Grouped class widths change how the histogram looks; try several.","Skewness g₁ near 0 means roughly symmetric."]},
+ r_cat:{t:"Percentages, proportions and the mode",x:"Categories cannot be averaged. Describe them with the frequency in each category, proportions and percentages, and the mode. For ordered (ordinal) categories add the cumulative percent and the median category.",
+  i:[["Nominal categories",["tab-cat","pre-cat-0"],"Study method: mode and percentages."],["Ordinal categories",["tab-cat","pre-cat-1"],"Satisfaction level: cumulative percent and median category."]],
+  n:["A mean of category codes is meaningless for nominal data.","Report N so readers can judge the percentages."]},
+ r_rate:{t:"Item means and total scores",x:"Ratings on a numbered scale can be added and averaged. Summarize each item (mean, SD, median, percent choosing the top options) and each respondent’s total score.",
+  i:[["Positive attitudes",["tab-rate","pre-rate-0"],"Ratings pile up near the top of the scale."],["Mixed attitudes",["tab-rate","pre-rate-1"],"Ratings spread across the scale."]],
+  n:["Treating ordinal ratings as numbers is common practice but an assumption; the percent per response option is always safe to report.","Check the distribution of totals before relying on the mean."]},
+ r_obs:{t:"Frequency, duration and interval methods",x:"Count the bouts (frequency), time them (duration) or divide the session into equal intervals and score each for whether the behavior occurred (interval). Each answers a different question.",
+  i:[["Typical session",["tab-obs","pre-obs-0"],"All three measures from one session."],["Few long bouts",["tab-obs","pre-obs-1"],"Low frequency, large share of the session."],["Many short bouts",["tab-obs","pre-obs-2"],"High frequency, small share of the session."]],
+  n:["Report the interval length with interval scores.","Whole-interval and partial-interval scoring differ; here an interval counts if the behavior occurred at any point in it."]},
+ r_agree:{t:"Percent agreement and Cohen’s κ",x:"Two observers independently code the same events. Percent agreement is the share coded the same way; κ corrects it for the agreement expected by chance.",
+  i:[["Strong agreement",["tab-obs","pre-obs-3"],"High agreement and high κ."],["Weak agreement",["tab-obs","pre-obs-4"],"Agreement looks acceptable but κ is low."]],
+  n:["With rare behaviors, percent agreement can be high even when the observers rarely agree on the events that matter.","The course content names inter-rater reliability without specifying an index."]},
+ r_case:{t:"Means before and during, and the change",x:"For one individual, describe the scores over time and compare the mean before and during a treatment, reporting the change and the relative change. Without a treatment this is a case history.",
+  i:[["Treatment helps",["tab-case","pre-case-0"],"A drop in scores after treatment starts."],["Case history",["tab-case","pre-case-1"],"No treatment, only description."]],
+  n:["With one person and no comparison condition, a change cannot be attributed to the treatment.","Averages describe this individual only and do not generalize."]}
+};
+let path=['start'];
+function clicks(ids){
+  ids.forEach(id=>{
+    if(id.indexOf('set:')===0){const kv=id.slice(4).split('='),e=$(kv[0]);if(e){e.value=kv[1];e.dispatchEvent(new Event('change',{bubbles:true}));}return;}
+    const b=$(id);if(b)b.click();
+  });
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function render(){
+  const id=path[path.length-1],nd=DEC[id],box=$('decideBody');let h='';
+  if(path.length>1)h+='<div class="crumbs">'+path.slice(0,-1).map((p,i)=>{const q=DEC[p],lab=q.o.find(o=>o[1]===path[i+1])[0];return`<button type="button" class="crumb" data-back="${i}"><span>${q.q.split('?')[0].replace(/\s*\([^)]*\)/g,'')+'?'}</span> <b>${lab.replace(/\s*[:(].*$/,'')}</b></button>`;}).join('')+'</div>';
+  if(nd.q){
+    h+=`<p class="dq">${nd.q}</p><div class="dopts">`+nd.o.map(o=>`<button type="button" class="dopt" data-go="${o[1]}">${o[0]}</button>`).join('')+'</div>';
+  }else{
+    h+=`<div class="dres"><h3 style="margin-top:0">Suggested</h3><p class="dtitle">${nd.t}</p><p>${nd.x}</p>`;
+    if(nd.i.length)h+='<ul class="dlist">'+nd.i.map(([lab,ids,why])=>`<li><button type="button" class="pill" data-open="${ids.join('|')}">${lab}</button> <span>${why}</span></li>`).join('')+'</ul>';
+    if(nd.n.length)h+='<h3>Things to keep in mind</h3><ul class="rel">'+nd.n.map(t=>`<li>${t}</li>`).join('')+'</ul>';
+    h+='</div>';
+  }
+  if(path.length>1)h+='<div class="row" style="margin-top:12px"><button type="button" class="pill" data-reset="1">Start over</button></div>';
+  box.innerHTML=h;
+}
+$('decideBody').addEventListener('click',e=>{
+  const t=e.target.closest('button');if(!t)return;
+  if(t.dataset.go){path.push(t.dataset.go);render();}
+  else if(t.dataset.back!=null){path=path.slice(0,+t.dataset.back+1);render();}
+  else if(t.dataset.reset){path=['start'];render();}
+  else if(t.dataset.open)clicks(t.dataset.open.split('|'));
+});
+window.__decide={DEC,go:p=>{path=p;render();}};
+render();
+})();
+
+</script>
+<script>
+/* ===== Download charts as PNG (300 dpi) ===== */
+(function(){
+'use strict';
+var DPI=300,SCALE=DPI/96,MAXPX=16000;
+var css=document.createElement('style');
+css.textContent='#pngLayer{position:absolute;left:0;top:0;width:0;height:0;z-index:60}'+
+'#pngLayer button{position:absolute;pointer-events:auto;font:600 11.5px/1 system-ui,-apple-system,"Segoe UI",sans-serif;padding:5px 8px;border-radius:7px;border:1px solid var(--line,#ccd);background:var(--card,var(--panel,#fff));color:var(--ink,#111);cursor:pointer;opacity:.6;white-space:nowrap;box-shadow:0 1px 3px rgba(0,0,0,.12)}'+
+'#pngLayer button:hover,#pngLayer button:focus-visible{opacity:1;border-color:var(--accent,#2468d6)}'+
+'#pngLayer button:focus-visible{outline:2px solid var(--accent,#2468d6);outline-offset:2px}'+
+'@media (hover:none){#pngLayer button{opacity:1}}@media print{#pngLayer{display:none}}';
+document.head.appendChild(css);
+var layer=document.createElement('div');layer.id='pngLayer';document.body.appendChild(layer);
+var map=new Map(),pending=0,counter=0;
+
+function crc32(buf){var t=crc32.t;if(!t){t=crc32.t=[];for(var n=0;n<256;n++){var c=n;for(var k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0;}}
+  var c2=0xFFFFFFFF;for(var i=0;i<buf.length;i++)c2=t[(c2^buf[i])&255]^(c2>>>8);return(c2^0xFFFFFFFF)>>>0;}
+function withDpi(ab){ /* insert a pHYs chunk (pixels per metre) right after IHDR */
+  var src=new Uint8Array(ab),ppm=Math.round(DPI/0.0254),chunk=new Uint8Array(21),dv=new DataView(chunk.buffer);
+  dv.setUint32(0,9);chunk.set([112,72,89,115],4);dv.setUint32(8,ppm);dv.setUint32(12,ppm);chunk[16]=1;
+  dv.setUint32(17,crc32(chunk.subarray(4,17)));
+  var cut=33,out=new Uint8Array(src.length+21);out.set(src.subarray(0,cut),0);out.set(chunk,cut);out.set(src.subarray(cut),cut+21);return out;
+}
+function bgOf(el){while(el){var c=getComputedStyle(el).backgroundColor;if(c&&c!=='transparent'&&!/rgba\(\s*\d+,\s*\d+,\s*\d+,\s*0\s*\)/.test(c))return c;el=el.parentElement;}return '#ffffff';}
+function slug(s){return String(s||'').toLowerCase().replace(/<[^>]*>/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,60);}
+function nameFor(el){
+  var base=slug(document.title.split(/[·|–-]/)[0])||'chart',lab=el.getAttribute('aria-label')||'';
+  if(!lab){var p=el.closest('.card,.panel,section,div');var h=p&&p.querySelector('h2,h3');lab=h?h.textContent:'';}
+  return base+'-'+(slug(lab).slice(0,45).replace(/-$/,'')||'chart')+'-'+(++counter)+'-'+DPI+'dpi';
+}
+function save(blob,name){var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name+'.png';document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},1500);}
+function finish(cv,bg,w,h,name){
+  var out=document.createElement('canvas');out.width=cv.width;out.height=cv.height;
+  var c=out.getContext('2d');c.fillStyle=bg;c.fillRect(0,0,out.width,out.height);c.drawImage(cv,0,0);
+  out.toBlob(function(b){b.arrayBuffer().then(function(ab){save(new Blob([withDpi(ab)],{type:'image/png'}),name);});},'image/png');
+}
+var PROPS=['fill','fill-opacity','fill-rule','stroke','stroke-width','stroke-opacity','stroke-dasharray','stroke-linecap','stroke-linejoin','opacity','font-family','font-size','font-weight','font-style','letter-spacing','text-anchor','dominant-baseline','visibility','display','paint-order'];
+function exportSvg(svg){
+  var r=svg.getBoundingClientRect(),w=Math.round(r.width),h=Math.round(r.height),vbx=null;
+  /* some charts let labels spill past the viewBox (visible on screen): widen the export so nothing is cropped */
+  try{var vb=(svg.getAttribute('viewBox')||'').split(/[\s,]+/).map(Number),bb=svg.getBBox();
+    if(vb.length===4&&vb[2]>0&&vb[3]>0&&bb.width>0){var k=r.width/vb[2],P=3,x1=Math.min(vb[0],Math.max(bb.x-3,vb[0]-60)),y1=Math.min(vb[1],Math.max(bb.y-3,vb[1]-60)),x2=Math.max(vb[0]+vb[2],Math.min(bb.x+bb.width+3,vb[0]+vb[2]+60)),y2=Math.max(vb[1]+vb[3],Math.min(bb.y+bb.height+3,vb[1]+vb[3]+60));
+      if(x1<vb[0]||y1<vb[1]||x2>vb[0]+vb[2]||y2>vb[1]+vb[3]){vbx=[x1,y1,x2-x1,y2-y1];w=Math.round((x2-x1)*k);h=Math.round((y2-y1)*k);}}}catch(e){}
+  var s=Math.min(SCALE,MAXPX/Math.max(w,h));
+  var clone=svg.cloneNode(true),a=svg.querySelectorAll('*'),b=clone.querySelectorAll('*'),i,j;
+  for(i=0;i<a.length;i++){var cs=getComputedStyle(a[i]),st='';for(j=0;j<PROPS.length;j++)st+=PROPS[j]+':'+cs.getPropertyValue(PROPS[j])+';';b[i].setAttribute('style',st);b[i].removeAttribute('class');}
+  clone.setAttribute('xmlns','http://www.w3.org/2000/svg');clone.setAttribute('xmlns:xlink','http://www.w3.org/1999/xlink');
+  clone.setAttribute('width',w);clone.setAttribute('height',h);clone.removeAttribute('style');clone.removeAttribute('class');
+  if(!clone.getAttribute('viewBox'))clone.setAttribute('viewBox','0 0 '+w+' '+h);
+  if(vbx)clone.setAttribute('viewBox',vbx.join(' '));
+  var xml=new XMLSerializer().serializeToString(clone),url=URL.createObjectURL(new Blob([xml],{type:'image/svg+xml;charset=utf-8'})),img=new Image(),bg=bgOf(svg.parentElement),name=nameFor(svg);
+  img.onload=function(){var cv=document.createElement('canvas');cv.width=Math.round(w*s);cv.height=Math.round(h*s);var c=cv.getContext('2d');c.fillStyle=bg;c.fillRect(0,0,cv.width,cv.height);c.drawImage(img,0,0,cv.width,cv.height);URL.revokeObjectURL(url);
+    cv.toBlob(function(bl){bl.arrayBuffer().then(function(ab){save(new Blob([withDpi(ab)],{type:'image/png'}),name);});},'image/png');};
+  img.onerror=function(){URL.revokeObjectURL(url);alert('Sorry, this chart could not be exported.');};
+  img.src=url;
+}
+function exportBar(bar){ /* stacked bar made of coloured <div>s */
+  var r=bar.getBoundingClientRect(),w=Math.round(r.width),h=Math.round(r.height),s=Math.min(SCALE,MAXPX/Math.max(w,h)),cv=document.createElement('canvas');
+  cv.width=Math.round(w*s);cv.height=Math.round(h*s);var c=cv.getContext('2d');c.scale(s,s);c.fillStyle=bgOf(bar.parentElement);c.fillRect(0,0,w,h);
+  var kids=bar.children,i;for(i=0;i<kids.length;i++){var k=kids[i],kr=k.getBoundingClientRect(),cs=getComputedStyle(k),x=kr.left-r.left;
+    c.fillStyle=cs.backgroundColor;c.fillRect(x,0,kr.width,h);
+    if(k.textContent.trim()){c.fillStyle=cs.color;c.font=cs.fontWeight+' '+cs.fontSize+' '+cs.fontFamily;c.textAlign='center';c.textBaseline='middle';c.fillText(k.textContent.trim(),x+kr.width/2,h/2);}}
+  c.strokeStyle=getComputedStyle(bar).borderTopColor;c.lineWidth=1;c.strokeRect(.5,.5,w-1,h-1);
+  var name=nameFor(bar);cv.toBlob(function(b){b.arrayBuffer().then(function(ab){save(new Blob([withDpi(ab)],{type:'image/png'}),name);});},'image/png');
+}
+function exportRows(box){ /* grouped horizontal bars built from label / bar / value rows */
+  var r=box.getBoundingClientRect(),w=Math.round(r.width),h=Math.round(r.height),s=Math.min(SCALE,MAXPX/Math.max(w,h)),cv=document.createElement('canvas');
+  cv.width=Math.round(w*s);cv.height=Math.round(h*s);var c=cv.getContext('2d');c.scale(s,s);c.fillStyle=bgOf(box);c.fillRect(0,0,w,h);
+  box.querySelectorAll('*').forEach(function(k){
+    var kr=k.getBoundingClientRect(),cs=getComputedStyle(k),x=kr.left-r.left,y=kr.top-r.top;
+    if(k.classList.contains('bar')){c.fillStyle=cs.backgroundColor;c.beginPath();if(c.roundRect)c.roundRect(x,y,kr.width,kr.height,parseFloat(cs.borderTopLeftRadius)||0);else c.rect(x,y,kr.width,kr.height);c.fill();}
+    else if(!k.children.length&&k.textContent.trim()){c.fillStyle=cs.color;c.font=cs.fontStyle+' '+cs.fontWeight+' '+cs.fontSize+' '+cs.fontFamily;c.textBaseline='middle';
+      var al=cs.textAlign;c.textAlign=(al==='right'||al==='end')?'right':(al==='center'?'center':'left');var tx=c.textAlign==='right'?x+kr.width:c.textAlign==='center'?x+kr.width/2:x;
+      c.fillText(k.textContent.trim(),tx,y+kr.height/2,Math.max(10,kr.width));}
+  });
+  var name=nameFor(box);cv.toBlob(function(b){b.arrayBuffer().then(function(ab){save(new Blob([withDpi(ab)],{type:'image/png'}),name);});},'image/png');
+}
+var ROWS=new WeakSet();
+function setDpr(v){try{Object.defineProperty(window,'devicePixelRatio',{value:v,configurable:true});}catch(e){}}
+function exportCanvas(cv){
+  var r=cv.getBoundingClientRect(),w=r.width,bg=bgOf(cv.parentElement),name=nameFor(cv),orig=window.devicePixelRatio||1,want=Math.min(SCALE,MAXPX/Math.max(r.width,r.height));
+  var redraw=function(){window.dispatchEvent(new Event('resize'));};
+  var ok=false;try{setDpr(Math.max(want,orig));redraw();ok=true;}catch(e){}
+  var done=function(){try{delete window.devicePixelRatio;}catch(e){}if(window.devicePixelRatio!==orig)setDpr(orig);redraw();};
+  /* wait for any scheduled redraw (requestAnimationFrame) before reading pixels */
+  requestAnimationFrame(function(){requestAnimationFrame(function(){
+    var snap=document.createElement('canvas');snap.width=cv.width;snap.height=cv.height;snap.getContext('2d').drawImage(cv,0,0);
+    done();finish(snap,bg,w,r.height,name);});});
+}
+function qualifies(el){
+  if(el.closest('#pngLayer')||el.closest('button,summary,label'))return false;
+  var r=el.getBoundingClientRect();return r.width>=140&&(r.height>=70||el.classList.contains('bar')&&r.height>=20)&&getComputedStyle(el).visibility!=='hidden';
+}
+function update(){
+  pending=0;var rowBoxes=[];document.querySelectorAll('.bar:not([role=img])').forEach(function(b){var bx=b.parentElement&&b.parentElement.parentElement;if(bx&&rowBoxes.indexOf(bx)<0){rowBoxes.push(bx);ROWS.add(bx);}});
+  var els=Array.prototype.slice.call(document.querySelectorAll('svg,canvas,.bar[role=img]')).concat(rowBoxes).filter(qualifies),seen=new Set(els);
+  map.forEach(function(btn,el){if(!seen.has(el)||!document.contains(el)){btn.remove();map.delete(el);}});
+  var sx=window.pageXOffset,sy=window.pageYOffset;
+  els.forEach(function(el){
+    var btn=map.get(el);
+    if(!btn){btn=document.createElement('button');btn.type='button';btn.textContent='⬇ PNG';btn.title='Download this chart as a PNG image ('+DPI+' dpi)';
+      btn.setAttribute('aria-label','Download this chart as a PNG image, '+DPI+' dpi');
+      btn.addEventListener('click',function(){var t=ROWS.has(el)?'rows':el.tagName.toLowerCase();if(t==='canvas')exportCanvas(el);else if(t==='svg')exportSvg(el);else if(t==='rows')exportRows(el);else exportBar(el);});
+      layer.appendChild(btn);map.set(el,btn);}
+    var r=el.getBoundingClientRect();btn.style.left=Math.round(r.right+sx-btn.offsetWidth-6)+'px';btn.style.top=Math.round(r.top+sy+6)+'px';
+  });
+}
+function sched(){if(!pending){pending=requestAnimationFrame(update);}}
+new MutationObserver(function(ms){for(var i=0;i<ms.length;i++){if(!(ms[i].target.closest&&ms[i].target.closest('#pngLayer'))){sched();return;}}}).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['hidden','open','style','class']});
+window.addEventListener('resize',sched);window.addEventListener('load',sched);document.addEventListener('toggle',sched,true);
+setInterval(sched,1000);sched();
+window.__pngExport={DPI:DPI,exportSvg:exportSvg,exportCanvas:exportCanvas};
+})();
+</script>
+</body>
+</html>
