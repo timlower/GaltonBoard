@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Descriptive Statistics Explorer</title>
-<meta name="description" content="Interactive explorer for descriptive statistics: frequency distributions, mean, median, mode, range, variance, standard deviation, z-scores, percentiles, percentages and proportions for categories, rating-scale summaries, observation measures, observer agreement and change in a single case.">
+<title>Descriptive Statistics Explorer · Standard Error, Confidence Intervals, Margin of Error &amp; Chebyshev</title>
+<meta name="description" content="Interactive explorer for descriptive statistics: frequency distributions, mean, median, mode, range, variance, standard deviation, Chebyshev's inequality, z-scores, percentiles, standard error, confidence intervals and margin of error (for means and for percentages), rating-scale summaries, observation measures, observer agreement and change in a single case.">
 <script>try{var t=localStorage.getItem("ttest-theme");if(t==="light"||t==="dark")document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
 <style>
 :root{
@@ -146,13 +146,16 @@ svg .gr{stroke:var(--line);stroke-opacity:.55}
 #ctl [data-fam]{margin:0}
 .panel .err{margin:0}
 .cap{margin:8px 0 0}
+.two2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;align-items:start;margin-top:10px}
+@media(max-width:860px){.two2{grid-template-columns:1fr}}
+.subh{margin:14px 0 4px;font-size:.9rem;font-weight:600}
 </style>
 </head>
 <body>
 <header>
   <button class="theme-btn" id="themeBtn" type="button" aria-label="Switch between light and dark theme"></button>
   <h1>Descriptive Statistics Explorer</h1>
-  <p>Organize, summarize and simplify scores. Build a <b>frequency distribution</b>, find the <b>mean, median and mode</b>, measure spread with the <b>range, variance and standard deviation</b>, see how scores sit on the <b>normal curve</b>, describe <b>categories</b> with percentages and proportions, summarize <b>rating scales</b>, <b>observations</b> and <b>observer agreement</b>, and track <b>change</b> in a single case. Use simulated data or paste your own, and copy the results in APA style.</p>
+  <p>Organize, summarize and simplify scores. Build a <b>frequency distribution</b>, find the <b>mean, median and mode</b>, measure spread with the <b>range, variance and standard deviation</b>, see how scores sit on the <b>normal curve</b> and what <b>Chebyshev&rsquo;s inequality</b> guarantees for any shape, judge how precisely a sample estimates a population with the <b>standard error</b>, <b>confidence intervals</b> and <b>margin of error</b>, describe <b>categories</b> with percentages and proportions, summarize <b>rating scales</b>, <b>observations</b> and <b>observer agreement</b>, and track <b>change</b> in a single case. Use simulated data or paste your own, and copy the results in APA style.</p>
   <div class="tabs" role="tablist" aria-label="Kind of data">
     <button class="tab" role="tab" id="tab-num" aria-selected="true">Numerical scores</button>
     <button class="tab" role="tab" id="tab-cat" aria-selected="false">Categories</button>
@@ -216,8 +219,24 @@ svg .gr{stroke:var(--line);stroke-opacity:.55}
       <div class="stats" id="numStats"></div><div id="numCalc"></div></div>
     <div class="panel" data-fam="num"><h2><span class="n">3</span>Standard deviation and the normal distribution</h2>
       <div id="numNorm"></div><div class="scroll" id="numNormTbl"></div><p class="cap" id="numNormTxt"></p></div>
-    <div class="panel" data-fam="num"><h2><span class="n">4</span>Where does a score sit? Quartiles, z and percentile</h2>
+    <div class="panel" data-fam="num"><h2><span class="n">4</span>Chebyshev&rsquo;s inequality: what must be true for <i>any</i> shape</h2>
+      <div class="stats" id="chebStats"></div>
+      <div class="two2"><div><div class="subh">The guarantee as k grows</div><div id="chebChart"></div></div><div><div class="subh">Your scores and the ±k SD band</div><div id="chebHist"></div></div></div>
+      <div id="chebLeg"></div>
+      <div class="scroll" id="chebTbl" style="margin-top:10px"></div><p class="cap" id="chebTxt"></p></div>
+    <div class="panel" data-fam="num"><h2><span class="n">5</span>Where does a score sit? Quartiles, z and percentile</h2>
       <div id="numBox"></div><div class="stats" id="numPos"></div><p class="cap" id="numPosTxt"></p></div>
+    <div class="panel" data-fam="num"><h2><span class="n">6</span>Standard error: how much does a sample mean vary?</h2>
+      <div class="stats" id="seStats"></div>
+      <div class="two2"><div><div class="subh">SE shrinks as the sample grows</div><div id="seCurve"></div></div><div><div class="subh">Many samples: scores versus sample means</div><div id="seDemo"></div></div></div>
+      <div id="seLeg"></div><p class="cap" id="seTxt"></p></div>
+    <div class="panel" data-fam="num"><h2><span class="n">7</span>Confidence interval and margin of error for the mean</h2>
+      <div class="stats" id="ciStats"></div>
+      <div class="two2"><div><div class="subh">Where the interval comes from</div><div id="ciChart"></div></div><div><div class="subh">Margin of error shrinks with n, grows with confidence</div><div id="moeChart"></div></div></div>
+      <div id="moeLeg"></div>
+      <div class="scroll" id="ciTbl" style="margin-top:10px"></div><p class="cap" id="ciTxt"></p></div>
+    <div class="panel" data-fam="num"><h2><span class="n">8</span>What &ldquo;confidence&rdquo; means: repeated samples</h2>
+      <div class="stats" id="covStats"></div><div id="covChart"></div><div id="covLeg"></div><p class="cap" id="covTxt"></p></div>
 
     <!-- categories -->
     <div class="panel" data-fam="cat"><h2><span class="n">1</span>Describing non-numerical data</h2>
@@ -225,6 +244,11 @@ svg .gr{stroke:var(--line);stroke-opacity:.55}
       <div id="catChart"></div></div>
     <div class="panel" data-fam="cat"><h2><span class="n">2</span>Frequencies, proportions and percentages</h2>
       <div class="scroll" id="catTable"></div><p class="cap" id="catCap"></p></div>
+    <div class="panel" data-fam="cat"><h2><span class="n">3</span>Margin of error for percentages</h2>
+      <div class="stats" id="catMoeStats"></div>
+      <div class="two2"><div><div class="subh">Each percentage with its margin of error</div><div id="catCI"></div></div><div><div class="subh">Margin of error against sample size</div><div id="catMoeCurve"></div></div></div>
+      <div id="catMoeLeg"></div>
+      <div class="scroll" id="catMoeTbl" style="margin-top:10px"></div><p class="cap" id="catMoeTxt"></p></div>
 
     <!-- rating scales -->
     <div class="panel" data-fam="rate"><h2><span class="n">1</span>Each item</h2>
@@ -276,6 +300,13 @@ svg .gr{stroke:var(--line);stroke-opacity:.55}
       <li>Quartiles Q1, Q2 (median) and Q3 by linear interpolation between sorted scores; <span class="f">IQR = Q3 − Q1</span>. Common outlier fences: <span class="f">Q1 − 1.5·IQR</span> and <span class="f">Q3 + 1.5·IQR</span>.</li>
       <li>z-score <span class="f">z = (X − M) / s</span>: distance from the mean in standard deviations. Percentile rank = percent of scores below X plus half of those equal to X; the normal-curve percentile is <span class="f">Φ(z)</span>.</li>
       <li>For a normal distribution about 68% of scores fall within ±1 SD, 95% within ±2 SD and 99.7% within ±3 SD.</li>
+      <li>Chebyshev&rsquo;s inequality (any distribution, <span class="f">k &gt; 1</span>): the proportion of scores within k SD of the mean is at least <span class="f">1 − 1/k²</span>, so at most <span class="f">1/k²</span> lie farther away. For example k = 2 gives at least 75%, k = 3 at least 89%.</li>
+    </ul>
+    <p><b>Standard error, confidence interval and margin of error.</b></p>
+    <ul>
+      <li>Standard error of the mean <span class="f">SE = s / √n</span>: the standard deviation of the sampling distribution of M, the typical distance of a sample mean from the population mean.</li>
+      <li>Confidence interval for a mean <span class="f">M ± t*·SE</span>, with t* the two-sided critical value of the t distribution with <span class="f">df = n − 1</span> for the chosen confidence level; the margin of error is <span class="f">MoE = t*·SE</span> and the interval&rsquo;s width is 2·MoE.</li>
+      <li>Proportion: <span class="f">SE = √(p̂(1 − p̂)/N)</span> and <span class="f">MoE = z*·SE</span>, largest at p̂ = .5 (worst case <span class="f">z*·0.5/√N</span>); the sample size for a target margin E is <span class="f">N = (z* / 2E)²</span>.</li>
     </ul>
     <p><b>Non-numerical data.</b> Proportion <span class="f">f / N</span>, percent <span class="f">100·f / N</span>, mode = category with the largest f. For ordered (ordinal) categories add the cumulative percent; the median category is the first where it reaches 50%.</p>
     <p><b>Rating scales.</b> Item mean, SD, median, mode and the percent choosing the top two options; a respondent&rsquo;s total score is the sum of their item ratings, summarized with <span class="f">M</span>, <span class="f">s</span> and the range.</p>
@@ -305,6 +336,14 @@ svg .gr{stroke:var(--line);stroke-opacity:.55}
       <dt>Q1, Q3, IQR</dt><dd>First and third quartiles (25th and 75th percentiles) and the distance between them.</dd>
       <dt>g₁ (skew)</dt><dd>Lopsidedness: 0 symmetric, positive long right tail, negative long left tail.</dd>
       <dt>z</dt><dd>A score expressed as standard deviations above or below the mean.</dd>
+      <dt>Chebyshev&rsquo;s inequality</dt><dd>For any distribution, at least 1 − 1/k² of the scores lie within k standard deviations of the mean (k &gt; 1). A distribution-free floor, much lower than the normal-curve percentages.</dd>
+      <dt>Sampling distribution</dt><dd>The distribution of a statistic (such as the mean) over all the samples of a given size that could be drawn from the population.</dd>
+      <dt>SE, standard error</dt><dd>The standard deviation of a sampling distribution. For the mean, s / √n. It measures the precision of the estimate, unlike s, which measures the spread of individual scores.</dd>
+      <dt>Confidence interval (CI)</dt><dd>A range computed from a sample by a method that captures the population value in a stated percentage of repeated samples (for example 95%).</dd>
+      <dt>Confidence level</dt><dd>The long-run capture rate of the method (80%, 90%, 95%, 99%). Higher confidence gives a wider interval.</dd>
+      <dt>Margin of error (MoE)</dt><dd>The “±” part of an interval: critical value × standard error. Half the interval&rsquo;s width.</dd>
+      <dt>t*, z*</dt><dd>Critical values that cut off the middle area for the chosen confidence level: t* from the t distribution with n − 1 df (for means), z* from the normal curve (for proportions).</dd>
+      <dt>df</dt><dd>Degrees of freedom, n − 1 for the mean. Fewer df means a heavier-tailed t distribution and a larger t*.</dd>
       <dt>Percentile rank</dt><dd>Percent of scores falling below a given score.</dd>
       <dt>Nominal, ordinal</dt><dd>Categories without order, and categories with a natural order. Described with percentages, proportions and the mode.</dd>
       <dt>Proportion, percent</dt><dd>f / N and 100·f / N.</dd>
@@ -329,6 +368,9 @@ svg .gr{stroke:var(--line);stroke-opacity:.55}
         <tr><td>Most common value, or categories</td><td>Mode, percentages and proportions</td><td>Mo, f, %</td></tr>
         <tr><td>Ordered categories</td><td>Mode, median category, cumulative percent</td><td>%, cumulative %</td></tr>
         <tr><td>How one score compares with the rest</td><td>z-score and percentile rank</td><td>z, percentile</td></tr>
+        <tr><td>Share of scores near the mean, shape unknown</td><td>Chebyshev&rsquo;s inequality</td><td>At least 1 − 1/k² within k SD</td></tr>
+        <tr><td>Precision of a sample mean</td><td>Standard error, confidence interval, margin of error</td><td>SE, 95% CI [lower, upper], MoE</td></tr>
+        <tr><td>Precision of a percentage from a survey</td><td>Margin of error for a proportion</td><td>p̂ ± MoE, N</td></tr>
         <tr><td>Rating-scale items</td><td>Item means and total scores</td><td>M, SD, range of totals</td></tr>
         <tr><td>Behavior in an observed session</td><td>Frequency, duration or interval counts</td><td>Count, minutes, % of session</td></tr>
         <tr><td>Two observers coding the same events</td><td>Percent agreement and Cohen&rsquo;s κ</td><td>p<sub>o</sub>, κ</td></tr>
@@ -337,7 +379,7 @@ svg .gr{stroke:var(--line);stroke-opacity:.55}
     </table></div>
   </div>
 </details>
-<footer>Single-file, dependency-free demo. Simulated data come from a seeded random generator, so a given seed is reproducible. Anything you paste stays in your browser; nothing is uploaded. The quiz example is the 5-point quiz from the course content; percent agreement, &kappa;, quartiles and z-scores are common extensions shown for illustration.</footer>
+<footer>Single-file, dependency-free demo. Simulated data come from a seeded random generator, so a given seed is reproducible. Anything you paste stays in your browser; nothing is uploaded. The quiz example is the 5-point quiz from the course content; percent agreement, &kappa;, quartiles, z-scores, Chebyshev&rsquo;s inequality, standard errors, confidence intervals and margins of error are common extensions shown for illustration. The repeated-sampling demonstrations resample your own scores with replacement.</footer>
 
 <script>
 (function(){
@@ -366,8 +408,8 @@ const CATSETS={study:{name:'Study method (nominal)',ord:false,labels:['Study alo
   sat:{name:'Satisfaction level (ordinal)',ord:true,labels:['Very low','Low','Medium','High','Very high'],def:[6,14,30,32,18]}};
 const ITEMS=['I enjoy math class','I feel confident doing math','Math is useful in daily life','I like solving math problems','I look forward to math lessons'];
 const DEF={
- num:{src:'quiz',seed:12,n:40,mu:60,sdv:12,skew:0,shape:'normal',out:false,bw:0,pop:'sample',own:'',px:null,ov:{hist:true,poly:false,mean:true,med:false,mode:false}},
- cat:{set:'study',c:{study:CATSETS.study.def.slice(),sat:CATSETS.sat.def.slice()},own:'',ord:'nominal'},
+ num:{src:'quiz',seed:12,n:40,mu:60,sdv:12,skew:0,shape:'normal',out:false,bw:0,pop:'sample',own:'',px:null,ck:2,cl:.95,dk:10,rs:1,ov:{hist:true,poly:false,mean:true,med:false,mode:false}},
+ cat:{set:'study',c:{study:CATSETS.study.def.slice(),sat:CATSETS.sat.def.slice()},own:'',ord:'nominal',cl:.95},
  rate:{n:60,pts:5,mu:3.8,spread:.7,noise:.7,seed:3,own:''},
  obs:{len:20,k:8,dur:30,iv:30,seed:5,own:'',ownLen:20,a:18,b:4,c:5,d:33},
  case:{wks:16,base:20,noise:3,tx:true,t0:6,eff:-7,seed:7,own:'',ownT:''}};
@@ -392,12 +434,21 @@ const CD=[
  {fam:'num',k:'bw',l:'Group width in the table',t:'range',min:0,max:20,step:1,fmt:v=>v?String(v):'auto',when:'both',show:s=>!(S.source==='sim'&&s.src==='quiz')},
  {fam:'num',k:'pop',l:'Treat the scores as',t:'select',o:[['sample','A sample (divide by n − 1)'],['pop','A whole population (divide by N)']],when:'both'},
  {fam:'num',k:'px',l:'Locate the score X =',t:'range',min:0,max:100,step:1,when:'both'},
+ {fam:'num',h:'Chebyshev’s inequality',when:'both'},
+ {fam:'num',k:'ck',l:'k standard deviations from the mean',t:'range',min:1,max:5,step:.1,fmt:v=>f(v,1),when:'both'},
+ {fam:'num',h:'Standard error and repeated sampling',when:'both'},
+ {fam:'num',k:'dk',l:'Sample size for the repeated-sampling demos',t:'range',min:2,max:100,step:1,when:'both'},
+ {fam:'num',k:'rsb',sk:'rs',t:'button',l:'Draw new samples',when:'both'},
+ {fam:'num',h:'Confidence interval and margin of error',when:'both'},
+ {fam:'num',k:'cl',l:'Confidence level',t:'select',num:true,o:[[.8,'80%'],[.9,'90%'],[.95,'95%'],[.99,'99%']],when:'both'},
 
  {fam:'cat',h:'Variable',when:'sim'},
  {fam:'cat',k:'set',l:'Variable',t:'select',o:Object.keys(CATSETS).map(k=>[k,CATSETS[k].name]),when:'sim',after:()=>buildCatSl()},
  {fam:'cat',h:'Frequencies',when:'sim'},
  {fam:'cat',k:'catSl',t:'custom',when:'sim'},
  {fam:'cat',k:'ord',l:'Treat the categories as',t:'select',o:[['nominal','Nominal (no order)'],['ordinal','Ordinal (in the order typed)']],when:'own'},
+ {fam:'cat',h:'Margin of error',when:'both'},
+ {fam:'cat',k:'cl',l:'Confidence level',t:'select',num:true,o:[[.8,'80%'],[.9,'90%'],[.95,'95%'],[.99,'99%']],when:'both'},
 
  {fam:'rate',h:'Data',when:'sim'},
  {fam:'rate',k:'pts',l:'Scale points',t:'select',num:true,o:[[5,'5-point (1 to 5)'],[7,'7-point (1 to 7)']],when:'both'},
@@ -467,8 +518,8 @@ function onCtl(e){
   if(d.t==='range')st[d.k]=+el.value;
   else if(d.t==='select')st[d.k]=d.num?+el.value:el.value;
   else if(d.t==='toggle'){if(e.type!=='click')return;st[d.k]=!st[d.k];}
-  else if(d.t==='button'){if(e.type!=='click')return;st.seed=(st.seed||0)+1;}
-  if(d.fam==='num'&&(d.k!=='px'))st.px=null;
+  else if(d.t==='button'){if(e.type!=='click')return;const sk=d.sk||'seed';st[sk]=(st[sk]||0)+1;}
+  if(d.fam==='num'&&['px','ck','cl','dk','rsb'].indexOf(d.k)<0)st.px=null;
   if(d.after)d.after();
   render();
 }
@@ -518,6 +569,123 @@ function frame(W,H,m,xd,yd,o){
   return{sx,sy,s};
 }
 function vline(fr,m,H,v,col,label,row){return '<line x1="'+fr.sx(v)+'" x2="'+fr.sx(v)+'" y1="'+m.t+'" y2="'+(H-m.b)+'" stroke="'+col+'" stroke-width="2" stroke-dasharray="6 4"/><text x="'+(fr.sx(v)+4)+'" y="'+(m.t+12+row*13)+'" style="fill:'+col+';font-weight:600">'+label+'</text>';}
+
+
+/* ============ inference helpers: t and z critical values ============ */
+function lgam(x){const c=[76.18009172947146,-86.50532032941677,24.01409824083091,-1.231739572450155,.1208650973866179e-2,-.5395239384953e-5];let y=x,t=x+5.5;t-=(x+.5)*Math.log(t);let s=1.000000000190015;for(let j=0;j<6;j++)s+=c[j]/++y;return -t+Math.log(2.5066282746310005*s/x);}
+function betacf(a,b,x){const FP=1e-300,qab=a+b,qap=a+1,qam=a-1;let c=1,d=1-qab*x/qap;if(Math.abs(d)<FP)d=FP;d=1/d;let h=d;
+  for(let m=1;m<=300;m++){const m2=2*m;let aa=m*(b-m)*x/((qam+m2)*(a+m2));d=1+aa*d;if(Math.abs(d)<FP)d=FP;c=1+aa/c;if(Math.abs(c)<FP)c=FP;d=1/d;h*=d*c;
+    aa=-(a+m)*(qab+m)*x/((a+m2)*(qap+m2));d=1+aa*d;if(Math.abs(d)<FP)d=FP;c=1+aa/c;if(Math.abs(c)<FP)c=FP;d=1/d;const del=d*c;h*=del;if(Math.abs(del-1)<3e-15)break;}
+  return h;}
+function ibeta(x,a,b){if(x<=0)return 0;if(x>=1)return 1;const bt=Math.exp(lgam(a+b)-lgam(a)-lgam(b)+a*Math.log(x)+b*Math.log(1-x));return x<(a+1)/(a+b+2)?bt*betacf(a,b,x)/a:1-bt*betacf(b,a,1-x)/b;}
+const tTail2=(t,df)=>ibeta(df/(df+t*t),df/2,.5);
+const tpdf=(x,df)=>Math.exp(lgam((df+1)/2)-lgam(df/2)-.5*Math.log(df*Math.PI)-(df+1)/2*Math.log(1+x*x/df));
+function zcrit(conf){const a=1-conf;let lo=0,hi=10;for(let i=0;i<60;i++){const mid=(lo+hi)/2;if(2*(1-Phi(mid))>a)lo=mid;else hi=mid;}return(lo+hi)/2;}
+const tcMemo={};
+function tcrit(conf,df){const key=conf+'|'+df;if(tcMemo[key]!==undefined)return tcMemo[key];const a=1-conf;let lo=0,hi=1;while(tTail2(hi,df)>a&&hi<1e7)hi*=2;
+  for(let i=0;i<70;i++){const mid=(lo+hi)/2;if(tTail2(mid,df)>a)lo=mid;else hi=mid;}return(tcMemo[key]=(lo+hi)/2);}
+function ciOf(x,cl){const n=x.length,M=mean(x),s=n>1?Math.sqrt(sum(x.map(v=>(v-M)**2))/(n-1)):NaN,se=s/Math.sqrt(n),df=n-1,t=tcrit(cl,df),moe=t*se;return{n,M,s,se,df,t,moe,lo:M-moe,hi:M+moe};}
+function resample(x,k,R){const a=[];for(let i=0;i<k;i++)a.push(x[Math.floor(R.u()*x.length)]);return a;}
+function legend(items){return '<p class="cap" style="display:flex;gap:6px 16px;flex-wrap:wrap;margin:8px 0 0">'+items.map(i=>'<span><i style="display:inline-block;width:12px;height:12px;border-radius:3px;background:'+i[0]+';margin-right:5px;vertical-align:-2px"></i>'+i[1]+'</span>').join('')+'</p>';}
+const LEVELS=[.8,.9,.95,.99],LCOL=['var(--a)','var(--ok)','var(--b)','var(--rej)'],clTxt=c=>f(100*c,0)+'%';
+const chebB=k=>k>1?1-1/(k*k):0,normW=k=>2*Phi(k)-1;
+function noteChart(id,t){$(id).innerHTML='<p class="err">'+t+'</p>';}
+
+/* ============ Chebyshev's inequality ============ */
+function rCheb(x,D){
+  const n=x.length,M=D.M,SD=D.SD,k=S.num.ck;
+  if(!(SD>0)){noteChart('chebChart','All scores are identical, so the standard deviation is 0 and there is nothing to bound.');['chebHist','chebStats','chebTbl','chebLeg'].forEach(i=>$(i).innerHTML='');$('chebTxt').textContent='';return;}
+  const obs=kk=>x.filter(v=>Math.abs(v-M)<=kk*SD+1e-9).length/n;
+  const W=640,H=270,m={l:50,r:16,t:16,b:44},fr=frame(W,H,m,[1,5],[0,100],{xlab:'k (number of standard deviations from the mean)',ylab:'Percent of scores within ±k SD',yf:v=>v+'%',yn:5,xn:8});let s=fr.s;
+  let area='M'+fr.sx(1)+' '+fr.sy(0),cl='',nl='',ol='';
+  for(let i=0;i<=160;i++){const kk=1+i*4/160,bx=fr.sx(kk);area+=' L'+bx+' '+fr.sy(100*chebB(kk));cl+=(i?'L':'M')+bx+' '+fr.sy(100*chebB(kk));nl+=(i?'L':'M')+bx+' '+fr.sy(100*normW(kk));ol+=(i?'L':'M')+bx+' '+fr.sy(100*obs(kk));}
+  s+='<path d="'+area+' L'+fr.sx(5)+' '+fr.sy(0)+' Z" fill="var(--a)" opacity=".22"/><path d="'+cl+'" fill="none" stroke="var(--a)" stroke-width="2.5"/><path d="'+nl+'" fill="none" stroke="var(--ok)" stroke-width="2" stroke-dasharray="6 4"/><path d="'+ol+'" fill="none" stroke="var(--b)" stroke-width="2.5"/>';
+  const cb=chebB(k),nv=normW(k),ov=obs(k),anc=k>3.6?'end':'start',dx=k>3.6?-8:8;
+  s+='<line x1="'+fr.sx(k)+'" x2="'+fr.sx(k)+'" y1="'+m.t+'" y2="'+(H-m.b)+'" stroke="var(--ink)" stroke-width="1.5" stroke-dasharray="3 3"/>';
+  [[cb,'var(--a)'],[nv,'var(--ok)'],[ov,'var(--b)']].forEach(p=>{s+='<circle cx="'+fr.sx(k)+'" cy="'+fr.sy(100*p[0])+'" r="4.5" fill="'+p[1]+'" stroke="var(--panel)" stroke-width="1.5"/>';});
+  s+='<text class="strong" x="'+(fr.sx(k)+dx)+'" y="'+(fr.sy(100*cb)+18)+'" text-anchor="'+anc+'">k = '+f(k,1)+': at least '+f(100*cb,1)+'%</text>';
+  $('chebChart').innerHTML=svgOpen(W,H,'Percent of scores within k standard deviations of the mean: the Chebyshev minimum, the normal curve and the observed scores')+s+'</svg>';
+  /* histogram with band */
+  const half=Math.max(3.2,k+.6),a=M-half*SD,b=M+half*SD,bins=Math.min(30,Math.max(10,Math.round(Math.sqrt(n)*1.8))),bwd=(b-a)/bins,cnt=new Array(bins).fill(0);
+  x.forEach(v=>{const i=Math.floor((v-a)/bwd);if(i>=0&&i<bins)cnt[i]++;});
+  const W2=640,H2=270,m2={l:50,r:16,t:16,b:44},ymax=Math.max(2,Math.ceil(Math.max(...cnt)*1.2)),f2=frame(W2,H2,m2,[a,b],[0,ymax],{xlab:'Score',ylab:'Frequency (f)',yn:Math.min(ymax,5),xn:8});let sv=f2.s;
+  const x1=f2.sx(M-k*SD),x2=f2.sx(M+k*SD);
+  sv+='<rect x="'+Math.max(m2.l,x1)+'" y="'+m2.t+'" width="'+Math.max(0,Math.min(W2-m2.r,x2)-Math.max(m2.l,x1))+'" height="'+(H2-m2.t-m2.b)+'" fill="var(--a)" opacity=".13"/>';
+  cnt.forEach((c,i)=>{const mid=a+(i+.5)*bwd,inside=Math.abs(mid-M)<=k*SD;sv+='<rect x="'+(f2.sx(a+i*bwd)+1)+'" y="'+f2.sy(c)+'" width="'+Math.max(1,f2.sx(a+bwd)-f2.sx(a)-2)+'" height="'+(f2.sy(0)-f2.sy(c))+'" fill="'+(inside?'var(--a)':'var(--rej)')+'" opacity=".75"/>';});
+  sv+='<line x1="'+f2.sx(M)+'" x2="'+f2.sx(M)+'" y1="'+m2.t+'" y2="'+(H2-m2.b)+'" stroke="var(--ink)" stroke-width="1.5"/>';
+  [[M-k*SD,'M − '+f(k,1)+' SD'],[M+k*SD,'M + '+f(k,1)+' SD']].forEach((p,i)=>{if(p[0]>=a&&p[0]<=b)sv+='<line x1="'+f2.sx(p[0])+'" x2="'+f2.sx(p[0])+'" y1="'+m2.t+'" y2="'+(H2-m2.b)+'" stroke="var(--b)" stroke-width="2" stroke-dasharray="6 4"/><text x="'+f2.sx(p[0])+'" y="'+(m2.t+11)+'" text-anchor="'+(i?'start':'end')+'" dx="'+(i?4:-4)+'" style="fill:var(--b);font-weight:600">'+p[1]+'</text>';});
+  $('chebHist').innerHTML=svgOpen(W2,H2,'Histogram of the scores with the band within k standard deviations of the mean shaded')+sv+'</svg>';
+  const inCnt=x.filter(v=>Math.abs(v-M)<=k*SD+1e-9).length;
+  $('chebLeg').innerHTML=legend([['var(--a)','Chebyshev minimum, 1 − 1/k² (any shape)'],['var(--ok)','Normal curve (bell-shaped only)'],['var(--b)','Your scores'],['var(--rej)','Bars outside the ±k SD band']]);
+  setStats('chebStats',[['k',f(k,1)],['Chebyshev: at least',k>1?pct(cb,1):'0% (k must exceed 1)'],['Normal curve would give',pct(nv,1)],['Your scores within ±k SD',pct(ov,1)+' ('+inCnt+' of '+n+')'],['Outside ±k SD, at most',k>1?pct(1/(k*k),1):'100%'],['Outside ±k SD, yours',pct(1-ov,1)]]);
+  const ks=[1.5,2,2.5,3,4];if(ks.indexOf(+f(k,1))<0)ks.unshift(+f(k,1));
+  $('chebTbl').innerHTML=tbl(['Within ±k SD','Chebyshev: at least','Normal curve','Your scores'],ks.map(kk=>[(kk===+f(k,1)?'<b>k = '+f(kk,1)+'</b>':'k = '+f(kk,1)),pct(chebB(kk),1),pct(normW(kk),1),pct(obs(kk),1)]));
+  $('chebTxt').textContent='Chebyshev’s inequality says that, for any distribution with a mean and standard deviation, at least 1 − 1/k² of the scores lie within k SD of the mean (for k > 1): at least 75% within 2 SD, 89% within 3 SD and 94% within 4 SD. It makes no shape assumption, so it is a floor, far below what the normal curve gives (95% and 99.7%). Your observed percentage can never fall below the floor; it will be close to the normal values only if the scores are bell-shaped. Try the skewed and outlier presets.';
+}
+
+/* ============ standard error, confidence interval, repeated sampling ============ */
+function rInf(x,D1){
+  const n=x.length,cl=S.num.cl,k=S.num.dk,ci=ciOf(x,cl),M=ci.M,s=ci.s,se=ci.se,SDp=Math.sqrt(D1.SS/n);
+  const ids=['seCurve','seDemo','seStats','seLeg','ciChart','moeChart','ciStats','moeLeg','ciTbl','covChart','covStats','covLeg'];
+  if(!(s>0)){ids.forEach(i=>$(i).innerHTML='');noteChart('seCurve','All scores are identical, so s = 0, the standard error is 0 and the interval has no width.');$('seTxt').textContent='';$('ciTxt').textContent='';$('covTxt').textContent='';return;}
+  /* --- standard error curve --- */
+  {const nMax=Math.max(100,Math.ceil(n*1.6/10)*10),nMin=Math.min(2,n),W=640,H=270,m={l:50,r:16,t:26,b:44},ymax=s*1.12,fr=frame(W,H,m,[0,nMax],[0,ymax],{xlab:'Sample size (n)',ylab:'Standard error of the mean',yn:5,xn:8,yf:v=>tl(+v.toPrecision(3))});let sv=fr.s,p='';
+    for(let q=0;q<=200;q++){const nn=nMin+(nMax-nMin)*q/200;p+=(q?'L':'M')+fr.sx(nn)+' '+fr.sy(s/Math.sqrt(nn));}
+    sv+='<path d="'+p+'" fill="none" stroke="var(--a)" stroke-width="2.5"/>';
+    sv+='<line x1="'+fr.sx(0)+'" x2="'+fr.sx(nMax)+'" y1="'+fr.sy(s)+'" y2="'+fr.sy(s)+'" stroke="var(--b)" stroke-width="1.5" stroke-dasharray="5 4"/><text x="'+(fr.sx(nMax)-4)+'" y="'+(fr.sy(s)-5)+'" text-anchor="end" style="fill:var(--b);font-weight:600">s = '+f(s)+' (spread of the scores)</text>';
+    [[n,'var(--rej)','n = '+n+': SE = '+f(se)],[4*n,'var(--ok)','4n = '+(4*n)+': SE = '+f(se/2)]].forEach((q,i)=>{if(q[0]<=nMax){sv+='<line x1="'+fr.sx(q[0])+'" x2="'+fr.sx(q[0])+'" y1="'+fr.sy(s/Math.sqrt(q[0]))+'" y2="'+(H-m.b)+'" stroke="'+q[1]+'" stroke-width="1.5" stroke-dasharray="3 3"/><circle cx="'+fr.sx(q[0])+'" cy="'+fr.sy(s/Math.sqrt(q[0]))+'" r="5" fill="'+q[1]+'" stroke="var(--panel)" stroke-width="1.5"/><text x="'+(fr.sx(q[0])+8)+'" y="'+(fr.sy(s/Math.sqrt(q[0]))-8)+'" style="fill:'+q[1]+';font-weight:600">'+q[2]+'</text>';}});
+    $('seCurve').innerHTML=svgOpen(W,H,'Standard error of the mean against sample size: it falls with the square root of n')+sv+'</svg>';}
+  /* --- sampling distribution demo --- */
+  const reps=300,R=rng((S.num.rs||1)*977+31),means=[];for(let r=0;r<reps;r++)means.push(mean(resample(x,k,R)));
+  const mM=mean(means),sdM=Math.sqrt(sum(means.map(v=>(v-mM)**2))/(reps-1)),seP=SDp/Math.sqrt(k);
+  {const W=640,H=270,m={l:50,r:16,t:16,b:44},half=Math.max(3.5*seP,1.2*SDp),a=M-half,b=M+half,bins=40,bwd=(b-a)/bins,cnt=new Array(bins).fill(0);
+    means.forEach(v=>{const i=Math.floor((v-a)/bwd);if(i>=0&&i<bins)cnt[i]++;});
+    const dens=cnt.map(c=>c/reps/bwd),ymax=Math.max(...dens,npdf(0)/seP)*1.12,fr=frame(W,H,m,[a,b],[0,ymax],{xlab:'Score or sample mean',ylab:'Density',yn:4,xn:8,yf:v=>tl(+v.toPrecision(2))});let sv=fr.s;
+    dens.forEach((q,i)=>{sv+='<rect x="'+(fr.sx(a+i*bwd)+.5)+'" y="'+fr.sy(q)+'" width="'+Math.max(1,fr.sx(a+bwd)-fr.sx(a)-1)+'" height="'+(fr.sy(0)-fr.sy(q))+'" fill="var(--b)" opacity=".6"/>';});
+    const curve=(sd,col,w,dash)=>{let p='';for(let q=0;q<=160;q++){const v=a+(b-a)*q/160;p+=(q?'L':'M')+fr.sx(v)+' '+fr.sy(npdf((v-M)/sd)/sd);}return '<path d="'+p+'" fill="none" stroke="'+col+'" stroke-width="'+w+'"'+(dash?' stroke-dasharray="'+dash+'"':'')+'/>';};
+    sv+=curve(SDp,'var(--a)',2,'6 4')+curve(seP,'var(--ok)',2.5);
+    sv+='<line x1="'+fr.sx(M)+'" x2="'+fr.sx(M)+'" y1="'+m.t+'" y2="'+(H-m.b)+'" stroke="var(--ink)" stroke-width="1.5"/>';
+    [-1,1].forEach(q=>{sv+='<line x1="'+fr.sx(M+q*seP)+'" x2="'+fr.sx(M+q*seP)+'" y1="'+(m.t+16)+'" y2="'+(H-m.b)+'" stroke="var(--ok)" stroke-width="1.5" stroke-dasharray="3 3"/>';});
+    sv+='<text x="'+(fr.sx(M+seP)+4)+'" y="'+(m.t+12)+'" style="fill:var(--ok);font-weight:600">±1 SE = '+f(seP)+'</text>';
+    $('seDemo').innerHTML=svgOpen(W,H,'Histogram of 300 sample means compared with the spread of the individual scores')+sv+'</svg>';}
+  $('seLeg').innerHTML=legend([['var(--b)','300 sample means, each from '+k+' scores'],['var(--ok)','Normal curve with SD = SE = σ/√k'],['var(--a)','Spread of the individual scores (SD)']]);
+  setStats('seStats',[['Sample size (n)',n],['Sample SD (s)',f(s)],['Standard error, s/√n',f(se)],['SE if n were 4× larger',f(se/2)],['Demo: size of each sample (k)',k],['Demo: SD of the 300 means',f(sdM)],['Demo: predicted σ/√k',f(seP)]]);
+  $('seTxt').textContent='The standard deviation describes how far individual scores sit from the mean; the standard error describes how far a sample mean sits from the population mean, SE = s / √n. Because errors in a sample partly cancel, SE is always smaller than s and falls as n grows (quadruple the sample to halve it). The right panel treats your scores as the population, draws 300 samples of size k with replacement and shows that the sample means pile up with SD close to σ/√k. Press “Draw new samples” to repeat it.'+(S.num.pop==='pop'?' These panels always treat the scores as a sample (n − 1), because the standard error is about estimating a population mean from a sample.':'');
+  /* --- confidence interval for the mean --- */
+  {const z=zcrit(cl),W=640,H=270,m={l:50,r:16,t:56,b:44},half=Math.max(ci.t*1.35,3.2)*se,a=M-half,b=M+half,top=tpdf(0,ci.df)/se*1.1,fr=frame(W,H,m,[a,b],[0,top],{noY:true,xlab:'Possible values of the population mean',xn:7});let sv=fr.s;
+    const pts=[];for(let q=0;q<=240;q++){const v=a+(b-a)*q/240;pts.push([v,tpdf((v-M)/se,ci.df)/se]);}
+    const seg=(lo,hi)=>{let p='M'+fr.sx(Math.max(lo,a))+' '+fr.sy(0);pts.forEach(q=>{if(q[0]>=lo&&q[0]<=hi)p+=' L'+fr.sx(q[0])+' '+fr.sy(q[1]);});return p+' L'+fr.sx(Math.min(hi,b))+' '+fr.sy(0)+' Z';};
+    sv+='<path d="'+seg(a,ci.lo)+'" fill="var(--rej)" opacity=".35"/><path d="'+seg(ci.hi,b)+'" fill="var(--rej)" opacity=".35"/><path d="'+seg(ci.lo,ci.hi)+'" fill="var(--a)" opacity=".3"/>';
+    sv+='<path d="'+pts.map((q,i)=>(i?'L':'M')+fr.sx(q[0])+' '+fr.sy(q[1])).join('')+'" fill="none" stroke="var(--ink)" stroke-width="2"/>';
+    sv+='<line x1="'+fr.sx(M)+'" x2="'+fr.sx(M)+'" y1="'+(m.t-18)+'" y2="'+(H-m.b)+'" stroke="var(--ink)" stroke-width="1.5"/>';
+    [ci.lo,ci.hi].forEach(v=>{sv+='<line x1="'+fr.sx(v)+'" x2="'+fr.sx(v)+'" y1="'+(m.t-18)+'" y2="'+(H-m.b)+'" stroke="var(--b)" stroke-width="2" stroke-dasharray="6 4"/>';});
+    sv+='<line x1="'+fr.sx(ci.lo)+'" x2="'+fr.sx(ci.hi)+'" y1="'+(m.t-18)+'" y2="'+(m.t-18)+'" stroke="var(--b)" stroke-width="3"/><circle cx="'+fr.sx(M)+'" cy="'+(m.t-18)+'" r="5" fill="var(--ink)"/>';
+    sv+='<text class="strong" x="'+fr.sx(M)+'" y="'+(m.t-32)+'" text-anchor="middle">M = '+f(M)+' ± MoE '+f(ci.moe)+'</text>';
+    sv+='<text x="'+fr.sx(ci.lo)+'" y="'+(m.t-5)+'" text-anchor="end" dx="-4" style="fill:var(--b);font-weight:600">'+f(ci.lo)+'</text><text x="'+fr.sx(ci.hi)+'" y="'+(m.t-5)+'" dx="4" style="fill:var(--b);font-weight:600">'+f(ci.hi)+'</text>';
+    sv+='<text x="'+fr.sx(M)+'" y="'+(fr.sy(top*.35))+'" text-anchor="middle" style="fill:var(--ink);font-weight:600">'+clTxt(cl)+' of the area</text>';
+    sv+='<text x="'+(fr.sx(ci.lo)-6)+'" y="'+(H-m.b-8)+'" text-anchor="end">'+f(100*(1-cl)/2,1)+'%</text><text x="'+(fr.sx(ci.hi)+6)+'" y="'+(H-m.b-8)+'">'+f(100*(1-cl)/2,1)+'%</text>';
+    $('ciChart').innerHTML=svgOpen(W,H,'t distribution centered on the sample mean with the middle confidence-level area shaded and the interval marked')+sv+'</svg>';
+    /* margin of error vs n */
+    const nMax=Math.max(100,Math.ceil(n*1.6/10)*10),nMin=Math.min(5,n),W2=640,H2=270,m2={l:50,r:16,t:16,b:44},ymax=tcrit(.99,nMin-1)*s/Math.sqrt(nMin)*1.05,f2=frame(W2,H2,m2,[nMin,nMax],[0,ymax],{xlab:'Sample size (n)',ylab:'Margin of error (± score units)',yn:5,xn:8,yf:v=>tl(+v.toPrecision(3))});let s2=f2.s;
+    LEVELS.forEach((lv,li)=>{let p='';for(let q=0;q<=80;q++){const nn=Math.round(nMin+(nMax-nMin)*q/80);p+=(q?'L':'M')+f2.sx(nn)+' '+f2.sy(tcrit(lv,Math.max(1,nn-1))*s/Math.sqrt(nn));}
+      s2+='<path d="'+p+'" fill="none" stroke="'+LCOL[li]+'" stroke-width="'+(lv===cl?3.2:1.6)+'" opacity="'+(lv===cl?1:.7)+'"/>';});
+    s2+='<line x1="'+f2.sx(n)+'" x2="'+f2.sx(n)+'" y1="'+f2.sy(ci.moe)+'" y2="'+(H2-m2.b)+'" stroke="var(--ink)" stroke-width="1.5" stroke-dasharray="3 3"/><circle cx="'+f2.sx(n)+'" cy="'+f2.sy(ci.moe)+'" r="5.5" fill="'+LCOL[LEVELS.indexOf(cl)]+'" stroke="var(--ink)" stroke-width="1.5"/><text class="strong" x="'+(f2.sx(n)+(n>nMax*.6?-9:9))+'" y="'+(f2.sy(ci.moe)-9)+'" text-anchor="'+(n>nMax*.6?'end':'start')+'">n = '+n+': MoE = '+f(ci.moe)+'</text>';
+    $('moeChart').innerHTML=svgOpen(W2,H2,'Margin of error of the mean against sample size for four confidence levels')+s2+'</svg>';
+    $('moeLeg').innerHTML=legend(LEVELS.map((lv,i)=>[LCOL[i],clTxt(lv)+' confidence'+(lv===cl?' (selected)':'')]));
+    setStats('ciStats',[['Mean (M)',f(M)],['Standard error',f(se)],['df = n − 1',ci.df],['Critical t* ('+clTxt(cl)+')',f(ci.t,3)],['Margin of error (t*·SE)',f(ci.moe)],['Lower limit',f(ci.lo)],['Upper limit',f(ci.hi)],['z* if σ were known',f(z,3)]]);
+    $('ciTbl').innerHTML=tbl(['Confidence level','Critical t*','Margin of error','Interval for the mean','Width'],LEVELS.map(lv=>{const c=ciOf(x,lv);return[(lv===cl?'<b>'+clTxt(lv)+'</b>':clTxt(lv)),f(c.t,3),f(c.moe),'['+f(c.lo)+', '+f(c.hi)+']',f(2*c.moe)];}));
+    $('ciTxt').textContent='A confidence interval is M ± t* × SE; the margin of error (MoE) is the “±” part, half the interval’s width. More confidence needs a wider interval (a larger t*), and a larger sample narrows it, because SE falls with √n and t* falls toward z* as df grows. The interval is about the population mean, not about individual scores: most individual scores lie outside it. It assumes the scores are a random sample from a roughly normal population, or that n is large enough for the mean to be roughly normal.';}
+  /* --- coverage of repeated intervals --- */
+  {const nI=30,R2=rng((S.num.rs||1)*733+5),tk=tcrit(cl,Math.max(1,k-1)),ints=[];let hits=0,wsum=0;
+    for(let i=0;i<nI;i++){const smp=resample(x,k,R2),mm=mean(smp),sd=k>1?Math.sqrt(sum(smp.map(v=>(v-mm)**2))/(k-1)):0,mo=tk*sd/Math.sqrt(k),hit=M>=mm-mo&&M<=mm+mo;if(hit)hits++;wsum+=2*mo;ints.push({m:mm,lo:mm-mo,hi:mm+mo,hit});}
+    const lo0=Math.min(M,...ints.map(q=>q.lo)),hi0=Math.max(M,...ints.map(q=>q.hi)),pad=(hi0-lo0)*.05||1,W=640,rh=11,m={l:30,r:16,t:20,b:44},H=m.t+m.b+nI*rh,fr=frame(W,H,m,[lo0-pad,hi0+pad],[0,nI],{noY:true,xlab:'Sample mean and interval (the dashed line is the true mean of the scores treated as a population)',xn:8});let sv=fr.s;
+    sv+='<line x1="'+fr.sx(M)+'" x2="'+fr.sx(M)+'" y1="'+(m.t-6)+'" y2="'+(H-m.b)+'" stroke="var(--ink)" stroke-width="1.8" stroke-dasharray="5 4"/>';
+    ints.forEach((q,i)=>{const y=m.t+rh*i+rh/2,col=q.hit?'var(--ok)':'var(--rej)';sv+='<line x1="'+fr.sx(q.lo)+'" x2="'+fr.sx(q.hi)+'" y1="'+y+'" y2="'+y+'" stroke="'+col+'" stroke-width="'+(q.hit?2:3)+'"/><line x1="'+fr.sx(q.lo)+'" x2="'+fr.sx(q.lo)+'" y1="'+(y-3)+'" y2="'+(y+3)+'" stroke="'+col+'" stroke-width="1.5"/><line x1="'+fr.sx(q.hi)+'" x2="'+fr.sx(q.hi)+'" y1="'+(y-3)+'" y2="'+(y+3)+'" stroke="'+col+'" stroke-width="1.5"/><circle cx="'+fr.sx(q.m)+'" cy="'+y+'" r="2.6" fill="'+col+'"/>';});
+    $('covChart').innerHTML=svgOpen(W,H,nI+' confidence intervals from repeated samples, colored by whether they capture the true mean')+sv+'</svg>';
+    $('covLeg').innerHTML=legend([['var(--ok)','Interval contains the true mean'],['var(--rej)','Interval misses it']]);
+    setStats('covStats',[['Confidence level',clTxt(cl)],['Sample size (k)',k],['Intervals drawn',nI],['Containing the true mean',hits+' of '+nI+' ('+f(100*hits/nI,0)+'%)'],['Expected in the long run',f(100*cl,0)+'%'],['Average width',f(wsum/nI)]]);
+    $('covTxt').textContent='Each line is the '+clTxt(cl)+' interval from a fresh sample of '+k+' scores (drawn with replacement from yours, so the true mean is exactly M = '+f(M)+'). “'+clTxt(cl)+' confidence” describes the method: in the long run about '+f(100*cl,0)+'% of such intervals capture the true mean. It does not mean there is a '+clTxt(cl)+' probability that any one finished interval contains it. With only '+nI+' intervals the hit rate wobbles; press “Draw new samples” a few times, or raise the confidence level to see more green lines and wider intervals. Small samples from skewed scores tend to miss more often than advertised.';}
+}
 
 /* ============ numerical scores ============ */
 function simNum(p){
@@ -613,11 +781,14 @@ function rNum(){
     $('numBox').innerHTML=svgOpen(W,H,'Box plot of the scores with the quartiles, mean diamond, outliers and the selected score')+sv+'</svg>';}
   setStats('numPos',[['Q1 (25th percentile)',f(D.Q1)],['Q3 (75th percentile)',f(D.Q3)],['IQR',f(iqr)],['Outliers (1.5 × IQR)',outs.length],['z for X = '+f(X,isInt?0:2),f(z)],['Percentile rank of X',f(100*prk,1)],['Normal-curve percentile',isFinite(z)?f(100*Phi(z),1):'–']]);
   $('numPosTxt').textContent='The box spans Q1 to Q3 and the green line is the median; the red diamond is the mean and red circles are scores beyond the fences. Move the slider to place X: '+(isFinite(z)?'it lies '+f(Math.abs(z))+' standard deviations '+(z>=0?'above':'below')+' the mean, higher than about '+f(100*prk,0)+'% of these scores.':'the z-score is undefined because every score is the same.');
+  rCheb(x,D);rInf(x,descr(x,false));
   /* result */
   const sk=Math.abs(D.g1)<.5?'roughly symmetric':D.g1>0?'positively skewed':'negatively skewed';
-  result({cards:[['n',n],[pop?'μ':'M',f(D.M)],['Median',f(D.Md)],[vs,f(D.SD)],['Range',f(D.min,isInt?0:2)+' to '+f(D.max,isInt?0:2)]],
+  const cI=ciOf(x,s.cl);
+  result({cards:[['n',n],[pop?'μ':'M',f(D.M)],['Median',f(D.Md)],[vs,f(D.SD)],['Range',f(D.min,isInt?0:2)+' to '+f(D.max,isInt?0:2)],['SE of the mean',f(cI.se)],[clTxt(s.cl)+' CI for the mean','['+f(cI.lo)+', '+f(cI.hi)+']'],['Margin of error','±'+f(cI.moe)]],
     interp:'The typical score is about <b>'+f(D.M)+'</b> (median '+f(D.Md)+'), and scores vary by about <b>'+f(D.SD)+'</b> from the mean across a range of '+f(D.range)+'. The distribution is <b>'+sk+'</b> (g₁ = '+f(D.g1)+'), so the '+(Math.abs(D.g1)<.5?'mean and SD summarize it well.':'median and quartiles may describe it better than the mean and SD.')+(outs.length?' '+outs.length+' score'+(outs.length>1?'s lie':' lies')+' beyond the 1.5 × IQR fences.':''),
-    apa:'M = '+f(D.M)+', SD = '+f(D.SD)+', Mdn = '+f(D.Md)+', n = '+n+(pop?' (population)':'')});
+    apa:'M = '+f(D.M)+', SD = '+f(D.SD)+', Mdn = '+f(D.Md)+', n = '+n+(pop?' (population)':', SE = '+f(cI.se)+', '+clTxt(s.cl)+' CI ['+f(cI.lo)+', '+f(cI.hi)+']')});
+  if(isFinite(cI.se))$('interp').innerHTML+=' The sample mean is a precise estimate to the extent that its standard error is small: <b>SE = '+f(cI.se)+'</b>, so the population mean is estimated to lie between <b>'+f(cI.lo)+'</b> and <b>'+f(cI.hi)+'</b> ('+clTxt(s.cl)+' confidence, margin of error ±'+f(cI.moe)+').';
 }
 
 /* ============ categories ============ */
@@ -634,6 +805,27 @@ function catData(){
   const set=CATSETS[s.set],c=s.c[s.set];if(sum(c)<=0)return{err:'All counts are zero. Move at least one slider.'};
   return{labels:set.labels,counts:c.slice(),ord:set.ord};
 }
+
+function rCatMoe(d,N,k){
+  const cl=S.cat.cl,z=zcrit(cl),rows=d.counts.map((c,i)=>{const p=c/N,se=Math.sqrt(p*(1-p)/N),moe=z*se;return{lab:d.labels[i],p,se,moe,lo:Math.max(0,p-moe),hi:Math.min(1,p+moe)};});
+  const mmax=Math.max(...rows.map(r=>r.moe)),mw=z*.5/Math.sqrt(N);
+  const W=640,H=270,m={l:50,r:16,t:20,b:58},top=Math.min(100,Math.max(10,Math.ceil(Math.max(...rows.map(r=>r.hi))*100/10)*10+5)),fr=frame(W,H,m,[0,k],[0,top],{ylab:'Percent',yf:v=>v+'%',xt:[],yn:5}),cw=(W-m.l-m.r)/k;let s=fr.s;
+  rows.forEach((r,i)=>{const cx=m.l+(i+.5)*cw,lab=r.lab.length>12?r.lab.slice(0,11)+'…':r.lab;
+    s+='<line x1="'+cx+'" x2="'+cx+'" y1="'+fr.sy(100*r.lo)+'" y2="'+fr.sy(100*r.hi)+'" stroke="var(--b)" stroke-width="3"/><line x1="'+(cx-8)+'" x2="'+(cx+8)+'" y1="'+fr.sy(100*r.lo)+'" y2="'+fr.sy(100*r.lo)+'" stroke="var(--b)" stroke-width="3"/><line x1="'+(cx-8)+'" x2="'+(cx+8)+'" y1="'+fr.sy(100*r.hi)+'" y2="'+fr.sy(100*r.hi)+'" stroke="var(--b)" stroke-width="3"/><circle cx="'+cx+'" cy="'+fr.sy(100*r.p)+'" r="5.5" fill="var(--a)" stroke="var(--panel)" stroke-width="1.5"/>';
+    s+='<text class="strong" x="'+(cx+12)+'" y="'+(fr.sy(100*r.p)+4)+'">'+f(100*r.p,1)+'%</text><text x="'+cx+'" y="'+(H-m.b+16)+'" text-anchor="middle">'+esc(lab)+'</text><text x="'+cx+'" y="'+(H-m.b+31)+'" text-anchor="middle">±'+f(100*r.moe,1)+' pts</text>';});
+  $('catCI').innerHTML=svgOpen(W,H,'Percentage in each category with its margin of error as an error bar')+s+'</svg>';
+  const nMax=Math.max(1200,Math.ceil(2*N/100)*100),nMin=Math.max(5,Math.min(30,Math.floor(N))),W2=640,H2=270,m2={l:50,r:16,t:16,b:44},ymax=100*zcrit(.99)*.5/Math.sqrt(nMin)*1.05,f2=frame(W2,H2,m2,[nMin,nMax],[0,ymax],{xlab:'Sample size (N)',ylab:'Largest margin of error (± percentage points)',yn:5,xn:8,yf:v=>tl(+v.toPrecision(3))});let s2=f2.s;
+  LEVELS.forEach((lv,li)=>{let p='';for(let q=0;q<=80;q++){const nn=nMin+(nMax-nMin)*q/80;p+=(q?'L':'M')+f2.sx(nn)+' '+f2.sy(100*zcrit(lv)*.5/Math.sqrt(nn));}
+    s2+='<path d="'+p+'" fill="none" stroke="'+LCOL[li]+'" stroke-width="'+(lv===cl?3.2:1.6)+'" opacity="'+(lv===cl?1:.7)+'"/>';});
+  const mp=100*mw,nx=Math.min(N,nMax),left=nx>nMax*.6;
+  s2+='<line x1="'+f2.sx(nx)+'" x2="'+f2.sx(nx)+'" y1="'+f2.sy(mp)+'" y2="'+(H2-m2.b)+'" stroke="var(--ink)" stroke-width="1.5" stroke-dasharray="3 3"/><circle cx="'+f2.sx(nx)+'" cy="'+f2.sy(mp)+'" r="5.5" fill="'+LCOL[LEVELS.indexOf(cl)]+'" stroke="var(--ink)" stroke-width="1.5"/><text class="strong" x="'+(f2.sx(nx)+(left?-9:9))+'" y="'+(f2.sy(mp)-9)+'" text-anchor="'+(left?'end':'start')+'">N = '+f(N,Number.isInteger(N)?0:1)+': ±'+f(mp,1)+' pts</text>';
+  $('catMoeCurve').innerHTML=svgOpen(W2,H2,'Largest possible margin of error for a percentage against sample size for four confidence levels')+s2+'</svg>';
+  $('catMoeLeg').innerHTML=legend(LEVELS.map((lv,i)=>[LCOL[i],clTxt(lv)+' confidence'+(lv===cl?' (selected)':'')]));
+  setStats('catMoeStats',[['N',f(N,Number.isInteger(N)?0:1)],['Confidence level',clTxt(cl)],['Critical z*',f(z,3)],['Largest margin of error here','±'+f(100*mmax,1)+' pts'],['Worst case (p = 50%)','±'+f(100*mw,1)+' pts'],['N needed for ±3 points',Math.ceil((z/(2*.03))**2)],['N needed for ±5 points',Math.ceil((z/(2*.05))**2)]]);
+  $('catMoeTbl').innerHTML=tbl(['Category','Percent (p̂)','SE = √(p̂(1 − p̂)/N)','Margin of error','Interval'],rows.map(r=>[esc(r.lab),f(100*r.p,1)+'%',f(100*r.se,2)+' pts','±'+f(100*r.moe,1)+' pts','['+f(100*r.lo,1)+'%, '+f(100*r.hi,1)+'%]']));
+  $('catMoeTxt').textContent='For a proportion the standard error is √(p̂(1 − p̂)/N) and the margin of error is z* × SE. It is largest when p̂ is near 50%, which is why polls quote the worst case, about ±'+f(100*mw,1)+' points here. Quadrupling N halves the margin. These formulas assume the counts come from a simple random sample (the sliders and any typed counts are treated that way), and they are unreliable when a category has fewer than about 10 members or a percentage is near 0% or 100%.';
+}
+
 function rCat(){
   const d=catData();if(d.err)return fail(d.err);
   const N=sum(d.counts),mx=Math.max(...d.counts),modeI=d.counts.map((c,i)=>c===mx?i:-1).filter(i=>i>=0),k=d.labels.length;
@@ -651,6 +843,7 @@ function rCat(){
   rows.push(['<b>Total</b>','<b>'+f(N,Number.isInteger(N)?0:1)+'</b>','<b>1.00</b>','<b>100.0%</b>'].concat(d.ord?['']:[]));
   $('catTable').innerHTML=tbl(['Category','Frequency (f)','Proportion','Percent'].concat(d.ord?['Cumulative %']:[]),rows);
   $('catCap').textContent='Proportion = f ÷ N and percent = 100 × f ÷ N, with N = '+f(N,Number.isInteger(N)?0:1)+'. '+(modeI.length>1?'There is a tie for the mode.':'')+(d.ord?' The median category is the first one where the cumulative percent reaches 50%: '+d.labels[medI]+'.':' Nominal categories have no order, so a median or mean would be meaningless.');
+  rCatMoe(d,N,k);
   const modeL=modeI.map(i=>d.labels[i]).join(' and ');
   result({cards:[['N',f(N,Number.isInteger(N)?0:1)],['Categories',k],['Mode',esc(modeL)],['Modal percent',f(100*mx/N,1)+'%']].concat(d.ord?[['Median category',esc(d.labels[medI])]]:[]),
     interp:'The most common '+(modeI.length>1?'categories are':'category is')+' <b>'+esc(modeL)+'</b> ('+f(100*mx/N,1)+'% of '+f(N,Number.isInteger(N)?0:1)+').'+(d.ord?' Because the categories are ordered, the <b>median category</b> is <b>'+esc(d.labels[medI])+'</b>.':' For unordered categories the mode, proportions and percentages are the appropriate descriptive statistics.'),
@@ -797,7 +990,7 @@ function syncUI(){
     if(el.classList.contains('own')&&S.source==='sim')h=true;
     el.hidden=h;
   });
-  $('resN').textContent={num:5,cat:3,rate:3,obs:3,case:2}[S.tab];
+  $('resN').textContent={num:9,cat:4,rate:3,obs:3,case:2}[S.tab];
   buildPresets();syncControls();
 }
 function render(){
@@ -847,7 +1040,9 @@ const DEC={
   ["What a typical score is","n2"],
   ["How spread out the scores are","r_spread"],
   ["How one particular score compares with the others","r_pos"],
-  ["What the overall shape looks like","r_shape"]]},
+  ["What the overall shape looks like","r_shape"],
+  ["How precisely the sample mean estimates the population mean","r_prec"],
+  ["How many scores must lie near the mean, whatever the shape","r_cheb"]]},
  n2:{q:"What does the distribution look like?",o:[
   ["Roughly symmetric, one peak","r_sym"],
   ["Skewed, or a few extreme scores","r_skew"],
@@ -860,7 +1055,7 @@ const DEC={
   n:["Report M, SD and n.","Check the histogram before trusting the mean: a skewed shape or an outlier can mislead it."]},
  r_skew:{t:"Median and quartiles",x:"In a skewed distribution the mean is pulled toward the long tail, away from the median. The median and the interquartile range resist extreme scores and describe a typical score better.",
   i:[["Positive skew",["tab-num","pre-num-2"],"The mean exceeds the median."],["Negative skew",["tab-num","pre-num-3"],"The mean falls below the median."],["With an outlier",["tab-num","pre-num-5"],"One extreme score moves the mean and SD but barely moves the median."]],
-  n:["Report Mdn with Q1 and Q3, and the mean as well if readers expect it.","Use the box plot in panel 4 to see which scores lie beyond the 1.5 × IQR fences."]},
+  n:["Report Mdn with Q1 and Q3, and the mean as well if readers expect it.","Use the box plot in panel 5 to see which scores lie beyond the 1.5 × IQR fences."]},
  r_bi:{t:"Describe both peaks",x:"A single average can sit in the empty valley between two groups and describe nobody. Report the modes (the peaks) and consider whether two distinct groups were mixed together.",
   i:[["Bimodal scores",["tab-num","pre-num-4"],"The mean lands between the two peaks."]],
   n:["The mode is the most frequent score; a distribution can have more than one.","Look for a grouping variable that separates the two peaks."]},
@@ -868,13 +1063,19 @@ const DEC={
   i:[["Quiz example, step by step",["tab-num","pre-num-0"],"Follow the X − M and (X − M)² columns to SS, s² and s."],["Whole population",["tab-num","set:c_num_pop=pop"],"Divide by N instead of n − 1 to get σ."]],
   n:["Use n − 1 for a sample (a statistic) and N for a whole population (a parameter).","For skewed data prefer the IQR to the SD."]},
  r_pos:{t:"z-score and percentile rank",x:"A z-score expresses a score as standard deviations above or below the mean, and the percentile rank says what share of scores fall below it. Quartiles mark the 25th, 50th and 75th percentiles.",
-  i:[["Locate a score",["tab-num","pre-num-1"],"Move the X slider in panel 4."]],
+  i:[["Locate a score",["tab-num","pre-num-1"],"Move the X slider in panel 5."]],
   n:["The normal-curve percentile is only trustworthy if the scores are roughly normal.","z is undefined when every score is the same."]},
+ r_prec:{t:"Standard error, confidence interval and margin of error",x:"A sample mean is only an estimate. The standard error (s / √n) says how much sample means vary from sample to sample, and a confidence interval, M ± t* × SE, turns that into a range of plausible values for the population mean. The margin of error is the “±” part.",
+  i:[["Mean and interval",["tab-num","pre-num-1","set:c_num_cl=0.95"],"Panels 6 and 7 show SE, the interval and the margin of error."],["Skewed scores, small samples",["tab-num","pre-num-2","set:c_num_cl=0.95"],"Panel 8 shows intervals missing the true mean more often than advertised."]],
+  n:["The standard error falls with the square root of n: quadruple the sample to halve it.","Higher confidence means a wider interval; the interval describes the mean, not individual scores.","For percentages the margin of error is on the Categories tab."]},
+ r_cheb:{t:"Chebyshev’s inequality",x:"When you cannot assume a bell shape, Chebyshev’s inequality still guarantees that at least 1 − 1/k² of the scores lie within k standard deviations of the mean (k > 1): at least 75% within 2 SD and 89% within 3 SD. It is a conservative floor that holds for every distribution.",
+  i:[["Skewed scores",["tab-num","pre-num-2","set:c_num_ck=2"],"The normal rule of 95% fails; the Chebyshev floor of 75% does not."],["With an outlier",["tab-num","pre-num-5","set:c_num_ck=3"],"One extreme score inflates the SD, yet the floor still holds."]],
+  n:["The observed percentage is usually well above the floor; the floor is attained only by special distributions.","For roughly bell-shaped scores use the normal-curve percentages in panel 3 instead."]},
  r_shape:{t:"Frequency distribution and graphs",x:"A frequency table lists each score X with its frequency f; a histogram or polygon shows the shape. Check the symmetry, the number of peaks and any outliers, and compare with the normal curve.",
   i:[["Histogram and polygon",["tab-num","pre-num-1"],"Toggle the overlays above the table."],["Normal curve",["tab-num","pre-num-1"],"Panel 3 compares the scores with ±1, 2 and 3 SD."]],
   n:["Grouped class widths change how the histogram looks; try several.","Skewness g₁ near 0 means roughly symmetric."]},
  r_cat:{t:"Percentages, proportions and the mode",x:"Categories cannot be averaged. Describe them with the frequency in each category, proportions and percentages, and the mode. For ordered (ordinal) categories add the cumulative percent and the median category.",
-  i:[["Nominal categories",["tab-cat","pre-cat-0"],"Study method: mode and percentages."],["Ordinal categories",["tab-cat","pre-cat-1"],"Satisfaction level: cumulative percent and median category."]],
+  i:[["Nominal categories",["tab-cat","pre-cat-0"],"Study method: mode and percentages."],["Margin of error for percentages",["tab-cat","pre-cat-0","set:c_cat_cl=0.95"],"Panel 3: each percentage with its margin of error and the sample size needed."],["Ordinal categories",["tab-cat","pre-cat-1"],"Satisfaction level: cumulative percent and median category."]],
   n:["A mean of category codes is meaningless for nominal data.","Report N so readers can judge the percentages."]},
  r_rate:{t:"Item means and total scores",x:"Ratings on a numbered scale can be added and averaged. Summarize each item (mean, SD, median, percent choosing the top options) and each respondent’s total score.",
   i:[["Positive attitudes",["tab-rate","pre-rate-0"],"Ratings pile up near the top of the scale."],["Mixed attitudes",["tab-rate","pre-rate-1"],"Ratings spread across the scale."]],
