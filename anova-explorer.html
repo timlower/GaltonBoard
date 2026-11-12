@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ANOVA Explorer · One-way &amp; Two-way, Independent &amp; Repeated Measures, Kruskal–Wallis &amp; Friedman</title>
-<meta name="description" content="Interactive ANOVA explorer: one-way and two-way designs, independent-measures (between-subjects) and repeated-measures (within-subjects). Simulate data or paste your own. Also covers the rank-based Kruskal–Wallis and Friedman tests, a side-by-side comparison of all tests, and a guide to deciding which to use.">
+<title>ANOVA Explorer · One-way, Two-way &amp; Mixed Designs, Independent &amp; Repeated Measures, Kruskal–Wallis &amp; Friedman</title>
+<meta name="description" content="Interactive ANOVA explorer: one-way and two-way designs, independent-measures (between-subjects), repeated-measures (within-subjects) and mixed-design (split-plot) ANOVA, with Kruskal–Wallis and Friedman alternatives. Simulate data or paste your own; see F, p, effect sizes, sphericity corrections, interaction plots, simple effects and step-by-step calculations.">
 <style>
 :root{
   --bg:#f5f6f8; --card:#ffffff; --ink:#18212d; --muted:#5b6878; --line:#dce1e8; --grid:#e8ecf1;
@@ -162,6 +162,9 @@ button.crumb:hover{color:var(--accent)}button.crumb b{color:var(--ink)}
 .apabox button.pill:hover{border-color:var(--accent)}
 .fcap{font-size:.88rem;margin-bottom:2px}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+select.gsel{font:inherit;font-size:.85rem;padding:4px 4px;border:0;border-radius:0;background:transparent;color:var(--ink);width:100%;min-width:92px;cursor:pointer}
+select.gsel:focus{background:var(--accent-weak);outline:none}
+table.t tr.subh td{background:var(--bg);color:var(--muted);font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding-top:8px;padding-bottom:4px}
 @media (max-width:760px){.two{grid-template-columns:1fr}}
 </style>
 </head>
@@ -169,11 +172,12 @@ button.crumb:hover{color:var(--accent)}button.crumb b{color:var(--ink)}
 <header class="top">
   <div class="wrap">
     <h1>ANOVA Explorer</h1>
-    <p class="sub">Explore <strong>one-way</strong> and <strong>two-way</strong> ANOVA for <strong>independent</strong> (between-subjects) and <strong>repeated-measures</strong> (within-subjects) designs. Drag the sliders to simulate data and watch F, p, effect sizes, interactions and the variance partition respond — or paste in your own numbers. The <strong>Kruskal–Wallis</strong> and <strong>Friedman</strong> tabs run the rank-based alternatives on the same data, and <strong>Compare all</strong> sets every test side by side.</p>
+    <p class="sub">Explore <strong>one-way</strong> and <strong>two-way</strong> ANOVA for <strong>independent</strong> (between-subjects) and <strong>repeated-measures</strong> (within-subjects) designs, and the <strong>mixed design</strong> that combines both: separate groups of people, each measured several times. Drag the sliders to simulate data and watch F, p, effect sizes, interactions, sphericity and the variance partition respond — or paste in your own numbers. The <strong>Kruskal–Wallis</strong> and <strong>Friedman</strong> tabs run the rank-based alternatives, and <strong>Compare all</strong> sets every one-way test side by side.</p>
     <div class="hdrrow">
       <div class="tabs" role="tablist" aria-label="Design">
         <button role="tab" id="tab-ind" aria-selected="true" data-mode="ind">Independent measures</button>
         <button role="tab" id="tab-rm" aria-selected="false" data-mode="rm">Repeated measures</button>
+        <button role="tab" id="tab-mix" aria-selected="false" data-mode="mix">Mixed design</button>
         <button role="tab" id="tab-kw" aria-selected="false" data-mode="kw">Kruskal–Wallis</button>
         <button role="tab" id="tab-fr" aria-selected="false" data-mode="fr">Friedman</button>
         <button role="tab" id="tab-cmp" aria-selected="false" data-mode="cmp">Compare all</button>
@@ -320,6 +324,24 @@ button.crumb:hover{color:var(--accent)}button.crumb b{color:var(--ink)}
           <dt>ε (epsilon)</dt><dd>How far sphericity is violated: 1 = perfect, lower = worse. Multiplying both df by ε corrects the test.</dd>
           <dt>GG, HF</dt><dd>Greenhouse–Geisser and Huynh–Feldt: two ways of estimating ε (GG is more conservative).</dd>
           <dt>Mauchly’s W, χ²</dt><dd>Test of sphericity. W = 1 is perfect; a small p suggests a violation.</dd>
+        </dl>
+        <h3>Mixed designs (split-plot)</h3>
+        <dl>
+          <dt>Mixed design</dt><dd>One factor varies <em>between</em> people (separate groups) and one <em>within</em> people (each person is measured at every level, for example before, after and at follow-up).</dd>
+          <dt>Between-subjects factor (A)</dt><dd>Each participant belongs to one level only, such as Control or Treatment.</dd>
+          <dt>Within-subjects factor (B)</dt><dd>Each participant provides a score at every level, such as every time point.</dd>
+          <dt>S/A</dt><dd>Subjects nested within groups: how much people in the same group differ in their overall level. It is the error term for the between-subjects factor A.</dd>
+        </dl>
+        <dl>
+          <dt>B × S/A</dt><dd>Person-by-condition residual: how much each person's pattern across the levels of B departs from their group's pattern. It is the one error term for B and for A × B.</dd>
+          <dt>A × B</dt><dd>Interaction: groups change differently over time. Usually the test of most interest, for example whether the treatment group improves more than the control group.</dd>
+          <dt>Simple effects</dt><dd>The effect of one factor at a single level of the other (for example, the change over time within each group). Follow up a significant interaction with these.</dd>
+        </dl>
+        <dl>
+          <dt>Compound symmetry</dt><dd>Stricter than sphericity: equal variances and equal correlations among the repeated measurements.</dd>
+          <dt>Box's M</dt><dd>Test that the groups have the same covariance matrix of the repeated measures, a second assumption of the mixed design. It is sensitive, so a very small p (below about .001) is the usual warning.</dd>
+          <dt>ρ (serial correlation)</dt><dd>Simulator setting: how strongly neighbouring measurements correlate. Higher ρ makes measurements close in time more alike than distant ones, which violates sphericity.</dd>
+          <dt>η²<sub>G</sub></dt><dd>Generalized eta squared: SS<sub>effect</sub> ÷ (SS<sub>effect</sub> + SS<sub>S/A</sub> + SS<sub>B×S/A</sub>). Comparable across mixed, between-subjects and within-subjects studies.</dd>
         </dl>
         <h3>Two-way designs &amp; assumptions</h3>
         <dl>
@@ -679,7 +701,94 @@ const Stats=(function(){
     return {a,b,n,N,grand,cm,mA,mB,ssS,dfS:n-1,msS:ssS/(n-1),ssErrTotal,sst,dft:N-1,effects,ciHalf,raw,pairsA:mkPairs(sA,a),pairsB:mkPairs(sB,b),
       terms:{ssA,ssB,ssAB,ssS,ssAS,ssBS,ssABS}};
   }
-  return {sum,mean,variance,median,lgamma,ibeta,fsf,tp2,fpdf,fcrit,tcrit,chi2sf,det,oneWay,anovaInd,anovaRM,anovaTwoInd,anovaTwoRM,helmert};
+
+  // Mixed (split-plot) design: one between-subjects factor A (g groups) x one within-subjects factor B (b levels).
+  // groups[i] = array of participants' rows (each row has b scores). SS are exact for balanced and weighted for unbalanced groups.
+  function anovaMixed(groups,b){
+    const g=groups.length, ns=groups.map(G=>G.length), N=sum(ns);
+    if(g<2) return {error:'Need at least 2 groups (use the Repeated measures tab for a single group).'};
+    if(b<2) return {error:'Need at least 2 repeated measurements.'};
+    if(ns.some(x=>x<2)) return {error:'Every group needs at least 2 participants with a score in every repeated measurement.'};
+    const dfSA=N-g, p=b-1, dfBS=dfSA*p;
+    const all=[].concat.apply([],groups), gi=[]; groups.forEach((G,i)=>G.forEach(()=>gi.push(i)));
+    const grand=sum(all.map(sum))/(N*b), subjM=all.map(mean);
+    const gm=groups.map(G=>mean(G.map(mean))), cm=groups.map(G=>Array.from({length:b},(_,j)=>mean(G.map(r=>r[j]))));
+    const mB=Array.from({length:b},(_,j)=>mean(all.map(r=>r[j])));
+    const ssA=b*sum(groups.map((G,i)=>G.length*(gm[i]-grand)**2));
+    let ssSA=0; all.forEach((r,s)=>{ssSA+=b*(subjM[s]-gm[gi[s]])**2;});
+    const Hm=helmert(b), Y=all.map(r=>Hm.map(h=>sum(h.map((w,c)=>w*r[c]))));
+    const yBar=Array.from({length:p},(_,c)=>mean(Y.map(y=>y[c])));
+    const yG=groups.map((G,i)=>Array.from({length:p},(_,c)=>mean(Y.filter((y,s)=>gi[s]===i).map(y=>y[c]))));
+    const ssB=N*sum(yBar.map(v=>v*v));
+    const ssAB=sum(groups.map((G,i)=>G.length*sum(yG[i].map((v,c)=>(v-yBar[c])**2))));
+    let ssBS=0; Y.forEach((y,s)=>{y.forEach((v,c)=>{ssBS+=(v-yG[gi[s]][c])**2;});});
+    let sst=0; all.forEach(r=>r.forEach(v=>{sst+=(v-grand)**2;}));
+    // pooled within-group covariance of the B-contrast scores -> sphericity
+    const E=Array.from({length:p},()=>new Array(p).fill(0));
+    Y.forEach((y,s)=>{for(let a=0;a<p;a++)for(let c=a;c<p;c++){const v=(y[a]-yG[gi[s]][a])*(y[c]-yG[gi[s]][c]);E[a][c]+=v;if(c!==a)E[c][a]+=v;}});
+    let sph={gg:1,hf:1,mauchly:null};
+    if(p>=2){
+      let tr=0,ss2=0; for(let a=0;a<p;a++)for(let c=0;c<p;c++){const v=E[a][c]/dfSA;if(a===c)tr+=v;ss2+=v*v;}
+      let gg=ss2>1e-12?tr*tr/(p*ss2):1; gg=Math.min(1,Math.max(1/p,gg));
+      let hf=(N*p*gg-2)/(p*(dfSA-p*gg)); hf=(isFinite(hf)&&dfSA-p*gg>0)?Math.min(1,Math.max(gg,hf)):1;
+      let mau=null;
+      if(dfSA>p){
+        const Sp=E.map(r=>r.map(v=>v/dfSA)), W=det(Sp)/Math.pow(tr/p,p), df=p*(p+1)/2-1, dd=dfSA-(2*p*p+p+2)/(6*p);
+        const chi=W>0?-dd*Math.log(W):Infinity; mau={W,chi,df,p:chi2sf(chi,df)};
+      }
+      sph={gg,hf,mauchly:mau};
+    }
+    const defs=[['A',ssA,g-1,ssSA,dfSA,false],['B',ssB,p,ssBS,dfBS,true],['AB',ssAB,(g-1)*p,ssBS,dfBS,true]];
+    const effects=defs.map(([key,ss,df,ssE,dfE,within])=>{
+      const ms=ss/df,msE=ssE/dfE,r=ratioF(ms,msE,df,dfE),F=r.F;
+      const eg=within&&p>=2?sph.gg:1, eh=within&&p>=2?sph.hf:1, corr={};
+      [['none',1],['gg',eg],['hf',eh]].forEach(([nm,e])=>{corr[nm]={eps:e,df1:e*df,df2:e*dfE,p:pFrom(F,e*df,e*dfE)};});
+      return {key,ss,df,ms,ssE,dfE,msE,F,p:r.p,etaP:ss/(ss+ssE),etaG:ss/(ss+ssSA+ssBS),corr,eps:{gg:eg,hf:eh},within};
+    });
+    // cell statistics
+    const sds=groups.map((G,i)=>cm[i].map((_,j)=>Math.sqrt(variance(G.map(r=>r[j])))));
+    const cis=groups.map((G,i)=>cm[i].map((_,j)=>tcrit(0.05,G.length-1)*sds[i][j]/Math.sqrt(G.length)));
+    const resid=[]; all.forEach((r,s)=>r.forEach((v,j)=>resid.push(v-cm[gi[s]][j])));
+    // homogeneity of variance of subject means (Brown–Forsythe) and of covariance matrices (Box's M)
+    const dev=groups.map(G=>{const m=G.map(mean),md=median(m);return m.map(v=>Math.abs(v-md));});
+    let levene=null; if(N>g){const lv=oneWay(dev);levene={F:lv.F,p:lv.p,df1:lv.dfb,df2:lv.dfw};}
+    let box=null;
+    if(ns.every(n=>n>b)){
+      const Ss=groups.map(G=>covMat(G));
+      const Sp=Array.from({length:b},(_,a)=>Array.from({length:b},(_,c)=>sum(Ss.map((Sx,i)=>(ns[i]-1)*Sx[a][c]))/dfSA));
+      const dp=det(Sp), dg=Ss.map(det);
+      if(dp>0&&dg.every(d=>d>0)){
+        const M=dfSA*Math.log(dp)-sum(dg.map((d,i)=>(ns[i]-1)*Math.log(d)));
+        const c1=(sum(ns.map(n=>1/(n-1)))-1/dfSA)*(2*b*b+3*b-1)/(6*(b+1)*(g-1));
+        const chi=M*(1-c1), df=(g-1)*b*(b+1)/2; box={M,chi,df,p:chi2sf(chi,df)};
+      }
+    }
+    // simple effects, each with its own error term
+    const simpleB=groups.map((G,i)=>{
+      const n=G.length, sb=n*sum(cm[i].map(v=>(v-gm[i])**2)); let se=0;
+      G.forEach(r=>{const sm=mean(r);r.forEach((v,j)=>{se+=(v-cm[i][j]-sm+gm[i])**2;});});
+      const d1=p,d2=(n-1)*p,r=ratioF(sb/d1,se/d2,d1,d2); return {F:r.F,p:r.p,df1:d1,df2:d2,etaP:sb/(sb+se)};
+    });
+    const simpleA=Array.from({length:b},(_,j)=>{
+      const o=oneWay(groups.map(G=>G.map(r=>r[j]))); return {F:o.F,p:o.p,df1:o.dfb,df2:o.dfw,etaP:o.ssb/(o.ssb+o.ssw)};
+    });
+    // pairwise comparisons of marginal means
+    const msSA=ssSA/dfSA, pairsA=[], pairsB=[];
+    for(let l1=0;l1<g;l1++)for(let l2=l1+1;l2<g;l2++){
+      const diff=gm[l1]-gm[l2], sdm=Math.sqrt(msSA/b), tp=tPair(diff,sdm*Math.sqrt(1/ns[l1]+1/ns[l2]),dfSA);
+      pairsA.push({a:l1,b:l2,diff,t:tp.t,df:dfSA,p:tp.p,d:sdm>0?diff/sdm:NaN});
+    }
+    for(let j1=0;j1<b;j1++)for(let j2=j1+1;j2<b;j2++){
+      const d=all.map(r=>r[j1]-r[j2]), md=mean(d); let ss=0;
+      groups.forEach((G,i)=>{const dm=mean(G.map(r=>r[j1]-r[j2]));G.forEach(r=>{ss+=(r[j1]-r[j2]-dm)**2;});});
+      const s2=ss/dfSA, tp=tPair(md,Math.sqrt(s2/N),dfSA);
+      pairsB.push({a:j1,b:j2,diff:md,t:tp.t,df:dfSA,p:tp.p,d:s2>0?md/Math.sqrt(s2):NaN});
+    }
+    let diffCheck=null;
+    if(b===2){const o=oneWay(groups.map(G=>G.map(r=>r[0]-r[1])));diffCheck={F:o.F,p:o.p,df1:o.dfb,df2:o.dfw};}
+    return {g,b,ns,N,grand,gm,mA:gm,cm,mB,sst,ssA,ssB,ssAB,ssSA,ssBS,dfSA,dfBS,msSA,effects,sph,levene,box,simpleA,simpleB,pairsA,pairsB,sds,cis,groups,resid,diffCheck};
+  }
+  return {sum,mean,variance,median,lgamma,ibeta,fsf,tp2,fpdf,fcrit,tcrit,chi2sf,det,oneWay,anovaInd,anovaRM,anovaTwoInd,anovaTwoRM,anovaMixed,helmert};
 })();
 // ==/STATS==
 
@@ -708,11 +817,18 @@ function makeDs(mode,way){
     a:2,b:3,fn:['Factor A','Factor B'],lvA:['A1','A2','A3','A4'],lvB:['B1','B2','B3','B4'],eA:8,eB:4,eAB:8};
 }
 const SEED2={ind:6,rm:6};
-const state={way:1,mode:'ind',tab:'ind',wayPref:1,cmp:'ind',alpha:0.05,corr:'none',ds:{1:{ind:makeDs('ind',1),rm:makeDs('rm',1)},2:{ind:makeDs('ind',2),rm:makeDs('rm',2)}}};
-const cur=()=>state.ds[state.way][state.mode];
-const allDs=()=>[state.ds[1].ind,state.ds[1].rm,state.ds[2].ind,state.ds[2].rm];
+function makeMix(){
+  return {mode:'mix',way:2,k:3,n:10,rows:20,a:2,b:3,names:['T1','T2','T3','T4'],
+    cells:Array.from({length:4},()=>new Array(20).fill('')),grp:new Array(20).fill(0),
+    eA:4,eB:6,eAB:8,sd:6,ssd:8,ar:0.4,seed:23,z:null,u:null,sim:true,shape:'normal',
+    fn:['Group','Time'],lvA:['Control','Treatment','Group C','Group D'],lvB:['Pre','Post','Follow-up','Time 4']};
+}
+const state={way:1,mode:'ind',tab:'ind',wayPref:1,cmp:'ind',alpha:0.05,corr:'none',ds:{1:{ind:makeDs('ind',1),rm:makeDs('rm',1)},2:{ind:makeDs('ind',2),rm:makeDs('rm',2)}},mix:makeMix()};
+const cur=()=>state.mode==='mix'?state.mix:state.ds[state.way][state.mode];
+const allDs=()=>[state.ds[1].ind,state.ds[1].rm,state.ds[2].ind,state.ds[2].rm,state.mix];
 
 function colNames(ds){
+  if(ds.mode==='mix') return ds.lvB.slice(0,ds.b);
   if(ds.way===1) return ds.names.slice(0,ds.k);
   const r=[]; for(let i=0;i<ds.a;i++)for(let j=0;j<ds.b;j++)r.push(ds.lvA[i]+' · '+ds.lvB[j]); return r;
 }
@@ -724,16 +840,30 @@ function cellMean(ds,j){
 }
 function genNoise(ds){
   const rnd=mulberry32(ds.seed), g=()=>{let u=0;while(u===0)u=rnd();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*rnd());};
+  if(ds.mode==='mix'){ds.z=Array.from({length:4},()=>Array.from({length:160},g));ds.u=Array.from({length:160},g);return;}
   ds.z=Array.from({length:Kmax},()=>Array.from({length:Nmax},g));
   ds.u=Array.from({length:Nmax},g);
 }
-function padRows(ds,rows){ds.rows=rows;ds.cells.forEach(c=>{while(c.length<rows)c.push('');c.length=rows;});}
+function padRows(ds,rows){ds.rows=rows;ds.cells.forEach(c=>{while(c.length<rows)c.push('');c.length=rows;});
+  if(ds.grp){while(ds.grp.length<rows)ds.grp.push(ds.grp.length?ds.grp[ds.grp.length-1]:0);ds.grp.length=rows;}}
 function shapeZ(shape,z){
   if(shape==='skew'){const q=0.85;return (Math.exp(q*z)-Math.exp(q*q/2))/Math.sqrt((Math.exp(q*q)-1)*Math.exp(q*q));}
   if(shape==='heavy')return (Math.abs(z)>1.4?z*2.4:z)*0.8;
   return z;
 }
 function applySim(ds){
+  if(ds.mode==='mix'){
+    ds.k=ds.b; padRows(ds,ds.a*ds.n);
+    const r=Math.sqrt(1-ds.ar*ds.ar);
+    for(let i=0;i<ds.rows;i++){
+      const gi=Math.floor(i/ds.n); ds.grp[i]=gi; let e=0;
+      for(let j=0;j<ds.b;j++){
+        const z=ds.z[j][i]; e=j===0?z:ds.ar*e+r*z;
+        ds.cells[j][i]=(cellMean(ds,gi*ds.b+j)+ds.ssd*ds.u[i]+ds.sd*shapeZ(ds.shape,e)).toFixed(1);
+      }
+    }
+    return;
+  }
   padRows(ds,ds.n);
   for(let j=0;j<ds.k;j++)for(let i=0;i<ds.n;i++){
     const v=cellMean(ds,j)+(ds.mode==='rm'?ds.ssd*ds.u[i]:0)+ds.sd*shapeZ(ds.shape,ds.z[j][i]);
@@ -752,14 +882,21 @@ const DESIGN={
 DESIGN.kw=['Kruskal–Wallis test (independent groups, rank-based)','Different people in each group, as in one-way independent ANOVA, but the test works on the <strong>ranks</strong> of all scores pooled together instead of the scores themselves. It asks whether the groups\' mean ranks differ more than chance would allow. It uses the same data as the Independent measures tab, so what you edit here changes there too.'];
 DESIGN.fr=['Friedman test (repeated measures, rank-based)','The <strong>same</strong> people are measured in every condition, as in one-way repeated-measures ANOVA, but each participant\'s scores are <strong>ranked among themselves</strong>. It asks whether the conditions\' mean ranks differ more than chance would allow. It uses the same data as the Repeated measures tab.'];
 DESIGN.cmp=['Compare all tests','Choose a design above, then see every test for it run on the <strong>same data</strong>: the parametric tests that compare means, and the rank-based test that compares mean ranks. Edit the data or change the shape of the scores to see where they agree and disagree.'];
+DESIGN.mix=['Mixed design (split-plot): groups × repeated measures','Separate groups of people (the <strong>between-subjects</strong> factor, such as Control and Treatment), and <strong>every</strong> person is measured at each level of a <strong>within-subjects</strong> factor (such as Pre, Post and Follow-up). The test of Group asks whether groups differ overall; the test of Time asks whether scores change; the <strong>Group × Time interaction</strong> asks whether groups change differently, which is usually the main question. Each row is one participant; choose their group in the first column.'];
 function renderDesign(){
-  const d=DESIGN[isNP()?state.tab:state.way+state.mode];
+  const d=DESIGN[isNP()?state.tab:(state.mode==='mix'?'mix':state.way+state.mode)];
   $('designCard').innerHTML=`<h2>${d[0]}</h2><p class="small" style="margin:0">${d[1]}</p>`;
   $('dataHint').textContent=state.way===1?(state.mode==='ind'?'(rows = participants, columns = groups)':'(rows = participants, columns = conditions)'):(state.mode==='ind'?'(rows = participants, columns = A × B cells)':'(rows = participants, columns = A × B cells)');
   $('tData').textContent=state.way===1?'Your data':'Interaction plot & cell means';
   $('tF').textContent=state.way===1?'F distribution under H₀':'F distributions under H₀ (one per effect)';
   $('tPost').innerHTML=state.way===1?'Pairwise comparisons <span class="muted small">(Bonferroni-adjusted)</span>':'Pairwise comparisons of marginal means <span class="muted small">(Bonferroni-adjusted within each factor)</span>';
-  $('body').className=state.way===2?'w2':'';
+  $('body').className=(state.way===2||state.mode==='mix')?'w2':'';
+  if(state.mode==='mix'&&!isNP()){
+    $('dataHint').textContent='(rows = participants, columns = repeated measures)';
+    $('tData').textContent='Interaction plot & cell means';
+    $('tF').textContent='F distributions under H₀ (one per effect)';
+    $('tPost').innerHTML='Simple effects &amp; pairwise comparisons <span class="muted small">(Bonferroni-adjusted)</span>';
+  }
 }
 
 /* ---------- controls ---------- */
@@ -767,6 +904,7 @@ const LABELS={
   ind:{Unit:'Number of groups',n:'Participants per group',sd:'Within-group SD (σ)',cn:'Participants per cell',colHead:'Group',rowHead:'#'},
   rm:{Unit:'Number of conditions',n:'Number of participants',sd:'Residual SD (σ within a person)',cn:'Number of participants',colHead:'Condition',rowHead:'Subj'}
 };
+LABELS.mix={n:'Participants per group',sd:'Residual SD (σ within a person)',colHead:'Time',rowHead:'Subj'};
 const optList=(vals,sel)=>vals.map(v=>`<option${v===sel?' selected':''}>${v}</option>`).join('');
 function sliderField(id,label,min,max,step,val,note){
   return `<div class="field"><label for="${id}">${label} <output id="${id}Out">${val}</output></label><input type="range" id="${id}" min="${min}" max="${max}" step="${step}" value="${val}">${note?`<div class="muted small">${note}</div>`:''}</div>`;
@@ -774,7 +912,24 @@ function sliderField(id,label,min,max,step,val,note){
 function renderSim(){
   const ds=cur(),L=LABELS[state.mode],rm=state.mode==='rm';
   let h='';
-  if(state.way===1){
+  if(state.mode==='mix'){
+    [['A',0,'a','lvA','Between-subjects factor (groups)'],['B',1,'b','lvB','Within-subjects factor (repeated measures)']].forEach(([f,ix,key,lk,cap])=>{
+      h+=`<div class="field"><label for="fn${f}">${cap}</label><div class="btnrow" style="flex-wrap:nowrap"><input type="text" id="fn${f}" value="${esc(ds.fn[ix])}" style="flex:1;min-width:0"><select id="${key}Sel" aria-label="Number of levels of ${cap}">${optList([2,3,4],ds[key])}</select><span class="muted small">levels</span></div>
+        <input type="text" id="lv${f}in" value="${esc(ds[lk].slice(0,ds[key]).join(', '))}" aria-label="Level names of ${cap}, comma separated" style="width:100%;margin-top:4px"></div>`;
+    });
+    h+=sliderField('nRange',L.n,3,20,1,ds.n).replace('nRangeOut','nOut');
+    h+='<div class="lbl">Population effects</div>';
+    h+=sliderField('effA','Group effect (between-subjects main effect)',0,20,0.5,ds.eA);
+    h+=sliderField('effB','Time effect (within-subjects main effect)',0,20,0.5,ds.eB);
+    h+=sliderField('effAB','Group × Time interaction (groups change differently)',-20,20,0.5,ds.eAB,'Positive values: later levels of B pull the higher-numbered groups upward, so the lines fan out.');
+    h+='<div class="btnrow small" style="margin:0 0 12px"><span class="muted">Presets:</span>';
+    [['none','No effects'],['main','Main effects only'],['cross','Crossover (interaction only)'],['both','Both']].forEach(([k,n])=>h+=`<button class="btn small" data-p="${k}" style="padding:3px 9px">${n}</button>`);
+    h+='</div>';
+    h+=sliderField('sdRange',L.sd,1,30,0.5,ds.sd);
+    h+=sliderField('ssdRange','Between-subject SD',0,30,0.5,ds.ssd,'How much people in the same group differ in their overall level. It sits in the error term for the Group effect only; Time and Group × Time are tested after removing it.');
+    h+=sliderField('arRange','Serial correlation ρ between neighbouring measurements',0,0.9,0.05,ds.ar,'0 = every pair of measurements related equally (compound symmetry). Raise it so that measurements close in time are more alike than distant ones, and watch Mauchly\'s test and ε flag a sphericity violation.');
+    h+=`<div class="field"><label for="shape">Shape of the scores</label><select id="shape"><option value="normal"${ds.shape==='normal'?' selected':''}>Normal (bell-shaped)</option><option value="skew"${ds.shape==='skew'?' selected':''}>Skewed to the right</option><option value="heavy"${ds.shape==='heavy'?' selected':''}>Heavy tails (outliers)</option></select><div class="muted small">Simulated scores only.</div></div>`;
+  } else if(state.way===1){
     h+=`<div class="field"><label for="kSel">${L.Unit}</label><select id="kSel">${optList([2,3,4,5,6],ds.k)}</select></div>`;
     h+=sliderField('nRange',L.n,3,40,1,ds.n).replace('nRangeOut','nOut');
     h+='<div class="lbl">Population means</div><div id="means">';
@@ -812,6 +967,18 @@ function updateStatus(){
 /* ---------- grid ---------- */
 function renderGrid(){
   const ds=cur(),L=LABELS[state.mode],nm=colNames(ds);
+  if(ds.mode==='mix'){
+    let h=`<table class="grid"><thead><tr><th class="rn">${L.rowHead}</th><th><div class="h"><span class="hn">${esc(ds.fn[0])}</span></div></th>`;
+    for(let j=0;j<ds.b;j++)h+=`<th><div class="h"><span class="sw" style="background:${COLORS[j]}"></span><span class="hn">${esc(ds.lvB[j])}</span></div></th>`;
+    h+='</tr></thead><tbody>';
+    for(let i=0;i<ds.rows;i++){
+      h+=`<tr><td class="rn">${i+1}</td><td><select class="gsel" data-r="${i}" aria-label="Group of participant ${i+1}">${ds.lvA.slice(0,ds.a).map((l,q)=>`<option value="${q}"${Math.min(ds.a-1,ds.grp[i]|0)===q?' selected':''}>${esc(l)}</option>`).join('')}</select></td>`;
+      for(let j=0;j<ds.b;j++)h+=`<td><input class="cell" inputmode="decimal" data-r="${i}" data-c="${j}" value="${esc(ds.cells[j][i]||'')}" aria-label="${esc(ds.lvB[j])}, participant ${i+1}"></td>`;
+      h+='</tr>';
+    }
+    $('grid').innerHTML=h+'</tbody></table>';
+    return;
+  }
   let h=`<table class="grid"><thead><tr><th class="rn">${L.rowHead}</th>`;
   for(let j=0;j<ds.k;j++){
     h+=`<th><div class="h"><span class="sw" style="background:${colColor(ds,j)}"></span>`+
@@ -830,6 +997,15 @@ function renderGrid(){
 const parseNum=s=>{s=(s||'').trim();if(s==='')return null;const v=Number(s);return isFinite(v)?v:NaN;};
 function getData(ds){
   let invalid=0;
+  if(ds.mode==='mix'){
+    const groups=Array.from({length:ds.a},()=>[]);let dropped=0;
+    for(let i=0;i<ds.rows;i++){
+      const row=[];let blank=0;
+      for(let j=0;j<ds.b;j++){const v=parseNum(ds.cells[j][i]);if(v===null)blank++;else if(isNaN(v)){invalid++;blank++;}else row.push(v);}
+      if(blank===0)groups[Math.min(ds.a-1,ds.grp[i]|0)].push(row);else if(blank<ds.b)dropped++;
+    }
+    return {groups,invalid,dropped};
+  }
   if(ds.mode==='ind'){
     const groups=[];
     for(let j=0;j<ds.k;j++){const vals=[];for(let i=0;i<ds.rows;i++){const v=parseNum(ds.cells[j][i]);if(v===null)continue;if(isNaN(v)){invalid++;continue;}vals.push(v);}groups.push(vals);}
@@ -1167,6 +1343,86 @@ SS_A×S = ${f(T.ssAS)}   SS_B×S = ${f(T.ssBS)}   SS_A×B×S = ${f(T.ssABS)}  (t
 η²_G = SS_effect / (SS_effect + SS_Subjects + all error SS)</code></div>`;
 }
 
+
+/* ---------- mixed design results ---------- */
+function mixText(ds,eff,c,alpha){
+  const [A,B,AB]=eff, sA=c(A).p<alpha, sB=c(B).p<alpha, sAB=c(AB).p<alpha, g=esc(ds.fn[0]), t=esc(ds.fn[1]);
+  let s=sAB
+    ? `The <strong>${g} × ${t} interaction is significant</strong>: the groups do not change across ${t} in the same way (the lines in the plot are not parallel), so the effect of ${t} depends on group. Follow up with the simple effects below; the main effects describe averages and should be read with that in mind.`
+    : `The ${g} × ${t} interaction is not significant: there is no clear evidence that the groups change differently across ${t} (lines roughly parallel), so the main effects can be read on their own.`;
+  const hits=[sA?g:null,sB?t:null].filter(Boolean);
+  return s+(hits.length?` Significant main effect${hits.length>1?'s':''} of ${hits.join(' and ')}.`:' Neither main effect is significant.');
+}
+function renderMixed(res,ds,alpha){
+  const eff=res.effects, c=e=>e.corr[state.corr], fn=ds.fn.map(esc), T=effTitle;
+  const bal=res.ns.every(n=>n===res.ns[0]), corrNm=state.corr==='gg'?'Greenhouse–Geisser':'Huynh–Feldt';
+  $('headline').innerHTML=eff.map(e=>effLine(ds,e,e.F,c(e).df1,c(e).df2,c(e).p,alpha)).join('')+`<p style="margin:.6rem 0 0">${mixText(ds,eff,c,alpha)}${state.corr==='none'?'':' ('+corrNm+' corrected for '+fn[1]+' and the interaction.)'}</p>
+    <div class="callout small"><strong>Two error terms.</strong> ${fn[0]} is tested against differences <em>between people within groups</em> (${fmt(res.ssSA/res.sst*100,1)}% of total variance). ${fn[1]} and the interaction are tested against the <em>person-by-${fn[1]}</em> residual (${fmt(res.ssBS/res.sst*100,1)}%), which is usually much smaller, so within-subject effects are typically the more powerful tests.</div>`;
+  addApa('headline',eff.map(e=>T(ds,e.key)+': '+apaF(c(e).df1,c(e).df2,e.F,c(e).p)+`, partial η² = ${e2(e.etaP)}`+(state.corr==='none'||!e.within||e.df<2||res.b<3?'':`, ${corrNm} ε = ${e2(c(e).eps)}`)));
+  const row=(e,lab)=>`<tr class="${c(e).p<alpha?'hl':''}"><td>${esc(lab)}</td><td>${fmt(e.ss)}</td><td>${e.df}</td><td>${fmt(e.ms)}</td><td>${fmt(e.F)}</td><td class="${c(e).p<alpha?'sigcell':''}">${fmtP(c(e).p)}</td><td>${fmtE(e.etaP)}</td></tr>`;
+  const errRow=(lab,ss,df,ms)=>`<tr><td style="padding-left:22px" class="muted">${lab}</td><td>${fmt(ss)}</td><td>${df}</td><td>${fmt(ms)}</td><td></td><td></td><td></td></tr>`;
+  const [A,B,AB]=eff;
+  $('anova').innerHTML=`<table class="t"><thead><tr><th>Source</th><th>SS</th><th>df</th><th>MS</th><th>F</th><th>p${state.corr==='none'?'':' ('+state.corr.toUpperCase()+')'}</th><th>partial η²</th></tr></thead><tbody>
+    <tr class="subh"><td colspan="7">Between subjects</td></tr>
+    ${row(A,T(ds,'A'))}${errRow('Error: Subjects within groups (S/A)',res.ssSA,res.dfSA,res.msSA)}
+    <tr class="subh"><td colspan="7">Within subjects</td></tr>
+    ${row(B,T(ds,'B'))}${row(AB,T(ds,'AB'))}${errRow('Error: '+esc(ds.fn[1])+' × S/A',res.ssBS,res.dfBS,B.msE)}
+    <tr class="tot"><td>Total</td><td>${fmt(res.sst)}</td><td>${res.N*res.b-1}</td><td></td><td></td><td></td><td></td></tr></tbody></table>
+    <h3>Sphericity corrections (${fn[1]} and the interaction)</h3>
+    <table class="t"><thead><tr><th>Effect</th><th>ε (GG)</th><th>ε (HF)</th><th>p assumed</th><th>p GG</th><th>p HF</th></tr></thead><tbody>
+    ${[B,AB].map(e=>`<tr><td>${esc(T(ds,e.key))}${res.b<3?' <span class="muted small">(only 2 levels of '+fn[1]+' — n/a)</span>':''}</td><td>${res.b<3?'—':fmtE(e.eps.gg)}</td><td>${res.b<3?'—':fmtE(e.eps.hf)}</td><td>${fmtP(e.corr.none.p)}</td><td>${fmtP(e.corr.gg.p)}</td><td>${fmtP(e.corr.hf.p)}</td></tr>`).join('')}</tbody></table>
+    ${corrRadios().replace('headline &amp; F plot','headline, table &amp; F plots')}`;
+  $('effects').innerHTML=tilesTwo(ds,eff,true);
+  // interaction plot: x = repeated-measure levels, one line per group
+  const pds={a:res.b,b:res.g,lvA:ds.lvB,lvB:ds.lvA,fn:[ds.fn[1],ds.fn[0]]};
+  const pres={raw:Array.from({length:res.b},(_,j)=>res.groups.map(G=>G.map(r=>r[j]))),cm:Array.from({length:res.b},(_,j)=>res.cm.map(r=>r[j])),cis:Array.from({length:res.b},(_,j)=>res.cis.map(r=>r[j]))};
+  $('chartData').innerHTML=chartInter(pds,pres,false);
+  $('chartDataNote').innerHTML=`Dots = individual scores · large markers = cell means · whiskers = 95% CI of each cell mean. One line per level of ${fn[0]}; parallel lines → no ${fn[0]} × ${fn[1]} interaction; lines that converge, diverge or cross → interaction.`+meansTable(ds,res)+`<p class="muted small" style="margin:.4rem 0 0">Participants per group: ${res.ns.map((n,i)=>esc(ds.lvA[i])+' = '+n).join(', ')}.</p>`;
+  $('chartF').innerHTML=fGrid(ds,eff.map(e=>({key:e.key,F:e.F,d1:c(e).df1,d2:c(e).df2})),alpha)+(state.corr!=='none'?'<p class="muted small" style="margin:.4rem 0 0">Plots use the selected correction\'s df for '+fn[1]+' and the interaction.</p>':'');
+  $('chartVar').innerHTML=partitionBar([{name:T(ds,'A'),ss:res.ssA,color:'var(--c0)'},{name:T(ds,'B'),ss:res.ssB,color:'var(--c4)'},{name:T(ds,'AB'),ss:res.ssAB,color:'var(--c2)'},{name:'Subjects within groups (S/A)',ss:res.ssSA,color:'var(--c1)'},{name:ds.fn[1]+' × S/A (residual)',ss:res.ssBS,color:'var(--muted)'}],res.sst)+
+    `<p class="muted small" style="margin:.8rem 0 0">${fn[0]} is compared with the orange between-subjects error; ${fn[1]} and the interaction are compared with the grey residual. Stable differences between people (orange) never enter the within-subject F ratios.</p>`;
+  // assumptions
+  let a='', sp=res.sph;
+  if(res.b<3) a+=`<p style="margin:0 0 .4rem"><strong>Sphericity</strong> holds automatically with only 2 levels of ${fn[1]} (one difference score).</p>`;
+  else if(sp.mauchly){const mc=sp.mauchly;a+=`<p style="margin:0 0 .4rem"><strong>Sphericity</strong> of ${fn[1]} (Mauchly, pooled over groups): W = ${fmtE(mc.W)}, χ²(${mc.df}) = ${fmt(mc.chi)}, ${pTxt(mc.p)} — ${mc.p>=0.05?'not rejected (the test has low power with small samples)':'<strong>violated</strong>; use a Greenhouse–Geisser or Huynh–Feldt correction'}. ε<sub>GG</sub> = ${fmtE(sp.gg)}, ε<sub>HF</sub> = ${fmtE(sp.hf)} (lower bound ${fmtE(1/(res.b-1))}).</p>`;}
+  else a+=`<p style="margin:0 0 .4rem" class="muted"><strong>Sphericity:</strong> Mauchly's test needs more error df than ${res.b-1}; ε<sub>GG</sub> = ${fmtE(sp.gg)}.</p>`;
+  if(res.box) a+=`<p style="margin:0 0 .4rem"><strong>Equal covariance matrices</strong> across groups (Box's M): M = ${fmt(res.box.M)}, χ²(${res.box.df}) = ${fmt(res.box.chi)}, ${pTxt(res.box.p)} — ${res.box.p>=0.001?'no strong evidence that the groups differ in variances and correlations of the repeated measures.':'<strong>covariance matrices appear to differ</strong>; with unequal group sizes the F tests can then be unreliable.'}</p>`;
+  else a+=`<p style="margin:0 0 .4rem" class="muted"><strong>Equal covariance matrices</strong> (Box's M) needs more participants in every group than repeated measures (${res.b}).</p>`;
+  if(res.levene) a+=`<p style="margin:0 0 .4rem"><strong>Homogeneity of variance</strong> of the participants' average scores across groups (Brown–Forsythe): F(${res.levene.df1}, ${res.levene.df2}) = ${fmt(res.levene.F)}, ${pTxt(res.levene.p)} — ${res.levene.p>=0.05?'no strong evidence that group variances differ.':'<strong>variances appear unequal</strong>; the test of '+fn[0]+' may be unreliable.'}</p>`;
+  const sk=skewOf(res.resid), oc=outlierCount(res.resid);
+  a+=`<p style="margin:0 0 .4rem"><strong>Normality</strong> of residuals (scores minus their cell mean): skewness = ${fmt(sk)}, ${oc} outlying value${oc===1?'':'s'} (beyond 1.5 × IQR). ${Math.abs(sk)>1||oc>0?'<strong>Look at the plot</strong>: skew or outliers can distort F with small groups.':'Nothing alarming.'}</p>`;
+  a+=`<p style="margin:0 0 .4rem"><strong>Design:</strong> ${bal?`balanced (n = ${res.ns[0]} per group).`:'<strong>unbalanced</strong> — group sizes differ, so sums of squares are weighted by group size and the covariance assumption matters more. Equal group sizes are strongly preferred.'}</p>`;
+  a+='<p class="muted small" style="margin:0">Also assumed: participants are independent of one another, and people are assigned to (not self-selected into) groups.</p>';
+  $('assump').innerHTML=a;
+  // simple effects + pairwise
+  const adjB=res.g, adjA=res.b;
+  let ph=`<h3 style="margin-top:.2rem">Simple effect of ${fn[1]} within each group <span class="muted small">(separate repeated-measures ANOVA per group; ×${adjB})</span></h3><table class="t"><thead><tr><th>${fn[0]}</th><th>F</th><th>df</th><th>p</th><th>p (adj.)</th><th>partial η²</th></tr></thead><tbody>`;
+  res.simpleB.forEach((s,i)=>{const pa=Math.min(1,s.p*adjB);ph+=`<tr><td><span class="sw" style="background:${COLORS[i]}"></span> ${esc(ds.lvA[i])}</td><td>${fmt(s.F)}</td><td>${s.df1}, ${s.df2}</td><td>${fmtP(s.p)}</td><td class="${pa<alpha?'sigcell':''}">${fmtP(pa)}</td><td>${fmtE(s.etaP)}</td></tr>`;});
+  ph+=`</tbody></table><h3>Simple effect of ${fn[0]} at each level of ${fn[1]} <span class="muted small">(one-way ANOVA across groups at each time; ×${adjA})</span></h3><table class="t"><thead><tr><th>${fn[1]}</th><th>F</th><th>df</th><th>p</th><th>p (adj.)</th><th>partial η²</th></tr></thead><tbody>`;
+  res.simpleA.forEach((s,j)=>{const pa=Math.min(1,s.p*adjA);ph+=`<tr><td><span class="sw" style="background:${COLORS[j]}"></span> ${esc(ds.lvB[j])}</td><td>${fmt(s.F)}</td><td>${s.df1}, ${s.df2}</td><td>${fmtP(s.p)}</td><td class="${pa<alpha?'sigcell':''}">${fmtP(pa)}</td><td>${fmtE(s.etaP)}</td></tr>`;});
+  ph+='</tbody></table>';
+  if(res.g>=3) ph+=`<h3>Marginal means of ${fn[0]} <span class="muted small">(pooled S/A error)</span></h3>`+pairTable(res.pairsA,ds.lvA,'Mean diff','d (SD of subject means)',alpha,false);
+  if(res.b>=3) ph+=`<h3>Marginal means of ${fn[1]} <span class="muted small">(pooled within-group error)</span></h3>`+pairTable(res.pairsB,ds.lvB,'Mean diff','d<sub>z</sub>',alpha,false);
+  ph+=`<p class="muted small" style="margin:.4rem 0 0">Simple effects use their own error terms, so they are robust to violations of sphericity. When the interaction is significant, interpret these rather than the marginal main effects. Both families are Bonferroni-adjusted for the number of tests shown.</p>`;
+  $('posthoc').innerHTML=ph;
+  // walk-through
+  const f=x=>fmt(x,3);
+  $('walk').innerHTML=`<div class="step"><strong>1 · Layout.</strong> ${res.g} groups (${res.ns.map((n,i)=>esc(ds.lvA[i])+': n = '+n).join(', ')}), N = ${res.N} participants, each measured ${res.b} times. Grand mean = ${f(res.grand)}.</div>
+  <div class="step"><strong>2 · Between-subjects part</strong> uses each person's average over time, so it behaves like a one-way ANOVA on those averages.<code class="eq">SS_${esc(ds.fn[0])} = b·Σ nᵢ(Mᵢ − M)² = ${f(res.ssA)}
+SS_S/A = b·Σ (Mₛ − Mᵢ)²   (person average minus own group mean) = ${f(res.ssSA)}
+df = ${res.g-1} and ${res.dfSA}   F = (${f(res.ssA)} / ${res.g-1}) / (${f(res.ssSA)} / ${res.dfSA}) = ${f(A.F)}   p = ${fmtP(A.p)}</code></div>
+  <div class="step"><strong>3 · Within-subjects part</strong> uses how each person's scores move across the levels of ${fn[1]}.<code class="eq">SS_${esc(ds.fn[1])} = N·Σ (Mⱼ − M)² = ${f(res.ssB)}
+SS_${esc(ds.fn[0])}×${esc(ds.fn[1])} = Σ nᵢ Σ (Mᵢⱼ − Mᵢ − Mⱼ + M)² = ${f(res.ssAB)}
+SS_${esc(ds.fn[1])}×S/A = SS_total − all other SS = ${f(res.ssBS)}   (SS_total = ${f(res.sst)})</code></div>
+  <div class="step"><strong>4 · df and F.</strong> Both within-subject effects share one error term.<code class="eq">df_${esc(ds.fn[1])} = b − 1 = ${B.df}   df_interaction = (a − 1)(b − 1) = ${AB.df}   df_error = (N − a)(b − 1) = ${res.dfBS}   MS_error = ${f(B.msE)}
+F_${esc(ds.fn[1])} = ${f(B.ms)} / ${f(B.msE)} = ${f(B.F)}   p = ${fmtP(B.p)}
+F_interaction = ${f(AB.ms)} / ${f(AB.msE)} = ${f(AB.F)}   p = ${fmtP(AB.p)}</code></div>
+  <div class="step"><strong>5 · Sphericity.</strong> ${res.b<3?'With 2 levels there is a single difference score, so sphericity cannot be violated.':`Contrast scores for ${fn[1]} are pooled across groups (within-group covariance) and ε = (tr Σ)² / ((b − 1) tr Σ²) = ${fmtE(res.sph.gg)} (Greenhouse–Geisser). Multiplying both df of the ${fn[1]} and interaction tests by ε gives df = (${fmtDf(B.corr.gg.df1)}, ${fmtDf(B.corr.gg.df2)}) and (${fmtDf(AB.corr.gg.df1)}, ${fmtDf(AB.corr.gg.df2)}), p = ${fmtP(B.corr.gg.p)} and ${fmtP(AB.corr.gg.p)}.`}</div>
+  <div class="step"><strong>6 · Effect sizes.</strong><code class="eq">η²_p = SS_effect / (SS_effect + SS_its error)   e.g. interaction: ${f(AB.ss)} / (${f(AB.ss)} + ${f(res.ssBS)}) = ${f(AB.etaP)}
+η²_G = SS_effect / (SS_effect + SS_S/A + SS_${esc(ds.fn[1])}×S/A)   e.g. interaction: ${f(AB.etaG)}</code></div>`+
+  (res.diffCheck?`<div class="step"><strong>7 · A useful check (2 time points).</strong> With only two levels of ${fn[1]}, the interaction equals a one-way ANOVA on each person's <em>change score</em> (${esc(ds.lvB[0])} − ${esc(ds.lvB[1])}) across groups: F(${res.diffCheck.df1}, ${res.diffCheck.df2}) = ${f(res.diffCheck.F)}, p = ${fmtP(res.diffCheck.p)}, the same as the interaction above. The ${fn[0]} test is the same as a one-way ANOVA on the two-score averages.</div>`:'');
+}
+
 /* ---------- compute & render ---------- */
 /* ---------- APA-style reporting ---------- */
 const e2=x=>!isFinite(x)?'—':x.toFixed(2).replace(/^(-?)0\./,'$1.').replace('-','−');
@@ -1470,7 +1726,8 @@ function compute(){
   const ds=cur(), names=colNames(ds), alpha=state.alpha, info=getData(ds);
   let msg='', res;
   try{
-    if(ds.way===1){
+    if(ds.mode==='mix') res=S.anovaMixed(info.groups,ds.b);
+    else if(ds.way===1){
       if(ds.mode==='ind'){ res=S.anovaInd(info.groups); if(!res.error)res.groupsData=info.groups; }
       else res=S.anovaRM(info.M);
     } else if(ds.mode==='ind'){
@@ -1479,11 +1736,12 @@ function compute(){
     } else res=S.anovaTwoRM(info.M,ds.a,ds.b);
   }catch(e){res={error:'Calculation error: '+e.message};}
   if(info.invalid) msg+=`<div class="notice">${info.invalid} cell(s) contain non-numeric text and were ignored.</div>`;
-  if(info.dropped) msg+=`<div class="notice">${info.dropped} participant row(s) with some blank cells were excluded — repeated measures needs a value in every ${ds.way===1?'condition':'cell'}.</div>`;
+  if(info.dropped) msg+=`<div class="notice">${info.dropped} participant row(s) with some blank cells were excluded — repeated measures needs a value in every ${ds.mode==='mix'?'repeated measurement':ds.way===1?'condition':'cell'}.</div>`;
   if(res.error){ $('msg').innerHTML=msg+`<div class="notice"><strong>Can't run the ANOVA yet.</strong> ${esc(res.error)}</div>`; $('body').style.display='none'; return; }
   $('body').style.display='';
   $('msg').innerHTML=msg;
-  if(ds.way===1){ if(ds.mode==='ind') renderInd(res,names,alpha); else renderRM(res,names,alpha); }
+  if(ds.mode==='mix') renderMixed(res,ds,alpha);
+  else if(ds.way===1){ if(ds.mode==='ind') renderInd(res,names,alpha); else renderRM(res,names,alpha); }
   else if(ds.mode==='ind') renderTwoInd(res,ds,alpha); else renderTwoRM(res,ds,alpha);
 }
 
@@ -1492,7 +1750,7 @@ function resim(){const ds=cur();ds.sim=true;applySim(ds);renderGrid();updateStat
 const setOut=(id,v)=>{const o=$(id+'Out')||(id==='nRange'?$('nOut'):null);if(o)o.textContent=v;};
 function syncChrome(){
   document.querySelectorAll('.tabs button').forEach(x=>x.setAttribute('aria-selected',x.dataset.mode===state.tab?'true':'false'));
-  $('wayBox').hidden=isNP();$('cmpBox').hidden=state.tab!=='cmp';
+  $('wayBox').hidden=isNP()||state.tab==='mix';$('cmpBox').hidden=state.tab!=='cmp';
   $('way1').checked=state.way===1;$('way2').checked=state.way===2;
   $('cmp-ind').checked=state.cmp==='ind';$('cmp-rm').checked=state.cmp==='rm';
 }
@@ -1511,6 +1769,7 @@ $('sim').addEventListener('input',e=>{
   else if(t.dataset.mean!==undefined){const j=+t.dataset.mean;ds.means[j]=v;$('meanOut'+j).textContent=t.value;resim();}
   else if(t.id==='sdRange'){ds.sd=v;setOut('sdRange',t.value);resim();}
   else if(t.id==='ssdRange'){ds.ssd=v;setOut('ssdRange',t.value);resim();}
+  else if(t.id==='arRange'){ds.ar=v;setOut('arRange',t.value);resim();}
   else if(t.id==='effA'||t.id==='effB'||t.id==='effAB'){ds[{effA:'eA',effB:'eB',effAB:'eAB'}[t.id]]=v;setOut(t.id,t.value);resim();}
   else if(t.id==='seed'){const s=Math.floor(v);if(isFinite(s)){ds.seed=s;genNoise(ds);resim();}}
   else if(t.id==='fnA'||t.id==='fnB'){ds.fn[t.id==='fnA'?0:1]=t.value||('Factor '+(t.id==='fnA'?'A':'B'));compute();}
@@ -1524,7 +1783,7 @@ $('sim').addEventListener('change',e=>{
   const ds=cur(),id=e.target.id;
   if(id==='shape'){ds.shape=e.target.value;resim();}
   else if(id==='kSel'){ds.k=+e.target.value;if(ds.sim)applySim(ds);renderSim();renderGrid();compute();}
-  else if(id==='aSel'||id==='bSel'){ds[id==='aSel'?'a':'b']=+e.target.value;ds.k=ds.a*ds.b;if(ds.sim)applySim(ds);renderSim();renderGrid();compute();}
+  else if(id==='aSel'||id==='bSel'){ds[id==='aSel'?'a':'b']=+e.target.value;ds.k=ds.mode==='mix'?ds.b:ds.a*ds.b;if(ds.sim)applySim(ds);renderSim();renderGrid();compute();}
 });
 $('sim').addEventListener('click',e=>{
   const ds=cur(),b=e.target.closest('button'); if(!b)return;
@@ -1560,11 +1819,25 @@ $('grid').addEventListener('paste',e=>{
     if(oneWay) rows[0].forEach((s,j)=>{if(s&&j<Kmax)ds.names[j]=s;});
     rows=rows.slice(1);
   }
+  let gcodes=null;
+  if(ds.mode==='mix'&&rows.length&&rows.every(r=>r.length>=2&&r[0]!==''&&isNaN(Number(r[0])))){
+    gcodes=rows.map(r=>{
+      const lab=r[0],low=lab.toLowerCase();let q=ds.lvA.slice(0,ds.a).findIndex(l=>l.toLowerCase()===low);
+      if(q<0&&ds.a<4){ds.lvA[ds.a]=lab;q=ds.a;ds.a++;}
+      return Math.max(0,q);
+    });
+    rows=rows.map(r=>r.slice(1));
+  }
   const width=Math.max.apply(null,rows.map(r=>r.length));
   if(oneWay) ds.k=Math.max(ds.k,Math.min(6,c0+width));
   padRows(ds,Math.min(Rmax,Math.max(ds.rows,r0+rows.length)));
   rows.forEach((r,i)=>r.forEach((s,j)=>{if(c0+j<ds.k&&r0+i<Rmax)ds.cells[c0+j][r0+i]=s;}));
+  if(gcodes)gcodes.forEach((q,i)=>{if(r0+i<ds.rows)ds.grp[r0+i]=q;});
   ds.sim=false; renderSim(); renderGrid(); compute();
+});
+$('grid').addEventListener('change',e=>{
+  const t=e.target; if(!t.classList.contains('gsel'))return;
+  const ds=cur(); ds.grp[+t.dataset.r]=+t.value; ds.sim=false; updateStatus(); compute();
 });
 $('addRow').addEventListener('click',()=>{const ds=cur();if(ds.rows<Rmax){padRows(ds,ds.rows+1);ds.sim=false;renderGrid();updateStatus();compute();}});
 $('delRow').addEventListener('click',()=>{const ds=cur();if(ds.rows>2){padRows(ds,ds.rows-1);ds.sim=false;renderGrid();updateStatus();compute();}});
@@ -1580,7 +1853,7 @@ window.__anova={Stats:S,state:state,NP:NP};
 <script>
 (function(){
 const DEC={
-"start":{q:"Are the scores from different participants in each group, or from the same participants measured in every condition?",o:[["Different participants in each group (independent measures)","ind1"],["The same participants in every condition (repeated measures)","rm1"]]},
+"start":{q:"Are the scores from different participants in each group, from the same participants measured in every condition, or both (separate groups, each measured repeatedly)?",o:[["Different participants in each group (independent measures)","ind1"],["The same participants in every condition (repeated measures)","rm1"],["Both: separate groups of participants, and each person measured at every time point or condition (mixed design)","mix1"]]},
 "ind1":{q:"How many factors (independent variables) define the groups?",o:[["One factor (for example, three teaching methods)","ind_scale"],["Two factors fully crossed (for example, method × school type)","ind2_scale"]]},
 "ind_scale":{q:"What kind of scores do you have?",o:[["Numerical measurements with equal steps (interval or ratio)","ind_dist"],["Ordinal: ranks, or ratings where the steps between levels are not equal","r_kw_ord"]]},
 "ind_dist":{q:"Within each group, are the scores roughly bell-shaped with no extreme outliers (or are there about 30 or more per group)?",o:[["Yes","ind_var"],["No: clearly skewed or outliers, with small groups","r_kw_shape"],["Not sure","r_cmp_ind"]]},
@@ -1591,6 +1864,13 @@ const DEC={
 "rm_dist":{q:"Are the scores (or the differences between conditions) roughly bell-shaped with no extreme outliers, or do you have about 30 or more participants?",o:[["Yes","rm_eps"],["No: clearly skewed or outliers, with few participants","r_fr_shape"],["Not sure","r_cmp_rm"]]},
 "rm_eps":{q:"With three or more conditions: do the differences between every pair of conditions have similar variance (sphericity: Mauchly's p above .05, or ε near 1)?",o:[["Yes, similar","r_rm1"],["No (Mauchly's p below .05, or ε well below 1)","r_rm_gg"],["Not sure","r_rm_chk"]]},
 "rm2_scale":{q:"Are the scores numerical and roughly bell-shaped (or are there about 30 or more participants)?",o:[["Yes","r_rm2"],["No: ordinal scores, or strongly skewed or outlying data","r_two_np"]]},
+"mix1":{q:"What kind of scores do you have?",o:[["Numerical measurements with equal steps (interval or ratio)","mix_dist"],["Ordinal: ranks, or ratings where the steps between levels are not equal","r_mix_np"]]},
+"mix_dist":{q:"Within each group at each time point, are the scores roughly bell-shaped with no extreme outliers (or are there about 15 or more participants per group)?",o:[["Yes","mix_eps"],["No: clearly skewed or outliers, with small groups","r_mix_np"],["Not sure","r_mix_chk"]]},
+"mix_eps":{q:"With three or more repeated measurements: is sphericity reasonable (Mauchly's p above .05, or ε near 1), and do the groups have similar covariance patterns (Box's M p above .001, similar group sizes)?",o:[["Yes, similar","r_mix"],["No: sphericity is violated (Mauchly's p below .05, or ε well below 1)","r_mix_gg"],["Not sure","r_mix_chk"]]},
+"r_mix":{t:"Mixed-design ANOVA",x:"Separate groups, each measured at every level of a within-subjects factor, call for a split-plot (mixed) ANOVA. It tests the group effect, the repeated-measures effect and, most informatively, their interaction, each against the appropriate error term.",i:[["Mixed design tab",["tab-mix"],"Group, Time and Group × Time tests, interaction plot, simple effects and the assumption checks."]],n:["Read the interaction first: if groups change differently over time, the main effects are averages that can mislead.","Follow a significant interaction with the simple effects (change over time within each group, and group differences at each time).","With only 2 time points the interaction is equivalent to comparing groups on their change scores."]},
+"r_mix_gg":{t:"Mixed-design ANOVA with a sphericity correction",x:"When sphericity is violated, the uncorrected F tests for the repeated-measures factor and the interaction are too liberal. Multiplying both df by ε (Greenhouse–Geisser, or Huynh–Feldt when ε is above about .75) corrects them; the between-subjects test is unaffected.",i:[["Mixed design tab",["tab-mix"],"Switch the headline to Greenhouse–Geisser or Huynh–Feldt under the ANOVA table."]],n:["Try raising the serial-correlation slider in the simulator to see ε fall and Mauchly's test react.","Simple effects use their own error terms and need no sphericity assumption."]},
+"r_mix_chk":{t:"Mixed-design ANOVA, after checking the assumptions",x:"Run the test and read the assumption card: Mauchly's W and ε show whether a sphericity correction is needed, Box's M compares the groups' covariance patterns, and the residual skewness and outlier count show whether the scores are well-behaved.",i:[["Mixed design tab",["tab-mix"],"Sphericity, Box's M, Brown–Forsythe and residual checks."]],n:["Unequal group sizes combined with a significant Box's M are the combination to worry about.","If the scores are clearly skewed or ordinal, see the rank-based options in the next suggestion."]},
+"r_mix_np":{t:"Mixed-design ANOVA, read with care (or analyse the parts separately)",x:"There is no rank-based test for a mixed design in this explorer. The F tests are reasonably robust with balanced groups and moderate sample sizes, but skewed, outlying or ordinal scores can distort them.",i:[["Mixed design tab",["tab-mix"],"Read the residual checks and the plot before trusting the F tests."],["Kruskal–Wallis tab",["tab-kw"],"Rank-based comparison of the groups (for example on each person's average or change score)."],["Friedman tab",["tab-fr"],"Rank-based comparison across the repeated measures (ignoring the groups)."]],n:["Analysing each part separately answers separate questions: it cannot test the group × time interaction.","Aligned-rank-transform ANOVA or mixed-effects models are options outside this tool."]},
 "r_anova1":{t:"One-way ANOVA (independent measures)",x:"Numerical, roughly bell-shaped scores with similar spread in every group are exactly what the ordinary F test assumes, and it is then the most powerful choice.",i:[["Independent measures tab",["tab-ind","way1"],"One-way F, η², ω² and pairwise comparisons."]],n:["With only two groups this is the independent t test.","A significant F says that <em>some</em> means differ; use the pairwise table to see which."]},
 "r_anova1_chk":{t:"One-way ANOVA, after checking the spreads",x:"Start with the ordinary F test and read the assumption checks: the Brown–Forsythe test and the largest/smallest SD ratio tell you whether the spreads are similar enough.",i:[["Independent measures tab",["tab-ind","way1"],"Assumption checks card."]],n:["If the spreads turn out unequal, switch to Welch's ANOVA (shown on the same tab).","If the data are also skewed or have outliers, compare with Kruskal–Wallis."]},
 "r_welch":{t:"Welch's ANOVA (one-way, unequal variances)",x:"The ordinary F test is unreliable when group spreads differ a lot, especially with unequal group sizes. Welch's version adjusts the degrees of freedom and does not assume equal variances.",i:[["Independent measures tab",["tab-ind","way1"],"Welch's F appears in the assumption checks."],["Compare all (independent)",["tab-cmp","cmp-ind"],"Welch beside ANOVA and Kruskal–Wallis."]],n:["Welch's test still assumes roughly bell-shaped scores. If the data are also skewed or have outliers, consider Kruskal–Wallis, which then compares overall distributions rather than just medians."]},
@@ -1607,7 +1887,7 @@ const DEC={
 "r_cmp_rm":{t:"Run the tests side by side",x:"When you cannot tell whether the scores are well-behaved enough, run repeated-measures ANOVA (with its sphericity correction) and Friedman on the same data. Agreement means the choice does not matter; disagreement points to outliers or skewed differences.",i:[["Compare all (repeated)",["tab-cmp","cmp-rm"],"RM ANOVA, Greenhouse–Geisser and Friedman on the same data."],["Repeated measures tab",["tab-rm","way1"],"Participant lines and sphericity check."]],n:["Decide on the design and the shape of the data, then report one test. Do not shop for the p-value you prefer."]},
 "r_rm2":{t:"Two-way repeated-measures ANOVA",x:"Two within-subject factors, with every participant in every combination, need a factorial repeated-measures ANOVA. Each effect has its own error term.",i:[["Repeated measures tab, two-way",["tab-rm","way2"],"Main effects, interaction, sphericity corrections for effects with 3+ levels."]],n:["Look at the interaction first.","Effects with three or more levels may need a Greenhouse–Geisser correction."]}
 };
-const SHORT={start:'Design',ind1:'Factors',ind_scale:'Scores',ind_dist:'Shape of scores',ind_var:'Spreads',ind2_scale:'Scores and shape',rm1:'Factors',rm_scale:'Scores',rm_dist:'Shape of scores',rm_eps:'Sphericity',rm2_scale:'Scores and shape'};
+const SHORT={mix1:'Scores',mix_dist:'Shape of scores',mix_eps:'Sphericity and groups',start:'Design',ind1:'Factors',ind_scale:'Scores',ind_dist:'Shape of scores',ind_var:'Spreads',ind2_scale:'Scores and shape',rm1:'Factors',rm_scale:'Scores',rm_dist:'Shape of scores',rm_eps:'Sphericity',rm2_scale:'Scores and shape'};
 let path=['start'];
 const $=id=>document.getElementById(id);
 function clicks(ids){ids.forEach(id=>{const b=$(id);if(b){b.click();}});window.scrollTo({top:0,behavior:'smooth'});}
