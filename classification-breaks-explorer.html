@@ -46,6 +46,14 @@ button.pill[aria-pressed="true"]{background:var(--accent);border-color:var(--acc
 .sl output{font-family:var(--mono);font-variant-numeric:tabular-nums}
 input[type=range]{width:100%;accent-color:var(--accent)}
 select,textarea{font:inherit;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:6px 8px;width:100%}
+.seg{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg label{flex:1;position:relative;text-align:center;font-size:.85rem;cursor:pointer;color:var(--ink);margin:0;padding:0}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg input:checked+span{background:var(--accent);color:#fff}
+.seg span{display:block;padding:6px 4px}
+.seg input:focus-visible+span{outline:3px solid color-mix(in srgb,var(--accent) 55%,transparent);outline-offset:-3px}
+.ownerr{color:var(--rej);font-weight:600;font-size:.85rem;margin:8px 0 0}
+.ownerr[hidden]{display:none}
 textarea{font-family:var(--mono);font-size:.85rem;min-height:70px;resize:vertical}
 .opt{margin:8px 0}.opt>label{display:block;font-size:.85rem;color:var(--muted);margin-bottom:3px}
 .chk{display:flex;gap:8px;align-items:center;font-size:.88rem;margin:6px 0;cursor:pointer}
@@ -314,17 +322,17 @@ function svgOpen(w,h,label){return '<svg viewBox="0 0 '+w+' '+h+'" role="img" ar
 /* =====================  TAB 1: classification  ===================== */
 var M1=[['equal','Equal Interval'],['quantile','Quantile'],['stdev','Standard Deviation'],['headtail','Head/Tail Breaks'],['natural','Natural Breaks (Jenks-Caspall)'],['jenks','Jenks Natural Breaks Optimization (Fisher–Jenks)']];
 var NAME1={};M1.forEach(function(m){NAME1[m[0]]=m[1]});
-var S1={data:'lognormal',n:200,seed:1,k:5,method:'jenks',sdStep:1,sdPos:'break',htThr:40,nbStart:'equal',bins:30,logY:false,custom:'3 5 8 13 21 34 55 89 144 233 377 610 987 1597'};
+var S1={src:'sim',own:'',data:'lognormal',n:200,seed:1,k:5,method:'jenks',sdStep:1,sdPos:'break',htThr:40,nbStart:'equal',bins:30,logY:false};
 var TILERANK=(function(){var r=mulberry(99),f=rep(100,function(){return r()}),it,i;for(it=0;it<6;it++){var g=f.slice();for(i=0;i<100;i++){var x=i%10,y=(i-x)/10,s=f[i]*2,c=2;if(x>0){s+=f[i-1];c++}if(x<9){s+=f[i+1];c++}if(y>0){s+=f[i-10];c++}if(y<9){s+=f[i+10];c++}g[i]=s/c}f=g}
   var ord=rep(100,function(i){return i}).sort(function(a,b){return f[a]-f[b]}),rk=new Array(100);ord.forEach(function(ix,q){rk[ix]=q});return rk})();
 S1.removed=[];S1.mergeSig='';S1.curUb=[];
 var D1cache={key:'',v:null};
 
 function build1(){
-  var opts=Object.keys(DS1).map(function(k){return [k,DS1[k].name]}).concat([['custom','Paste your own numbers']]);
-  $('c-class').innerHTML='<h3>Data</h3>'+selH('c1-data','Data set',opts,S1.data)
-   +'<div class="opt" id="c1-cbox" hidden><label for="c1-txt">Numbers (separated by spaces, commas or new lines)</label><textarea id="c1-txt" spellcheck="false">'+S1.custom+'</textarea></div>'
-   +'<div id="c1-nbox">'+sliderH('c1-n','Observations',30,1000,10,S1.n)+'<div class="row"><button type="button" class="pill" id="c1-new">New random sample</button></div></div>'
+  var opts=Object.keys(DS1).map(function(k){return [k,DS1[k].name]});
+  $('c-class').innerHTML='<h3>Data source</h3><div class="seg" role="radiogroup" aria-label="Data source"><label><input type="radio" name="c1-src" value="sim"'+(S1.src==='sim'?' checked':'')+'><span>Simulated</span></label><label><input type="radio" name="c1-src" value="own"'+(S1.src==='own'?' checked':'')+'><span>My own data</span></label></div>'
+   +'<div id="c1-nbox"><h3>Data</h3>'+selH('c1-data','Data set',opts,S1.data)+sliderH('c1-n','Observations',30,1000,10,S1.n)+'<div class="row"><button type="button" class="pill" id="c1-new">New random sample</button></div></div>'
+   +'<div id="c1-cbox" hidden><h3>Your data</h3><div class="opt"><label for="c1-txt">Numbers (separated by spaces, commas or new lines)</label><textarea id="c1-txt" spellcheck="false"></textarea></div><div class="row"><button type="button" class="pill" id="c1-load">Load current simulated data into box</button></div><p class="ownerr" id="c1-err" hidden></p><p class="note" id="c1-cap"></p></div>'
    +'<h3>Method</h3>'+pillsH('c1-m',M1,S1.method)
    +'<h3>Settings</h3>'
    +'<div id="c1-kb">'+sliderH('c1-k','Number of classes (k)',2,9,1,S1.k)+'</div>'
@@ -335,8 +343,14 @@ function build1(){
    +'<h3>Display</h3>'+sliderH('c1-bins','Histogram bins',10,60,1,S1.bins)+chkH('c1-log','Log scale for counts (helps with heavy tails)',S1.logY)+'<div class="row" style="margin-top:14px"><button type="button" class="pill" id="c1-rs">Reset settings &amp; display</button></div>';
   $('p-c2').innerHTML='';
   var go=function(){sched('r1',render1)};
-  bindS('c1-data',S1,'data',function(){S1.seed=S1.seed;go()});
-  $('c1-txt').addEventListener('input',function(){S1.custom=this.value;go()});
+  bindS('c1-data',S1,'data',go);
+  $('c1-txt').value=S1.own;
+  $('c1-txt').addEventListener('input',function(){S1.own=this.value;go()});
+  $('c1-load').addEventListener('click',function(){loadSim1();go()});
+  Array.prototype.forEach.call(document.querySelectorAll('input[name=c1-src]'),function(r){r.addEventListener('change',function(){
+    if(!this.checked)return;S1.src=this.value;
+    if(S1.src==='own'&&!S1.own.trim())loadSim1();
+    go()})});
   bindR('c1-n',S1,'n',go);
   $('c1-new').addEventListener('click',function(){S1.seed++;go()});
   bindP('c1-m',S1,'method',go);
@@ -345,15 +359,28 @@ function build1(){
   bindR('c1-ht',S1,'htThr',go);bindS('c1-nbs',S1,'nbStart',go);
   bindR('c1-bins',S1,'bins',go);bindC('c1-log',S1,'logY',go);
 }
+function simVals1(){return DS1[S1.data].gen(S1.n,mulberry(S1.seed*7919+S1.data.length*31))}
+function loadSim1(){
+  var v=simVals1().map(function(x){return +x.toPrecision(7)});
+  S1.own=v.join('\n');$('c1-txt').value=S1.own;
+}
+function parseOwn1(txt){
+  var toks=txt.split(/[\s,;]+/).filter(function(x){return x!==''}),vals=[],bad=[],i;
+  for(i=0;i<toks.length;i++){var x=Number(toks[i]);if(isFinite(x))vals.push(x);else bad.push(toks[i])}
+  if(bad.length)return {err:'“'+bad[0].slice(0,20)+'” is not a number'+(bad.length>1?' (and '+(bad.length-1)+' more entr'+(bad.length>2?'ies':'y')+' that are not numbers)':'')+'. Enter numbers only.'};
+  if(vals.length<5)return {err:'Enter at least 5 numbers (found '+vals.length+').'};
+  if(vals.length>3000)return {vals:vals.slice(0,3000),note:'Only the first 3,000 of '+vals.length+' numbers are used.'};
+  var mn=Math.min.apply(null,vals),mx=Math.max.apply(null,vals);
+  if(mn===mx)return {err:'All the numbers are the same, so there is nothing to classify. Enter at least two different values.'};
+  return {vals:vals};
+}
 function getD1(){
-  var s=S1,key=[s.data,s.n,s.seed,s.data==='custom'?s.custom:''].join('|');
+  var s=S1,own=s.src==='own',key=own?'own|'+s.own:[s.data,s.n,s.seed].join('|');
   if(D1cache.key===key)return D1cache.v;
-  var vals;
-  if(s.data==='custom'){vals=s.custom.split(/[\s,;]+/).filter(function(x){return x!==''}).map(Number).filter(isFinite);
-    if(vals.length<5){return {err:'Enter at least 5 numbers (found '+vals.length+').'}}
-    if(vals.length>3000)vals=vals.slice(0,3000)}
-  else vals=DS1[s.data].gen(s.n,mulberry(s.seed*7919+s.data.length*31));
-  D1cache={key:key,v:{d:prepare(vals)}};return D1cache.v;
+  var v;
+  if(own){var p=parseOwn1(s.own);v=p.err?{err:p.err}:{d:prepare(p.vals),note:p.note||'',own:true}}
+  else v={d:prepare(simVals1())};
+  D1cache={key:key,v:v};return v;
 }
 function clsOf(ub,v){var c=0;while(c<ub.length-1&&v>ub[c])c++;return c}
 
@@ -422,7 +449,9 @@ function msg1(m,d,res,opt,s){
 }
 function render1(){
   var s=S1,dat=getD1();
-  show('c1-cbox',s.data==='custom');show('c1-nbox',s.data!=='custom');
+  show('c1-cbox',s.src==='own');show('c1-nbox',s.src!=='own');
+  var er=$('c1-err');if(s.src==='own'&&dat.err){er.textContent=dat.err;er.hidden=false}else{er.hidden=true;er.textContent=''}
+  $('c1-cap').textContent=s.src==='own'&&dat.d?(dat.d.n+' values read'+(dat.note?'. '+dat.note:'.')):'';
   show('c1-kb',s.method!=='stdev'&&s.method!=='headtail');show('c1-kn',s.method==='stdev'||s.method==='headtail');
   show('c1-sdb',s.method==='stdev');show('c1-htb',s.method==='headtail');show('c1-nbb',s.method==='natural');
   if(dat.err){$('p-c1').innerHTML='<h2><span class="n">1</span>Distribution and class breaks</h2><div class="msg warn">'+dat.err+'</div>';['p-c2','p-c3','p-c4'].forEach(function(i){$(i).innerHTML=''});return}

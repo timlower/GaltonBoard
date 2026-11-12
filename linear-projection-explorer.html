@@ -46,6 +46,16 @@ button.pill[aria-pressed="true"]{background:var(--accent);border-color:var(--acc
 .sl output{font-family:var(--mono);font-variant-numeric:tabular-nums}
 input[type=range]{width:100%;accent-color:var(--accent)}
 select,textarea{font:inherit;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:6px 8px;width:100%}
+.seg{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg label{flex:1;position:relative;text-align:center;font-size:.85rem;cursor:pointer;color:var(--ink);margin:0;padding:0}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg input:checked+span{background:var(--accent);color:#fff}
+.seg span{display:block;padding:6px 4px}
+.seg input:focus-visible+span{outline:3px solid color-mix(in srgb,var(--accent) 55%,transparent);outline-offset:-3px}
+.ownerr{color:var(--rej);font-weight:600;font-size:.85rem;margin:8px 0 0}
+.ownerr[hidden]{display:none}
+.grid4.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media(max-width:900px){.grid4.g3{grid-template-columns:1fr}}
 textarea{font-family:var(--mono);font-size:.85rem;min-height:70px;resize:vertical}
 .opt{margin:8px 0}.opt>label{display:block;font-size:.85rem;color:var(--muted);margin-bottom:3px}
 .chk{display:flex;gap:8px;align-items:center;font-size:.88rem;margin:6px 0;cursor:pointer}
@@ -368,29 +378,38 @@ function blendFill(R,i,K,soft){
 }
 
 /* =====================  TAB 3: PCA & ICA  ===================== */
-var S3={method:'pca',pd:'species',pn:150,pseed:1,std:true,vx:2,vy:3,pa:0,pb:1,m:2,proj:true,s1:'uniform',s2:'laplace',a1:20,a2:75,nl:'tanh',nS:600,iseed:1,iinit:1};
+var S3={src:'sim',own:'',ownI:'',method:'pca',pd:'species',pn:150,pseed:1,std:true,vx:2,vy:3,pa:0,pb:1,m:2,proj:true,s1:'uniform',s2:'laplace',a1:20,a2:75,nl:'tanh',nS:600,iseed:1,iinit:1};
 var DS3=[['species','Three species, 4 measurements (synthetic, iris-like)'],['pair','Two correlated variables (height, weight)'],['tests','Six test scores from two hidden abilities']];
 var SRC=[['uniform','Uniform (flat, negative kurtosis)'],['laplace','Laplace (peaked, positive kurtosis)'],['spiky','Sparse spikes (very peaked)'],['sine','Sine wave'],['square','Square wave'],['saw','Sawtooth wave'],['gaussian','Gaussian (ICA cannot separate)']];
 var P3={key:'',g:null,p:null};
 
 function build3(){
   $('c-proj').innerHTML='<h3>Method</h3>'+pillsH('c3-m',[['pca','Principal Component Analysis'],['ica','Independent Component Analysis']],S3.method)
-   +'<div id="c3-pbox"><h3>Data</h3>'+selH('c3-pd','Data set',DS3,S3.pd)+sliderH('c3-pn','Cases',60,400,10,S3.pn)+'<div class="row"><button type="button" class="pill" id="c3-pnew">New random sample</button></div>'
+   +'<h3>Data source</h3><div class="seg" role="radiogroup" aria-label="Data source"><label><input type="radio" name="c3-src" value="sim"'+(S3.src==='sim'?' checked':'')+'><span>Simulated</span></label><label><input type="radio" name="c3-src" value="own"'+(S3.src==='own'?' checked':'')+'><span>My own data</span></label></div>'
+   +'<div id="c3-pbox"><div id="c3-psim"><h3>Data</h3>'+selH('c3-pd','Data set',DS3,S3.pd)+sliderH('c3-pn','Cases',60,400,10,S3.pn)+'<div class="row"><button type="button" class="pill" id="c3-pnew">New random sample</button></div></div>'
+   +'<div id="c3-pown" hidden><h3>Your data</h3><div class="opt"><label for="c3-ptxt">One case per line, one column per variable (2 to 12 columns; spaces, commas or tabs between values). A first line of variable names is used for labels.</label><textarea id="c3-ptxt" spellcheck="false" style="min-height:140px"></textarea></div><div class="row"><button type="button" class="pill" id="c3-pload">Load current simulated data into box</button></div><p class="ownerr" id="c3-perr" hidden></p><p class="note" id="c3-pcap"></p></div>'
    +'<h3>Settings</h3>'+chkH('c3-std','Standardize variables first (use correlations)',S3.std)+'<div id="c3-dyn"></div><div class="row" style="margin-top:14px"><button type="button" class="pill" id="c3-prs">Reset settings</button></div></div>'
-   +'<div id="c3-ibox" hidden><h3>Hidden sources</h3>'+selH('c3-s1','Source 1',SRC,S3.s1)+selH('c3-s2','Source 2',SRC,S3.s2)+sliderH('c3-ns','Samples',200,2000,100,S3.nS)
+   +'<div id="c3-ibox" hidden><div id="c3-isim"><h3>Hidden sources</h3>'+selH('c3-s1','Source 1',SRC,S3.s1)+selH('c3-s2','Source 2',SRC,S3.s2)+sliderH('c3-ns','Samples',200,2000,100,S3.nS)
    +'<h3>Mixing</h3>'+sliderH('c3-a1','Direction of source 1 in the mix (°)',0,180,1,S3.a1)+sliderH('c3-a2','Direction of source 2 in the mix (°)',0,180,1,S3.a2)
-   +'<div class="note">Each observed variable is a weighted sum of the two sources. These directions set the weights; keep them apart or the mix cannot be undone.</div>'
+   +'<div class="note">Each observed variable is a weighted sum of the two sources. These directions set the weights; keep them apart or the mix cannot be undone.</div></div>'
+   +'<div id="c3-iown" hidden><h3>Your data</h3><div class="opt"><label for="c3-itxt">Two columns of mixed signals, one sample (time point) per line; spaces, commas or tabs between values. A first line of names is skipped.</label><textarea id="c3-itxt" spellcheck="false" style="min-height:140px"></textarea></div><div class="row"><button type="button" class="pill" id="c3-iload">Load current simulated mixtures into box</button></div><p class="ownerr" id="c3-ierr" hidden></p><p class="note" id="c3-icap"></p></div>'
    +'<h3>FastICA</h3>'+selH('c3-nl','Contrast function',[['tanh','log cosh (robust, general)'],['cube','Kurtosis (cubic)'],['exp','Gaussian (for spiky sources)']],S3.nl)
    +'<div class="row" style="margin-top:6px"><button type="button" class="pill" id="c3-inew">New random sample</button><button type="button" class="pill" id="c3-irs">Restart ICA</button></div><div class="row" style="margin-top:14px"><button type="button" class="pill" id="c3-irset">Reset settings</button></div></div>';
   var go=function(){sched('r3',render3)};
-  bindP('c3-m',S3,'method',go);
+  bindP('c3-m',S3,'method',function(){ensureOwn3();go()});
+  $('c3-ptxt').value=S3.own;$('c3-itxt').value=S3.ownI;
+  $('c3-ptxt').addEventListener('input',function(){S3.own=this.value;go()});
+  $('c3-itxt').addEventListener('input',function(){S3.ownI=this.value;go()});
+  $('c3-pload').addEventListener('click',function(){loadSimP();go()});
+  $('c3-iload').addEventListener('click',function(){loadSimI();go()});
+  Array.prototype.forEach.call(document.querySelectorAll('input[name=c3-src]'),function(r){r.addEventListener('change',function(){if(!this.checked)return;S3.src=this.value;ensureOwn3();go()})});
   bindS('c3-pd',S3,'pd',function(){S3.pa=0;S3.pb=1;S3.vx=0;S3.vy=1;S3.m=2;go()});bindR('c3-pn',S3,'pn',go);
   $('c3-pnew').addEventListener('click',function(){S3.pseed++;go()});bindC('c3-std',S3,'std',go);
   bindS('c3-s1',S3,'s1',go);bindS('c3-s2',S3,'s2',go);bindR('c3-ns',S3,'nS',go);
   bindR('c3-a1',S3,'a1',go);bindR('c3-a2',S3,'a2',go);bindS('c3-nl',S3,'nl',go);
   $('c3-inew').addEventListener('click',function(){S3.iseed++;go()});$('c3-irs').addEventListener('click',function(){S3.iinit++;go()});
 }
-function dynKey(g){return S3.pd+'|'+g.names.length}
+function dynKey(g){return S3.src==='own'?'own|'+g.names.join('\u0001'):S3.pd+'|'+g.names.length}
 var lastDyn='';
 function buildDyn(g){
   var k=dynKey(g);if(k===lastDyn)return;lastDyn=k;
@@ -404,14 +423,52 @@ function buildDyn(g){
   bindS('c3-pa',S3,'pa',go,true);bindS('c3-pb',S3,'pb',go,true);bindR('c3-mc',S3,'m',go);
   if(d===2)bindC('c3-proj',S3,'proj',go);
 }
+/* ---- pasted data ---- */
+function splitRow(t){return t.split(/[\t,;]+|\s+/).filter(function(z){return z!==''})}
+function parseTable(txt,minC,maxC,minR,maxR,what){
+  var lines=txt.split(/\r?\n/),rows=[],i,j;
+  for(i=0;i<lines.length;i++){var ln=lines[i].trim();if(ln!=='')rows.push({f:splitRow(ln),n:i+1})}
+  if(!rows.length)return {err:'Paste your data: one '+what+' per line.'};
+  var names=null,allNum=rows[0].f.every(function(z){return isFinite(Number(z))});
+  if(!allNum){names=rows[0].f;rows.shift()}
+  var C=rows.length?rows[0].f.length:(names?names.length:0);
+  if(C<minC)return {err:'Need at least '+minC+' columns (found '+C+'). Put each variable in its own column.'};
+  if(C>maxC)return {err:'Found '+C+' columns; at most '+maxC+' are supported.'};
+  if(minC===maxC&&C!==minC)return {err:'Need exactly '+minC+' columns (found '+C+').'};
+  if(names&&names.length!==C)return {err:'The first line has '+names.length+' names but the data have '+C+' columns.'};
+  var X=[],note='';
+  for(i=0;i<rows.length;i++){
+    var f=rows[i].f;
+    if(f.length!==C)return {err:'Line '+rows[i].n+' has '+f.length+' values but the first data line has '+C+'.'};
+    var r=[];for(j=0;j<C;j++){var v=Number(f[j]);if(!isFinite(v))return {err:'Line '+rows[i].n+': “'+f[j].slice(0,20)+'” is not a number.'};r.push(v)}
+    X.push(r);
+  }
+  if(X.length>maxR){note='Only the first '+maxR.toLocaleString('en-US')+' of '+X.length.toLocaleString('en-US')+' lines are used.';X=X.slice(0,maxR)}
+  if(X.length<minR)return {err:'Enter at least '+minR+' '+what+'s (found '+X.length+').'};
+  if(!names)names=rep(C,function(q){return 'Variable '+(q+1)});
+  for(j=0;j<C;j++){var lo=Infinity,hi=-Infinity;for(i=0;i<X.length;i++){lo=Math.min(lo,X[i][j]);hi=Math.max(hi,X[i][j])}
+    if(lo===hi)return {err:'“'+names[j]+'” is constant (every value is '+lo+'), so it carries no information. Remove that column.'}}
+  return {X:X,names:names,note:note,named:!allNum};
+}
+function fmtRows(names,X,dp){return names.join(', ')+'\n'+X.map(function(r){return r.map(function(v){return +v.toFixed(dp)}).join(', ')}).join('\n')}
+function loadSimP(){var g=genPCA(S3.pd,S3.pn,S3.pseed);S3.own=fmtRows(g.names.map(function(n){return n.replace(/[,()]/g,'').replace(/\s+/g,'_')}),g.X,2);$('c3-ptxt').value=S3.own}
+function loadSimI(){var V=getI3sim();S3.ownI=fmtRows(['signal_1','signal_2'],V.X,4);$('c3-itxt').value=S3.ownI}
+function ensureOwn3(){if(S3.src!=='own')return;if(S3.method==='pca'&&!S3.own.trim())loadSimP();if(S3.method==='ica'&&!S3.ownI.trim())loadSimI()}
 function getP3(){
-  var s=S3,key=[s.pd,s.pn,s.pseed,s.std].join('|');
-  if(P3.key!==key){var g=genPCA(s.pd,s.pn,s.pseed);P3={key:key,g:g,p:pca(g.X,s.std)}}
+  var s=S3,own=s.src==='own',key=own?'own|'+s.own+'|'+s.std:[s.pd,s.pn,s.pseed,s.std].join('|');
+  if(P3.key!==key){
+    if(own){var t=parseTable(s.own,2,12,5,1000,'case');
+      if(t.err)P3={key:key,err:t.err};
+      else{var X=t.X;P3={key:key,g:{X:X,lab:X.map(function(){return 0}),names:t.names},p:pca(X,s.std),note:t.note}}}
+    else{var g=genPCA(s.pd,s.pn,s.pseed);P3={key:key,g:g,p:pca(g.X,s.std)}}
+  }
   return P3;
 }
 function groupFills(lab){var multi=Math.max.apply(null,lab)>0;return lab.map(function(l){return multi?catc(l):'#3b73d9'})}
 function renderPCA(){
-  var P=getP3(),g=P.g,p=P.p,d=g.names.length,n=g.X.length,i,j;
+  var P=getP3();
+  if(P.err){$('p-j1').innerHTML='<h2><span class="n">1</span>Principal Component Analysis</h2><div class="msg warn">'+esc(P.err)+'</div>';$('p-j2').innerHTML='';$('p-j3').innerHTML='';return}
+  var g=P.g,p=P.p,d=g.names.length,n=g.X.length,i,j;
   buildDyn(g);
   var vx=S3.vx,vy=S3.vy,pa=S3.pa,pb=S3.pb,m=S3.m,fills=groupFills(g.lab),multi=Math.max.apply(null,g.lab)>0;
   var pts=g.X.map(function(r){return [r[vx],r[vy]]}),lines=[];
@@ -453,7 +510,25 @@ function alignY(Y,S,keepOrder){
   o.forEach(function(q,k){var c=corr(y[q],S[k]),sg=c<0?-1:1;a.push(y[q].map(function(v){return sg*v}));r.push(Math.abs(c))});
   return {a:a,r:r,score:ms.score};
 }
-function getI3(){
+function getI3(){return S3.src==='own'?getI3own():getI3sim()}
+function getI3own(){
+  var s=S3,key='own|'+s.ownI+'|'+s.nl+'|'+s.iinit;
+  if(I3.key===key)return I3.v;
+  var t=parseTable(s.ownI,2,2,20,2000,'sample'),v;
+  if(t.err)v={err:t.err};
+  else{
+    var X=t.X,n=X.length,mu=[0,0],sd=[0,0],i;
+    for(i=0;i<n;i++){mu[0]+=X[i][0]/n;mu[1]+=X[i][1]/n}
+    for(i=0;i<n;i++){sd[0]+=Math.pow(X[i][0]-mu[0],2)/n;sd[1]+=Math.pow(X[i][1]-mu[1],2)/n}
+    sd=sd.map(Math.sqrt);
+    var Xs=X.map(function(r){return [(r[0]-mu[0])/sd[0],(r[1]-mu[1])/sd[1]]});
+    var ic=fastICA2(Xs,s.nl,s.iinit+7);
+    var ca=function(P,k){return P.map(function(q){return q[k]})};
+    v={own:true,X:Xs,names:t.names,note:t.note,ic:ic,pca:[ca(ic.Z,0),ca(ic.Z,1)],ica:[ca(ic.Y,0),ca(ic.Y,1)],corr:Math.abs(corr(ca(Xs,0),ca(Xs,1)))};
+  }
+  I3={key:key,v:v};return v;
+}
+function getI3sim(){
   var s=S3,key=[s.s1,s.s2,s.nS,s.a1,s.a2,s.nl,s.iseed,s.iinit].join('|');
   if(I3.key===key)return I3.v;
   var r=mulberry(s.iseed*31+7),S=[genSource(s.s1,0,s.nS,r),genSource(s.s2,1,s.nS,r)],a=s.a1*Math.PI/180,b=s.a2*Math.PI/180,A=[[Math.cos(a),Math.cos(b)],[Math.sin(a),Math.sin(b)]];
@@ -465,7 +540,30 @@ function getI3(){
 }
 function robustR(pts){var a=[],i;for(i=0;i<pts.length;i++)a.push(Math.max(Math.abs(pts[i][0]),Math.abs(pts[i][1])));a.sort(function(x,y){return x-y});return Math.max(2,a[Math.floor(a.length*0.99)]*1.12)}
 function miniSc(pts,o){var R=robustR(pts);o.dom=[-R,R,-R,R];o.W=250;o.H=250;o.r=2;o.cross=true;o.fills=pts.map(function(){return o.col||'#3b73d9'});return scatterSVG(pts,o)}
+function renderICAown(V){
+  var ic=V.ic,kk=function(a){return exKurt(a).toFixed(2)},lines=[],N=Math.min(120,V.X.length);
+  var L=8;
+  [0,1].forEach(function(c){var u=ic.pcaAxes[c];lines.push({x1:-L*u[0],y1:-L*u[1],x2:L*u[0],y2:L*u[1],col:'#e07b1a',w:1.8,dash:'6 4'})});
+  [0,1].forEach(function(c){var a=ic.Aest[0][c],b=ic.Aest[1][c],nr=Math.hypot(a,b)||1;lines.push({x1:-L*a/nr,y1:-L*b/nr,x2:L*a/nr,y2:L*b/nr,col:'#3b73d9',w:2})});
+  var sc2=miniSc(V.X,{lines:lines,label:'Scatter of your two signals with PCA and ICA directions'});
+  var sc3=miniSc(ic.Z,{label:'Scatter of PCA-whitened data',col:'#e07b1a'});
+  var sc4=miniSc(V.ica[0].map(function(_,q){return [V.ica[0][q],V.ica[1][q]]}),{label:'Scatter of the ICA components',col:'#2a9d6a'});
+  var k1=exKurt(V.ica[0]),k2=exKurt(V.ica[1]),gauss=Math.abs(k1)<0.35&&Math.abs(k2)<0.35;
+  var m1=gauss?'<div class="msg warn"><b>The recovered components are (nearly) Gaussian.</b> A round Gaussian cloud looks the same after any rotation, so ICA has nothing to latch onto and the answer is not meaningful. Press Restart ICA a few times and watch it change.</div>':'';
+  var m2=V.corr>0.97?'<div class="msg warn"><b>Your two signals are almost perfectly correlated.</b> The data are nearly one-dimensional and cannot be unmixed reliably.</div>':'';
+  $('p-j1').innerHTML='<h2><span class="n">1</span>Independent Component Analysis: from your mixed signals to independent components</h2><div class="grid4 g3"><div><p class="cap">1. Your signals (standardized)</p>'+sc2+'</div><div><p class="cap">2. PCA, whitened</p>'+sc3+'</div><div><p class="cap">3. ICA components</p>'+sc4+'</div></div>'
+   +'<p class="note" style="margin-top:8px"><span class="sw" style="background:none;border-top:2px dashed #e07b1a;height:0;width:18px;border-radius:0"></span>PCA axes (always perpendicular) &nbsp; <span class="sw" style="background:#3b73d9;height:2px;width:18px;border-radius:0;vertical-align:3px"></span>ICA directions. Each of your columns is centred and scaled to unit variance first (this does not change what ICA can find). The true sources are unknown for your own data, so there is no recovery score; the order and sign of ICA components are arbitrary.</p>'+m1+m2
+   +'<div class="msg">If the two signals are mixtures of independent, non-Gaussian sources, the whitened cloud (panel 2) is a rotated version of a box-like or star-like shape, and ICA rotates it until the cloud lines up with the axes again (panel 3).</div>';
+  var xs=rep(N,function(q){return q}),mk=function(a,b){return [{ys:a.slice(0,N),xs:xs,col:'#3b73d9',w:1.5},{ys:b.slice(0,N),xs:xs,col:'#e07b1a',w:1.5}]},ch=function(se,label){return lineSVG(380,150,se,{ml:34,label:label,xt:5})};
+  var Xa=[V.X.map(function(p){return p[0]}),V.X.map(function(p){return p[1]})];
+  $('p-j2').innerHTML='<h2><span class="n">2</span>The signals (first '+N+' samples)</h2><div class="two"><div><p class="cap">Your signals (standardized)</p>'+ch(mk(Xa[0],Xa[1]),'Your signals')+'</div><div><p class="cap">PCA components</p>'+ch(mk(V.pca[0],V.pca[1]),'PCA components')+'</div><div><p class="cap">ICA components</p>'+ch(mk(V.ica[0],V.ica[1]),'ICA components')+'</div></div><p class="note">Blue is the first column or component and orange the second. Rows are plotted in the order you pasted them.</p>';
+  $('p-j3').innerHTML='<h2><span class="n">3</span>How non-Gaussian are the components?</h2><div class="tiles">'+tile(V.X.length,'Samples used')+tile(ic.iters+(ic.converged?'':'+'),'FastICA iterations')+tile(ic.converged?'yes':'no','Converged')+'</div>'
+   +'<div class="twrap" style="margin-top:12px"><table><thead><tr><th>Version</th><th>Excess kurtosis (1, 2)</th></tr></thead><tbody>'
+   +'<tr><td>Your signals</td><td>'+kk(Xa[0])+', '+kk(Xa[1])+'</td></tr><tr><td>PCA</td><td>'+kk(V.pca[0])+', '+kk(V.pca[1])+'</td></tr><tr><td>ICA</td><td>'+kk(V.ica[0])+', '+kk(V.ica[1])+'</td></tr></tbody></table></div>'
+   +'<p class="note">ICA works by pushing components away from the bell shape. Values far from 0 (flat is negative, spiky is positive) mean the components are clearly non-Gaussian. Kurtosis near 0 for both means ICA has little to work with.</p>';
+}
 function renderICA(){
+  if(S3.src==='own'){var VV=getI3own();if(VV.err){$('p-j1').innerHTML='<h2><span class="n">1</span>Independent Component Analysis</h2><div class="msg warn">'+esc(VV.err)+'</div>';$('p-j2').innerHTML='';$('p-j3').innerHTML='';return}return renderICAown(VV)}
   var s=S3,V=getI3(),ic=V.ic,n=s.nS,S=V.S,i;
   var L=8,lines=[];
   [0,1].forEach(function(c){lines.push({x1:-L*V.A[0][c],y1:-L*V.A[1][c],x2:L*V.A[0][c],y2:L*V.A[1][c],col:'var(--muted)',w:1.5,dash:'2 3'})});
@@ -494,7 +592,14 @@ function renderICA(){
    +'<p class="note">Recovery score = average absolute correlation with the matching source (1 = perfect). PCA only decorrelates, so it cannot undo a mix of equal-variance sources. ICA succeeds because the sources are non-Gaussian: flat (negative kurtosis) or spiky (positive kurtosis) rather than bell-shaped (kurtosis near 0).</p>';
 }
 function render3(){
+  var own=S3.src==='own';
   show('c3-pbox',S3.method==='pca');show('c3-ibox',S3.method==='ica');setPills('c3-m',S3.method);
+  show('c3-psim',!own);show('c3-pown',own);show('c3-isim',!own);show('c3-iown',own);show('c3-inew',!own);
+  if(own){
+    var P=S3.method==='pca'?getP3():null,V=S3.method==='ica'?getI3own():null,E=P||V,nm=S3.method==='pca'?'p':'i',er=$('c3-'+nm+'err'),cp=$('c3-'+nm+'cap');
+    if(E.err){er.textContent=E.err;er.hidden=false;cp.textContent=''}
+    else{er.hidden=true;er.textContent='';cp.textContent=(P?P.g.X.length+' cases, '+P.g.names.length+' variables read':V.X.length+' samples read')+(E.note?'. '+E.note:'.')}
+  }
   if(S3.method==='pca')renderPCA();else renderICA();
 }
 
@@ -504,7 +609,7 @@ function render3(){
   var DEF={p:{std:S3.std,vx:S3.vx,vy:S3.vy,pa:S3.pa,pb:S3.pb,m:S3.m,proj:S3.proj},i:{nl:S3.nl,iinit:S3.iinit}};
   build3();
   function setC(id,v){var e=$(id);if(!e)return;if(e.type==='checkbox')e.checked=v;else e.value=v;var o=$(id+'-o');if(o)o.textContent=id==='c2-sp'?(+v).toFixed(2):v}
-  $('c3-prs').addEventListener('click',function(){var d=getP3().g.names.length;Object.assign(S3,DEF.p);if(d!==4){S3.vx=0;S3.vy=1}S3.m=Math.min(DEF.p.m,d);lastDyn='';setC('c3-std',S3.std);sched('r3',render3)});
+  $('c3-prs').addEventListener('click',function(){var PP=getP3(),d=PP.g?PP.g.names.length:4;Object.assign(S3,DEF.p);if(d!==4){S3.vx=0;S3.vy=1}S3.m=Math.min(DEF.p.m,d);lastDyn='';setC('c3-std',S3.std);sched('r3',render3)});
   $('c3-irset').addEventListener('click',function(){Object.assign(S3,DEF.i);setC('c3-nl',S3.nl);sched('r3',render3)});
   $('keybtn').addEventListener('change',function(){$('key').hidden=!this.checked});
   render3();

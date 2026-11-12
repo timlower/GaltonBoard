@@ -46,6 +46,14 @@ button.pill[aria-pressed="true"]{background:var(--accent);border-color:var(--acc
 .sl output{font-family:var(--mono);font-variant-numeric:tabular-nums}
 input[type=range]{width:100%;accent-color:var(--accent)}
 select,textarea{font:inherit;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:6px 8px;width:100%}
+.seg{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg label{flex:1;position:relative;text-align:center;font-size:.85rem;cursor:pointer;color:var(--ink);margin:0;padding:0}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg input:checked+span{background:var(--accent);color:#fff}
+.seg span{display:block;padding:6px 4px}
+.seg input:focus-visible+span{outline:3px solid color-mix(in srgb,var(--accent) 55%,transparent);outline-offset:-3px}
+.ownerr{color:var(--rej);font-weight:600;font-size:.85rem;margin:8px 0 0}
+.ownerr[hidden]{display:none}
 textarea{font-family:var(--mono);font-size:.85rem;min-height:70px;resize:vertical}
 .opt{margin:8px 0}.opt>label{display:block;font-size:.85rem;color:var(--muted);margin-bottom:3px}
 .chk{display:flex;gap:8px;align-items:center;font-size:.88rem;margin:6px 0;cursor:pointer}
@@ -422,15 +430,18 @@ function blendFill(R,i,K,soft){
 }
 
 /* =====================  TAB 2: clustering  ===================== */
-var S2={data:'blobs3',n:150,spread:1,seed:1,method:'hier',link:'ward',hk:3,emK:3,emInit:'kpp',emSeed:1,showEll:true,soft:true,truth:false,mbMax:7,mbOn:{EII:true,VII:true,EEE:true,VVV:true},mbSel:null};
+var S2={src:'sim',own:'',data:'blobs3',n:150,spread:1,seed:1,method:'hier',link:'ward',hk:3,emK:3,emInit:'kpp',emSeed:1,showEll:true,soft:true,truth:false,mbMax:7,mbOn:{EII:true,VII:true,EEE:true,VVV:true},mbSel:null};
 var DS2=[['blobs3','Three round blobs'],['aniso','Three stretched (elliptical) clusters'],['varied','Different sizes and densities'],['moons','Two moons (curved)'],['rings','Two rings (nested)'],['uniform','No clusters (uniform scatter)']];
 var D2={key:''},H2={key:''},EM=null,MB={key:'',busy:null,fits:null},emTimer=null;
 var MODELS=[['EII','EII: equal circles'],['VII','VII: circles, varying size'],['EEE','EEE: identical ellipses'],['VVV','VVV: free ellipses']];
 var MCOL={EII:'#3b73d9',VII:'#2a9d6a',EEE:'#e07b1a',VVV:'#c2479b'};
 
 function build2(){
-  $('c-clus').innerHTML='<h3>Data</h3>'+selH('c2-data','Data set',DS2,S2.data)+sliderH('c2-n','Points',60,300,10,S2.n)+sliderH('c2-sp','Spread / noise',0.5,2,0.05,S2.spread)
-   +'<div class="row"><button type="button" class="pill" id="c2-new">New random sample</button></div>'+chkH('c2-truth','Mark the true groups with shapes',S2.truth)
+  $('c-clus').innerHTML='<h3>Data source</h3><div class="seg" role="radiogroup" aria-label="Data source"><label><input type="radio" name="c2-src" value="sim"'+(S2.src==='sim'?' checked':'')+'><span>Simulated</span></label><label><input type="radio" name="c2-src" value="own"'+(S2.src==='own'?' checked':'')+'><span>My own data</span></label></div>'
+   +'<div id="c2-sbox"><h3>Data</h3>'+selH('c2-data','Data set',DS2,S2.data)+sliderH('c2-n','Points',60,300,10,S2.n)+sliderH('c2-sp','Spread / noise',0.5,2,0.05,S2.spread)
+   +'<div class="row"><button type="button" class="pill" id="c2-new">New random sample</button></div></div>'
+   +'<div id="c2-obox" hidden><h3>Your data</h3><div class="opt"><label for="c2-txt">One point per line: x, y, and optionally a group label (spaces, commas or tabs between values). A first line of column names is skipped.</label><textarea id="c2-txt" spellcheck="false" style="min-height:140px"></textarea></div><div class="row"><button type="button" class="pill" id="c2-load">Load current simulated data into box</button></div><p class="ownerr" id="c2-err" hidden></p><p class="note" id="c2-cap"></p></div>'
+   +'<div id="c2-tbox">'+chkH('c2-truth','Mark the true groups with shapes',S2.truth)+'</div>'
    +'<h3>Method</h3>'+pillsH('c2-m',[['hier','Hierarchical Clustering'],['em','Expectation-Maximization'],['mb','Model-Based Clustering']],S2.method)
    +'<h3>Settings</h3>'
    +'<div id="c2-hb">'+selH('c2-link','Linkage',[['ward','Ward'],['average','Average'],['complete','Complete'],['single','Single']],S2.link)+sliderH('c2-hk','Clusters to cut the tree into (K)',1,9,1,S2.hk)+'</div>'
@@ -443,6 +454,13 @@ function build2(){
   bindR('c2-sp',S2,'spread',function(){S2.mbSel=null;go()},function(v){return v.toFixed(2)});
   $('c2-new').addEventListener('click',function(){S2.seed++;S2.mbSel=null;go()});
   bindC('c2-truth',S2,'truth',go);bindP('c2-m',S2,'method',go);
+  $('c2-txt').value=S2.own;
+  $('c2-txt').addEventListener('input',function(){S2.own=this.value;S2.mbSel=null;go()});
+  $('c2-load').addEventListener('click',function(){loadSim2();S2.mbSel=null;go()});
+  Array.prototype.forEach.call(document.querySelectorAll('input[name=c2-src]'),function(r){r.addEventListener('change',function(){
+    if(!this.checked)return;S2.src=this.value;S2.mbSel=null;emStop();
+    if(S2.src==='own'&&!S2.own.trim())loadSim2();
+    go()})});
   bindS('c2-link',S2,'link',go);bindR('c2-hk',S2,'hk',go);
   bindR('c2-ek',S2,'emK',go);bindS('c2-ei',S2,'emInit',go);bindC('c2-ell',S2,'showEll',go);bindC('c2-soft',S2,'soft',go);
   $('c2-eE').addEventListener('click',function(){emStop();emE();go()});$('c2-eM').addEventListener('click',function(){emStop();emM();go()});
@@ -453,12 +471,55 @@ function build2(){
   $('p-k2').addEventListener('click',function(e){var t=e.target.closest('[data-mk]');if(!t)return;var p=t.getAttribute('data-mk').split('-');S2.mbSel={m:p[0],k:+p[1]};render2()});
 }
 function emStop(){if(emTimer){clearInterval(emTimer);emTimer=null}var b=$('c2-eR');if(b)b.textContent='Run ▶'}
+var MAXOWN=400;
+function loadSim2(){
+  var g=genCluster(S2.data,S2.n,S2.spread,S2.seed);
+  S2.own='x, y, group\n'+g.X.map(function(p,i){return (+p[0].toFixed(4))+', '+(+p[1].toFixed(4))+', '+(g.lab[i]+1)}).join('\n');
+  $('c2-txt').value=S2.own;
+}
+function parseOwn2(txt){
+  var lines=txt.split(/\r?\n/),rows=[],hdr=false,i,hasLab=null,X=[],labs=[],note='';
+  for(i=0;i<lines.length;i++){var ln=lines[i].trim();if(ln==='')continue;rows.push({t:ln,n:i+1})}
+  if(!rows.length)return {err:'Paste your data: one point per line, x then y (optionally a third column of group labels).'};
+  var split=function(t){return t.split(/[\t,;]+|\s+/).filter(function(z){return z!==''})};
+  var f0=split(rows[0].t);
+  if(f0.length>=2&&(!isFinite(Number(f0[0]))||!isFinite(Number(f0[1])))){hdr=true;rows.shift()}
+  for(i=0;i<rows.length;i++){
+    var f=split(rows[i].t),a=Number(f[0]),b=Number(f[1]);
+    if(f.length<2)return {err:'Line '+rows[i].n+' needs at least two values (x and y).'};
+    if(!isFinite(a)||!isFinite(b))return {err:'Line '+rows[i].n+': “'+(isFinite(a)?f[1]:f[0]).slice(0,20)+'” is not a number. x and y must be numeric.'};
+    if(f.length>3)return {err:'Line '+rows[i].n+' has '+f.length+' values. Use x, y and (optionally) one group label.'};
+    var hl=f.length===3;
+    if(hasLab===null)hasLab=hl;
+    else if(hasLab!==hl)return {err:'Line '+rows[i].n+(hl?' has a group label but earlier lines do not.':' is missing the group label that earlier lines have.')};
+    X.push([a,b]);if(hl)labs.push(f[2]);
+  }
+  if(X.length>MAXOWN){note='Only the first '+MAXOWN+' of '+X.length+' points are used.';X=X.slice(0,MAXOWN);labs=labs.slice(0,MAXOWN)}
+  if(X.length<6)return {err:'Enter at least 6 points (found '+X.length+').'};
+  var vx=X.map(function(p){return p[0]}),vy=X.map(function(p){return p[1]});
+  if(Math.min.apply(null,vx)===Math.max.apply(null,vx)||Math.min.apply(null,vy)===Math.max.apply(null,vy))return {err:'x and y must each vary. All the '+(Math.min.apply(null,vx)===Math.max.apply(null,vx)?'x':'y')+' values are the same.'};
+  var lab=null;
+  if(hasLab){
+    var u=[];labs.forEach(function(l){if(u.indexOf(l)<0)u.push(l)});
+    if(u.every(function(l){return isFinite(Number(l))}))u.sort(function(p,q){return p-q});
+    if(u.length>9)return {err:'There are '+u.length+' different group labels; at most 9 are supported.'};
+    lab=labs.map(function(l){return u.indexOf(l)});
+  }
+  return {X:X,lab:lab,hdr:hdr,note:note};
+}
 function getD2(){
-  var s=S2,key=[s.data,s.n,s.spread,s.seed].join('|');
-  if(D2.key!==key){var g=genCluster(s.data,s.n,s.spread,s.seed);D2={key:key,X:g.X,lab:g.lab,trueK:Math.max.apply(null,g.lab)+1,floor:gmmFloor(g.X)}}
+  var s=S2,own=s.src==='own',key=own?'own|'+s.own:[s.data,s.n,s.spread,s.seed].join('|');
+  if(D2.key!==key){
+    if(own){var p=parseOwn2(s.own);
+      if(p.err)D2={key:key,err:p.err};
+      else D2={key:key,X:p.X,lab:p.lab,trueK:p.lab?Math.max.apply(null,p.lab)+1:null,hasLab:!!p.lab,own:true,note:p.note,floor:gmmFloor(p.X)};}
+    else{var g=genCluster(s.data,s.n,s.spread,s.seed);D2={key:key,X:g.X,lab:g.lab,trueK:Math.max.apply(null,g.lab)+1,hasLab:true,floor:gmmFloor(g.X)}}
+    EM=null;
+  }
   return D2;
 }
-function labShapes(d){return S2.truth?d.lab:null}
+function labShapes(d){return S2.truth&&d.hasLab?d.lab:null}
+function trueTxt(d){return !d.hasLab?'':(d.trueK===1?' These data have no real groups.':' The data '+(d.own?'have':'were generated from')+' <b>'+d.trueK+'</b> '+(d.own?'labelled ':'')+'groups.')}
 /* ---- EM state machine ---- */
 function emInit(d){
   var K=S2.emK,key=[d.key,K,S2.emInit,S2.emSeed].join('|');
@@ -472,8 +533,8 @@ function emFull(){if(EM.phase==='M')emE();emM();emE()}
 
 function labelsToFills(lab){return lab.map(function(l){return catc(l)})}
 function qualityTiles(d,lab,extra){
-  var K=Math.max.apply(null,lab)+1,a=ari(d.lab,lab),s=silhouette(d.X,lab);
-  return '<div class="tiles">'+(extra||'')+tile(K,'Clusters found')+tile(d.trueK,'True groups')+tile(a.toFixed(2),'ARI vs truth (1 = perfect)')+tile(isNaN(s)?'–':s.toFixed(2),'Mean silhouette')+'</div>';
+  var K=Math.max.apply(null,lab)+1,s=silhouette(d.X,lab);
+  return '<div class="tiles">'+(extra||'')+tile(K,'Clusters found')+(d.hasLab?tile(d.trueK,d.own?'Labelled groups':'True groups')+tile(ari(d.lab,lab).toFixed(2),d.own?'ARI vs your labels (1 = perfect)':'ARI vs truth (1 = perfect)'):'')+tile(isNaN(s)?'–':s.toFixed(2),'Mean silhouette')+'</div>';
 }
 var LINKTIP={single:'Single linkage joins clusters by their <b>closest</b> pair of points, so it can follow curved chains (moons, rings) but is easily pulled together by a few stray points.',complete:'Complete linkage uses the <b>farthest</b> pair of points, which favours compact clusters of similar diameter and can split elongated ones.',average:'Average linkage uses the <b>mean</b> of all pairwise distances, a compromise between single and complete.',ward:'Ward linkage merges the pair that adds the <b>least within-cluster variance</b>, which tends to give round, similar-sized clusters.'};
 
@@ -511,7 +572,7 @@ function renderHier(d){
   var key=d.key+'|'+S2.link;if(H2.key!==key)H2={key:key,M:hclust(d.X,S2.link)};
   var n=d.X.length,K=Math.min(S2.hk,n),lab=cutTree(H2.M,n,K);
   $('p-k1').innerHTML='<h2><span class="n">1</span>Hierarchical clustering: '+S2.link+' linkage, cut at K = '+K+'</h2>'+scatterSVG(d.X,{fills:labelsToFills(lab),labs:labShapes(d),label:'Scatter plot of points coloured by cluster'})+qualityTiles(d,lab)
-   +'<div class="msg">'+LINKTIP[S2.link]+' '+(d.trueK===1?'These data have no real groups.':'The data were generated from <b>'+d.trueK+'</b> groups.')+'</div>';
+   +'<div class="msg">'+LINKTIP[S2.link]+trueTxt(d)+'</div>';
   $('p-k2').innerHTML='<h2><span class="n">2</span>Dendrogram</h2>'+dendroSVG(H2.M,n,K,lab)+'<div class="two" style="margin-top:12px"><div><p class="cap">Where to cut?</p>'+jumpSVG(H2.M,n,K)+'</div><div class="msg" style="margin:0;align-self:center">Reading the tree: a tall bar at j followed by a much shorter bar at j + 1 means the tree stays stable until it is forced to merge j groups, so j clusters is a natural choice. The orange bar marks your current cut (K = '+K+'). The dashed line in the dendrogram is that cut.</div></div>';
 }
 function renderEM(d){
@@ -550,7 +611,7 @@ function renderMB(d){
   $('p-k1').innerHTML='<h2><span class="n">1</span>Model-Based Clustering: '+sel.m+' with '+sel.k+' cluster'+(sel.k>1?'s':'')+(sel===best?' (best BIC)':' (your choice)')+'</h2>'
    +scatterSVG(d.X,{fills:labelsToFills(lab),labs:labShapes(d),ell:ell,label:'Scatter plot with the selected mixture model'})
    +qualityTiles(d,lab,tile(Math.round(sel.bic),'BIC (higher = better)')+tile(sel.np,'Parameters'))
-   +'<div class="msg">BIC picks <b>'+best.m+'</b> with <b>'+best.k+'</b> cluster'+(best.k>1?'s':'')+'. '+(d.trueK===1?'These data have no real groups.':'The data were generated from <b>'+d.trueK+'</b> groups.')+' '+({EII:'EII fits equal-sized circles.',VII:'VII fits circles whose sizes may differ.',EEE:'EEE fits ellipses that share one size, shape and tilt.',VVV:'VVV lets every cluster have its own size, shape and tilt.'}[sel.m])+' BIC rewards fit but charges for every parameter, so it stops adding clusters once they no longer pay for themselves.'+((best.m!==sel.m||best.k!==sel.k)?'':'')+'</div>';
+   +'<div class="msg">BIC picks <b>'+best.m+'</b> with <b>'+best.k+'</b> cluster'+(best.k>1?'s':'')+'.'+trueTxt(d)+' '+({EII:'EII fits equal-sized circles.',VII:'VII fits circles whose sizes may differ.',EEE:'EEE fits ellipses that share one size, shape and tilt.',VVV:'VVV lets every cluster have its own size, shape and tilt.'}[sel.m])+' BIC rewards fit but charges for every parameter, so it stops adding clusters once they no longer pay for themselves.'+((best.m!==sel.m||best.k!==sel.k)?'':'')+'</div>';
   var yb=best.bic,yw=Math.min.apply(null,all.map(function(a){return a.bic})),yl=Math.max(yw,yb-Math.max(60,0.22*(yb-yw))),yh=yb+0.04*(yb-yl);
   var W=640,H=300,m={l:64,r:14,t:26,b:36},pw=W-m.l-m.r,ph=H-m.t-m.b,x=lin(1,Math.max(2,Kmax),m.l+14,m.l+pw-14),y=lin(yl,yh,m.t+ph,m.t),o=svgOpen(W,H,'BIC for each covariance model and number of clusters');
   niceTicks(yl,yh,5).forEach(function(t){o+='<line class="gr" x1="'+m.l+'" x2="'+(m.l+pw)+'" y1="'+y(t)+'" y2="'+y(t)+'"/><text x="'+(m.l-6)+'" y="'+(y(t)+4)+'" text-anchor="end">'+Math.round(t)+'</text>'});
@@ -571,7 +632,12 @@ function renderMB(d){
    +'<div class="twrap" style="margin-top:10px"><table><thead><tr><th>Rank</th><th class="l">Model</th><th>Clusters</th><th>BIC</th><th>&Delta; BIC</th><th>Params</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div><p class="note">A BIC difference above about 10 is strong evidence for the higher model. Models within a few points of each other are hard to tell apart.</p>';
 }
 function render2(){
-  var s=S2,d=getD2();
+  var s=S2,d=getD2(),own=s.src==='own';
+  show('c2-sbox',!own);show('c2-obox',own);show('c2-tbox',!own||!!d.hasLab);
+  var er=$('c2-err');if(own&&d.err){er.textContent=d.err;er.hidden=false}else{er.hidden=true;er.textContent=''}
+  $('c2-cap').textContent=own&&!d.err?(d.X.length+' points read'+(d.hasLab?' with '+d.trueK+' group label'+(d.trueK>1?'s':''):' (no group labels, so there is no truth to compare with)')+(d.note?'. '+d.note:'.')):'';
+  $('c2-truth').nextSibling.textContent=own?'Mark my group labels with shapes':'Mark the true groups with shapes';
+  if(d.err){emStop();$('p-k1').innerHTML='<h2><span class="n">1</span>Clustering</h2><div class="msg warn">'+esc(d.err)+'</div>';$('p-k2').innerHTML='';return}
   show('c2-hb',s.method==='hier');show('c2-eb',s.method==='em');show('c2-mb',s.method==='mb');
   if(s.method!=='em')emStop();
   setPills('c2-m',s.method);
