@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Linear Projection Explorer</title>
 <meta name="description" content="Interactive explorer for linear projection methods: Principal Component Analysis (PCA) and Independent Component Analysis (ICA).">
+<script>try{var t=localStorage.getItem("ttest-theme");if(t==="light"||t==="dark")document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
 <style>
 :root{
   --bg:#f5f4ef;--panel:#ffffff;--ink:#1b1e25;--muted:#5b6370;--line:#dedbd1;--soft:#efede6;
@@ -12,18 +13,23 @@
   --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
 }
 @media (prefers-color-scheme:dark){
-  :root{--bg:#13151a;--panel:#1c1f26;--ink:#e8e9ed;--muted:#9aa1ae;--line:#323744;--soft:#252932;
+  :root:not([data-theme="light"]){--bg:#13151a;--panel:#1c1f26;--ink:#e8e9ed;--muted:#9aa1ae;--line:#323744;--soft:#252932;
     --a:#6ba4ff;--b:#ffa24f;--rej:#ff7064;--ok:#4cc58c;--accent:#6ba4ff;}
 }
+:root[data-theme="dark"]{--bg:#13151a;--panel:#1c1f26;--ink:#e8e9ed;--muted:#9aa1ae;--line:#323744;--soft:#252932;
+    --a:#6ba4ff;--b:#ffa24f;--rej:#ff7064;--ok:#4cc58c;--accent:#6ba4ff;}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
-header{padding:26px 22px 8px;max-width:1280px;margin:0 auto}
+header{padding:26px 22px 8px;max-width:1280px;margin:0 auto;position:relative}
+.theme-btn{position:absolute;top:26px;right:22px;border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:7px 14px;border-radius:999px;font:inherit;font-size:.85rem;font-weight:600;cursor:pointer}
+.theme-btn:hover{border-color:var(--accent)}
+@media(max-width:600px){.theme-btn{position:static;display:block;margin:0 0 10px auto}}
 h1{margin:0 0 4px;font-size:1.65rem;letter-spacing:-.01em}
 header p{margin:0;color:var(--muted);max-width:820px}
 .tabs{display:flex;gap:6px;margin-top:16px;flex-wrap:wrap}
 .tab{border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:9px 16px;border-radius:999px;font:inherit;font-weight:600;cursor:pointer}
 .tab[aria-selected="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
-.tab:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,summary:focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 55%,transparent);outline-offset:2px}
+.tab:focus-visible,.theme-btn:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,summary:focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 55%,transparent);outline-offset:2px}
 .layout{max-width:1280px;margin:0 auto;padding:14px 22px 22px;display:grid;grid-template-columns:330px minmax(0,1fr);gap:18px;align-items:start}
 .layout[hidden]{display:none}
 @media(max-width:940px){.layout{grid-template-columns:1fr}}
@@ -46,16 +52,6 @@ button.pill[aria-pressed="true"]{background:var(--accent);border-color:var(--acc
 .sl output{font-family:var(--mono);font-variant-numeric:tabular-nums}
 input[type=range]{width:100%;accent-color:var(--accent)}
 select,textarea{font:inherit;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:6px 8px;width:100%}
-.seg{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
-.seg label{flex:1;position:relative;text-align:center;font-size:.85rem;cursor:pointer;color:var(--ink);margin:0;padding:0}
-.seg input{position:absolute;opacity:0;pointer-events:none}
-.seg input:checked+span{background:var(--accent);color:#fff}
-.seg span{display:block;padding:6px 4px}
-.seg input:focus-visible+span{outline:3px solid color-mix(in srgb,var(--accent) 55%,transparent);outline-offset:-3px}
-.ownerr{color:var(--rej);font-weight:600;font-size:.85rem;margin:8px 0 0}
-.ownerr[hidden]{display:none}
-.grid4.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
-@media(max-width:900px){.grid4.g3{grid-template-columns:1fr}}
 textarea{font-family:var(--mono);font-size:.85rem;min-height:70px;resize:vertical}
 .opt{margin:8px 0}.opt>label{display:block;font-size:.85rem;color:var(--muted);margin-bottom:3px}
 .chk{display:flex;gap:8px;align-items:center;font-size:.88rem;margin:6px 0;cursor:pointer}
@@ -107,26 +103,53 @@ td.l,th.l{text-align:left}
 .key h3{grid-column:1/-1;margin:10px 0 0;border-bottom:1px solid var(--line);padding-bottom:2px}
 .key dt{font-weight:600;font-family:Georgia,'Times New Roman',serif;white-space:nowrap}
 .key dd{margin:0;color:var(--muted)}
-.guide{max-width:1280px;margin:0 auto;padding:0 22px 30px;display:flex;flex-direction:column;gap:18px}
-.guide td,.guide th{text-align:left;vertical-align:top}
-.guide td:first-child{font-weight:600;white-space:nowrap}
+.glance td,.glance th{text-align:left;vertical-align:top}
+.glance td:first-child{font-weight:600;white-space:nowrap}
 footer{max-width:1280px;margin:0 auto;padding:0 22px 36px;color:var(--muted);font-size:.82rem}
 .formula{font-family:Georgia,'Times New Roman',serif;font-size:1.05rem;margin:2px 0 8px}
 table.cls th,table.cls td{padding:5px 5px}
 button.pill:disabled{opacity:.45;cursor:default}
 button.pill:disabled:hover{border-color:var(--line)}
 table.cls button.pill{padding:1px 8px;line-height:1.3}
+.seg{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-bottom:8px}
+.seg label{flex:1;position:relative;text-align:center;font-size:.85rem;cursor:pointer;color:var(--ink);margin:0;padding:0}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg input:checked+span{background:var(--accent);color:#fff}
+.seg span{display:block;padding:6px 4px}
+.seg input:focus-visible+span{outline:3px solid color-mix(in srgb,var(--accent) 55%,transparent);outline-offset:-3px}
+.ownerr{color:var(--rej);font-weight:600;font-size:.85rem;margin:8px 0 0}
+.ownerr[hidden]{display:none}
+details{max-width:1280px;margin:0 auto 10px;padding:0 22px}
+details .panel{margin-top:8px}
+details summary{cursor:pointer;font-weight:600}
+code,.f{font-family:var(--mono);font-size:.88rem}
+.scroll{overflow-x:auto}
+.rel{margin:0;padding-left:20px}.rel li{margin:6px 0}
+.apa{font-family:var(--mono);font-size:.85rem;background:var(--soft);padding:8px 10px;border-radius:8px;display:flex;justify-content:space-between;gap:10px;align-items:center;margin-top:10px}
+.wz .dq{font-weight:600;margin:0 0 8px}
+.dopts{display:flex;flex-direction:column;gap:6px}
+button.dopt{text-align:left;border:1px solid var(--line);background:var(--soft);color:var(--ink);padding:9px 12px;border-radius:10px;font:inherit;font-size:.9rem;cursor:pointer}
+button.dopt:hover{border-color:var(--accent)}
+.crumbs{display:flex;flex-direction:column;gap:4px;margin-bottom:12px}
+button.crumb{text-align:left;border:0;background:transparent;color:var(--muted);font:inherit;font-size:.82rem;padding:2px 0;cursor:pointer}
+button.crumb:hover{color:var(--accent)}button.crumb b{color:var(--ink)}
+.dres{border-left:3px solid var(--accent);padding:2px 0 2px 14px}
+.dtitle{font-size:1.05rem;font-weight:700;margin:0 0 6px}
+.dlist{list-style:none;padding:0;margin:10px 0}
+.dlist li{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;margin:7px 0}
+.dlist li span{color:var(--muted);font-size:.88rem;flex:1 1 220px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
 <body>
 <header>
+  <button class="theme-btn" id="themeBtn" type="button" aria-label="Switch between light and dark theme"></button>
   <h1>Linear Projection Explorer</h1>
-  <p>See how two methods rotate multivariate data onto new axes. PCA finds the directions of greatest variance; ICA unmixes hidden, independent sources that were added together.</p>
+  <p>See how two methods rotate multivariate data onto new axes. PCA finds the directions of greatest variance; ICA unmixes hidden, independent sources that were added together. Use simulated data or paste your own, and copy a one-line summary of the results.</p>
 </header>
 
 <main>
-  <section class="layout" id="v-proj" aria-label="Projection">
+  <section class="layout" id="v-proj">
     <aside class="panel controls" id="c-proj" aria-label="Projection controls"></aside>
     <div class="stack" id="s-proj">
       <div class="panel" id="p-j1"></div>
@@ -136,26 +159,21 @@ table.cls button.pill{padding:1px 8px;line-height:1.3}
   </section>
 </main>
 
-<div class="guide">
+<details>
+  <summary>Formulas used</summary>
   <div class="panel">
-    <h2>Method guide</h2>
-    <div class="twrap"><table>
-      <thead><tr><th>Method</th><th>How it works</th><th>Reach for it when&hellip;</th><th>Watch out for&hellip;</th></tr></thead>
-      <tbody>
-      <tr><td>Principal Component Analysis</td><td>Rotates the axes to the directions of greatest variance, giving uncorrelated components ranked by variance explained.</td><td>You want to compress many correlated variables or see them in two dimensions.</td><td>Linear only; sensitive to units (standardize!); high variance does not always mean important.</td></tr>
-      <tr><td>Independent Component Analysis</td><td>Finds directions that make the components as statistically independent (as non-Gaussian) as possible, after whitening.</td><td>Unmixing signals that were added together (cocktail party, EEG artifacts).</td><td>Needs non-Gaussian sources and a linear mixture; order, sign and scale of components are arbitrary.</td></tr>
-      </tbody>
-    </table></div>
-  </div>
+    <p><b>Projection.</b></p>
+    <ul>
+      <li>PCA: eigen-decompose the covariance matrix (the correlation matrix when standardizing), <span class="f">Σv = λv</span>. Variance explained by component j is <span class="f">λ<sub>j</sub> / Σλ</span>; scores are <span class="f">z = (x − μ)ᵀv</span>.</li>
+      <li>ICA: whiten the data, <span class="f">x̃ = D<sup>−½</sup>Eᵀ(x − μ)</span>, then run FastICA: <span class="f">w⁺ = E[x̃ g(wᵀx̃)] − E[g′(wᵀx̃)] w</span> followed by normalisation, with contrast g = tanh, cubic or exponential.</li>
+      <li>Non-Gaussianity: excess kurtosis <span class="f">m₄ / m₂² − 3</span>. Recovery score: mean absolute correlation between each recovered component and its best-matching true source.</li>
+    </ul>
+    <p>Everything runs in your browser; nothing is uploaded.</p>
+</details>
+<details id="keyBox">
+  <summary>Key: symbols and terms</summary>
   <div class="panel">
-    <label class="sw-switch" for="keybtn">
-      <input type="checkbox" role="switch" id="keybtn" aria-controls="key">
-      <span class="track" aria-hidden="true"></span>
-      <span>Show key: symbols &amp; terms</span>
-    </label>
-    <dl class="key" id="key" hidden>
-      
-      
+    <dl class="key">
       <h3>Projection</h3>
       <dt>Eigenvalue</dt><dd>Variance captured by a principal component.</dd>
       <dt>Loading</dt><dd>Weight of an original variable in a component. Large magnitude means that variable matters to that component.</dd>
@@ -165,12 +183,38 @@ table.cls button.pill{padding:1px 8px;line-height:1.3}
       <dt>Whitening</dt><dd>Rotating and scaling data so the variables are uncorrelated with unit variance. ICA&rsquo;s first step.</dd>
       <dt>Excess kurtosis</dt><dd>Non-Gaussianity: 0 for a Gaussian, negative for flat (uniform) data, positive for spiky data.</dd>
       <dt>Recovery score</dt><dd>Average absolute correlation between each recovered component and the best-matching true source (1 is perfect). Sign and order are ignored because they are arbitrary.</dd>
-    </dl>
+        </dl>
   </div>
-</div>
-<footer>All data are simulated in your browser; nothing is uploaded.</footer>
+</details>
+<details id="decideBox">
+  <summary>Deciding which to use</summary>
+  <div class="panel wz">
+    <p class="note" style="margin-top:0">Answer a few questions to find the method that fits your data. Each suggestion sets the method and an example data set on this page.</p>
+    <div id="decideBody"></div>
+    <h3>At a glance</h3>
+    <div class="scroll"><table class="glance">
+      <thead><tr><th>Method</th><th>How it works</th><th>Reach for it when&hellip;</th><th>Watch out for&hellip;</th></tr></thead>
+      <tbody>
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      <tr><td>Principal Component Analysis</td><td>Rotates the axes to the directions of greatest variance, giving uncorrelated components ranked by variance explained.</td><td>You want to compress many correlated variables or see them in two dimensions.</td><td>Linear only; sensitive to units (standardize!); high variance does not always mean important.</td></tr>
+      <tr><td>Independent Component Analysis</td><td>Finds directions that make the components as statistically independent (as non-Gaussian) as possible, after whitening.</td><td>Unmixing signals that were added together (cocktail party, EEG artifacts).</td><td>Needs non-Gaussian sources and a linear mixture; order, sign and scale of components are arbitrary.</td></tr>
+      </tbody>
+    </table></div>
+  </div>
+</details>
+<footer>Single-file, dependency-free demo. Simulated data come from seeded random generators, so a given seed is reproducible. Anything you paste stays in your browser; nothing is uploaded.</footer>
 
 <script>
+/*CORE-START*/
+'use strict';
 /* ---------- utilities ---------- */
 function mulberry(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 function randn(r){var u=0;while(!u)u=r();var v=r();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)}
@@ -178,6 +222,269 @@ function sum(a){var s=0;for(var i=0;i<a.length;i++)s+=a[i];return s}
 function mean(a){return sum(a)/a.length}
 function r2(x){return Math.round(x*100)/100}
 function rep(n,f){var o=[];for(var i=0;i<n;i++)o.push(f(i));return o}
+
+/* ---------- 1-D data sets ---------- */
+var DS1={
+  lognormal:{name:'Right-skewed (log-normal), e.g. city sizes',gen:function(n,r){return rep(n,function(){return r2(Math.exp(3+0.8*randn(r)))})}},
+  pareto:{name:'Heavy-tailed (power law), e.g. wealth',gen:function(n,r){return rep(n,function(){return r2(10/Math.pow(1-r(),1/1.3))})}},
+  normal:{name:'Normal (bell-shaped), e.g. test scores',gen:function(n,r){return rep(n,function(){return r2(100+15*randn(r))})}},
+  uniform:{name:'Uniform (flat)',gen:function(n,r){return rep(n,function(){return r2(100*r())})}},
+  bimodal:{name:'Bimodal (two groups)',gen:function(n,r){return rep(n,function(){return r2(r()<0.55?30+7*randn(r):70+9*randn(r))})}},
+  trimodal:{name:'Trimodal (three groups, unequal sizes)',gen:function(n,r){return rep(n,function(){var u=r();return r2(u<0.3?18+4*randn(r):u<0.75?50+6*randn(r):85+4*randn(r))})}}
+};
+function prepare(vals){
+  var v=Float64Array.from(vals).sort(),n=v.length,S1=new Float64Array(n+1),S2=new Float64Array(n+1),i;
+  for(i=0;i<n;i++){S1[i+1]=S1[i]+v[i];S2[i+1]=S2[i]+v[i]*v[i]}
+  var m=S1[n]/n,sdam=Math.max(0,S2[n]-S1[n]*S1[n]/n),sd=Math.sqrt(sdam/n),sk=0;
+  for(i=0;i<n;i++)sk+=Math.pow(v[i]-m,3);
+  sk=sd>0?sk/n/Math.pow(sd,3):0;
+  return {v:v,n:n,min:v[0],max:v[n-1],mean:m,sd:sd,sdam:sdam,skew:sk,S1:S1,S2:S2};
+}
+function ssd(d,i,j){return d.S2[j]-d.S2[i]-Math.pow(d.S1[j]-d.S1[i],2)/(j-i)}  /* sorted indices [i,j) */
+function firstGreater(v,t,lo){var a=lo||0,b=v.length;while(a<b){var m=(a+b)>>1;if(v[m]>t)b=m;else a=m+1}return a}
+function incr(d,arr){var o=[],i,x;for(i=0;i<arr.length;i++){x=arr[i];if(x>=d.min&&x<d.max&&(!o.length||x>o[o.length-1]))o.push(x)}o.push(d.max);return o}
+
+/* ---------- 1-D classification methods (return upper-inclusive class bounds) ---------- */
+function mEqual(d,p){
+  if(d.max===d.min)return {ub:[d.max],info:{}};
+  var w=(d.max-d.min)/p.k,a=[];for(var i=1;i<p.k;i++)a.push(d.min+w*i);
+  return {ub:incr(d,a),info:{width:w}};
+}
+function mQuantile(d,p){
+  var a=[];for(var i=1;i<p.k;i++)a.push(d.v[Math.min(d.n-1,Math.max(0,Math.ceil(d.n*i/p.k)-1))]);
+  return {ub:incr(d,a),info:{}};
+}
+function mStdev(d,p){
+  if(d.sd===0)return {ub:[d.max],info:{}};
+  var w=p.sdStep*d.sd,off=p.sdPos==='centre'?0.5:0,a=[],units=[],j,t;
+  for(j=Math.floor((d.min-d.mean)/w)-1;j<=Math.ceil((d.max-d.mean)/w)+1;j++){t=d.mean+(j+off)*w;if(t>d.min&&t<d.max){a.push(t);units.push((j+off)*p.sdStep)}}
+  return {ub:incr(d,a),info:{width:w,units:units}};
+}
+function mHeadTail(d,p){
+  var thr=p.htThr/100,cur=d.v,a=[],shares=[];
+  for(var g=0;g<14;g++){
+    var m=mean(cur),hi=firstGreater(cur,m);
+    if(hi>=cur.length)break;
+    a.push(m);
+    var head=cur.subarray?cur.subarray(hi):cur.slice(hi),sh=head.length/cur.length;
+    shares.push(sh);
+    if(sh<=thr&&head.length>=2)cur=head;else break;
+  }
+  return {ub:incr(d,a),info:{shares:shares,thr:thr}};
+}
+function initCuts(d,k,start,seed){
+  var n=d.n,cuts=[],j;
+  if(start==='quantile'){for(j=1;j<k;j++)cuts.push(Math.round(n*j/k))}
+  else if(start==='random'){var r=mulberry(seed*131+7),set={},c=0,x;while(c<k-1){x=1+Math.floor(r()*(n-1));if(!set[x]){set[x]=1;c++}}cuts=Object.keys(set).map(Number).sort(function(a,b){return a-b})}
+  else{for(j=1;j<k;j++)cuts.push(firstGreater(d.v,d.min+(d.max-d.min)*j/k))}
+  for(j=0;j<k-1;j++){var lo=j?cuts[j-1]+1:1,hi=n-(k-1-j);cuts[j]=Math.min(hi,Math.max(lo,cuts[j]))}
+  return cuts;
+}
+function cutsToUb(d,cuts){var a=cuts.map(function(c){return d.v[c-1]});return incr(d,a)}
+function mNatural(d,p){
+  var k=Math.min(p.k,d.n),n=d.n;
+  if(k<2||d.max===d.min)return {ub:[d.max],info:{passes:0}};
+  var cuts=initCuts(d,k,p.nbStart,p.seed),passes=0,moved=true,b,L,R,cur,tl,tr;
+  var total=function(){var t=0,s=0;for(var j=0;j<=k-1;j++){var e=j<k-1?cuts[j]:n;t+=ssd(d,s,e);s=e}return t};
+  var start=total();
+  while(moved&&passes<20000){
+    moved=false;
+    for(b=0;b<k-1;b++){
+      L=b?cuts[b-1]:0;R=b<k-2?cuts[b+1]:n;
+      cur=ssd(d,L,cuts[b])+ssd(d,cuts[b],R);
+      tl=cuts[b]-1>L?ssd(d,L,cuts[b]-1)+ssd(d,cuts[b]-1,R):Infinity;
+      tr=cuts[b]+1<R?ssd(d,L,cuts[b]+1)+ssd(d,cuts[b]+1,R):Infinity;
+      if(tl<cur-1e-12&&tl<=tr){cuts[b]--;moved=true}
+      else if(tr<cur-1e-12){cuts[b]++;moved=true}
+    }
+    if(moved)passes++;
+  }
+  return {ub:cutsToUb(d,cuts),info:{passes:passes,startSsd:start,endSsd:total()}};
+}
+function mJenks(d,p){
+  var k=Math.min(p.k,d.n),n=d.n;
+  if(k<2||d.max===d.min)return {ub:[d.max],info:{}};
+  var D=[],B=[],c,j,m,best,bm,val;
+  for(c=0;c<=k;c++){D.push(new Float64Array(n+1));B.push(new Int32Array(n+1))}
+  for(j=1;j<=n;j++)D[1][j]=ssd(d,0,j);
+  for(c=2;c<=k;c++)for(j=c;j<=n;j++){
+    best=Infinity;bm=c-1;
+    for(m=c-1;m<j;m++){val=D[c-1][m]+ssd(d,m,j);if(val<best){best=val;bm=m}}
+    D[c][j]=best;B[c][j]=bm;
+  }
+  var cuts=[];j=n;for(c=k;c>=2;c--){m=B[c][j];cuts.unshift(m);j=m}
+  return {ub:cutsToUb(d,cuts),info:{ssd:D[k][n]}};
+}
+var METHODS1={equal:mEqual,quantile:mQuantile,stdev:mStdev,headtail:mHeadTail,natural:mNatural,jenks:mJenks};
+function finalize(d,ub){
+  var k=ub.length,cls=new Int16Array(d.n),c=0,i,cnt=new Array(k).fill(0),s1=new Array(k).fill(0),s2=new Array(k).fill(0);
+  for(i=0;i<d.n;i++){while(c<k-1&&d.v[i]>ub[c])c++;cls[i]=c;cnt[c]++;s1[c]+=d.v[i];s2[c]+=d.v[i]*d.v[i]}
+  var sdcm=0,classes=[];
+  for(c=0;c<k;c++){
+    if(cnt[c])sdcm+=s2[c]-s1[c]*s1[c]/cnt[c];
+    classes.push({i:c,lo:c?ub[c-1]:d.min,hi:ub[c],n:cnt[c],mean:cnt[c]?s1[c]/cnt[c]:NaN});
+  }
+  return {ub:ub,cls:cls,classes:classes,sdcm:sdcm,gvf:d.sdam>0?1-sdcm/d.sdam:1};
+}
+function classify(d,method,p){var r=METHODS1[method](d,p),f=finalize(d,r.ub);f.info=r.info;return f}
+
+/* ---------- 2-D clustering data ---------- */
+function genCluster(kind,n,spread,seed){
+  var r=mulberry(seed*7919+101),X=[],lab=[],i,t,c;
+  function blob(cx,cy,sd,m,l,A){for(var q=0;q<m;q++){var x=sd*randn(r),y=sd*randn(r);if(A){var u=A[0]*x+A[1]*y,v=A[2]*x+A[3]*y;x=u;y=v}X.push([cx+x,cy+y]);lab.push(l)}}
+  if(kind==='blobs3'){var m=Math.floor(n/3);blob(-2.2,-1.2,0.6*spread,m,0);blob(2.2,-1.2,0.6*spread,m,1);blob(0,2.3,0.6*spread,n-2*m,2)}
+  else if(kind==='aniso'){var m2=Math.floor(n/3),A=[1.25*spread,0.9*spread,-0.25*spread,0.35*spread];blob(-2.5,-1.5,0.55,m2,0,A);blob(1,-2.2,0.55,m2,1,A);blob(2.2,1.6,0.55,n-2*m2,2,A)}
+  else if(kind==='moons'){var h=Math.floor(n/2);for(i=0;i<n;i++){c=i<h?0:1;t=Math.PI*r();var x=c?1-Math.cos(t):Math.cos(t),y=c?0.5-Math.sin(t):Math.sin(t);X.push([1.6*(x+0.09*spread*randn(r)),1.6*(y+0.09*spread*randn(r))]);lab.push(c)}}
+  else if(kind==='rings'){var h2=Math.floor(n*0.4);for(i=0;i<n;i++){c=i<h2?0:1;t=2*Math.PI*r();var rad=(c?2.6:1)+0.13*spread*randn(r);X.push([rad*Math.cos(t),rad*Math.sin(t)]);lab.push(c)}}
+  else if(kind==='varied'){var a=Math.floor(n*0.3),b=Math.floor(n*0.45);blob(-3,0,0.28*spread,a,0);blob(0.3,0.3,1.0*spread,b,1);blob(3.6,-1,0.45*spread,n-a-b,2)}
+  else{for(i=0;i<n;i++){X.push([6*r()-3,4.5*r()-2.25]);lab.push(0)}}
+  return {X:X,lab:lab};
+}
+
+/* ---------- hierarchical clustering ---------- */
+function hclust(X,link){
+  var n=X.length,D=new Float64Array(n*n),i,j,m,ward=link==='ward';
+  for(i=0;i<n;i++)for(j=i+1;j<n;j++){var dx=X[i][0]-X[j][0],dy=X[i][1]-X[j][1],q=dx*dx+dy*dy;D[i*n+j]=D[j*n+i]=ward?q:Math.sqrt(q)}
+  var size=new Int32Array(n).fill(1),id=new Int32Array(n),act=new Uint8Array(n).fill(1),merges=[],step;
+  for(i=0;i<n;i++)id[i]=i;
+  for(step=0;step<n-1;step++){
+    var bi=-1,bj=-1,bd=Infinity;
+    for(i=0;i<n;i++){if(!act[i])continue;for(j=i+1;j<n;j++){if(act[j]&&D[i*n+j]<bd){bd=D[i*n+j];bi=i;bj=j}}}
+    var ni=size[bi],nj=size[bj];
+    for(m=0;m<n;m++){
+      if(!act[m]||m===bi||m===bj)continue;
+      var dim=D[bi*n+m],djm=D[bj*n+m],nm=size[m],v;
+      if(link==='single')v=Math.min(dim,djm);
+      else if(link==='complete')v=Math.max(dim,djm);
+      else if(link==='average')v=(ni*dim+nj*djm)/(ni+nj);
+      else v=((ni+nm)*dim+(nj+nm)*djm-nm*bd)/(ni+nj+nm);
+      D[bi*n+m]=D[m*n+bi]=v;
+    }
+    merges.push({a:id[bi],b:id[bj],h:ward?Math.sqrt(bd):bd,size:ni+nj});
+    id[bi]=n+step;size[bi]=ni+nj;act[bj]=0;
+  }
+  return merges;
+}
+function cutTree(merges,n,K){
+  var mem=new Array(2*n-1),alive=new Uint8Array(2*n-1),i,m;
+  for(i=0;i<n;i++){mem[i]=[i];alive[i]=1}
+  for(m=0;m<n-K;m++){var g=merges[m];mem[n+m]=mem[g.a].concat(mem[g.b]);alive[g.a]=0;alive[g.b]=0;alive[n+m]=1;mem[g.a]=mem[g.b]=null}
+  var lab=new Array(n).fill(0),roots=[];
+  for(i=0;i<2*n-1;i++)if(alive[i])roots.push(i);
+  roots.sort(function(a,b){return Math.min.apply(null,mem[a])-Math.min.apply(null,mem[b])});
+  roots.forEach(function(rt,c){mem[rt].forEach(function(p){lab[p]=c})});
+  return lab;
+}
+
+/* ---------- metrics ---------- */
+function ari(a,b){
+  var n=a.length,ca={},cb={},cab={},i,k,s=0,sa=0,sb=0;
+  function c2(x){return x*(x-1)/2}
+  for(i=0;i<n;i++){ca[a[i]]=(ca[a[i]]||0)+1;cb[b[i]]=(cb[b[i]]||0)+1;k=a[i]+'|'+b[i];cab[k]=(cab[k]||0)+1}
+  for(k in cab)s+=c2(cab[k]);for(k in ca)sa+=c2(ca[k]);for(k in cb)sb+=c2(cb[k]);
+  var exp=sa*sb/c2(n),mx=(sa+sb)/2;
+  return mx===exp?1:(s-exp)/(mx-exp);
+}
+function silhouette(X,lab){
+  var n=X.length,K=0,i,j,c;
+  for(i=0;i<n;i++)K=Math.max(K,lab[i]+1);
+  if(K<2)return NaN;
+  var tot=0;
+  for(i=0;i<n;i++){
+    var s=new Array(K).fill(0),cn=new Array(K).fill(0);
+    for(j=0;j<n;j++){if(j===i)continue;var dx=X[i][0]-X[j][0],dy=X[i][1]-X[j][1];s[lab[j]]+=Math.sqrt(dx*dx+dy*dy);cn[lab[j]]++}
+    if(cn[lab[i]]===0)continue;
+    var a=s[lab[i]]/cn[lab[i]],b=Infinity;
+    for(c=0;c<K;c++)if(c!==lab[i]&&cn[c])b=Math.min(b,s[c]/cn[c]);
+    tot+=(b-a)/Math.max(a,b);
+  }
+  return tot/n;
+}
+
+/* ---------- Gaussian mixtures (2-D): cov stored as [a,b,c] = [[a,b],[b,c]] ---------- */
+function globalCov(X){
+  var n=X.length,mx=0,my=0,i;
+  for(i=0;i<n;i++){mx+=X[i][0];my+=X[i][1]}mx/=n;my/=n;
+  var a=0,b=0,c=0;
+  for(i=0;i<n;i++){var dx=X[i][0]-mx,dy=X[i][1]-my;a+=dx*dx;b+=dx*dy;c+=dy*dy}
+  return [a/n,b/n,c/n];
+}
+function initMeans(X,K,method,seed){
+  var r=mulberry(seed*977+31),n=X.length,pick=[Math.floor(r()*n)],i,k;
+  if(method==='random'){while(pick.length<K){var q=Math.floor(r()*n);if(pick.indexOf(q)<0)pick.push(q)}}
+  else{
+    var d2=new Float64Array(n).fill(Infinity);
+    while(pick.length<K){
+      var last=X[pick[pick.length-1]],tot=0;
+      for(i=0;i<n;i++){var dx=X[i][0]-last[0],dy=X[i][1]-last[1];d2[i]=Math.min(d2[i],dx*dx+dy*dy);tot+=d2[i]}
+      var u=r()*tot,acc=0,ch=n-1;
+      for(i=0;i<n;i++){acc+=d2[i];if(acc>=u){ch=i;break}}
+      pick.push(ch);
+    }
+  }
+  return pick.map(function(p){return [X[p][0],X[p][1]]});
+}
+function gmmE(X,th){
+  var n=X.length,K=th.pi.length,R=new Float64Array(n*K),ll=0,i,k,pre=[];
+  for(k=0;k<K;k++){var c=th.cov[k],det=Math.max(c[0]*c[2]-c[1]*c[1],1e-300);pre.push({ia:c[2]/det,ib:-c[1]/det,ic:c[0]/det,lc:Math.log(Math.max(th.pi[k],1e-300))-Math.log(2*Math.PI)-0.5*Math.log(det)})}
+  var l=new Float64Array(K);
+  for(i=0;i<n;i++){
+    var mx=-Infinity;
+    for(k=0;k<K;k++){var dx=X[i][0]-th.mu[k][0],dy=X[i][1]-th.mu[k][1],p=pre[k];l[k]=p.lc-0.5*(p.ia*dx*dx+2*p.ib*dx*dy+p.ic*dy*dy);if(l[k]>mx)mx=l[k]}
+    var s=0;for(k=0;k<K;k++){l[k]=Math.exp(l[k]-mx);s+=l[k]}
+    ll+=mx+Math.log(s);
+    for(k=0;k<K;k++)R[i*K+k]=l[k]/s;
+  }
+  return {R:R,ll:ll};
+}
+function gmmM(X,R,K,type,floor,prev){
+  var n=X.length,pi=[],mu=[],S=[],Nk=[],i,k;
+  for(k=0;k<K;k++){
+    var nk=0,mx=0,my=0;
+    for(i=0;i<n;i++){var r=R[i*K+k];nk+=r;mx+=r*X[i][0];my+=r*X[i][1]}
+    if(nk<1e-8){Nk.push(1e-8);mu.push(prev?prev.mu[k].slice():[X[0][0],X[0][1]]);S.push(prev?prev.cov[k].slice():[1,0,1]);continue}
+    mx/=nk;my/=nk;
+    var a=0,b=0,c=0;
+    for(i=0;i<n;i++){var rr=R[i*K+k],dx=X[i][0]-mx,dy=X[i][1]-my;a+=rr*dx*dx;b+=rr*dx*dy;c+=rr*dy*dy}
+    Nk.push(nk);mu.push([mx,my]);S.push([a/nk,b/nk,c/nk]);
+  }
+  var cov=[];
+  if(type==='VVV'){cov=S.map(function(s){return s.slice()})}
+  else if(type==='VII'){cov=S.map(function(s){var v=(s[0]+s[2])/2;return [v,0,v]})}
+  else{
+    var pa=0,pb=0,pc=0;
+    for(k=0;k<K;k++){pa+=Nk[k]*S[k][0];pb+=Nk[k]*S[k][1];pc+=Nk[k]*S[k][2]}
+    pa/=n;pb/=n;pc/=n;
+    if(type==='EEE')cov=rep(K,function(){return [pa,pb,pc]});
+    else{var v=(pa+pc)/2;cov=rep(K,function(){return [v,0,v]})}
+  }
+  cov=cov.map(function(c){return [c[0]+floor,c[1],c[2]+floor]});
+  for(k=0;k<K;k++)pi.push(Nk[k]/n);
+  return {pi:pi,mu:mu,cov:cov};
+}
+function gmmFloor(X){var g=globalCov(X);return 1e-3*(g[0]+g[2])/2}
+function gmmInitHard(X,K,type,seed){
+  var mu=initMeans(X,K,'kpp',seed),n=X.length,R=new Float64Array(n*K),i,k;
+  for(i=0;i<n;i++){var b=0,bd=Infinity;for(k=0;k<K;k++){var dx=X[i][0]-mu[k][0],dy=X[i][1]-mu[k][1],q=dx*dx+dy*dy;if(q<bd){bd=q;b=k}}R[i*K+b]=1}
+  return gmmM(X,R,K,type,gmmFloor(X),null);
+}
+function fitGMM(X,K,type,seed,restarts,maxIt){
+  var best=null,fl=gmmFloor(X);
+  for(var r=0;r<restarts;r++){
+    var th=gmmInitHard(X,K,type,seed+r*17),prev=-Infinity,e=null;
+    for(var it=0;it<maxIt;it++){
+      e=gmmE(X,th);
+      if(it>0&&Math.abs(e.ll-prev)<1e-7*Math.abs(e.ll)){break}
+      prev=e.ll;th=gmmM(X,e.R,K,type,fl,th);
+    }
+    e=gmmE(X,th);
+    if(!best||e.ll>best.ll)best={th:th,ll:e.ll,R:e.R};
+  }
+  return best;
+}
+function gmmParams(type,K){var cp={EII:1,VII:K,EEE:3,VVV:3*K}[type];return 2*K+(K-1)+cp}
+function gmmBIC(ll,type,K,n){return 2*ll-gmmParams(type,K)*Math.log(n)}
+function hardLabels(R,n,K){var o=new Array(n),i,k;for(i=0;i<n;i++){var b=0;for(k=1;k<K;k++)if(R[i*K+k]>R[i*K+b])b=k;o[i]=b}return o}
 
 /* ---------- PCA ---------- */
 function eigSym(M){
@@ -284,6 +591,7 @@ function matchScore(Y,S){
   var s1=c[0][0]+c[1][1],s2=c[0][1]+c[1][0];
   return {c:c,score:Math.max(s1,s2)/2,swap:s2>s1};
 }
+/*CORE-END*/
 
 /* =====================  UI helpers  ===================== */
 var $=function(id){return document.getElementById(id)};
@@ -608,12 +916,130 @@ function render3(){
 (function(){
   var DEF={p:{std:S3.std,vx:S3.vx,vy:S3.vy,pa:S3.pa,pb:S3.pb,m:S3.m,proj:S3.proj},i:{nl:S3.nl,iinit:S3.iinit}};
   build3();
-  function setC(id,v){var e=$(id);if(!e)return;if(e.type==='checkbox')e.checked=v;else e.value=v;var o=$(id+'-o');if(o)o.textContent=id==='c2-sp'?(+v).toFixed(2):v}
+
+  /* ---- theme ---- */
+  function currentTheme(){var t=document.documentElement.getAttribute('data-theme');return t||(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light')}
+  function syncThemeBtn(){var dark=currentTheme()==='dark',b=$('themeBtn');b.textContent=dark?'\u2600 Light theme':'\u263E Dark theme';b.setAttribute('aria-pressed',dark)}
+  syncThemeBtn();
+  $('themeBtn').addEventListener('click',function(){var next=currentTheme()==='dark'?'light':'dark';document.documentElement.setAttribute('data-theme',next);try{localStorage.setItem('ttest-theme',next)}catch(e){}syncThemeBtn()});
+  if(window.matchMedia){var mq=matchMedia('(prefers-color-scheme: dark)');if(mq.addEventListener)mq.addEventListener('change',syncThemeBtn)}
+  /* ---- copyable summary ---- */
+  function sumRow(pids,title){
+    var i,p=null;for(i=0;i<pids.length;i++){var q=$(pids[i]);if(q&&q.querySelector('.tiles .tile')){p=q;break}}
+    if(!p)return;var old=p.querySelector('.apa');if(old)old.remove();
+    var t=Array.prototype.map.call(p.querySelectorAll('.tiles .tile'),function(e){return e.querySelector('span').textContent.replace(/\s*\([^)]*\)/g,'')+' = '+e.querySelector('b').textContent});
+    p.insertAdjacentHTML('beforeend','<div class="apa"><span>'+esc(title+': '+t.join('; ')+'.')+'</span><button type="button" class="pill copybtn">Copy</button></div>');
+  }
+  document.addEventListener('click',function(e){
+    var b=e.target.closest&&e.target.closest('.copybtn');if(!b)return;
+    var txt=b.previousElementSibling.textContent,done=function(){b.textContent='Copied';setTimeout(function(){b.textContent='Copy'},1200)};
+    if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(txt).then(done,done);
+    else{var ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();try{document.execCommand('copy')}catch(x){}ta.remove();done()}
+  });
+  var r3=render3;
+  render3=function(){r3();sumRow(['p-j1','p-j3'],(S3.method==='pca'?'Principal Component Analysis':'Independent Component Analysis')+(S3.src==='own'?', own data':''))};
   $('c3-prs').addEventListener('click',function(){var PP=getP3(),d=PP.g?PP.g.names.length:4;Object.assign(S3,DEF.p);if(d!==4){S3.vx=0;S3.vy=1}S3.m=Math.min(DEF.p.m,d);lastDyn='';setC('c3-std',S3.std);sched('r3',render3)});
   $('c3-irset').addEventListener('click',function(){Object.assign(S3,DEF.i);setC('c3-nl',S3.nl);sched('r3',render3)});
-  $('keybtn').addEventListener('change',function(){$('key').hidden=!this.checked});
+  function setC(id,v){var e=$(id);if(!e)return;if(e.type==='checkbox')e.checked=v;else e.value=v;var o=$(id+'-o');if(o)o.textContent=id==='c2-sp'?(+v).toFixed(2):v}
   render3();
 })();
+</script>
+<script>
+(function(){
+"use strict";
+const $=id=>document.getElementById(id);
+const M=v=>'#c1-m [data-v='+v+']';
+const DEC={
+ start:{q:"What are you trying to do?",o:[
+  ["Turn one numerical variable into a few classes (map legend, bins, grades)","c1"],
+  ["Find groups of similar points in two-dimensional data","k1"],
+  ["Reduce several correlated variables to a few new axes, or unmix mixed signals","p1"]]},
+ c1:{q:"What does the distribution look like, or what do you need from the classes?",o:[
+  ["Roughly bell-shaped, and I want to show distance from the average","r_sd"],
+  ["Spread fairly evenly across the range, and I want a simple legend","r_eq"],
+  ["I want the same number of observations in every class","r_q"],
+  ["Heavy-tailed: many small values and a few very large ones","r_ht"],
+  ["Clumpy or skewed, and I want classes that are as internally alike as possible","r_jenks"]]},
+ k1:{q:"What do the groups look like, and what do you need?",o:[
+  ["Compact blobs, and I want a tree showing structure at every scale","r_hier"],
+  ["Curved, chained or nested shapes (moons, rings)","r_single"],
+  ["Overlapping or elliptical groups, and I want soft (probability) membership","r_em"],
+  ["I do not know how many groups there are or what shape they take","r_mb"]]},
+ p1:{q:"Which describes your goal?",o:[
+  ["Compress correlated variables while keeping as much variance as possible","r_pca"],
+  ["The variables are measured in very different units","r_std"],
+  ["I think the data are mixtures of independent, non-Gaussian sources","r_ica"]]},
+ r_sd:{t:"Standard Deviation classes",x:"Breaks at the mean plus or minus multiples of the standard deviation show how far each value sits from average, which is natural for bell-shaped data.",
+  i:[["Standard Deviation",["t-class",M('stdev'),"set:c1-data=normal"],"Bell-shaped data with classes centred on the mean."],["Compare with Jenks",["t-class",M('jenks')],"See how much GVF you give up for the easy interpretation."]],
+  n:["With skewed data the long-tail side holds nearly empty classes.","The number of classes is set by the class width, not by k."]},
+ r_eq:{t:"Equal Interval classes",x:"Dividing the range into equal-width classes gives the simplest legend and works when values are spread evenly.",
+  i:[["Equal Interval",["t-class",M('equal'),"set:c1-data=uniform"],"Even data, identical class widths."],["Skewed data for contrast",["t-class",M('equal'),"set:c1-data=lognormal"],"One class swallows most of the data; others sit nearly empty."]],
+  n:["Outliers stretch the range and squeeze everything else into one or two classes.","The legend is easy to read, but the classes ignore where the data cluster."]},
+ r_q:{t:"Quantile classes",x:"Each class holds about n / k observations, so the picture is visually balanced and ranks are respected.",
+  i:[["Quantile",["t-class",M('quantile'),"set:c1-data=lognormal"],"Balanced class sizes on skewed data."]],
+  n:["Near-identical values can land in different classes, and widely different values in the same one, because breaks ignore gaps.","Class widths vary a lot, so the legend can be hard to interpret."]},
+ r_ht:{t:"Head/Tail Breaks",x:"Splitting repeatedly at the mean while the above-average head stays a small minority picks out the few very large values from the many small ones.",
+  i:[["Head/Tail Breaks",["t-class",M('headtail'),"set:c1-data=pareto"],"Power-law data split into a hierarchy of heads."]],
+  n:["If the first head holds more than the limit, the data are not heavy-tailed and the method stops after one split.","The number of classes is chosen by the data, not by k."]},
+ r_jenks:{t:"Jenks natural breaks",x:"The Fisher–Jenks optimisation finds the classes with the smallest within-class variance, the highest possible GVF for a given k. Natural Breaks (Jenks–Caspall) is a faster heuristic that can stop at a local optimum.",
+  i:[["Jenks optimization",["t-class",M('jenks'),"set:c1-data=trimodal"],"Breaks fall in the gaps between clumps."],["Natural Breaks (heuristic)",["t-class",M('natural')],"Compare its GVF with the exact optimum."]],
+  n:["Use the GVF tile to choose k: stop adding classes when the gain gets small.","Breaks depend on the data, so legends cannot be shared between maps or years."]},
+ r_hier:{t:"Hierarchical clustering",x:"Merging the closest clusters step by step builds a dendrogram, so you can cut it at any height and see structure at every scale. Ward linkage favours compact, similar-sized clusters.",
+  i:[["Hierarchical, Ward",["t-clus",'#c2-m [data-v=hier]',"set:c2-data=blobs3","set:c2-link=ward"],"Cut the tree at the biggest jump."],["Average linkage",["t-clus",'#c2-m [data-v=hier]',"set:c2-link=average"],"A compromise between single and complete."]],
+  n:["Every merge is final: an early mistake cannot be undone.","Cost grows quickly with the number of points."]},
+ r_single:{t:"Single-linkage hierarchical clustering",x:"Joining clusters through their closest pair of points lets groups follow curved chains, which is why it separates moons and rings that centre-based methods cut across.",
+  i:[["Two moons, single linkage",["t-clus",'#c2-m [data-v=hier]',"set:c2-data=moons","set:c2-link=single"],"The chain follows each crescent."],["Nested rings",["t-clus",'#c2-m [data-v=hier]',"set:c2-data=rings","set:c2-link=single"],"Ward and EM fail here; single linkage succeeds."]],
+  n:["A few stray points between groups can bridge them (chaining).","Gaussian mixtures assume elliptical groups and will split a curve into blobs."]},
+ r_em:{t:"Expectation-Maximization (Gaussian mixture)",x:"Alternating soft assignment (E-step) and re-estimation (M-step) fits overlapping elliptical groups and gives each point a probability of belonging to every component.",
+  i:[["EM on stretched clusters",["t-clus",'#c2-m [data-v=em]',"set:c2-data=aniso"],"Step through the E- and M-steps and watch the ellipses move."]],
+  n:["You must choose the number of components K, and a poor start can land in a local optimum; try a new start.","The log-likelihood never decreases."]},
+ r_mb:{t:"Model-based clustering (BIC)",x:"Fitting mixtures with several covariance structures and several values of K, then choosing by BIC, selects the number of clusters and their shape together.",
+  i:[["Model-based clustering",["t-clus",'#c2-m [data-v=mb]',"set:c2-data=varied"],"BIC picks both the model and K."]],
+  n:["BIC here is higher-is-better (the mclust convention).","Results assume the groups are roughly Gaussian."]},
+ r_pca:{t:"Principal Component Analysis",x:"Rotating to the directions of greatest variance gives uncorrelated components ranked by variance explained, so you can keep the first few and drop the rest.",
+  i:[["PCA on four measurements",["t-proj",'#c3-m [data-v=pca]',"set:c3-pd=species"],"Read the scree plot and loadings."],["Test scores",["t-proj",'#c3-m [data-v=pca]',"set:c3-pd=tests"],"Six scores driven by two hidden abilities."]],
+  n:["Choose the number of components from the scree elbow or about 90% of variance.","Components are linear combinations; interpret them through their loadings."]},
+ r_std:{t:"PCA on standardized variables",x:"When variables use different units the biggest-variance one dominates PC1. Standardizing (PCA on the correlation matrix) puts all variables on an equal footing.",
+  i:[["PCA with standardizing",["t-proj",'#c3-m [data-v=pca]',"set:c3-pd=species"],"Toggle Standardize and compare PC1."]],
+  n:["Standardize unless the variables share natural units and you want their raw spread to count."]},
+ r_ica:{t:"Independent Component Analysis",x:"ICA whitens the data and then rotates to make the components as non-Gaussian, and so as independent, as possible. It can unmix signals that PCA cannot.",
+  i:[["ICA demo",["t-proj",'#c3-m [data-v=ica]'],"Hidden sources are mixed, then recovered; compare recovery scores for PCA and ICA."]],
+  n:["If the sources are Gaussian ICA cannot separate them.","Order and sign of the recovered components are arbitrary."]}
+};
+DEC.start=DEC.p1;let path=['start'];
+function clicks(ids){
+  ids.forEach(id=>{
+    if(id.indexOf('set:')===0){const kv=id.slice(4).split('='),e=$(kv[0]),rr=document.querySelector('input[name='+kv[0].split('-')[0]+'-src][value=sim]');if(rr&&!rr.checked)rr.click();if(e){e.value=kv[1];e.dispatchEvent(new Event('input',{bubbles:true}));}return;}
+    let b=null;try{b=id.charAt(0)==='#'||id.charAt(0)==='['?document.querySelector(id):$(id);}catch(e){}
+    if(b)b.click();
+  });
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function render(){
+  const id=path[path.length-1],nd=DEC[id],box=$('decideBody');let h='';
+  if(path.length>1)h+='<div class="crumbs">'+path.slice(0,-1).map((p,i)=>{const q=DEC[p],lab=q.o.find(o=>o[1]===path[i+1])[0];return`<button type="button" class="crumb" data-back="${i}"><span>${q.q.split('?')[0].replace(/\s*\([^)]*\)/g,'')+'?'}</span> <b>${lab.replace(/\s*[:(].*$/,'')}</b></button>`;}).join('')+'</div>';
+  if(nd.q){
+    h+=`<p class="dq">${nd.q}</p><div class="dopts">`+nd.o.map(o=>`<button type="button" class="dopt" data-go="${o[1]}">${o[0]}</button>`).join('')+'</div>';
+  }else{
+    h+=`<div class="dres"><h3 style="margin-top:0">Suggested</h3><p class="dtitle">${nd.t}</p><p>${nd.x}</p>`;
+    if(nd.i.length)h+='<ul class="dlist">'+nd.i.map(([lab,ids,why])=>`<li><button type="button" class="pill" data-open="${ids.join('|')}">${lab}</button> <span>${why}</span></li>`).join('')+'</ul>';
+    if(nd.n.length)h+='<h3>Things to keep in mind</h3><ul class="rel">'+nd.n.map(t=>`<li>${t}</li>`).join('')+'</ul>';
+    h+='</div>';
+  }
+  if(path.length>1)h+='<div class="row" style="margin-top:12px"><button type="button" class="pill" data-reset="1">Start over</button></div>';
+  box.innerHTML=h;
+}
+$('decideBody').addEventListener('click',e=>{
+  const t=e.target.closest('button');if(!t)return;
+  if(t.dataset.go){path.push(t.dataset.go);render();}
+  else if(t.dataset.back!=null){path=path.slice(0,+t.dataset.back+1);render();}
+  else if(t.dataset.reset){path=['start'];render();}
+  else if(t.dataset.open)clicks(t.dataset.open.split('|'));
+});
+window.__decide={DEC,go:p=>{path=p;render();}};
+render();
+})();
+
 </script>
 <script>
 /* ===== Download charts as PNG (300 dpi) ===== */
